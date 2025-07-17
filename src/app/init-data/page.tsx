@@ -82,7 +82,7 @@ export default function InitDataPage() {
   }
   return (
     <Page>
-      <List>
+      <List className=''>
         Проверка
         {/* <DisplayData header={'Init Data'} rows={initDataRows} /> */}
         {/* {userRows && <DisplayData header={'User'} rows={userRows} />} */}
