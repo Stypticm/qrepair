@@ -67,6 +67,7 @@ export default function Home() {
           <div className="p-2">
             <MainButtons path={path} />
           </div>
+          <Link href="/init-data">Init data</Link>
           {/* <div className="flex-1 flex items-center justify-center">
             <Link
               href="/learn-more"
