@@ -32,7 +32,7 @@ export default function Home() {
 
         if (data?.existing) {
           const req = data.existing
-          
+
           setBrand(req.brandname ?? null)
           setModel(req.modelname ?? '')
           setBrandModelText(req.brandModelText ?? '')
@@ -55,28 +55,26 @@ export default function Home() {
 
   return (
     <Page back={false}>
-      <List>
-        <section className="flex flex-col overflow-y-auto">
-          <div className="flex-1 flex items-center justify-center">
-            <Image
-              src="/picture.png"
-              alt="Main picture"
-              width={200}
-              height={200}
-              className="w-full h-full"
-            />
-          </div>
-          <div className="flex-1 flex items-center justify-center">
+      <List className='h-full w-full bg-background'>
+        <section className="flex flex-col justify-center overflow-y-auto h-full w-full">
+          <Image
+            src="/picture.png"
+            alt="Main picture"
+            width={400}
+            height={400}
+            className="w-full h-full"
+          />
+          <div className="p-2">
             <MainButtons path={path} />
           </div>
-          <div className="flex-1 flex items-center justify-center">
+          {/* <div className="flex-1 flex items-center justify-center">
             <Link
               href="/learn-more"
               className="text-blue-300 underline font-bold text-lg hover:text-blue-500 transition"
             >
               Learn more
             </Link>
-          </div>
+          </div> */}
           {/* <div className="flex-1 flex items-end justify-center">
             <Footer />
           </div> */}
