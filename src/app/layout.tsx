@@ -33,7 +33,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <I18nProvider>
           <Root>
             <StartFormProvider>
-              <Header />
               {children}
             </StartFormProvider>
           </Root>

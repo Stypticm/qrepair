@@ -49,10 +49,10 @@ const CrashPage = () => {
                     id={option.value}
                     checked={isChecked}
                     onCheckedChange={(checked) => {
-                      if (checked) {
+                      if (checked === true) {
                         setCrash([...(crash || []), option.value]);
                         setCrashDescription('');
-                      } else {
+                      } else if (checked === false) {
                         setCrash(crash.filter((val: string) => val !== option.value));
                       }
                     }}

@@ -25,9 +25,10 @@ const Footer = () => {
 
       <Link
         href="/learn-more"
-        className="text-blue-300 underline text-md hover:text-blue-500 transition"
       >
-        Learn more
+        <span className="text-blue-300 underline hover:text-blue-500 transition">
+          Learn more
+        </span>
       </Link>
     </section>
   );

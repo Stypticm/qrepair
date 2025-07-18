@@ -1,42 +1,85 @@
 'use client';
 
-import { Section, Cell, Image, List } from '@telegram-apps/telegram-ui';
+import { Section, Cell, List } from '@telegram-apps/telegram-ui';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 
 import { Link } from '@/components/Link/Link';
 import { LocaleSwitcher } from '@/components/LocaleSwitcher/LocaleSwitcher';
 import { Page } from '@/components/Page';
 
 import tonSvg from './_assets/ton.svg';
+import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
 import MainButtons from '@/components/MainButtons/MainButtons';
 import Footer from '@/components/Footer/Footer';
+import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { useEffect, useState } from 'react';
+import { repairSteps } from '@/core/lib/constants';
 
 export default function Home() {
   const t = useTranslations('i18n');
+  const { telegramId, setBrand, setModel, setBrandModelText, setCrash, setCrashDescription, setPhotoUrls } = useStartForm();
+  const [path, setPath] = useState('/repair/choose');
+
+  useEffect(() => {
+    if (!telegramId) return
+
+    const fetchStep = async () => {
+      try {
+        const res = await fetch(`/api/step?telegramId=${telegramId}`)
+        const data = await res.json()
+
+        if (data?.existing) {
+          const req = data.existing
+          
+          setBrand(req.brandname ?? null)
+          setModel(req.modelname ?? '')
+          setBrandModelText(req.brandModelText ?? '')
+          setCrash(req.crash ? req.crash.split(',').map((c: string) => c.trim()) : [])
+          setCrashDescription(req.crashDescription ?? '')
+          setPhotoUrls(req.photoUrls ?? [])
+
+          const matchedStep = repairSteps.find((s) => s.currentStep === req.currentStep)
+          if (matchedStep) {
+            setPath(matchedStep.path)
+            return
+          }
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    fetchStep()
+  }, [telegramId])
 
   return (
     <Page back={false}>
       <List>
         <section className="flex flex-col overflow-y-auto">
-          <div className="w-full overflow-hidden flex justify-center basis-1/3">
+          <div className="flex-1 flex items-center justify-center">
             <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              width={0}
-              height={0}
-              sizes="(max-width: 668px) 90vw, 400px"
-              className="w-full max-w-xs bg-slate-700 rounded-md p-2 border-slate-700"
+              src="/picture.png"
+              alt="Main picture"
+              width={200}
+              height={200}
+              className="w-auto h-auto bg-slate-700 rounded-sm"
             />
           </div>
-
           <div className="flex-1 flex items-center justify-center">
-            <MainButtons />
+            <MainButtons path={path} />
           </div>
-
-          <div className="flex-1 flex items-end justify-center">
+          <div className="flex-1 flex items-center justify-center">
+            <Link
+              href="/learn-more"
+              className="text-blue-300 underline font-bold text-lg hover:text-blue-500 transition"
+            >
+              Learn more
+            </Link>
+          </div>
+          {/* <div className="flex-1 flex items-end justify-center">
             <Footer />
-          </div>
+          </div> */}
         </section>
         {/* <List>
         <Section

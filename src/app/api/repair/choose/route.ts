@@ -6,7 +6,6 @@ export async function POST(req: Request) {
   let { telegramId, username } = body
 
   if (!username) username = 'local_dev'
-
   if (!telegramId || !username) {
     return NextResponse.json(
       { error: 'Invalid request' },

@@ -1,4 +1,9 @@
-export const repairSteps = ['/repair/brand', '/repair/crash', '/repair/photos', '/repair/summary'];
+export const repairSteps = [
+  { path: '/repair/brand', currentStep: 0 },
+  { path: '/repair/crash', currentStep: 1 },
+  { path: '/repair/photos', currentStep: 2 },
+  { path: '/repair/summary', currentStep: 3 },
+]
 
 export const crashOptions = [
   {
@@ -21,7 +26,7 @@ export const crashOptions = [
     label: 'Поломка от воды',
     checked: false,
   },
-];
+]
 
 export const pictures = [
   {
@@ -32,4 +37,4 @@ export const pictures = [
     name: 'Фото 2',
     alt: 'picture2',
   },
-];
+]

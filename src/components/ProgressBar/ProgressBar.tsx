@@ -7,7 +7,7 @@ import React from 'react';
 
 const ProgressBar = () => {
   const pathName = usePathname();
-  const index = repairSteps.findIndex((path) => pathName.startsWith(path));
+  const index = repairSteps.findIndex((value) => pathName.startsWith(value.path));
   const percent = ((index + 1) / repairSteps.length) * 100;
 
   return (
