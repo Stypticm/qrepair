@@ -11,6 +11,7 @@ import {
 import { List, Placeholder } from '@telegram-apps/telegram-ui';
 
 import {
+  DisplayData,
   type DisplayDataRow,
 } from '@/components/DisplayData/DisplayData';
 import { Page } from '@/components/Page';
@@ -43,26 +44,26 @@ export default function InitDataPage() {
     ];
   }, [initDataState, initDataRaw]);
 
-  // const userRows = useMemo<DisplayDataRow[] | undefined>(() => {
-  //   return initDataState && initDataState.user
-  //     ? getUserRows(initDataState.user)
-  //     : undefined;
-  // }, [initDataState]);
+  const userRows = useMemo<DisplayDataRow[] | undefined>(() => {
+    return initDataState && initDataState.user
+      ? getUserRows(initDataState.user)
+      : undefined;
+  }, [initDataState]);
 
-  // const receiverRows = useMemo<DisplayDataRow[] | undefined>(() => {
-  //   return initDataState && initDataState.receiver
-  //     ? getUserRows(initDataState.receiver)
-  //     : undefined;
-  // }, [initDataState]);
+  const receiverRows = useMemo<DisplayDataRow[] | undefined>(() => {
+    return initDataState && initDataState.receiver
+      ? getUserRows(initDataState.receiver)
+      : undefined;
+  }, [initDataState]);
 
-  // const chatRows = useMemo<DisplayDataRow[] | undefined>(() => {
-  //   return !initDataState?.chat
-  //     ? undefined
-  //     : Object.entries(initDataState.chat).map(([title, value]) => ({
-  //         title,
-  //         value,
-  //       }));
-  // }, [initDataState]);
+  const chatRows = useMemo<DisplayDataRow[] | undefined>(() => {
+    return !initDataState?.chat
+      ? undefined
+      : Object.entries(initDataState.chat).map(([title, value]) => ({
+        title,
+        value,
+      }));
+  }, [initDataState]);
 
   if (!initDataRows) {
     return (
@@ -83,13 +84,18 @@ export default function InitDataPage() {
   return (
     <Page>
       <List className=''>
-        Проверка
-        {/* <DisplayData header={'Init Data'} rows={initDataRows} /> */}
-        {/* {userRows && <DisplayData header={'User'} rows={userRows} />} */}
-        {/* {receiverRows && (
-          <DisplayData header={'Receiver'} rows={receiverRows} />
-        )} */}
-        {/* {chatRows && <DisplayData header={'Chat'} rows={chatRows} />} */}
+        <DisplayData header={'Init Data'} rows={initDataRows} />
+        {
+          userRows && <DisplayData header={'User'} rows={userRows} />
+        }
+        {
+          receiverRows && (
+            <DisplayData header={'Receiver'} rows={receiverRows} />
+          )
+        }
+        {
+          chatRows && <DisplayData header={'Chat'} rows={chatRows} />
+          }
       </List>
     </Page>
   );
