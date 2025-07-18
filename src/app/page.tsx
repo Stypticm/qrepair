@@ -63,7 +63,7 @@ export default function Home() {
               alt="Main picture"
               width={200}
               height={200}
-              className="w-auto h-auto bg-slate-700 rounded-sm"
+              className="w-full h-full"
             />
           </div>
           <div className="flex-1 flex items-center justify-center">
