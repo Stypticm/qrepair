@@ -21,9 +21,14 @@ export default function Home() {
   const t = useTranslations('i18n');
   const { telegramId, setBrand, setModel, setBrandModelText, setCrash, setCrashDescription, setPhotoUrls } = useStartForm();
   const [path, setPath] = useState('/repair/choose');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!telegramId) return
+
+    if (telegramId === '1' || telegramId === '296925626' || telegramId === '531360988') {
+      setIsAdmin(true)
+    }
 
     const fetchStep = async () => {
       try {
@@ -57,6 +62,13 @@ export default function Home() {
     <Page back={false}>
       <List className='h-full w-full bg-background'>
         <section className="flex flex-col justify-center overflow-y-auto h-full w-full">
+          {
+            isAdmin && (
+              <Button>
+                <Link href="/admin">Admin</Link>
+              </Button>
+            )
+          }
           <Image
             src="/picture.png"
             alt="Main picture"
@@ -67,7 +79,7 @@ export default function Home() {
           <div className="p-2">
             <MainButtons path={path} />
           </div>
-          <Link href="/init-data">Init data</Link>
+          {/* <Link href="/init-data">Init data</Link> */}
           {/* <div className="flex-1 flex items-center justify-center">
             <Link
               href="/learn-more"

@@ -12,12 +12,12 @@ export async function PATCH(req: Request) {
     )
   }
 
-  let crashText: string | null = null
+  let crashArray: string[] | null = null
 
   if (crashDescription?.trim()) {
-    crashText = crashDescription.trim()
-  } else if (crash && Array.isArray(crash)) {
-    crashText = crash.join(', ')
+    crashArray = [crashDescription.trim()]
+  } else if (Array.isArray(crash) && crash.length > 0) {
+    crashArray = crash
   } else {
     return NextResponse.json(
       { error: 'Insufficient data to update crash info' },
@@ -40,7 +40,7 @@ export async function PATCH(req: Request) {
     const updated = await prisma.repairRequest.update({
       where: { id: draft.id },
       data: {
-        crash: crashText,
+        crash: crashArray,
         currentStep: 2,
       },
     })
