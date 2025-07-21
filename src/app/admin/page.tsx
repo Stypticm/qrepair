@@ -29,7 +29,7 @@ const AdminPage = () => {
 
   const assignRepairman = (telegramId: string) => {
     return async () => {
-      const res = await fetch('/api/repair/assign', {
+      const res = await fetch('/api/bids', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

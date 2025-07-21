@@ -1,7 +1,8 @@
 import prisma from '@/core/lib/prisma'
+import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
 import { NextResponse } from 'next/server'
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     const bids = await prisma.repairRequest.findMany()
     return NextResponse.json(bids)
@@ -25,12 +26,19 @@ export async function PATCH(req: Request) {
     const updated = await prisma.repairRequest.updateMany({
       where: {
         telegramId,
-        status: 'submitted', // обновляем только если статус submitted
+        status: 'submitted',
       },
       data: {
-        status: 'in_progress', // новое состояние, не забудь добавить его в enum
+        status: 'in_progress',
       },
     })
+
+    if (updated.count > 0) {
+      await sendTelegramMessage(
+        telegramId,
+        '📱 Ваша заявка передана в работу. Ожидайте, скоро с вами свяжется мастер.'
+      )
+    }
 
     return NextResponse.json({ success: true, updated })
   } catch (error) {
