@@ -4,8 +4,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const bids = await prisma.repairRequest.findMany()
-    return NextResponse.json(bids)
+    const applications =
+      await prisma.repairRequest.findMany()
+    return NextResponse.json(applications)
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 })
   }
