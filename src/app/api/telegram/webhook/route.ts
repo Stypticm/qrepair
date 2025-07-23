@@ -1,4 +1,3 @@
-import { Textarea } from '@/components/ui/textarea'
 import { NextResponse } from 'next/server'
 import prisma from '@/core/lib/prisma'
 import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
@@ -59,7 +58,7 @@ export async function POST(req: Request) {
     }
 
     const telegramId = message?.chat?.id.toString()
-    const text = message?.Textarea
+    const text = message?.text
 
     if (!telegramId || !text) {
       console.error('Invalid update:', update)
