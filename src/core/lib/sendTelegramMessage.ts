@@ -1,8 +1,16 @@
 export async function sendTelegramMessage(
   telegramId: string,
-  text: string
+  text: string,
+  options: {
+    parse_mode?: 'Markdown' | 'HTML'
+    reply_markup?: object
+  } = {}
 ) {
   const BOT_TOKEN = process.env.BOT_TOKEN
+  if (!BOT_TOKEN) {
+    throw new Error('BOT_TOKEN is not defined')
+  }
+
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`
 
   const res = await fetch(url, {
@@ -13,6 +21,7 @@ export async function sendTelegramMessage(
     body: JSON.stringify({
       chat_id: telegramId,
       text,
+      ...options,
     }),
   })
 
