@@ -30,6 +30,23 @@ export default function Home() {
       setIsAdmin(true)
     }
 
+    const sendStartCommand = async () => {
+      try {
+        const response = await fetch('/api/telegram/send-command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ telegramId, command: '/start' }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send /start command');
+        }
+        console.log('Successfully sent /start command');
+      } catch (error) {
+        console.error('Error sending /start command:', error);
+      }
+    };
+
     const fetchStep = async () => {
       try {
         const res = await fetch(`/api/step?telegramId=${telegramId}`)
@@ -55,6 +72,8 @@ export default function Home() {
         console.error(e)
       }
     }
+
+    sendStartCommand()
     fetchStep()
   }, [telegramId])
 
