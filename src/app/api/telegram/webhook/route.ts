@@ -106,7 +106,12 @@ export async function POST(req: Request) {
           where: {
             telegramId,
             status: {
-              in: ['submitted', 'in_progress', 'completed'],
+              in: [
+                'draft',
+                'submitted',
+                'in_progress',
+                'completed',
+              ],
             },
           },
           orderBy: { createdAt: 'desc' },
@@ -114,7 +119,9 @@ export async function POST(req: Request) {
 
       const responseText = repairRequest
         ? `Статус вашей заявки: *${
-            repairRequest.status === 'submitted'
+            repairRequest.status === 'draft'
+              ? 'Черновик'
+              : repairRequest.status === 'submitted'
               ? 'Ожидает обработки'
               : repairRequest.status === 'in_progress'
               ? 'В работе'
