@@ -11,6 +11,7 @@ const SummaryPage = () => {
   const { telegramId } = useStartForm();
   const [data, setData] = useState<RepairRequest | null>(null);
   const [loading, setLoading] = useState(true);
+  const [webhookSecret, setWebhookSecret] = useState<string>('');
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -31,7 +32,20 @@ const SummaryPage = () => {
       }
     };
 
+    const fetchWebhookSecret = async () => {
+      try {
+        const res = await fetch('/api/telegram/secret');
+        if (res.ok) {
+          const { secret } = await res.json();
+          setWebhookSecret(secret);
+        }
+      } catch (error) {
+        console.error('Ошибка при получении секретного токена:', error);
+      }
+    };
+
     fetchSummary();
+    fetchWebhookSecret();
   }, [telegramId]);
 
   const handleNext = async () => {
@@ -48,10 +62,18 @@ const SummaryPage = () => {
         throw new Error('Failed to submit repair request');
       }
 
-      const statusResponse = await fetch('/api/telegram/send-command', {
+      const statusResponse = await fetch('/api/telegram/webhook', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telegramId, command: '/status' }),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Telegram-Bot-Api-Secret-Token': webhookSecret,
+        },
+        body: JSON.stringify({
+          callback_query: {
+            from: { id: telegramId },
+            data: 'check_status',
+          },
+        }),
       });
 
       if (!statusResponse.ok) {

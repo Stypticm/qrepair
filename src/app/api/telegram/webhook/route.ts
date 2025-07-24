@@ -8,6 +8,19 @@ export async function POST(req: Request) {
     const message = update.message
     const callbackQuery = update.callback_query
 
+    const secretToken = req.headers.get(
+      'X-Telegram-Bot-Api-Secret-Token'
+    )
+    if (
+      secretToken &&
+      secretToken !== process.env.TELEGRAM_WEBHOOK_SECRET
+    ) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      )
+    }
+
     if (callbackQuery) {
       const telegramId = callbackQuery.from.id.toString()
       const data = callbackQuery.data
