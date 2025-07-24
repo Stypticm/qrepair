@@ -48,28 +48,27 @@ const SummaryPage = () => {
         throw new Error('Failed to submit repair request');
       }
 
-      const submitData = await submitResponse.json();
-      const status = submitData?.status || 'submitted';
+      const statusResponse = await fetch(`/api/repair/summary?telegramId=${telegramId}`);
+      if (!statusResponse.ok) {
+        throw new Error('Failed to fetch status');
+      }
 
-      const statusText = status === 'submitted'
-        ? 'Ожидает обработки'
-        : status === 'in_progress'
-          ? 'В работе'
-          : status === 'completed'
-            ? 'Завершена'
-            : 'Черновик';
+      const repairRequest = await statusResponse.json();
+      const responseText = repairRequest
+        ? `Статус вашей заявки: *${repairRequest.status === 'submitted' ? 'Ожидает обработки' : repairRequest.status === 'in_progress' ? 'В работе' : repairRequest.status === 'completed' ? 'Завершена' : 'Черновик'}*`
+        : 'У вас нет активных заявок.';
 
-      const statusResponse = await fetch('/api/telegram/send-command', {
+      const sendResponse = await fetch('/api/telegram/send-command', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           telegramId,
-          message: `Статус вашей заявки: *${statusText}*`,
+          message: responseText,
         }),
       });
 
-      if (!statusResponse.ok) {
-        throw new Error('Failed to send status command');
+      if (!sendResponse.ok) {
+        throw new Error('Failed to send status message');
       }
     } catch (error) {
       console.error('Ошибка при отправке:', error);

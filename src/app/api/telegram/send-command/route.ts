@@ -23,6 +23,14 @@ export async function POST(req: Request) {
             inline_keyboard: [
               [
                 {
+                  text: 'Открыть приложение',
+                  web_app: {
+                    url: 'https://qrepair-git-dev-stypticms-projects.vercel.app',
+                  },
+                },
+              ],
+              [
+                {
                   text: 'Проверить статус',
                   callback_data: 'check_status',
                 },
