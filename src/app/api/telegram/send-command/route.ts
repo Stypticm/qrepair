@@ -3,7 +3,8 @@ import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
 
 export async function POST(req: Request) {
   try {
-    const { telegramId, command } = await req.json()
+    const { telegramId, command, message } =
+      await req.json()
 
     if (!telegramId || !command) {
       return NextResponse.json(
@@ -36,11 +37,16 @@ export async function POST(req: Request) {
           },
         }
       )
-    } else {
+    } else if (command) {
       await sendTelegramMessage(telegramId, command, {
         parse_mode: 'Markdown',
       })
+    } else if (message) {
+      await sendTelegramMessage(telegramId, message, {
+        parse_mode: 'Markdown',
+      })
     }
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error sending command:', error)
