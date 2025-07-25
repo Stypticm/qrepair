@@ -22,6 +22,10 @@ export type FormState = {
   telegramId: string | null
   setTelegramId: (id: string | null) => void
 
+  // user photo url
+  userPhotoUrl: string | null
+  setUserPhotoUrl: (url: string | null) => void
+
   onNext?: () => Promise<void>
   setOnNext: (cb?: () => Promise<void>) => void
 }

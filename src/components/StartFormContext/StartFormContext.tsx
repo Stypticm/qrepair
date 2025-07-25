@@ -11,6 +11,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
 
     const [username, setUsername] = useState<string | null>(null);
     const [telegramId, setTelegramId] = useState<string | null>(null);
+    const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
 
     const [brandname, setBrand] = useState<string | null>(null);
     const [modelname, setModel] = useState<string>('');
@@ -22,8 +23,9 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (initDataState?.user) {
-            setUsername(initDataState.user.username ?? null);
+            setUsername(initDataState.user.first_name ?? null);
             setTelegramId(String(initDataState.user.id));
+            setUserPhotoUrl(initDataState.user.photo_url ?? null);
         }
     }, [initDataState]);
 
@@ -38,6 +40,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 crashDescription,
                 photoUrls,
                 telegramId,
+                userPhotoUrl,
                 onNext,
                 setOnNext,
                 setCrash,
@@ -48,6 +51,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setCrashDescription,
                 setBrandModelText,
                 setUsername,
+                setUserPhotoUrl
             }}
         >
             {children}
