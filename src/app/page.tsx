@@ -84,18 +84,10 @@ export default function Home() {
 
   return (
     <Page back={false}>
-      <div className="flex flex-col items-center justify-start w-screen h-screen p-2">
+      <div className="flex flex-col items-center justify-start w-screen h-screen p-4 mt-[50px]">
         <div className="w-full">
-          {isAdmin && (
-            <Button
-              variant="outline"
-              className="w-full bg-slate-800 text-black font-bold uppercase !border-slate-700"
-            >
-              <Link href="/admin">АДМИН</Link>
-            </Button>
-          )}
           <div className="w-full">
-            <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2">
+            <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">
               💰 ВЫКУП СМАРТФОНА
             </h2>
             <p className="text-base font-bold text-black mb-4 leading-tight">
@@ -140,6 +132,16 @@ export default function Home() {
               <p>💰 Гарантия честной цены</p>
               <p>👽 Оценка через ИИ и вручную — на выбор</p>
             </div>
+          </div>
+          <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2'>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                className="w-full bg-slate-800 text-black font-bold uppercase !border-slate-700"
+              >
+                <Link href="/admin">АДМИН</Link>
+              </Button>
+            )}
           </div>
         </div>
 
