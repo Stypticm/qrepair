@@ -110,6 +110,7 @@ export async function POST(req: Request) {
                 },
               ],
             ],
+            request_write_access: true,
           },
         }
       )

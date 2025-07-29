@@ -144,6 +144,11 @@
   dependencies:
     tslib "2"
 
+"@grammyjs/types@3.21.0":
+  version "3.21.0"
+  resolved "https://registry.yarnpkg.com/@grammyjs/types/-/types-3.21.0.tgz#b97c6d240e60adac48f67dd0cd124d3525f5e733"
+  integrity sha512-IMj0EpmglPCICuyfGRx4ENKPSuzS2xMSoPgSPzHC6FtnWKDEmJLBP/GbPv/h3TAeb27txqxm/BUld+gbJk6ccQ==
+
 "@humanwhocodes/config-array@^0.13.0":
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.13.0.tgz#fb907624df3256d04b9aa2df50d7aa97ec648748"
@@ -1295,6 +1300,13 @@
   dependencies:
     "@radix-ui/react-dialog" "^1.0.4"
 
+abort-controller@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/abort-controller/-/abort-controller-3.0.0.tgz#eaf54d53b62bae4138e809ca225c8439a6efb392"
+  integrity sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==
+  dependencies:
+    event-target-shim "^5.0.0"
+
 acorn-jsx@^5.3.2:
   version "5.3.2"
   resolved "https://registry.yarnpkg.com/acorn-jsx/-/acorn-jsx-5.3.2.tgz#7ed5bb55908b3b2f1bc55c6af1653bada7f07937"
@@ -2159,6 +2171,11 @@ esutils@^2.0.2:
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.3.tgz#74d2eb4de0b8da1293711910d50775b9b710ef64"
   integrity sha512-kVscqXk4OCp68SZ0dkgEKVi6/8ij300KBWTJq32P/dYeWTSwK41WyTxalN1eRmA5Z9UU/LX9D7FWSmV9SAYx6g==
 
+event-target-shim@^5.0.0:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-5.0.1.tgz#5d4d3ebdf9583d63a5333ce2deb7480ab2b05789"
+  integrity sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==
+
 eventsource@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/eventsource/-/eventsource-2.0.2.tgz#76dfcc02930fb2ff339520b6d290da573a9e8508"
@@ -2403,6 +2420,16 @@ graceful-fs@^4.2.4:
   version "4.2.11"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.11.tgz#4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
+
+grammy@^1.37.0:
+  version "1.37.0"
+  resolved "https://registry.yarnpkg.com/grammy/-/grammy-1.37.0.tgz#6de5a1707afe7834b1062aaec49760a217dc4b00"
+  integrity sha512-UBGqGKux+49t1vm7n/m1BaeXIYbWESXjhaFxG+9z33VTLSHdQJwIOmpNKmZSaoBlSWbAJE+IJZ30X7RfWvEolA==
+  dependencies:
+    "@grammyjs/types" "3.21.0"
+    abort-controller "^3.0.0"
+    debug "^4.3.4"
+    node-fetch "^2.7.0"
 
 graphemer@^1.4.0:
   version "1.4.0"
@@ -3045,7 +3072,7 @@ next@15.3.1:
     "@next/swc-win32-x64-msvc" "15.3.1"
     sharp "^0.34.1"
 
-node-fetch@^2.6.9:
+node-fetch@^2.6.9, node-fetch@^2.7.0:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
   integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
