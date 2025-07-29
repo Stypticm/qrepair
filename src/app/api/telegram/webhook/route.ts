@@ -93,7 +93,7 @@ export async function POST(req: Request) {
                 {
                   text: '🚀 Открыть приложение',
                   web_app: {
-                    url: 'https://t.me/QRepairBot/QRepairDev',
+                    url: 'https://qrepair-git-dev-stypticms-projects.vercel.app',
                   },
                 },
               ],
