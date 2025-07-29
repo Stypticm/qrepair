@@ -8,7 +8,7 @@ const LearnMore = () => {
             <div className="flex flex-col items-center justify-start w-screen h-screen p-4">
                 <h2 className="text-2xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">📦 как происходит выкуп</h2>
                 <Image
-                    src="/instruction.jpg"
+                    src="/instruction.png"
                     alt="Инструкция"
                     width={400}
                     height={200}
