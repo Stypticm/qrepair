@@ -84,7 +84,7 @@ export default function Home() {
 
   return (
     <Page back={false}>
-      <div className="flex flex-col items-center justify-start w-screen h-screen p-4 mt-[50px]">
+      <div className="flex flex-col items-center justify-start w-screen h-screen p-4 mt-[100px]">
         <div className="w-full">
           <div className="w-full">
             <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">
