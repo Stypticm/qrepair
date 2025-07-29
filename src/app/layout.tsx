@@ -28,12 +28,15 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   const locale = await getLocale();
 
   return (
-    <html lang={locale} suppressHydrationWarning className="h-[100dvh] overflow-hidden">
-      <body className={`${comicNeue.className} antialiased h-[100dvh] w-[100dvw] flex flex-col overflow-hidden`}>
+    <html lang={locale} suppressHydrationWarning className="h-full overflow-hidden">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+      </head>
+      <body className={`${comicNeue.className} antialiased h-full w-full flex flex-col overflow-hidden`}>
         <I18nProvider>
           <Root>
             <StartFormProvider>
-              <main className='mt-[100px]'>
+              <main className="flex-1 w-full max-w-[800px] mx-auto md:max-h-[600px] md:mx-auto md:my-4">
                 {children}
               </main>
             </StartFormProvider>
