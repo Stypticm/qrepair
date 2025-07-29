@@ -33,7 +33,9 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <I18nProvider>
           <Root>
             <StartFormProvider>
-              {children}
+              <main className='mt-[100px]'>
+                {children}
+              </main>
             </StartFormProvider>
           </Root>
         </I18nProvider>
