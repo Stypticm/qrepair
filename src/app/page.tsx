@@ -23,6 +23,12 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.expand();
+    } else {
+      console.warn('Telegram WebApp not initialized');
+    }
+
     if (!telegramId) return
 
     if (telegramId === '1' || telegramId === '296925626' || telegramId === '531360988') {

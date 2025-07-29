@@ -1,25 +1,28 @@
 'use client'
 
+import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 const AdminPage = () => {
   return (
-    <div className='flex flex-col bg-slate-800 h-full w-full'>
-      <h1 className='text-2xl font-bold text-center'>Админка</h1>
-      <section className='flex flex-col gap-2 p-4'>
-        <Button>
-          <Link href='/admin/repairman'>
-            Мастера
-          </Link>
-        </Button>
-        <Button>
-          <Link href='/admin/requests'>
-            Заявки
-          </Link>
-        </Button>
-      </section>
-    </div>
+    <Page back={true}>
+      <div className='flex flex-col bg-slate-800 h-full w-full'>
+        <h1 className='text-2xl font-bold text-center'>Админка</h1>
+        <section className='flex flex-col gap-2 p-4'>
+          <Button>
+            <Link href='/admin/repairman'>
+              Мастера
+            </Link>
+          </Button>
+          <Button>
+            <Link href='/admin/requests'>
+              Заявки
+            </Link>
+          </Button>
+        </section>
+      </div>
+    </Page>
   )
 }
 
