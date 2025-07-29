@@ -84,7 +84,7 @@
     "@floating-ui/core" "^1.7.2"
     "@floating-ui/utils" "^0.2.10"
 
-"@floating-ui/react-dom@^2.0.0", "@floating-ui/react-dom@^2.0.8":
+"@floating-ui/react-dom@^2.0.0":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@floating-ui/react-dom/-/react-dom-2.1.4.tgz#a0689be8978352fff2be2dfdd718cf668c488ec3"
   integrity sha512-JbbpPhp38UmXDDAu60RJmbeme37Jbgsm7NrHGgzYYFKmblzRUh6Pa641dII6LsjwF4XlScDrde2UAzDo/b9KPw==
@@ -529,26 +529,6 @@
   resolved "https://registry.yarnpkg.com/@radix-ui/react-context/-/react-context-1.1.2.tgz#61628ef269a433382c364f6f1e3788a6dc213a36"
   integrity sha512-jCi/QKUM2r1Ju5a3J64TH2A5SpKAgh0LpknyqdQ4m6DCV0xJ2HG1xARRwNGPQfi1SLdLWZ1OJz6F4OMBBNiGJA==
 
-"@radix-ui/react-dialog@^1.0.4":
-  version "1.1.14"
-  resolved "https://registry.yarnpkg.com/@radix-ui/react-dialog/-/react-dialog-1.1.14.tgz#4c69c80c258bc6561398cfce055202ea11075107"
-  integrity sha512-+CpweKjqpzTmwRwcYECQcNYbI8V9VSQt0SNFKeEBLgfucbsLssU6Ppq7wUdNXEGb573bMjFhVjKVll8rmV6zMw==
-  dependencies:
-    "@radix-ui/primitive" "1.1.2"
-    "@radix-ui/react-compose-refs" "1.1.2"
-    "@radix-ui/react-context" "1.1.2"
-    "@radix-ui/react-dismissable-layer" "1.1.10"
-    "@radix-ui/react-focus-guards" "1.1.2"
-    "@radix-ui/react-focus-scope" "1.1.7"
-    "@radix-ui/react-id" "1.1.1"
-    "@radix-ui/react-portal" "1.1.9"
-    "@radix-ui/react-presence" "1.1.4"
-    "@radix-ui/react-primitive" "2.1.3"
-    "@radix-ui/react-slot" "1.2.3"
-    "@radix-ui/react-use-controllable-state" "1.2.2"
-    aria-hidden "^1.2.4"
-    react-remove-scroll "^2.6.3"
-
 "@radix-ui/react-direction@1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-direction/-/react-direction-1.1.1.tgz#39e5a5769e676c753204b792fbe6cf508e550a14"
@@ -829,13 +809,6 @@
   dependencies:
     tslib "^2.8.0"
 
-"@swc/helpers@^0.5.3":
-  version "0.5.17"
-  resolved "https://registry.yarnpkg.com/@swc/helpers/-/helpers-0.5.17.tgz#5a7be95ac0f0bf186e7e6e890e7a6f6cda6ce971"
-  integrity sha512-5IKx/Y13RsYd+sauPb2x+U/xZikHjolzfuDgTAl/Tdf3Q8rslRvC19NKDLgAJQ6wsqADk10ntlv08nPFw/gO/A==
-  dependencies:
-    tslib "^2.8.0"
-
 "@tailwindcss/node@4.1.11":
   version "4.1.11"
   resolved "https://registry.yarnpkg.com/@tailwindcss/node/-/node-4.1.11.tgz#d626af65fc9872e5e9d8884791d7e3856e945359"
@@ -967,14 +940,14 @@
   resolved "https://registry.yarnpkg.com/@telegram-apps/navigation/-/navigation-1.0.14.tgz#606df093f89d68f3013d8086acc7b63d9cc5ec3c"
   integrity sha512-bqNgF/J8Po7ZtsELm3E1a6aPr7awwxO3sIqD8J6u12urOlGoW5+1KxKKbkPa58mgXuQdsltd8apI+OVy0IYiUA==
 
-"@telegram-apps/sdk-react@^3.2.4":
-  version "3.3.6"
-  resolved "https://registry.yarnpkg.com/@telegram-apps/sdk-react/-/sdk-react-3.3.6.tgz#290814e8b0f8384e34a5b5ae681a820de592aae5"
-  integrity sha512-v9y2eKoDmud04XNXEELnrE23lWN/Nav+Idfvzo+ilXU+bg8VDIYpECiGwfTUS50nZsJowrtcWOc/TystsZMYKA==
+"@telegram-apps/sdk-react@3.2.4":
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/@telegram-apps/sdk-react/-/sdk-react-3.2.4.tgz#6de8b73e53b69b14a3933395e13693c7711c8f6f"
+  integrity sha512-hDV1Vp9AacVO5nyuMeRAatdEnbZskzKfSi+GEKruwhv1U3jCv11reSYkm4sSWNNRBKVP/fr/ywrvdjk4kmGp7g==
   dependencies:
-    "@telegram-apps/sdk" "^3.11.4"
+    "@telegram-apps/sdk" "^3.9.2"
 
-"@telegram-apps/sdk@^3.11.4":
+"@telegram-apps/sdk@^3.9.2":
   version "3.11.4"
   resolved "https://registry.yarnpkg.com/@telegram-apps/sdk/-/sdk-3.11.4.tgz#b70ed11dd90e06d33f0ec2af7b1ac52d53e4725c"
   integrity sha512-en2yRVhKJwzKfT4TOAG8fwaZHAqB2CfMCE0AY7mx55+UKlPCDdRN2BVUOxdYabUoxglJUquCUpNWr4TXIeAfng==
@@ -993,16 +966,6 @@
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@telegram-apps/signals/-/signals-1.1.2.tgz#a533420b658b555c2fb85063f87b969792a57a4b"
   integrity sha512-1P1kdCLX7MfETGPxH7f3UZKIsdE7Tz5S7QmN4Km1sbYQMakD5Bi1NecSMR7/wnHp50gWMI1JzENcMtCEmouhSg==
-
-"@telegram-apps/telegram-ui@^2.1.5":
-  version "2.1.9"
-  resolved "https://registry.yarnpkg.com/@telegram-apps/telegram-ui/-/telegram-ui-2.1.9.tgz#7b7dd71642d8ac809a7b6443ca0e53fe7112eac0"
-  integrity sha512-rqttvF6Ss/iKohHPYo0JRQaN/3JctJ+nR4ikAN1Z1bXPdGUFE29rTJHdt/+NHEvXwZ8P4TYVaB2IeFvAmjmcwg==
-  dependencies:
-    "@floating-ui/react-dom" "^2.0.8"
-    "@swc/helpers" "^0.5.3"
-    "@twa-dev/types" "^7.0.0"
-    "@xelene/vaul-with-scroll-fix" "0.1.4"
 
 "@telegram-apps/toolkit@^2.1.3":
   version "2.1.3"
@@ -1071,11 +1034,6 @@
     csstype "^3.1.1"
     deepmerge "^4.2.2"
     ua-parser-js "^1.0.35"
-
-"@twa-dev/types@^7.0.0":
-  version "7.10.0"
-  resolved "https://registry.yarnpkg.com/@twa-dev/types/-/types-7.10.0.tgz#907f3e4bc082405a3130dee82a66dbf01d6fd33e"
-  integrity sha512-BXHyNLXy+cPbOZ2qQq5ArPKcP4kUfuX3YBSFT0XUxtMNWAzvyMuYAiq59UTfQ8OnELXlfChrAoIT3c2pujBtcQ==
 
 "@tybys/wasm-util@^0.10.0":
   version "0.10.0"
@@ -1287,13 +1245,6 @@
   version "1.11.1"
   resolved "https://registry.yarnpkg.com/@unrs/resolver-binding-win32-x64-msvc/-/resolver-binding-win32-x64-msvc-1.11.1.tgz#538b1e103bf8d9864e7b85cc96fa8d6fb6c40777"
   integrity sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==
-
-"@xelene/vaul-with-scroll-fix@0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@xelene/vaul-with-scroll-fix/-/vaul-with-scroll-fix-0.1.4.tgz#777ff30d43e4181cb3d02c004e93efbd216a5063"
-  integrity sha512-R9J7y92rzZKIQLtFHKtzRsb4x8G26cvwGIDSf7OQZCdROFt7xic4Yz1BlFYjm8oiQsYV4SFSQfOzatZjvxz5XQ==
-  dependencies:
-    "@radix-ui/react-dialog" "^1.0.4"
 
 acorn-jsx@^5.3.2:
   version "5.3.2"

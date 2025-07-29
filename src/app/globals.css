@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -72,7 +72,7 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
-  --background: #f7e8cf;
+  --background: #FDEFCD;
   --foreground: oklch(0.141 0.005 285.823);
 }
 
@@ -110,11 +110,18 @@
   --sidebar-ring: oklch(0.552 0.016 285.938);
 } */
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+html,
+body,
+#__next {
+  height: 100%;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+* {
+  border-color: var(--border);
+  outline-color: var(--ring);
 }

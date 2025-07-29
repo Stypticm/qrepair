@@ -5,7 +5,7 @@ import Link from 'next/link'
 
 const AdminPage = () => {
   return (
-    <>
+    <div className='flex flex-col bg-slate-800 h-full w-full'>
       <h1 className='text-2xl font-bold text-center'>Админка</h1>
       <section className='flex flex-col gap-2 p-4'>
         <Button>
@@ -19,7 +19,7 @@ const AdminPage = () => {
           </Link>
         </Button>
       </section>
-    </>
+    </div>
   )
 }
 

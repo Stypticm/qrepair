@@ -1,6 +1,5 @@
 'use client';
 
-import { Section, Cell, List } from '@telegram-apps/telegram-ui';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
@@ -79,38 +78,80 @@ export default function Home() {
 
   return (
     <Page back={false}>
-      <List className='h-full w-full bg-background'>
-        <section className="flex flex-col justify-center overflow-y-auto h-full w-full">
-          {
-            isAdmin && (
-              <Button>
-                <Link href="/admin">Admin</Link>
-              </Button>
-            )
-          }
-          <Image
-            src="/picture.png"
-            alt="Main picture"
-            width={400}
-            height={400}
-            className="w-full h-full"
-          />
-          <div className="p-2">
-            <MainButtons path={path} />
-          </div>
-          {/* <Link href="/init-data">Init data</Link> */}
-          {/* <div className="flex-1 flex items-center justify-center">
-            <Link
-              href="/learn-more"
-              className="text-blue-300 underline font-bold text-lg hover:text-blue-500 transition"
+      <div className="flex flex-col items-center justify-start w-screen h-screen p-2">
+        <div className="w-full">
+          {isAdmin && (
+            <Button
+              variant="outline"
+              className="w-full bg-slate-800 text-black font-bold uppercase !border-slate-700"
             >
-              Learn more
+              <Link href="/admin">АДМИН</Link>
+            </Button>
+          )}
+          <div className="w-full">
+            <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2">
+              💰 ВЫКУП СМАРТФОНА
+            </h2>
+            <p className="text-base font-bold text-black mb-4 leading-tight">
+              🚀 Продай свой смартфон за 3 минуты. Мы оценим его по фото, приедем и заберём. Деньги — сразу на карту или наличными.
+            </p>
+            <Image
+              src="/courier.png"
+              alt="Курьер с телефоном"
+              width={400}
+              height={200}
+              className="w-full h-auto object-contain mb-4"
+            />
+            <div className="flex flex-col gap-2 w-full">
+              <Button
+                variant="outline"
+                className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+                onClick={() => window.Telegram.WebApp.showAlert('В разработке')}
+              >
+                ✅ ОЦЕНИТЬ СМАРТФОН
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              >
+                📦 КАК ЭТО РАБОТАЕТ?
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              >
+                🕵️ СТАТУС ЗАЯВКИ
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              >
+                📋 МОИ УСТРОЙСТВА
+              </Button>
+            </div>
+            <div className="mt-6 text-sm text-slate-700 w-full font-semibold">
+              <p>🔐 Безопасно: договор и выезд с курьером</p>
+              <p>💰 Гарантия честной цены</p>
+              <p>👽 Оценка через ИИ и вручную — на выбор</p>
+            </div>
+          </div>
+        </div>
+
+        {/* <div className="p-2">
+            <MainButtons path={path} />
+            </div> */}
+        {/* <Link href="/init-data">Init data</Link> */}
+        {/* <div className="flex-1 flex items-center justify-center">
+            <Link
+            href="/learn-more"
+            className="text-blue-300 underline font-bold text-lg hover:text-blue-500 transition"
+            >
+            Learn more
             </Link>
-          </div> */}
-          {/* <div className="flex-1 flex items-end justify-center">
+            </div> */}
+        {/* <div className="flex-1 flex items-end justify-center">
             <Footer />
-          </div> */}
-        </section>
+            </div> */}
         {/* <List>
         <Section
         header="Features"
@@ -136,7 +177,7 @@ export default function Home() {
           <LocaleSwitcher />
           </Section>
           </List> */}
-      </List>
+      </div>
     </Page>
   );
 }
