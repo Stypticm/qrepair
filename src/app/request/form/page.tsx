@@ -52,7 +52,7 @@ const BrandPage = () => {
   return (
     <Page back={true}>
       <main className="h-full flex flex-col justify-between">
-        <section className="flex flex-col gap-8">
+        <section className="flex flex-col gap-2">
           <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">
             Отправка заявки
           </h2>
@@ -73,7 +73,7 @@ const BrandPage = () => {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="condition" className="text-black text-2xl font-bold">
               Состояние
             </Label>
@@ -90,7 +90,7 @@ const BrandPage = () => {
             <Label htmlFor="photos_and_video" className="text-black text-2xl font-bold">
               Фотографии и видео
             </Label>
-            <section className="flex flex-row gap-2 justify-center items-end">
+            <section className="flex flex-row gap-1 justify-center items-end">
               <Image
                 src="/photo_phone.png"
                 alt="Картинка телефона"
