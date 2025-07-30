@@ -106,15 +106,9 @@ export default function Home() {
             <Button
               variant="outline"
               className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              onClick={() => router.push('/request/choose')}
             >
               ✅ ОЦЕНИТЬ СМАРТФОН
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
-              onClick={() => router.push('/learn-more')}
-            >
-              📦 КАК ЭТО РАБОТАЕТ?
             </Button>
             <Button
               variant="outline"
@@ -128,6 +122,21 @@ export default function Home() {
             >
               📋 МОИ УСТРОЙСТВА
             </Button>
+            <Button
+              variant="outline"
+              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              onClick={() => router.push('/learn-more')}
+            >
+              📦 КАК ЭТО РАБОТАЕТ?
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              onClick={() => router.push('/questions')}
+            >
+              ❓ ЧАСТЫЕ ВОПРОСЫ
+            </Button>
+
           </div>
           <div className="mt-6 text-lg text-slate-700 w-full font-semibold">
             <p>🔐 Безопасно: договор и выезд с курьером</p>

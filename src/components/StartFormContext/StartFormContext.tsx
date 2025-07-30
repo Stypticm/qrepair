@@ -13,7 +13,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [telegramId, setTelegramId] = useState<string | null>(null);
     const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
 
-    const [brandname, setBrand] = useState<string | null>(null);
+    const [brandname, setBrand] = useState<string | null>('Apple iPhone 11');
     const [modelname, setModel] = useState<string>('');
     const [brandModelText, setBrandModelText] = useState<string>('');
     const [crash, setCrash] = useState<string[]>([]);
