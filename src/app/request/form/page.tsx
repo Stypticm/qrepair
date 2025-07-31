@@ -7,6 +7,7 @@ import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -19,9 +20,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 const BrandPage = () => {
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
   const {
     telegramId,
     brandname,
@@ -104,8 +107,8 @@ const BrandPage = () => {
                 alt="Видео телефона"
                 width={150}
                 height={150}
-                className="h-full w-full object-cover rounded-lg"
-                onClick={() => alert('В разработке')}
+                className="h-full w-full object-cover rounded-lg blur-xs"
+                onClick={() => setIsOpen(true)}
               />
             </section>
           </div>
@@ -133,6 +136,16 @@ const BrandPage = () => {
         <section className="mt-2">
           <Button className="w-full bg-green-700 text-2xl font-bold text-black ">Оценить состояние</Button>
         </section>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="max-w-[90%] max-h-[90%] p-4 flex flex-col items-center">
+            <p className="text-lg text-black font-bold mb-2">Заблерено же, зачем нажал</p>
+            <img
+              src="https://xelene.me/telegram.gif"
+              className="w-16 h-16 rounded-full"
+              alt="User photo"
+            />
+          </DialogContent>
+        </Dialog>
         {/* <FooterButton nextPath="/repair/crash" isNextDisabled={isValid} onNext={handleNext} /> */}
       </main>
     </Page>

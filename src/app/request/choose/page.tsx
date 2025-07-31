@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const ChoosePage = () => {
   const router = useRouter();
   const { telegramId, username } = useStartForm();
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleStart = async () => {
     setLoading(true);
@@ -46,10 +48,21 @@ const ChoosePage = () => {
         <Button
           variant="outline"
           className="w-full bg-background text-black uppercase border-3 !border-slate-700 h-full py-8 rounded-xl blur-xs"
+          onClick={() => setIsOpen(true)}
         >
           <span className='text-2xl font-bold disabled'>Оценка с помощью ИИ</span>
         </Button>
       </section>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-[90%] max-h-[90%] p-4 flex flex-col items-center">
+          <p className="text-lg text-black font-bold mb-2">Не работает же, очевидно</p>
+          <img
+            src="https://xelene.me/telegram.gif"
+            className="w-16 h-16 rounded-full"
+            alt="User photo"
+          />
+        </DialogContent>
+      </Dialog>
     </Page>
   );
 };
