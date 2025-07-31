@@ -27,7 +27,7 @@ const questions = [
 const QuestionsPage = () => {
     return (
         <Page back={true}>
-            <div className="flex flex-col items-center justify-start w-screen h-screen p-4">
+            <div className="flex flex-col items-center justify-start w-[100dvw] h-[100dvh] p-4">
                 <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">❓Частые вопросы</h2>
                 <section className='flex flex-col gap-2'>
                     {

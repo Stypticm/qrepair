@@ -36,7 +36,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <I18nProvider>
           <Root>
             <StartFormProvider>
-              <main className="flex-1 w-full max-w-[800px] mx-auto md:max-h-[600px] md:mx-auto md:my-4">
+              <main className="flex-1 w-full max-w-full md:max-w-[800px] min-h-0 overflow-auto md:mx-auto md:my-4 md:max-h-[600px]">
                 {children}
               </main>
             </StartFormProvider>

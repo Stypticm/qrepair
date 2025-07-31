@@ -61,7 +61,7 @@ const BrandPage = () => {
               Выбор модели
             </Label>
             <Select defaultValue="Apple iPhone 11" onValueChange={setBrand}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full !border-slate-700 border-3">
                 <SelectValue placeholder="Выберите модель" />
               </SelectTrigger>
               <SelectContent>
@@ -78,11 +78,11 @@ const BrandPage = () => {
               Состояние
             </Label>
             <div className="flex items-center gap-3">
-              <Checkbox id="display" />
+              <Checkbox id="display" className='flex justify-center items-center !border-slate-700 border-3' />
               <Label htmlFor="terms" className="text-black text-xl font-bold" >Дисплей битый, но работает</Label>
             </div>
             <div className="flex items-center gap-3">
-              <Checkbox id="body" />
+              <Checkbox id="body" className='flex justify-center items-center !border-slate-700 border-3' />
               <Label htmlFor="terms" className="text-black text-xl font-bold">Корпус целый</Label>
             </div>
           </div>
@@ -105,7 +105,7 @@ const BrandPage = () => {
                 width={150}
                 height={150}
                 className="h-full w-full object-cover rounded-lg"
-                onClick={() => {}}
+                onClick={() => alert('В разработке')}
               />
             </section>
           </div>
@@ -126,10 +126,13 @@ const BrandPage = () => {
                 }
               }}
               placeholder="Ваш комментарий"
+              className='!border-slate-700 border-3'
             />
           </div>
         </section>
-        <Button className="w-full bg-green-700 text-2xl font-bold text-black">Оценить состояние</Button>
+        <section className="mt-2">
+          <Button className="w-full bg-green-700 text-2xl font-bold text-black ">Оценить состояние</Button>
+        </section>
         {/* <FooterButton nextPath="/repair/crash" isNextDisabled={isValid} onNext={handleNext} /> */}
       </main>
     </Page>
