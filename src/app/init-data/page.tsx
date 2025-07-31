@@ -2,6 +2,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import {
   initDataRaw as _initDataRaw,
   initDataState as _initDataState,
@@ -9,12 +10,12 @@ import {
   useSignal,
 } from '@telegram-apps/sdk-react';
 import { List, Placeholder } from '@telegram-apps/telegram-ui';
-
 import {
   DisplayData,
   type DisplayDataRow,
 } from '@/components/DisplayData/DisplayData';
 import { Page } from '@/components/Page';
+
 
 function getUserRows(user: User): DisplayDataRow[] {
   return Object.entries(user).map(([title, value]) => ({ title, value }));
@@ -72,10 +73,12 @@ export default function InitDataPage() {
           header="Oops, something went wrong"
           description="Application was launched with missing init data"
         >
-          <img
-            alt="Telegram sticker"
-            src="https://xelene.me/telegram.gif"
-            style={{ display: 'block', width: '144px', height: '144px' }}
+          <Image
+            src="/banan.gif"
+            alt="Banan"
+            width={400}
+            height={300}
+            className="w-16 h-16 rounded-full"
           />
         </Placeholder>
       </Page>
@@ -95,7 +98,7 @@ export default function InitDataPage() {
         }
         {
           chatRows && <DisplayData header={'Chat'} rows={chatRows} />
-          }
+        }
       </List>
     </Page>
   );

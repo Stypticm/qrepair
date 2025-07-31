@@ -3,6 +3,7 @@
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { RepairRequest } from '@/core/lib/interfaces';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 const ProfilePage = () => {
     const { telegramId, username } = useStartForm();
@@ -41,10 +42,12 @@ const ProfilePage = () => {
             <h1>Profile</h1>
             <p>Telegram ID: {telegramId}</p>
             <p>Username: {username}</p>
-            <img
-                alt="Telegram sticker"
-                src="https://xelene.me/telegram.gif"
-                style={{ display: 'block', width: '144px', height: '144px' }}
+            <Image
+                src="/banan.gif"
+                alt="Banan"
+                width={400}
+                height={300}
+                className="w-16 h-16 rounded-full"
             />
             <section>
                 <h2>Статус ваших заявок: </h2>

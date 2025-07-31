@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 const ChoosePage = () => {
   const router = useRouter();
@@ -54,12 +54,14 @@ const ChoosePage = () => {
         </Button>
       </section>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-[90%] max-h-[90%] p-4 flex flex-col items-center">
-          <p className="text-lg text-black font-bold mb-2">Не работает же, очевидно</p>
-          <img
-            src="https://xelene.me/telegram.gif"
+        <DialogContent className="max-w-[90%] max-h-[90%] p-4 flex flex-col items-center" aria-describedby={undefined}>
+          <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>
+          <Image
+            src="/banan.gif"
+            alt="Banan"
+            width={400}
+            height={300}
             className="w-16 h-16 rounded-full"
-            alt="User photo"
           />
         </DialogContent>
       </Dialog>

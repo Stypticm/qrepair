@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { useStartForm } from '../StartFormContext/StartFormContext';
+import Image from 'next/image';
 
 const Header = () => {
     const { telegramId, username, userPhotoUrl } = useStartForm();
@@ -40,10 +41,12 @@ const Header = () => {
                                 alt="User photo"
                             />
                         ) : (
-                            <img
-                                src="https://xelene.me/telegram.gif"
-                                className="w-12 h-12 rounded-full"
-                                alt="User photo"
+                            <Image
+                                src="/banan.gif"
+                                alt="Banan"
+                                width={400}
+                                height={300}
+                                className="w-16 h-16 rounded-full"
                             />
                         )
                     }
