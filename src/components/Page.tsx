@@ -27,5 +27,5 @@ export function Page({ children, back = true }: PropsWithChildren<{
     });
   }, [router]);
 
-  return <main className='w-full h-full'>{children}</main>;
+  return <main className='w-full h-screen'>{children}</main>;
 }

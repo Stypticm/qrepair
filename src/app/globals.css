@@ -125,3 +125,16 @@ body {
   border-color: var(--border);
   outline-color: var(--ring);
 }
+
+@keyframes slideUpFull {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0%);
+  }
+}
+
+.animate-slideUpFull {
+  animation: slideUpFull 0.8s ease-out forwards;
+}

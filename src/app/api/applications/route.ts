@@ -4,8 +4,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const applications =
-      await prisma.repairRequest.findMany()
+    const applications = await prisma.skupka.findMany()
     return NextResponse.json(applications)
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 })
@@ -24,10 +23,10 @@ export async function PATCH(req: Request) {
       )
     }
 
-    const updated = await prisma.repairRequest.updateMany({
+    const updated = await prisma.skupka.updateMany({
       where: {
         telegramId,
-        status: 'submitted',
+        status: 'accepted',
       },
       data: {
         status: 'in_progress',

@@ -1,13 +1,13 @@
 'use client'
 
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { RepairRequest } from '@/core/lib/interfaces';
+import { SkupkaRequest } from '@/core/lib/interfaces';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 const ProfilePage = () => {
     const { telegramId, username } = useStartForm();
-    const [application, setApplication] = useState<RepairRequest[]>([])
+    const [application, setApplication] = useState<SkupkaRequest[]>([])
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -51,7 +51,7 @@ const ProfilePage = () => {
             />
             <section>
                 <h2>Статус ваших заявок: </h2>
-                {
+                {/* {
                     application.map((item) => (
                         <section key={item.id} className='flex flex-col'>
                             <h3>{item.id}</h3>
@@ -63,7 +63,7 @@ const ProfilePage = () => {
                             }</p>
                         </section>
                     ))
-                }
+                } */}
             </section>
         </section>
     )

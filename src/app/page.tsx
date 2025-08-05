@@ -14,13 +14,11 @@ import MainButtons from '@/components/MainButtons/MainButtons';
 import Footer from '@/components/Footer/Footer';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
-import { repairSteps } from '@/core/lib/constants';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const t = useTranslations('i18n');
-  const { telegramId, setBrand, setModel, setBrandModelText, setCrash, setCrashDescription, setPhotoUrls } = useStartForm();
-  const [path, setPath] = useState('/repair/choose');
+  const { telegramId, setModel, setPhotoUrls } = useStartForm();
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
@@ -54,39 +52,28 @@ export default function Home() {
     //   }
     // };
 
-    const fetchStep = async () => {
-      try {
-        const res = await fetch(`/api/step?telegramId=${telegramId}`)
-        const data = await res.json()
+    // const fetchStep = async () => {
+    //   try {
+    //     const res = await fetch(`/api/step?telegramId=${telegramId}`)
+    //     const data = await res.json()
 
-        if (data?.existing) {
-          const req = data.existing
-
-          setBrand(req.brandname ?? null)
-          setModel(req.modelname ?? '')
-          setBrandModelText(req.brandModelText ?? '')
-          setCrash(req.crash ? req.crash.split(',').map((c: string) => c.trim()) : [])
-          setCrashDescription(req.crashDescription ?? '')
-          setPhotoUrls(req.photoUrls ?? [])
-
-          const matchedStep = repairSteps.find((s) => s.currentStep === req.currentStep)
-          if (matchedStep) {
-            setPath(matchedStep.path)
-            return
-          }
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    }
+    //     if (data?.existing) {
+    //       const req = data.existing
+    //       setModel(req.modelname ?? '')
+    //       setPhotoUrls(req.photoUrls ?? [])
+    //     }
+    //   } catch (e) {
+    //     console.error(e)
+    //   }
+    // }
 
     // sendStartCommand()
-    fetchStep()
+    // fetchStep()
   }, [telegramId])
 
   return (
     <Page back={false}>
-      <div className="flex flex-col items-center justify-start w-screen h-screen p-4">
+      <div className="flex flex-col items-center justify-start p-4">
         <div className="w-full">
           <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">
             💰 ВЫКУП СМАРТФОНА
@@ -113,12 +100,7 @@ export default function Home() {
             <Button
               variant="outline"
               className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
-            >
-              🕵️ СТАТУС ЗАЯВКИ
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              onClick={() => router.push('/my-devices')}
             >
               📋 МОИ УСТРОЙСТВА
             </Button>

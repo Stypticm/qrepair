@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const draft = await prisma.repairRequest.findFirst({
+    const draft = await prisma.skupka.findFirst({
       where: {
         telegramId,
         status: 'draft',

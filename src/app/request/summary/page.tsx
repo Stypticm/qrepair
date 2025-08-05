@@ -2,14 +2,13 @@
 
 import FooterButton from '@/components/FooterButton/FooterButton';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { crashOptions } from '@/core/lib/constants';
-import { RepairRequest } from '@/core/lib/interfaces';
+import { SkupkaRequest } from '@/core/lib/interfaces';
 import { List } from '@telegram-apps/telegram-ui';
 import React, { useEffect, useState } from 'react';
 
 const SummaryPage = () => {
   const { telegramId } = useStartForm();
-  const [data, setData] = useState<RepairRequest | null>(null);
+  const [data, setData] = useState<SkupkaRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [webhookSecret, setWebhookSecret] = useState<string>('');
 
@@ -18,7 +17,7 @@ const SummaryPage = () => {
       if (!telegramId) return;
 
       try {
-        const res = await fetch(`/api/repair/summary?telegramId=${telegramId}`);
+        const res = await fetch(`/api/request/summary?telegramId=${telegramId}`);
         if (res.ok) {
           const json = await res.json();
           console.log(json);
@@ -52,7 +51,7 @@ const SummaryPage = () => {
     if (!telegramId) return;
 
     try {
-      const submitResponse = await fetch('/api/repair/summary', {
+      const submitResponse = await fetch('/api/request/summary', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ telegramId }),
@@ -92,7 +91,7 @@ const SummaryPage = () => {
       <main className="p-6 flex flex-col gap-6">
         <h2 className="text-2xl font-bold text-center">Ваша заявка</h2>
 
-        <section>
+        {/* <section>
 
           <strong>Бренд:</strong>{' '}
           {data.brandname && data.modelname
@@ -126,8 +125,7 @@ const SummaryPage = () => {
               return found ? found.label : value;
             })
             .join(', ')}
-        </section>
-
+        </section> */}
 
         <FooterButton onNext={handleNext} nextPath="/" isNextDisabled={false} />
       </main>

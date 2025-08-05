@@ -15,10 +15,9 @@ export async function GET(
   }
 
   try {
-    const application =
-      await prisma.repairRequest.findUnique({
-        where: { id },
-      })
+    const application = await prisma.skupka.findUnique({
+      where: { id },
+    })
 
     if (!application) {
       return NextResponse.json(

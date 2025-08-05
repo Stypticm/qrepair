@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { crashOptions } from '@/core/lib/constants'
-import { RepairRequest } from '@/core/lib/interfaces'
+import { ConditionStatus, SkupkaRequest } from '@/core/lib/interfaces'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -12,7 +11,7 @@ import Link from 'next/link'
 const RequestById = () => {
     const params = useParams()
     const id = Array.isArray(params.id) ? params.id[0] : params.id
-    const [application, setApplication] = useState<RepairRequest | null>(null)
+    const [application, setApplication] = useState<SkupkaRequest | null>(null)
     const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
@@ -73,6 +72,21 @@ const RequestById = () => {
         }
     };
 
+    const formatCondition = (condition: ConditionStatus[] | string | undefined) => {
+        if (!condition) return 'Состояние: Не указано';
+        const condArray = Array.isArray(condition) ? condition : [condition]; // Преобразуем строку в массив, если нужно
+
+        const displayDamaged = condArray.includes('display_with_damage');
+        const bodyDamaged = condArray.includes('body_with_damage');
+        const displayWhole = condArray.includes('display') && !displayDamaged;
+        const bodyWhole = condArray.includes('body') && !bodyDamaged;
+
+        const displayText = `Дисплей битый, но работает - ${displayDamaged ? 'Да' : 'Нет'}`;
+        const bodyText = `Корпус целый - ${bodyWhole ? 'Да' : 'Нет'}`;
+
+        return `Состояние: ${displayText}, ${bodyText}`;
+    };
+
     return (
         <div className="max-w-xl mx-auto mt-10 p-2">
             <Card className="mt-10 bg-slate-400">
@@ -81,33 +95,30 @@ const RequestById = () => {
                 </CardHeader>
                 <CardContent className="max-h-80 overflow-y-auto flex flex-col">
                     <CardDescription>
-                        <p className="text-slate-50">Телефон: {application?.brandname && application.modelname ? `${application.brandname} ${application.modelname}` : application?.brandModelText}</p>
-                        <p className="text-slate-50">
-                            Проблема: {(Array.isArray(application?.crash) ? application.crash : [application?.crash])
-                                .map((value) => {
-                                    const found = crashOptions.find((option) => option.value === value);
-                                    return found ? found.label : value;
-                                })
-                                .join(', ')}
-                        </p>
+                        <p className="text-slate-50">Модель телефона: {application?.modelname}`</p>
+                        <p className="text-slate-50">{formatCondition(application?.condition)}</p>
                         <p className="text-slate-50">
                             Статус:{' '}
                             <Badge className='bg-emerald-300'>
-                                {application?.status === 'draft'
-                                    ? 'Черновик'
-                                    : application?.status === 'submitted'
-                                        ? 'Ожидает обработки'
-                                        : application?.status === 'in_progress'
-                                            ? 'В обработке'
-                                            : application?.status === 'done'
-                                                ? 'Выполнена'
-                                                : 'Завершена'}
+                                {
+                                    application?.status === 'draft'
+                                        ? 'Черновик'
+                                        : application?.status === 'accepted'
+                                            ? 'Принята'
+                                            : application?.status === 'in_progress'
+                                                ? 'На проверке'
+                                                : application?.status === 'on_the_way'
+                                                    ? 'В пути'
+                                                    : application?.status === 'paid'
+                                                        ? 'Оплачено'
+                                                        : 'Выполнена'
+                                }
                             </Badge>
                         </p>
                     </CardDescription>
-                    <CardAction className="self-center pt-2">
+                    <CardAction className="self-center pt-2 gap-2">
                         {
-                            application?.status === 'submitted' && <Button onClick={handleTakeRequest}>Принять заявку</Button>
+                            application?.status === 'accepted' && <Button onClick={handleTakeRequest}>Принять заявку</Button>
                         }
                         {
                             application?.status === 'in_progress' && <Button onClick={handleRequestDone}>Выполнена</Button>

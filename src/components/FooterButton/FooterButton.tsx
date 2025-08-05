@@ -1,54 +1,51 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { repairSteps } from '@/core/lib/constants';
 import { usePathname, useRouter } from 'next/navigation';
 
 const FooterButton = ({
   nextPath,
   isNextDisabled,
   onNext,
+  onClick,
+  preventRedirect = false
 }: {
-  nextPath: string;
+  nextPath?: string;
   isNextDisabled: boolean;
   onNext?: () => Promise<void>;
+  onClick?: () => void;
+  preventRedirect?: boolean;
 }) => {
   const path = usePathname();
   const router = useRouter();
 
   const handleClick = async () => {
     if (onNext) await onNext();
-    router.push(nextPath);
+    if (!preventRedirect) {
+      router.push(nextPath || path);
+    }
   };
 
-  let step = repairSteps.findIndex((value) => path.startsWith(value.path));
-  if (step === -1) step = 0;
-
   return (
-    <section className="flex flex-row justify-between p-4">
+    <div className="flex flex-row justify-center p-2">
       {
-        path === '/repair/brand' ? (
-          <Button variant={'destructive'} onClick={() => router.push('/repair/choose')}>
-            Начать заново
-          </Button>
-        ) : (
-          <Button variant={'destructive'} onClick={() => router.push(repairSteps[step - 1].path)}>
-            Назад
+        path === '/request/form' && (
+          <Button className="bg-green-700 w-full" onClick={handleClick} disabled={!isNextDisabled}>
+            Оценить телефон
           </Button>
         )
       }
       {
-        path !== '/repair/summary' ? (
-          <Button className="bg-green-700" onClick={handleClick} disabled={!isNextDisabled}>
-            Далее
-          </Button>
-        ) : (
-          <Button className="bg-green-700" onClick={handleClick}>
-            Отправить заявку
+        path === '/request/photos' && (
+          <Button
+            className="bg-yellow-400 w-full text-black font-extrabold !text-xl !border-3 !border-black"
+            onClick={handleClick}
+            disabled={!isNextDisabled}>
+            Отправить фото
           </Button>
         )
       }
-    </section>
+    </div>
   );
 };
 

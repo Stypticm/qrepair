@@ -1,22 +1,20 @@
 export type FormState = {
   username: string | null
-  brandname: string | null
-  modelname: string
-  brandModelText: string
-  setBrand: (value: string | null) => void
-  setModel: (value: string) => void
-  setBrandModelText: (value: string) => void
   setUsername: (value: string | null) => void
 
-  // crash info
-  crash: string[]
-  crashDescription: string
-  setCrash: (value: string[]) => void
-  setCrashDescription: (value: string) => void
+  modelname: string
+  setModel: (value: string) => void
+
+  condition: ConditionStatus[]
+  setCondition: (value: ConditionStatus[]) => void
 
   // uploaded photo
-  photoUrls: string[]
-  setPhotoUrls: (files: string[]) => void
+  photoUrls: (string | null)[]
+  setPhotoUrls: (files: (string | null)[]) => void
+
+  // uploaded video
+  videoUrl: string | null
+  setVideoUrl: (url: string | null) => void
 
   // telegram id
   telegramId: string | null
@@ -26,18 +24,37 @@ export type FormState = {
   userPhotoUrl: string | null
   setUserPhotoUrl: (url: string | null) => void
 
+  // comment
+  comment: string
+  setComment: (value: string) => void
+
+  // contract url
+  contractUrl: string | null
+  setContractUrl: (url: string | null) => void
+
+  // imei
+  imei: string | null
+  setImei: (imei: string | null) => void
+
   onNext?: () => Promise<void>
   setOnNext: (cb?: () => Promise<void>) => void
 }
 
-export interface RepairRequest {
+export interface SkupkaRequest {
   id: number
   telegramId: string | null
-  brandname?: string | null
   modelname?: string
-  brandModelText?: string
-  crash?: string[]
-  crashDescription?: string
+  condition?: ConditionStatus[]
   photoUrls?: string[]
+  videoUrl?: string
   status?: string
+  comment?: string
+  imei?: string
+  contractUrl?: string
 }
+
+export type ConditionStatus =
+  | 'display'
+  | 'display_with_damage'
+  | 'body'
+  | 'body_with_damage'

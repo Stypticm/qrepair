@@ -13,12 +13,10 @@ export async function GET(req: Request) {
   }
 
   try {
-    const application = await prisma.repairRequest.findMany(
-      {
-        where: { telegramId },
-        orderBy: { createdAt: 'desc' },
-      }
-    )
+    const application = await prisma.skupka.findMany({
+      where: { telegramId },
+      orderBy: { createdAt: 'desc' },
+    })
 
     if (!application) {
       return NextResponse.json(

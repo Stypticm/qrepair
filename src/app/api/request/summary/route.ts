@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     )
   }
 
-  const draft = await prisma.repairRequest.findFirst({
+  const draft = await prisma.skupka.findFirst({
     where: { telegramId, status: 'draft' },
   })
 
@@ -40,7 +40,7 @@ export async function PATCH(req: Request) {
     )
   }
 
-  const draft = await prisma.repairRequest.findFirst({
+  const draft = await prisma.skupka.findFirst({
     where: { telegramId, status: 'draft' },
   })
 
@@ -51,9 +51,9 @@ export async function PATCH(req: Request) {
     )
   }
 
-  const updated = await prisma.repairRequest.update({
+  const updated = await prisma.skupka.update({
     where: { id: draft.id, status: 'draft' },
-    data: { status: 'submitted', currentStep: 3 },
+    data: { status: 'accepted' },
   })
 
   return NextResponse.json({ success: true, updated })

@@ -26,29 +26,31 @@ export async function POST(req: Request) {
       const data = callbackQuery.data
 
       if (data === 'check_status') {
-        const repairRequest =
-          await prisma.repairRequest.findFirst({
+        const skupkaRequest = await prisma.skupka.findFirst(
+          {
             where: {
               telegramId,
               status: {
                 in: [
                   'draft',
-                  'submitted',
+                  'accepted',
                   'in_progress',
-                  'completed',
+                  'paid',
+                  'on_the_way',
                 ],
               },
             },
             orderBy: {
               createdAt: 'desc',
             },
-          })
+          }
+        )
 
-        const responseText = repairRequest
+        const responseText = skupkaRequest
           ? `Статус вашей заявки: *${
-              repairRequest.status === 'submitted'
+              skupkaRequest.status === 'accepted'
                 ? 'Ожидает обработки'
-                : repairRequest.status === 'in_progress'
+                : skupkaRequest.status === 'in_progress'
                 ? 'В работе'
                 : 'Завершена'
             }*`
@@ -114,29 +116,29 @@ export async function POST(req: Request) {
         }
       )
     } else if (text === '/status') {
-      const repairRequest =
-        await prisma.repairRequest.findFirst({
-          where: {
-            telegramId,
-            status: {
-              in: [
-                'draft',
-                'submitted',
-                'in_progress',
-                'completed',
-              ],
-            },
+      const skupkaRequest = await prisma.skupka.findFirst({
+        where: {
+          telegramId,
+          status: {
+            in: [
+              'draft',
+              'accepted',
+              'in_progress',
+              'paid',
+              'on_the_way',
+            ],
           },
-          orderBy: { createdAt: 'desc' },
-        })
+        },
+        orderBy: { createdAt: 'desc' },
+      })
 
-      const responseText = repairRequest
+      const responseText = skupkaRequest
         ? `Статус вашей заявки: *${
-            repairRequest.status === 'draft'
+            skupkaRequest.status === 'draft'
               ? 'Черновик'
-              : repairRequest.status === 'submitted'
+              : skupkaRequest.status === 'accepted'
               ? 'Ожидает обработки'
-              : repairRequest.status === 'in_progress'
+              : skupkaRequest.status === 'in_progress'
               ? 'В работе'
               : 'Завершена'
           }*`

@@ -18,7 +18,7 @@ export async function PATCH(
 
   try {
     // Находим заявку по id
-    const request = await prisma.repairRequest.findUnique({
+    const request = await prisma.skupka.findUnique({
       where: { id },
     })
 
@@ -33,11 +33,10 @@ export async function PATCH(
     }
 
     // Обновляем статус
-    const updatedRequest =
-      await prisma.repairRequest.update({
-        where: { id },
-        data: { status: 'completed' },
-      })
+    const updatedRequest = await prisma.skupka.update({
+      where: { id },
+      data: { status: 'paid' },
+    })
 
     console.log('Updated request:', updatedRequest)
 

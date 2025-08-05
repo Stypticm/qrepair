@@ -1,14 +1,42 @@
 import prisma from '@/core/lib/prisma'
 import { NextResponse } from 'next/server'
 
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url)
+  const telegramId = searchParams.get('telegramId')
+
+  if (!telegramId) {
+    return NextResponse.json(
+      { error: 'Missing telegramId' },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const draft = await prisma.skupka.findFirst({
+      where: { telegramId, status: 'draft' },
+    })
+
+    if (!draft) {
+      return NextResponse.json(
+        { error: 'Repair request not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ draft })
+  } catch (error) {
+    console.error('Error fetching draft:', error)
+    return NextResponse.json(
+      { error: 'Server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function PATCH(req: Request) {
   const body = await req.json()
-  const {
-    telegramId,
-    brandname,
-    modelname,
-    brandModelText,
-  } = body
+  const { telegramId, modelname, condition } = body
 
   if (!telegramId) {
     return NextResponse.json(
@@ -19,15 +47,8 @@ export async function PATCH(req: Request) {
 
   const dataToUpdate: Record<string, unknown> = {}
 
-  if (brandModelText?.trim()) {
-    dataToUpdate.brandModelText = brandModelText.trim()
-
-    dataToUpdate.brandname = null
-    dataToUpdate.modelname = null
-  } else if (brandname && modelname?.trim()) {
-    dataToUpdate.brandname = brandname
-    dataToUpdate.modelname = modelname.trim()
-    dataToUpdate.brandModelText = null
+  if (modelname) {
+    dataToUpdate.modelname = modelname
   } else {
     return NextResponse.json(
       { error: 'Insufficient data to update brand info' },
@@ -35,8 +56,12 @@ export async function PATCH(req: Request) {
     )
   }
 
+  if (condition && condition.length > 0) {
+    dataToUpdate.condition = condition
+  }
+
   try {
-    const draft = await prisma.repairRequest.findFirst({
+    const draft = await prisma.skupka.findFirst({
       where: { telegramId, status: 'draft' },
     })
 
@@ -47,11 +72,11 @@ export async function PATCH(req: Request) {
       )
     }
 
-    const updated = await prisma.repairRequest.update({
+    const updated = await prisma.skupka.update({
       where: { id: draft.id },
       data: {
         ...dataToUpdate,
-        currentStep: 1,
+        status: 'accepted',
       },
     })
     return NextResponse.json({ succes: true, updated })

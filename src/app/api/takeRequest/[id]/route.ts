@@ -18,11 +18,11 @@ export async function PATCH(
 
   try {
     // Находим заявку по id
-    const request = await prisma.repairRequest.findUnique({
+    const request = await prisma.skupka.findUnique({
       where: { id },
     })
 
-    if (!request || request.status !== 'submitted') {
+    if (!request || request.status !== 'accepted') {
       console.warn(
         `No submitted request found for id: ${id}`
       )
@@ -33,11 +33,10 @@ export async function PATCH(
     }
 
     // Обновляем статус
-    const updatedRequest =
-      await prisma.repairRequest.update({
-        where: { id },
-        data: { status: 'in_progress' },
-      })
+    const updatedRequest = await prisma.skupka.update({
+      where: { id },
+      data: { status: 'in_progress' },
+    })
 
     console.log('Updated request:', updatedRequest)
 

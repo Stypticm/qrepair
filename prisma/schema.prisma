@@ -8,25 +8,33 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model RepairRequest {
-  id             String        @id @default(cuid())
-  telegramId     String
-  username       String
-  brandname      String?
-  modelname      String?
-  brandModelText String?
-  crash          String[]
-  photoUrls      String[]
-  currentStep    Int           @default(0)
-  status         RequestStatus @default(draft)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+model Skupka {
+  id          String            @id @default(cuid())
+  telegramId  String
+  username    String
+  modelname   String?
+  condition   ConditionStatus[] @default([display, body])
+  photoUrls   String[]
+  videoUrl    String?
+  status      SkupkaStatus      @default(draft)
+  comment     String?
+  imei        String?
+  contractUrl String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 }
 
-enum RequestStatus {
+enum SkupkaStatus {
   draft
-  submitted
+  on_the_way
   in_progress
-  completed
-  cancelled
+  accepted
+  paid
+}
+
+enum ConditionStatus {
+  display
+  display_with_damage
+  body
+  body_with_damage
 }

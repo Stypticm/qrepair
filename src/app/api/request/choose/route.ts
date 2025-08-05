@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     )
   }
 
-  const existing = await prisma.repairRequest.findFirst({
+  const existing = await prisma.skupka.findFirst({
     where: { telegramId, status: 'draft' },
   })
 
@@ -21,12 +21,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ id: existing.id })
   }
 
-  const created = await prisma.repairRequest.create({
+  const created = await prisma.skupka.create({
     data: {
       telegramId,
       username,
       status: 'draft',
-      currentStep: 0,
     },
   })
 

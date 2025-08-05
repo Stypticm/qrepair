@@ -3,44 +3,55 @@ export const dynamic = 'force-dynamic';
 
 import FooterButton from '@/components/FooterButton/FooterButton';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { deleteImageFromSupabase } from '@/core/lib/deleteImageFromSupabase';
 import { uploadImageToSupabase } from '@/core/lib/uploadImageToSupabase';
-import { List } from '@telegram-apps/telegram-ui';
+import { Page } from '@/components/Page';
 import { X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import Image from 'next/image';
 
 const PhotosPage = () => {
-  const { telegramId } = useStartForm();
+  const { telegramId, photoUrls, setPhotoUrls } = useStartForm();
 
-  const [picture1, setPicture1] = useState<string | null>(null);
-  const [picture2, setPicture2] = useState<string | null>(null);
+  const initialPhotos = photoUrls || new Array(6).fill(null);
+  const [photos, setPhotos] = useState<(string | null)[]>(initialPhotos);
+
   const [uploading, setUploading] = useState(false);
-  const [noPhotos, setNoPhotos] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>(new Array(6).fill(null));
 
-  const inputRef1 = useRef<HTMLInputElement>(null);
-  const inputRef2 = useRef<HTMLInputElement>(null);
+  const photoLabels = [
+    {
+      id: 0,
+      text: 'спереди',
+      pic: '/front.png'
+    },
+    {
+      id: 1,
+      text: 'сзади',
+      pic: '/back.png'
+    },
+    {
+      id: 2,
+      text: 'сбоку',
+      pic: '/right_side.png'
+    },
+  ];
 
-  const isNextDisabled = !!picture1 || !!picture2 || noPhotos;
+  const isNextDisabled = photos.filter((photo) => photo !== null).length >= 3;
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, num: number) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0] || null;
-    if (!file) return;
-
-    if (num === 1 && picture1) return;
-    if (num === 2 && picture2) return;
-
+    if (!file || photos[index]) return;
     setUploading(true);
+
     try {
       const url = await uploadImageToSupabase(file);
-
-      if (num === 1) {
-        setPicture1(url);
-      } else if (num === 2) {
-        setPicture2(url);
-      }
+      const newPhotos = [...photos];
+      newPhotos[index] = url;
+      setPhotos(newPhotos);
+      setPhotoUrls(newPhotos);
     } catch (error) {
       console.error(error);
     } finally {
@@ -49,16 +60,17 @@ const PhotosPage = () => {
     }
   };
 
-  const deleteImage = async (num: number) => {
+
+  const deleteImage = async (index: number) => {
+    if (!photoUrls[index]) return;
+
     setUploading(true);
     try {
-      if (num === 1) {
-        await deleteImageFromSupabase(picture1 as string);
-        setPicture1(null);
-      } else if (num === 2) {
-        await deleteImageFromSupabase(picture2 as string);
-        setPicture2(null);
-      }
+      await deleteImageFromSupabase(photoUrls[index]);
+      const newPhotos = [...photos];
+      newPhotos[index] = null;
+      setPhotos(newPhotos);
+      setPhotoUrls(newPhotos);
     } catch (error) {
       console.error(error);
     } finally {
@@ -67,86 +79,112 @@ const PhotosPage = () => {
   };
 
   const handleNext = async () => {
-    const payload = { telegramId, picture1, picture2, noPhotos };
-
-    await fetch('/api/repair/photos', {
+    const payload = { telegramId, photoUrls: photos };
+    const response = await fetch('/api/request/photos', {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+    const data = await response.json();
+    console.log('API response:', data);
   };
 
   return (
-    <List>
-      <main className="h-full flex flex-col justify-between">
-        <section className="flex flex-col gap-8">
-          <h2 className="text-slate-700 text-3xl font-bold text-center">
-            Добавьте если возможно фото поломки
-          </h2>
-          <div className="grid w-full max-w-sm items-center gap-3">
-            <Label htmlFor="picture">Фото 1</Label>
-            {picture1 ? (
-              <section className="flex flex-row justify-start relative p-4">
-                <img src={picture1} alt="Picture 1" className="max-h-12 rounded-sm" />
-                <X className="text-red-600 cursor-pointer" onClick={() => deleteImage(1)} />
-              </section>
-            ) : (
-              <Input
-                id="picture1"
-                type="file"
-                ref={inputRef1}
-                disabled={noPhotos}
-                onChange={(e) => handleFileChange(e, 1)}
-              />
-            )}
-          </div>
-          <div className="grid w-full max-w-sm items-center gap-3">
-            <Label htmlFor="picture">Фото 2</Label>
-            {picture2 ? (
-              <section className="flex flex-row justify-start relative p-4">
-                <img src={picture2} alt="Picture 2" className="max-h-12 rounded-sm" />
-                <X className="text-red-600 cursor-pointer" onClick={() => deleteImage(2)} />
-              </section>
-            ) : (
-              <Input
-                id="picture2"
-                type="file"
-                ref={inputRef2}
-                disabled={noPhotos}
-                onChange={(e) => handleFileChange(e, 2)}
-              />
-            )}
-          </div>
-          <div className="flex flex-row w-full max-w-sm items-center gap-3">
-            <Checkbox
-              id="noPhotos"
-              checked={noPhotos}
-              onCheckedChange={(checked) => {
-                setNoPhotos(!!checked);
-                if (checked) {
-                  setPicture1(null);
-                  setPicture2(null);
-                  if (inputRef1.current?.value) {
-                    inputRef1.current.value = '';
-                  }
-                  if (inputRef2.current?.value) {
-                    inputRef2.current.value = '';
-                  }
-                }
-              }}
-            />
-            <Label htmlFor="terms">Нет фото</Label>
-          </div>
-        </section>
-        <FooterButton
-          nextPath="/repair/summary"
-          isNextDisabled={isNextDisabled || uploading}
-          onNext={handleNext}
-        />
-      </main>
-    </List>
+    <Page back={true}>
+      <section className="h-full w-full flex flex-col gap-4">
+        <h2 className="text-3xl font-extrabold uppercase text-black flex justify-center items-center">
+          📷 загрузите фото
+        </h2>
+        <span className="text-slate-700 text-lg font-bold text-center border-3 !border-slate-700 p-2 rounded-md">
+          Загрузите минимум 3 фото: спереди, сзади и сбоку.
+        </span>
+        <div className="grid grid-cols-2 gap-4">
+          {photoLabels.slice(0, 2).map((item, index) => (
+            <div key={index} className="flex flex-col gap-2">
+              <div className="relative flex items-center justify-center">
+                {photoUrls[index] ? (
+                  <>
+                    <Image
+                      src={photoUrls[index]}
+                      alt={`${item.text} фото`}
+                      width={120}
+                      height={120}
+                      className="rounded-sm h-full w-full object-cover"
+                    />
+                    <X
+                      className="text-red-600 cursor-pointer absolute top-1 right-1"
+                      onClick={() => deleteImage(index)}
+                    />
+                  </>
+                ) : (
+                  <Input
+                    type="file"
+                    ref={el => { inputRefs.current[index] = el }}
+                    onChange={e => handleFileChange(e, index)}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                )}
+                {!photoUrls[index] && (
+                  <Image
+                    src={item.pic}
+                    alt={item.text}
+                    width={150}
+                    height={150}
+                    className="object-cover rounded-md cursor-pointer"
+                    onClick={() => inputRefs.current[index]?.click()}
+                  />
+                )}
+              </div>
+              <Label htmlFor={`photo-${index}`} className='text-black font-bold text-xl flex justify-center items-center'>{item.text}</Label>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-center w-full">
+          {photoLabels.slice(2).map((item, index) => (
+            <div key={index} className="flex flex-col gap-2">
+              <div className="relative flex items-center justify-center">
+                {photoUrls[index + 2] ? (
+                  <>
+                    <Image
+                      src={photoUrls[2] || ''}
+                      alt={`${item.text} фото`}
+                      width={120}
+                      height={120}
+                      className="rounded-md w-full h-full object-cover flex justify-center items-center"
+                    />
+                    <X
+                      className="text-red-600 cursor-pointer absolute top-1 right-1"
+                      onClick={() => deleteImage(index + 2)}
+                    />
+                  </>
+                ) : (
+                  <Input
+                    type="file"
+                    ref={el => { inputRefs.current[2] = el }}
+                    onChange={e => handleFileChange(e, 2)}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                )}
+                {!photoUrls[index + 2] && (
+                  <Image
+                    src={item.pic}
+                    alt={item.text}
+                    width={200}
+                    height={150}
+                    className="object-cover rounded-md w-full cursor-pointer"
+                    onClick={() => inputRefs.current[index + 2]?.click()}
+                  />
+                )}
+              </div>
+              <Label htmlFor={`photo-${index + 2}`} className='text-black font-bold text-xl flex justify-center items-center'>{item.text}</Label>
+            </div>
+          ))}
+        </div>
+          <FooterButton nextPath="/request/form" isNextDisabled={isNextDisabled} onNext={handleNext} />
+      </section>
+    </Page>
   );
 };
 

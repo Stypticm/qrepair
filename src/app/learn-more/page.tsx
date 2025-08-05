@@ -5,7 +5,7 @@ import React from 'react';
 const LearnMore = () => {
     return (
         <Page back={true}>
-            <div className="flex flex-col items-center justify-start w-screen h-screen p-4">
+            <div className="flex flex-col items-center justify-start w-full h-full p-4">
                 <h2 className="text-2xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">📦 как происходит выкуп</h2>
                 <Image
                     src="/instruction.png"
