@@ -48,11 +48,17 @@ export async function POST(req: Request) {
 
         const responseText = skupkaRequest
           ? `Статус вашей заявки: *${
-              skupkaRequest.status === 'accepted'
-                ? 'Ожидает обработки'
-                : skupkaRequest.status === 'in_progress'
-                ? 'В работе'
-                : 'Завершена'
+              skupkaRequest.status === 'draft'
+                ? 'Черновик'
+                : skupkaRequest?.status === 'accepted'
+                ? 'Принята'
+                : skupkaRequest?.status === 'in_progress'
+                ? 'На проверке'
+                : skupkaRequest?.status === 'on_the_way'
+                ? 'В пути'
+                : skupkaRequest?.status === 'paid'
+                ? 'Оплачено'
+                : 'Выполнена'
             }*`
           : 'У вас нет активных заявок.'
 
@@ -136,11 +142,15 @@ export async function POST(req: Request) {
         ? `Статус вашей заявки: *${
             skupkaRequest.status === 'draft'
               ? 'Черновик'
-              : skupkaRequest.status === 'accepted'
-              ? 'Ожидает обработки'
-              : skupkaRequest.status === 'in_progress'
-              ? 'В работе'
-              : 'Завершена'
+              : skupkaRequest?.status === 'accepted'
+              ? 'Принята'
+              : skupkaRequest?.status === 'in_progress'
+              ? 'На проверке'
+              : skupkaRequest?.status === 'on_the_way'
+              ? 'В пути'
+              : skupkaRequest?.status === 'paid'
+              ? 'Оплачено'
+              : 'Выполнена'
           }*`
         : 'У вас нет активных заявок.'
 
