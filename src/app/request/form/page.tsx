@@ -140,6 +140,13 @@ const BrandPage = () => {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      textareaRef.current?.blur();
+    }
+  };
+
   return (
     <Page back={true}>
       <section className="flex flex-col gap-2">
@@ -230,6 +237,7 @@ const BrandPage = () => {
               setComment(value);
             }}
             onFocus={handleTextareaFocus}
+            onKeyPress={handleKeyPress}
             placeholder="Ваш комментарий"
             className='!border-slate-700 border-3 text-black font-bold'
           />
