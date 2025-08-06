@@ -49,7 +49,6 @@ const BrandPage = () => {
     setPhotoUrls,
     setCondition
   } = useStartForm();
-  const [dialogComment, setDialogComment] = useState(comment || '');
   const [localCondition, setLocalCondition] = useState<ConditionStatus[]>(condition || ['display', 'body']);
   const [webhookSecret, setWebhookSecret] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -242,7 +241,7 @@ const BrandPage = () => {
             className="!border-slate-700 border-3 text-black font-bold h-24"
           />
           <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
-            <DialogContent className="p-4 flex flex-col items-center" aria-describedby='modal-description'>
+            <DialogContent className="p-4 flex flex-col items-center top-0 transform translate-y-0 fixed w-full max-w-md bg-white rounded-b-none" aria-describedby='modal-description'>
               <DialogTitle className="text-lg text-black font-bold mb-2">Введите комментарий</DialogTitle>
               <Textarea
                 ref={textareaRef}
