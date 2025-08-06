@@ -49,6 +49,7 @@ const BrandPage = () => {
     setPhotoUrls,
     setCondition
   } = useStartForm();
+  const [dialogComment, setDialogComment] = useState(comment || '');
   const [localCondition, setLocalCondition] = useState<ConditionStatus[]>(condition || ['display', 'body']);
   const [webhookSecret, setWebhookSecret] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -135,6 +136,10 @@ const BrandPage = () => {
       return newCondition
     })
   }
+
+  const handleCommentDialogOpen = () => {
+    setIsCommentDialogOpen(true);
+  };
 
   const handleCommentSave = (value: string) => {
     setComment(value);
@@ -225,30 +230,36 @@ const BrandPage = () => {
         </div>
 
         <div>
-          <Label htmlFor="photos_and_video" className="text-black text-2xl font-bold">
+          <Label htmlFor="comment" className="text-black text-2xl font-bold mb-2">
             Комментарии (Не обязательно)
           </Label>
+          <Textarea
+            ref={textareaRef}
+            value={comment || ''}
+            readOnly
+            onClick={handleCommentDialogOpen}
+            placeholder="Нажмите для ввода комментария"
+            className="!border-slate-700 border-3 text-black font-bold h-24"
+          />
           <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
-            <DialogContent className="p-4 flex flex-col items-center">
+            <DialogContent className="p-4 flex flex-col items-center" aria-describedby='modal-description'>
               <DialogTitle className="text-lg text-black font-bold mb-2">Введите комментарий</DialogTitle>
               <Textarea
                 ref={textareaRef}
-                value={comment}
+                value={comment || ''}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Ваш комментарий"
-                className="!border-slate-700 border-3 text-black font-bold"
+                className="!border-slate-700 border-3 text-black font-bold h-40"
               />
-              <DialogFooter className="mt-4 flex gap-2">
-                <Button onClick={() => handleCommentSave(comment)}>OK</Button>
+              <DialogFooter className="mt-4 flex flex-row gap-2">
+                <Button onClick={() => handleCommentSave(comment || '')}>OK</Button>
                 <Button variant="outline" onClick={handleCommentCancel}>Отмена</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </section>
-      <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true}
-        className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-11/12 max-w-md z-10"
-      />
+      <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true} />
       {showSuccess && (
         <SuccessPopup
           text="Ваш заявка принята"

@@ -8,15 +8,13 @@ const FooterButton = ({
   isNextDisabled,
   onNext,
   onClick,
-  preventRedirect = false,
-  className
+  preventRedirect = false
 }: {
   nextPath?: string;
   isNextDisabled: boolean;
   onNext?: () => Promise<void>;
   onClick?: () => void;
   preventRedirect?: boolean;
-  className?: string
 }) => {
   const path = usePathname();
   const router = useRouter();
@@ -29,7 +27,7 @@ const FooterButton = ({
   };
 
   return (
-    <div className={className}>
+    <div className="flex flex-row justify-center p-2">
       {
         path === '/request/form' && (
           <Button className="bg-green-700 w-full" onClick={handleClick} disabled={!isNextDisabled}>
