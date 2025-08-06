@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ConditionStatus } from '@/core/lib/interfaces';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const models = [
   { id: '1', name: 'Apple Iphone 13' },
@@ -49,6 +49,7 @@ const BrandPage = () => {
   } = useStartForm();
   const [localCondition, setLocalCondition] = useState<ConditionStatus[]>(condition || ['display', 'body']);
   const [webhookSecret, setWebhookSecret] = useState<string>('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const getData = async () => {
@@ -132,6 +133,12 @@ const BrandPage = () => {
       return newCondition
     })
   }
+
+  const handleTextareaFocus = () => {
+    if (textareaRef.current) {
+      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   return (
     <Page back={true}>
@@ -222,12 +229,15 @@ const BrandPage = () => {
               const value = e.target.value;
               setComment(value);
             }}
+            onFocus={handleTextareaFocus}
             placeholder="Ваш комментарий"
             className='!border-slate-700 border-3 text-black font-bold'
           />
         </div>
       </section>
-      <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true} />
+      <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true}
+        className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-11/12 max-w-md z-10"
+      />
       {showSuccess && (
         <SuccessPopup
           text="Ваш заявка принята"
