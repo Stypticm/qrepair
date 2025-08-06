@@ -6,8 +6,9 @@ import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { SuccessPopup } from '@/components/SuccessPopup/SuccessPopup';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -36,6 +37,7 @@ const BrandPage = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const {
     telegramId,
     modelname,
@@ -134,17 +136,13 @@ const BrandPage = () => {
     })
   }
 
-  const handleTextareaFocus = () => {
-    if (textareaRef.current) {
-      textareaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+  const handleCommentSave = (value: string) => {
+    setComment(value);
+    setIsCommentDialogOpen(false);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      textareaRef.current?.blur();
-    }
+  const handleCommentCancel = () => {
+    setIsCommentDialogOpen(false);
   };
 
   return (
@@ -230,17 +228,22 @@ const BrandPage = () => {
           <Label htmlFor="photos_and_video" className="text-black text-2xl font-bold">
             Комментарии (Не обязательно)
           </Label>
-          <Textarea
-            value={comment}
-            onChange={(e) => {
-              const value = e.target.value;
-              setComment(value);
-            }}
-            onFocus={handleTextareaFocus}
-            onKeyPress={handleKeyPress}
-            placeholder="Ваш комментарий"
-            className='!border-slate-700 border-3 text-black font-bold'
-          />
+          <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
+            <DialogContent className="p-4 flex flex-col items-center">
+              <DialogTitle className="text-lg text-black font-bold mb-2">Введите комментарий</DialogTitle>
+              <Textarea
+                ref={textareaRef}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Ваш комментарий"
+                className="!border-slate-700 border-3 text-black font-bold"
+              />
+              <DialogFooter className="mt-4 flex gap-2">
+                <Button onClick={() => handleCommentSave(comment)}>OK</Button>
+                <Button variant="outline" onClick={handleCommentCancel}>Отмена</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
       <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true}
