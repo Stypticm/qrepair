@@ -44,6 +44,7 @@ const BrandPage = () => {
     condition,
     comment,
     photoUrls,
+    setTelegramId,
     setModel,
     setComment,
     setPhotoUrls,
@@ -57,16 +58,26 @@ const BrandPage = () => {
     const getData = async () => {
       try {
         const res = await fetch(`/api/request/form?telegramId=${telegramId}`)
-        const data = await res.json()
-        setModel(data.draft.modelname)
-        setPhotoUrls(data.draft.photoUrls)
-        setLocalCondition(data.draft.condition)
-
+        if (!res.ok) {
+          console.error("Fetch error:", res.status, await res.text());
+          return;
+        }
+        const data = await res.json();
+        if (data && data.draft) {
+          setModel(data.draft.modelname || models[0].name)
+          setPhotoUrls(data.draft.photoUrls || []);
+          setLocalCondition(data.draft.condition || ["display", "body"]);
+        }
       } catch (e) {
         console.error(e)
       }
     }
-    getData()
+    if (telegramId === null) {
+      setTelegramId('1');
+      getData();
+    } else {
+      getData();
+    }
   }, []);
 
   useEffect(() => {

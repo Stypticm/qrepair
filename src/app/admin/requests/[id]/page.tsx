@@ -102,7 +102,7 @@ const RequestById = () => {
                 </CardHeader>
                 <CardContent className="max-h-80 overflow-y-auto flex flex-col">
                     <CardDescription>
-                        <p className="text-slate-50">Модель телефона: {application?.modelname}`</p>
+                        <p className="text-slate-50">Модель телефона: {application?.modelname}</p>
                         <p className="text-slate-50">{formatCondition(application?.condition)}</p>
                         <p className="text-slate-50">
                             Статус:{' '}
