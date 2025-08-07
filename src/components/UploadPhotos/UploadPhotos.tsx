@@ -27,7 +27,12 @@ export default function UploadPhotos({
   uploading,
   setUploading,
 }: Props) {
-  const inputRefs = useRef<(React.MutableRefObject<HTMLInputElement | null> | null)[]>(new Array(3).fill(null).map(() => useRef<HTMLInputElement | null>(null)));
+  const inputRefs = [
+    useRef<HTMLInputElement | null>(null),
+    useRef<HTMLInputElement | null>(null),
+    useRef<HTMLInputElement | null>(null),
+  ];
+
 
   const photoLabels: PhotoLabel[] = [
     { id: 0, text: "спереди", pic: "/front.png" },
@@ -99,7 +104,7 @@ export default function UploadPhotos({
               ) : (
                 <Input
                   type="file"
-                  ref={inputRefs.current[index]}
+                  ref={inputRefs[index]}
                   onChange={(e) => handleFileChange(e, index)}
                   disabled={uploading}
                   className="hidden"
@@ -112,7 +117,7 @@ export default function UploadPhotos({
                   width={150}
                   height={150}
                   className="object-cover rounded-md cursor-pointer"
-                  onClick={() => inputRefs.current[index]?.current?.click()}
+                  onClick={() => inputRefs[index]?.current?.click()}
                 />
               )}
             </div>
@@ -143,7 +148,7 @@ export default function UploadPhotos({
               ) : (
                 <Input
                   type="file"
-                  ref={inputRefs.current[index + 2]}
+                  ref={inputRefs[index + 2]}
                   onChange={(e) => handleFileChange(e, 2)}
                   disabled={uploading}
                   className="hidden"
@@ -156,7 +161,7 @@ export default function UploadPhotos({
                   width={200}
                   height={150}
                   className="object-cover rounded-md w-full cursor-pointer"
-                  onClick={() => inputRefs.current[index + 2]?.current?.click()}
+                  onClick={() => inputRefs[index + 2]?.current?.click()}
                 />
               )}
             </div>
