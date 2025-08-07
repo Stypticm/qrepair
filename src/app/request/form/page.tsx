@@ -65,8 +65,8 @@ const BrandPage = () => {
         const data = await res.json();
         if (data && data.draft) {
           setModel(data.draft.modelname || models[0].name)
-          setPhotoUrls(data.draft.photoUrls || []);
-          setLocalCondition(data.draft.condition || ["display", "body"]);
+          setPhotoUrls(data.draft.photoUrls);
+          setLocalCondition(data.draft.condition);
         }
       } catch (e) {
         console.error(e)
