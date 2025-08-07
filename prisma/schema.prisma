@@ -30,6 +30,7 @@ enum SkupkaStatus {
   in_progress
   accepted
   paid
+  completed
 }
 
 enum ConditionStatus {

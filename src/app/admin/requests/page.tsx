@@ -37,17 +37,23 @@ const RequestsPage = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {applications.map((bid: SkupkaRequest) => (
-                            <TableRow key={bid.id} onClick={() => router.push(`/admin/requests/${bid.id}`)}>
-                                <TableCell className='text-center text-black !text-bold'>{bid.id}</TableCell>
-                                <TableCell className='text-center text-black !text-bold'>
-                                    {bid.modelname}
-                                </TableCell>
-                                {/* <TableCell className='text-center'>
+                        {
+                            applications.length === 0 ?
+                                <TableRow>
+                                    <TableCell className='text-center text-black !text-bold'>Нет заявок</TableCell>
+                                </TableRow>
+                                :
+                                applications.map((bid: SkupkaRequest) => (
+                                    <TableRow key={bid.id} onClick={() => router.push(`/admin/requests/${bid.id}`)}>
+                                        <TableCell className='text-center text-black !text-bold'>{bid.id}</TableCell>
+                                        <TableCell className='text-center text-black !text-bold'>
+                                            {bid.modelname}
+                                        </TableCell>
+                                        {/* <TableCell className='text-center'>
                                     {bid.condition}
                                 </TableCell> */}
-                            </TableRow>
-                        ))}
+                                    </TableRow>
+                                ))}
                     </TableBody>
                 </Table>
             </div>

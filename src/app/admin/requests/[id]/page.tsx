@@ -118,7 +118,7 @@ const RequestById = () => {
                                                     ? 'В пути'
                                                     : application?.status === 'paid'
                                                         ? 'Оплачено'
-                                                        : 'Выполнена'
+                                                        : application?.status === 'completed' && 'Выполнена'
                                 }
                             </Badge>
                         </p>
@@ -128,6 +128,12 @@ const RequestById = () => {
                         {application?.status === 'in_progress' && <Button onClick={handleReviewRequest}>Заявка рассмотрена</Button>}
                         {application?.status === 'on_the_way' && <Button onClick={handleCourierReceived}>Телефон у курьера</Button>}
                         {application?.status === 'paid' && <Button onClick={handleMarkPaid}>Оплачено</Button>}
+                        {
+                            application?.status === 'completed' &&
+                            <section className="text-black !border-3 rounded-md !border-slate-700 p-2">
+                                Заявка выполнена
+                            </section>
+                        }
                     </CardAction>
                 </CardContent>
             </Card>

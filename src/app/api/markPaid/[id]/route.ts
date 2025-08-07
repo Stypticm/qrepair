@@ -33,7 +33,7 @@ export async function PATCH(
     // Обновляем статус (можно оставить как paid или добавить 'completed', если нужно)
     const updatedRequest = await prisma.skupka.update({
       where: { id },
-      data: { status: 'paid' }, // Или 'completed', если финальный статус
+      data: { status: 'completed' },
     })
 
     console.log('Updated request:', updatedRequest)
