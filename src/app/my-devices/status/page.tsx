@@ -9,9 +9,9 @@ export default function StatusPage() {
     const status = searchParams.get('status');
 
     const statuses = [
-        { key: 'on_the_way', image: 'pic_on_the_way', label: 'В пути' },
-        { key: 'in_progress', image: 'pic_in_progress', label: 'На проверке' },
         { key: 'accepted', image: 'pic_accepted', label: 'Принята' },
+        { key: 'in_progress', image: 'pic_in_progress', label: 'На проверке' },
+        { key: 'on_the_way', image: 'pic_on_the_way', label: 'В пути' },
         { key: 'paid', image: 'pic_paid', label: 'Оплачено' },
     ];
 
@@ -21,10 +21,10 @@ export default function StatusPage() {
                 <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">📋 Статус заявки</h2>
                 {status && (
                     <div className="grid grid-cols-2 gap-4 items-center">
-                        {statuses.map((item) => (
+                        {statuses.map((item, index) => (
                             <div
                                 key={item.key}
-                                className={`flex flex-col items-center border-1 ${status === item.key ? '' : 'blur-[2px]'}`}
+                                className={`flex flex-col items-center ${status === item.key ? '' : 'blur-[2px]'}`}
                             >
                                 <Image
                                     src={`/status/${item.image}.png`}
@@ -34,7 +34,12 @@ export default function StatusPage() {
                                     priority
                                     className="object-cover rounded-lg"
                                 />
-                                <span className="text-black text-lg font-bold mt-2">{item.label}</span>
+                                <section className='flex flex-row justify-center gap-2'>
+                                    <span className={`text-lg font-bold mt-2 border-3 rounded-full w-8 h-8 flex items-center justify-center ${status === item.key ? 'bg-black text-white' : 'text-black border-black'}`}>
+                                        {index + 1}
+                                    </span>
+                                    <span className="text-black text-lg font-bold mt-2 flex items-center justify-center">{item.label}</span>
+                                </section>
                             </div>
                         ))}
                     </div>

@@ -7,6 +7,7 @@ import { ConditionStatus, SkupkaRequest } from '@/core/lib/interfaces'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { checkRequest, completeRequest, payRequest, takeRequest } from '@/core/lib/requestActions'
 
 const RequestById = () => {
     const params = useParams()
@@ -42,33 +43,45 @@ const RequestById = () => {
 
     const handleTakeRequest = async () => {
         try {
-            const res = await fetch(`/api/takeRequest/${id}`, { method: 'PATCH' });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Ошибка при принятии заявки');
-            }
-            const data = await res.json();
-            setApplication(data.application);
+            const data = await takeRequest(id as string);
+            setApplication(data);
             setError(null);
         } catch (err) {
             console.error('Error taking request:', err);
-            setError('Не удалось принять заявку: ' + String(err));
+            setError(String(err));
         }
     };
 
-    const handleRequestDone = async () => {
+    const handleCompleteRequest = async () => {
         try {
-            const res = await fetch(`/api/doneRequest/${id}`, { method: 'PATCH' });
-            if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Ошибка при завершении заявки');
-            }
-            const data = await res.json();
-            setApplication(data.application);
+            const data = await completeRequest(id as string);
+            setApplication(data);
             setError(null);
         } catch (err) {
             console.error('Error completing request:', err);
-            setError('Не удалось завершить заявку: ' + String(err));
+            setError(String(err));
+        }
+    };
+
+    const handleCheckRequest = async () => {
+        try {
+            const data = await checkRequest(id as string);
+            setApplication(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error checking request:', err);
+            setError(String(err));
+        }
+    };
+
+    const handlePayRequest = async () => {
+        try {
+            const data = await payRequest(id as string);
+            setApplication(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error paying request:', err);
+            setError(String(err));
         }
     };
 
@@ -117,12 +130,10 @@ const RequestById = () => {
                         </p>
                     </CardDescription>
                     <CardAction className="self-center pt-2 gap-2">
-                        {
-                            application?.status === 'accepted' && <Button onClick={handleTakeRequest}>Принять заявку</Button>
-                        }
-                        {
-                            application?.status === 'in_progress' && <Button onClick={handleRequestDone}>Выполнена</Button>
-                        }
+                        {application?.status === 'accepted' && <Button onClick={handleTakeRequest}>Принять заявку</Button>}
+                        {application?.status === 'in_progress' && <Button onClick={handleCompleteRequest}>Выполнена</Button>}
+                        {application?.status === 'on_the_way' && <Button onClick={handleCheckRequest}>Заявка проверена</Button>}
+                        {application?.status === 'paid' && <Button onClick={handlePayRequest}>Оплачено</Button>}
                     </CardAction>
                 </CardContent>
             </Card>

@@ -4,7 +4,11 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const applications = await prisma.skupka.findMany()
+    const applications = await prisma.skupka.findMany({
+      where: {
+        status: 'accepted',
+      },
+    })
     return NextResponse.json(applications)
   } catch (error) {
     return NextResponse.json({ error }, { status: 500 })

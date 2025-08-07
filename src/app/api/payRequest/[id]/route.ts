@@ -22,12 +22,12 @@ export async function PATCH(
       where: { id },
     })
 
-    if (!request || request.status !== 'in_progress') {
+    if (!request || request.status !== 'on_the_way') {
       console.warn(
-        `No in_progress request found for id: ${id}`
+        `No on_the_way request found for id: ${id}`
       )
       return NextResponse.json(
-        { error: 'No in_progress request found' },
+        { error: 'No on_the_way request found' },
         { status: 404 }
       )
     }
@@ -43,7 +43,7 @@ export async function PATCH(
     // Отправляем сообщение пользователю
     await sendTelegramMessage(
       updatedRequest.telegramId,
-      '✅ Ваша заявка выполнена! Спасибо за обращение в QtweRepair.',
+      '💰 Оплата за ваш телефон успешно получена. Спасибо!',
       { parse_mode: 'Markdown' }
     )
 
@@ -52,7 +52,7 @@ export async function PATCH(
       application: updatedRequest,
     })
   } catch (error) {
-    console.error('Error in doneRequest:', error)
+    console.error('Error in payRequest:', error)
     return NextResponse.json(
       { error: 'Server error', details: String(error) },
       { status: 500 }
