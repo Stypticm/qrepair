@@ -43,7 +43,7 @@ export async function PATCH(
     // Отправляем сообщение пользователю
     await sendTelegramMessage(
       updatedRequest.telegramId,
-      '💰 Оплата за ваш телефон успешно получена. Спасибо!',
+      '📦 Телефон получен курьером. Ожидайте оплату.',
       { parse_mode: 'Markdown' }
     )
 
@@ -52,7 +52,7 @@ export async function PATCH(
       application: updatedRequest,
     })
   } catch (error) {
-    console.error('Error in payRequest:', error)
+    console.error('Error in courierReceived:', error)
     return NextResponse.json(
       { error: 'Server error', details: String(error) },
       { status: 500 }

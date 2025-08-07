@@ -7,7 +7,7 @@ import { ConditionStatus, SkupkaRequest } from '@/core/lib/interfaces'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { checkRequest, completeRequest, payRequest, takeRequest } from '@/core/lib/requestActions'
+import { acceptRequest, courierReceived, fetchApplication, markPaid, reviewRequest } from '@/core/lib/requestActions';
 
 const RequestById = () => {
     const params = useParams()
@@ -23,13 +23,7 @@ const RequestById = () => {
             }
 
             try {
-                const res = await fetch(`/api/requestById/${id}`);
-                if (!res.ok) {
-                    const errorData = await res.json().catch(() => ({}));
-                    throw new Error(errorData.error || 'Ошибка при загрузке заявки');
-                }
-                const data = await res.json();
-                console.log(data);
+                const data = await fetchApplication(id);
                 setApplication(data);
                 setError(null);
             } catch (err) {
@@ -41,46 +35,46 @@ const RequestById = () => {
         if (id) getApplication();
     }, [id]);
 
-    const handleTakeRequest = async () => {
+    const handleAcceptRequest = async () => {
         try {
-            const data = await takeRequest(id as string);
+            const data = await acceptRequest(id as string);
             setApplication(data);
             setError(null);
         } catch (err) {
-            console.error('Error taking request:', err);
+            console.error('Error accepting request:', err);
             setError(String(err));
         }
     };
 
-    const handleCompleteRequest = async () => {
+    const handleReviewRequest = async () => {
         try {
-            const data = await completeRequest(id as string);
+            const data = await reviewRequest(id as string);
             setApplication(data);
             setError(null);
         } catch (err) {
-            console.error('Error completing request:', err);
+            console.error('Error reviewing request:', err);
             setError(String(err));
         }
     };
 
-    const handleCheckRequest = async () => {
+    const handleCourierReceived = async () => {
         try {
-            const data = await checkRequest(id as string);
+            const data = await courierReceived(id as string);
             setApplication(data);
             setError(null);
         } catch (err) {
-            console.error('Error checking request:', err);
+            console.error('Error marking courier received:', err);
             setError(String(err));
         }
     };
 
-    const handlePayRequest = async () => {
+    const handleMarkPaid = async () => {
         try {
-            const data = await payRequest(id as string);
+            const data = await markPaid(id as string);
             setApplication(data);
             setError(null);
         } catch (err) {
-            console.error('Error paying request:', err);
+            console.error('Error marking paid:', err);
             setError(String(err));
         }
     };
@@ -130,10 +124,10 @@ const RequestById = () => {
                         </p>
                     </CardDescription>
                     <CardAction className="self-center pt-2 gap-2">
-                        {application?.status === 'accepted' && <Button onClick={handleTakeRequest}>Принять заявку</Button>}
-                        {application?.status === 'in_progress' && <Button onClick={handleCompleteRequest}>Выполнена</Button>}
-                        {application?.status === 'on_the_way' && <Button onClick={handleCheckRequest}>Заявка проверена</Button>}
-                        {application?.status === 'paid' && <Button onClick={handlePayRequest}>Оплачено</Button>}
+                        {application?.status === 'accepted' && <Button onClick={handleAcceptRequest}>Принять заявку</Button>}
+                        {application?.status === 'in_progress' && <Button onClick={handleReviewRequest}>Заявка рассмотрена</Button>}
+                        {application?.status === 'on_the_way' && <Button onClick={handleCourierReceived}>Телефон у курьера</Button>}
+                        {application?.status === 'paid' && <Button onClick={handleMarkPaid}>Оплачено</Button>}
                     </CardAction>
                 </CardContent>
             </Card>

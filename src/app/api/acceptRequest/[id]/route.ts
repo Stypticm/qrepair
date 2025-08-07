@@ -24,10 +24,10 @@ export async function PATCH(
 
     if (!request || request.status !== 'accepted') {
       console.warn(
-        `No submitted request found for id: ${id}`
+        `No accepted request found for id: ${id}`
       )
       return NextResponse.json(
-        { error: 'No submitted request found' },
+        { error: 'No accepted request found' },
         { status: 404 }
       )
     }
@@ -52,7 +52,7 @@ export async function PATCH(
       application: updatedRequest,
     })
   } catch (error) {
-    console.error('Error in takeRequest:', error)
+    console.error('Error in acceptRequest:', error)
     return NextResponse.json(
       { error: 'Server error', details: String(error) },
       { status: 500 }

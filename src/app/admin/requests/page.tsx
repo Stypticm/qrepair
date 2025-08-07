@@ -39,6 +39,7 @@ const RequestsPage = () => {
                     <TableBody>
                         {applications.map((bid: SkupkaRequest) => (
                             <TableRow key={bid.id} onClick={() => router.push(`/admin/requests/${bid.id}`)}>
+                                <TableCell className='text-center text-black !text-bold'>{bid.id}</TableCell>
                                 <TableCell className='text-center text-black !text-bold'>
                                     {bid.modelname}
                                 </TableCell>

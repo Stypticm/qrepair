@@ -10,8 +10,8 @@ export const fetchApplication = async (id: string) => {
   return data
 }
 
-export const takeRequest = async (id: string) => {
-  const res = await fetch(`/api/takeRequest/${id}`, {
+export const acceptRequest = async (id: string) => {
+  const res = await fetch(`/api/acceptRequest/${id}`, {
     method: 'PATCH',
   })
   if (!res.ok) {
@@ -24,8 +24,8 @@ export const takeRequest = async (id: string) => {
   return data.application
 }
 
-export const completeRequest = async (id: string) => {
-  const res = await fetch(`/api/completeRequest/${id}`, {
+export const reviewRequest = async (id: string) => {
+  const res = await fetch(`/api/reviewRequest/${id}`, {
     method: 'PATCH',
   })
   if (!res.ok) {
@@ -38,8 +38,8 @@ export const completeRequest = async (id: string) => {
   return data.application
 }
 
-export const checkRequest = async (id: string) => {
-  const res = await fetch(`/api/checkRequest/${id}`, {
+export const courierReceived = async (id: string) => {
+  const res = await fetch(`/api/courierReceived/${id}`, {
     method: 'PATCH',
   })
   if (!res.ok) {
@@ -52,8 +52,8 @@ export const checkRequest = async (id: string) => {
   return data.application
 }
 
-export const payRequest = async (id: string) => {
-  const res = await fetch(`/api/payRequest/${id}`, {
+export const markPaid = async (id: string) => {
+  const res = await fetch(`/api/markPaid/${id}`, {
     method: 'PATCH',
   })
   if (!res.ok) {

@@ -58,7 +58,7 @@ const BrandPage = () => {
       try {
         const res = await fetch(`/api/request/form?telegramId=${telegramId}`)
         const data = await res.json()
-        console.log(data)
+        setModel(data.draft.modelname)
         setPhotoUrls(data.draft.photoUrls)
         setLocalCondition(data.draft.condition)
 

@@ -22,20 +22,18 @@ export async function PATCH(
       where: { id },
     })
 
-    if (!request || request.status !== 'in_progress') {
-      console.warn(
-        `No in_progress request found for id: ${id}`
-      )
+    if (!request || request.status !== 'paid') {
+      console.warn(`No paid request found for id: ${id}`)
       return NextResponse.json(
-        { error: 'No in_progress request found' },
+        { error: 'No paid request found' },
         { status: 404 }
       )
     }
 
-    // Обновляем статус
+    // Обновляем статус (можно оставить как paid или добавить 'completed', если нужно)
     const updatedRequest = await prisma.skupka.update({
       where: { id },
-      data: { status: 'on_the_way' },
+      data: { status: 'paid' }, // Или 'completed', если финальный статус
     })
 
     console.log('Updated request:', updatedRequest)
@@ -43,7 +41,7 @@ export async function PATCH(
     // Отправляем сообщение пользователю
     await sendTelegramMessage(
       updatedRequest.telegramId,
-      '📦 Ваша заявка проверена. Курьер скоро заберёт телефон.',
+      '💰 Оплата за ваш телефон успешно получена. Спасибо!',
       { parse_mode: 'Markdown' }
     )
 
@@ -52,7 +50,7 @@ export async function PATCH(
       application: updatedRequest,
     })
   } catch (error) {
-    console.error('Error in checkRequest:', error)
+    console.error('Error in markPaid:', error)
     return NextResponse.json(
       { error: 'Server error', details: String(error) },
       { status: 500 }
