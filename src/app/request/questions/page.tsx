@@ -8,10 +8,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 
-interface QuestionsFormProps {
-    onChange: (answers: number[]) => void
-}
-
 const questions = [
     { id: '1', text: 'Имеются ли глубокие царапины?' },
     { id: '2', text: 'Есть ли мелкие царапины?' },
@@ -24,7 +20,7 @@ const questions = [
 ]
 
 
-const QuestionsPage = ({ onChange }: QuestionsFormProps) => {
+const QuestionsPage = () => {
     const { telegramId, answers, setAnswers } = useStartForm();
     const [localAnswers, setLocalAnswers] = useState<number[]>(answers || new Array(8).fill(0));
 
