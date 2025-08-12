@@ -57,7 +57,7 @@ export const SuccessPopup = ({
                     </div>
                     <div className="bg-green-100 rounded-lg p-3 text-center">
                         <p className="text-sm text-bold text-gray-500">Наше предложение</p>
-                        <p className="text-lg font-bold text-green-600">{price} ₽</p>
+                        <p className="text-lg font-bold text-green-600">{price?.toLocaleString()} ₽</p>
                     </div>
                 </div>
 
