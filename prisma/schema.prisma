@@ -9,19 +9,20 @@ datasource db {
 }
 
 model Skupka {
-  id          String            @id @default(cuid())
+  id          String       @id @default(cuid())
   telegramId  String
   username    String
   modelname   String?
-  condition   ConditionStatus[] @default([display, body])
   photoUrls   String[]
   videoUrl    String?
-  status      SkupkaStatus      @default(draft)
+  status      SkupkaStatus @default(draft)
   comment     String?
   imei        String?
   contractUrl String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  answers     Int[]        @default([0, 0, 0, 0, 0, 0, 0, 0])
+  price       Float?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 enum SkupkaStatus {
@@ -31,11 +32,4 @@ enum SkupkaStatus {
   accepted
   paid
   completed
-}
-
-enum ConditionStatus {
-  display
-  display_with_damage
-  body
-  body_with_damage
 }

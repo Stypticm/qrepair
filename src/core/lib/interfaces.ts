@@ -5,9 +5,6 @@ export type FormState = {
   modelname: string
   setModel: (value: string) => void
 
-  condition: ConditionStatus[]
-  setCondition: (value: ConditionStatus[]) => void
-
   // uploaded photo
   photoUrls: (string | null)[]
   setPhotoUrls: (files: (string | null)[]) => void
@@ -36,6 +33,14 @@ export type FormState = {
   imei: string | null
   setImei: (imei: string | null) => void
 
+  // answers
+  answers: number[]
+  setAnswers: (answers: number[]) => void
+
+  // price
+  price: number | null
+  setPrice: (price: number | null) => void
+
   onNext?: () => Promise<void>
   setOnNext: (cb?: () => Promise<void>) => void
 }
@@ -44,17 +49,12 @@ export interface SkupkaRequest {
   id: number
   telegramId: string | null
   modelname?: string
-  condition?: ConditionStatus[]
   photoUrls?: string[]
   videoUrl?: string
   status?: string
   comment?: string
   imei?: string
   contractUrl?: string
+  answers?: number[]
+  price?: number
 }
-
-export type ConditionStatus =
-  | 'display'
-  | 'display_with_damage'
-  | 'body'
-  | 'body_with_damage'

@@ -62,11 +62,9 @@ export async function POST(req: Request) {
             }*`
           : 'У вас нет активных заявок.'
 
-        await sendTelegramMessage(
-          telegramId,
-          responseText,
-          { parse_mode: 'Markdown' }
-        )
+        await sendTelegramMessage('1', responseText, {
+          parse_mode: 'Markdown',
+        })
       } else if (data === 'contact_support') {
         await sendTelegramMessage(
           telegramId,

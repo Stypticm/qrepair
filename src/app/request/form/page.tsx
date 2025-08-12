@@ -7,7 +7,6 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { SuccessPopup } from '@/components/SuccessPopup/SuccessPopup';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,7 +18,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { ConditionStatus } from '@/core/lib/interfaces';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
@@ -33,24 +31,34 @@ const models = [
   { id: '6', name: 'Apple Iphone 14 Pro Max' },
 ]
 
+const basePrices: Record<string, number> = {
+  'Apple Iphone 13': 48000,
+  'Apple Iphone 13 Pro': 56000,
+  'Apple Iphone 13 Pro Max': 64000,
+  'Apple Iphone 14': 56000,
+  'Apple Iphone 14 Pro': 72000,
+  'Apple Iphone 14 Pro Max': 80000,
+};
+
 const BrandPage = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showPhotoSuccess, setShowPhotoSuccess] = useState(false);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(true);
   const {
     telegramId,
     modelname,
-    condition,
     comment,
     photoUrls,
+    answers,
+    price,
     setTelegramId,
     setModel,
     setComment,
     setPhotoUrls,
-    setCondition
+    setPrice,
   } = useStartForm();
-  const [localCondition, setLocalCondition] = useState<ConditionStatus[]>(condition || ['display', 'body']);
   const [webhookSecret, setWebhookSecret] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -64,9 +72,8 @@ const BrandPage = () => {
         }
         const data = await res.json();
         if (data && data.draft) {
-          setModel(data.draft.modelname || models[0].name)
+          setModel(data.draft.modelname)
           setPhotoUrls(data.draft.photoUrls);
-          setLocalCondition(data.draft.condition);
         }
       } catch (e) {
         console.error(e)
@@ -95,18 +102,25 @@ const BrandPage = () => {
     fetchWebhookSecret();
   }, [telegramId]);
 
-  useEffect(() => {
-    setCondition(localCondition);
-  }, [localCondition, setCondition]);
-
   const isPhotoAdded = photoUrls.some((url) => url !== null);
-  const isValid = (modelname.trim().length > 0) && isPhotoAdded && localCondition.length > 0
+  const isValid = !!modelname && isPhotoAdded && showQuestionsSuccess;
+
+  const calculatePrice = () => {
+    const basePrice = basePrices[modelname] || 0;
+    const discountPercentage = answers.reduce((sum, val) => sum + val, 0) * 5; // 5% за каждый "Да"
+    let finalPrice = basePrice * (1 - discountPercentage / 100);
+    return Math.floor(finalPrice / 100) * 100;
+  };
 
   const handleNext = async () => {
-    const payload =
-      modelname.trim().length > 0
-        ? { telegramId, modelname, condition: localCondition }
-        : { telegramId };
+    const calculatedPrice = calculatePrice();
+    setPrice(calculatedPrice);
+
+    const payload = {
+      telegramId,
+      modelname,
+      price: calculatedPrice,
+    };
 
     await fetch('/api/request/form', {
       method: 'PATCH',
@@ -134,18 +148,8 @@ const BrandPage = () => {
       throw new Error('Failed to send status command');
     }
 
-    setShowSuccess(true);
+    setShowPhotoSuccess(true);
   };
-
-
-  const handleConditionChange = (type: 'display' | 'body', isDamaged: boolean) => {
-    setLocalCondition((prev) => {
-      const newCondition = [...prev]
-      const index = type === 'display' ? 0 : 1;
-      newCondition[index] = isDamaged ? `${type}_with_damage` as ConditionStatus : type as ConditionStatus;
-      return newCondition
-    })
-  }
 
   const handleCommentDialogOpen = () => {
     setIsCommentDialogOpen(true);
@@ -159,6 +163,11 @@ const BrandPage = () => {
   const handleCommentCancel = () => {
     setIsCommentDialogOpen(false);
   };
+
+  const handleTransferToQuestions = () => {
+    router.push('/request/questions');
+    // setShowQuestionsSuccess(true);
+  }
 
   return (
     <Page back={true}>
@@ -192,23 +201,14 @@ const BrandPage = () => {
           <Label htmlFor="condition" className="text-black text-2xl font-bold">
             Состояние
           </Label>
-          <div className="flex items-center gap-3">
-            <Checkbox
-              id="displayDamaged"
-              checked={localCondition[0] === 'display_with_damage'}
-              onCheckedChange={(checked) => handleConditionChange('display', checked as boolean)}
-              className='flex justify-center items-center !border-slate-700 border-3'
-            />
-            <Label htmlFor="displayDamaged" className="text-black text-xl font-bold">Дисплей битый, но работает</Label>
-          </div>
-          <div className="flex items-center gap-3">
-            <Checkbox id="bodyDamaged"
-              checked={localCondition[1] === 'body_with_damage'}
-              onCheckedChange={(checked) => handleConditionChange('body', checked as boolean)}
-              className='flex justify-center items-center !border-slate-700 border-3'
-            />
-            <Label htmlFor="bodyDamaged" className="text-black text-xl font-bold">Корпус целый</Label>
-          </div>
+          <Button onClick={handleTransferToQuestions}>
+            <span className="font-bold">Ответить на вопросы</span>
+          </Button>
+          {showQuestionsSuccess && (
+            <Badge variant="secondary" className="bg-green-600 text-center">
+              Идеальное состояние
+            </Badge>
+          )}
         </div>
         <div>
           <Label htmlFor="photos_and_video" className="text-black text-2xl font-bold">
@@ -270,13 +270,13 @@ const BrandPage = () => {
         </div>
       </section>
       <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true} />
-      {showSuccess && (
+      {showPhotoSuccess && (
         <SuccessPopup
           text="Ваш заявка принята"
           phoneModel={modelname}
           phoneImage={photoUrls[0] as string}
           redirectTo="/"
-          onClose={() => setShowSuccess(false)}
+          onClose={() => setShowPhotoSuccess(false)}
         />
       )}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

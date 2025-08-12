@@ -45,6 +45,16 @@ const FooterButton = ({
           </Button>
         )
       }
+      {
+        path === '/request/questions' && (
+          <Button
+            className="bg-yellow-400 w-full text-black font-extrabold !text-xl !border-3 !border-black"
+            onClick={handleClick}
+            disabled={!isNextDisabled}>
+            Ответить на вопросы
+          </Button>
+        )
+      }
     </div>
   );
 };

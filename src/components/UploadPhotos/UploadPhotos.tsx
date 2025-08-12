@@ -33,7 +33,6 @@ export default function UploadPhotos({
     useRef<HTMLInputElement | null>(null),
   ];
 
-
   const photoLabels: PhotoLabel[] = [
     { id: 0, text: "спереди", pic: "/front.png" },
     { id: 1, text: "сзади", pic: "/back.png" },
@@ -134,7 +133,7 @@ export default function UploadPhotos({
               {photoUrls[index + 2] ? (
                 <>
                   <Image
-                    src={photoUrls[2] || ""}
+                    src={photoUrls[index + 2] || ""}
                     alt={`${item.text} фото`}
                     width={200}
                     height={150}
@@ -149,7 +148,7 @@ export default function UploadPhotos({
                 <Input
                   type="file"
                   ref={inputRefs[index + 2]}
-                  onChange={(e) => handleFileChange(e, 2)}
+                  onChange={(e) => handleFileChange(e, index + 2)}
                   disabled={uploading}
                   className="hidden"
                 />

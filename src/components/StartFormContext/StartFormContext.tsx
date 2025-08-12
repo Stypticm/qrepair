@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
-import { ConditionStatus, FormState } from '@/core/lib/interfaces';
+import { FormState } from '@/core/lib/interfaces';
 
 const StartFormContext = createContext<FormState | null>(null);
 
@@ -14,12 +14,13 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
 
     const [modelname, setModel] = useState<string>('Apple iPhone 11');
-    const [condition, setCondition] = useState<ConditionStatus[]>(['display', 'body']);
     const [photoUrls, setPhotoUrls] = useState<(string | null)[]>(new Array(6).fill(null));
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [comment, setComment] = useState<string>('');
     const [contractUrl, setContractUrl] = useState<string | null>(null);
     const [imei, setImei] = useState<string | null>(null);
+    const [answers, setAnswers] = useState<number[]>(new Array(8).fill(0));
+    const [price, setPrice] = useState<number | null>(null);
     const [onNext, setOnNext] = useState<(() => Promise<void>) | undefined>(undefined);
 
     useEffect(() => {
@@ -35,7 +36,6 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             value={{
                 username,
                 modelname,
-                condition,
                 photoUrls,
                 videoUrl,
                 telegramId,
@@ -43,6 +43,8 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 comment,
                 contractUrl,
                 imei,
+                answers,
+                price,
                 onNext,
                 setOnNext,
                 setVideoUrl,
@@ -50,11 +52,12 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setTelegramId,
                 setComment,
                 setModel,
-                setCondition,
                 setContractUrl,
                 setImei,
                 setUsername,
-                setUserPhotoUrl
+                setUserPhotoUrl,
+                setAnswers,
+                setPrice
             }}
         >
             {children}

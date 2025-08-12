@@ -32,11 +32,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body className={`${comicNeue.className} antialiased h-full w-full flex flex-col overflow-hidden`}>
+      <body className={`${comicNeue.className} antialiased w-full flex flex-col overflow-hidden`}>
         <I18nProvider>
           <Root>
             <StartFormProvider>
-              <main className="flex-1 w-full max-w-full md:max-w-[800px] min-h-0 overflow-auto md:mx-auto md:my-4 md:max-h-[600px]">
+              <main className="flex-1 h-screen w-full max-w-full md:max-w-[800px] overflow-auto md:mx-auto md:my-4 md:max-h-[600px]">
                 {children}
               </main>
             </StartFormProvider>

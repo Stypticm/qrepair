@@ -1,6 +1,11 @@
 import prisma from '@/core/lib/prisma'
 import { NextResponse } from 'next/server'
 
+interface QuestionsRequest {
+  telegramId: string
+  answers: number[]
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const telegramId = searchParams.get('telegramId')
@@ -36,7 +41,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const body = await req.json()
-  const { telegramId, modelname } = body
+  const { telegramId, answers } = body as QuestionsRequest
 
   if (!telegramId) {
     return NextResponse.json(
@@ -45,13 +50,9 @@ export async function PATCH(req: Request) {
     )
   }
 
-  const dataToUpdate: Record<string, unknown> = {}
-
-  if (modelname?.trim()) {
-    dataToUpdate.modelname = modelname.trim()
-  } else {
+  if (!Array.isArray(answers) || answers.length !== 8) {
     return NextResponse.json(
-      { error: 'Insufficient data to update brand info' },
+      { error: 'Invalid answers array' },
       { status: 400 }
     )
   }
@@ -70,13 +71,13 @@ export async function PATCH(req: Request) {
 
     const updated = await prisma.skupka.update({
       where: { id: draft.id },
-      data: dataToUpdate,
+      data: { answers },
     })
     return NextResponse.json({ success: true, updated })
   } catch (error) {
     console.error(error)
     return NextResponse.json(
-      { error: 'Error updating brand info' },
+      { error: 'Error updating answers' },
       { status: 500 }
     )
   }

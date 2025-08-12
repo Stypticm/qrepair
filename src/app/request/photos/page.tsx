@@ -11,11 +11,10 @@ import UploadPhotos from '@/components/UploadPhotos/UploadPhotos';
 const PhotosPage = () => {
   const { telegramId, photoUrls, setPhotoUrls } = useStartForm();
 
-  const initialPhotos = photoUrls || new Array(6).fill(null);
+  const initialPhotos = photoUrls || new Array(3).fill(null);
   const [photos, setPhotos] = useState<(string | null)[]>(initialPhotos);
 
   const [uploading, setUploading] = useState(false);
-  
 
   const isNextDisabled = photos.filter((photo) => photo !== null).length >= 3;
 

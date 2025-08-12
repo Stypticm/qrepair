@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useStartForm } from '../StartFormContext/StartFormContext';
 
 type Props = {
     text?: string;
@@ -19,13 +20,15 @@ export const SuccessPopup = ({
     redirectTo = '/',
     onClose
 }: Props) => {
-
+    const { price } = useStartForm();
     const router = useRouter()
 
     const handleClick = () => {
         if (onClose) onClose();
         router.push(redirectTo);
     };
+
+    const displayPrice = price ? Math.floor(price / 100) * 100 : 0;
 
     return (
         <div
@@ -46,9 +49,9 @@ export const SuccessPopup = ({
                         className='rounded-md'
                     />
                 </section>
-                <section className='flex flex-row items-center gap-4 text-2xl font-bold text-black border-3 !border-slate-700 bg-amber-500 p-2 w-full rounded-md'>
+                <section className="flex flex-row items-center gap-4 text-2xl font-bold text-black border-3 !border-slate-700 bg-amber-500 p-2 w-full rounded-md">
                     <span>{phoneModel}</span>
-                    <span>~ 65000 ₽</span>
+                    <span>~ {displayPrice} ₽</span>
                 </section>
                 <p className="text-3xl font-bold text-black border-3 !border-slate-700 bg-orange-600 p-2 w-full rounded-md">Связаться с нами</p>
                 <p className="fixed bottom-4 text-sm text-gray-500 mt-2">(Нажмите, чтобы вернуться на главную)</p>
