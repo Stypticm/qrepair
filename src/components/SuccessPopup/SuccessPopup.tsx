@@ -4,12 +4,14 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useStartForm } from '../StartFormContext/StartFormContext';
+import { CheckCircle } from 'lucide-react';
 
 type Props = {
     text?: string;
     phoneModel?: string;
     phoneImage?: string;
     redirectTo?: string;
+    priceNewPhone?: number;
     onClose?: () => void
 }
 
@@ -18,6 +20,7 @@ export const SuccessPopup = ({
     phoneModel = '',
     phoneImage = '',
     redirectTo = '/',
+    priceNewPhone = 0,
     onClose
 }: Props) => {
     const { price } = useStartForm();
@@ -29,30 +32,56 @@ export const SuccessPopup = ({
     };
 
     return (
-        <div
-            onClick={handleClick}
-            className="fixed inset-0 bg-background z-50 flex items-center justify-center cursor-pointer animate-slideUpFull rounded-md"
-        >
-            <div className="flex flex-col items-center text-center px-4 gap-6">
-                <section className='flex flex-row items-center'>
-                    <p className="text-6xl">✅</p>
-                    <span className="text-3xl font-bold text-black">{text}</span>
-                </section>
-                <section>
-                    <Image
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md relative">
+
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                >
+                    ✕
+                </button>
+
+                <div className="flex flex-col items-center text-center mb-4">
+                    <CheckCircle size={48} className="text-green-500 mb-2" />
+                    <h2 className="text-xl font-bold">{text}</h2>
+                </div>
+
+                <div className="flex justify-center mb-4">
+                    <img
                         src={phoneImage}
-                        alt="phone"
-                        width={200}
-                        height={200}
-                        className='rounded-md'
+                        alt={phoneModel}
+                        className="max-h-48 object-contain rounded-lg"
                     />
-                </section>
-                <section className="flex flex-row items-center gap-4 text-2xl font-bold text-black border-3 !border-slate-700 bg-amber-500 p-2 w-full rounded-md">
-                    <span>{phoneModel}</span>
-                    <span>~ {price} ₽</span>
-                </section>
-                <p className="text-3xl font-bold text-black border-3 !border-slate-700 bg-orange-600 p-2 w-full rounded-md">Связаться с нами</p>
-                <p className="fixed bottom-4 text-sm text-gray-500 mt-2">(Нажмите, чтобы вернуться на главную)</p>
+                </div>
+
+                {/* Сравнение цен */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="bg-gray-100 rounded-lg p-3 text-center">
+                        <p className="text-sm text-gray-500">Новый</p>
+                        <p className="text-lg font-bold">{priceNewPhone.toLocaleString()} ₽</p>
+                    </div>
+                    <div className="bg-green-100 rounded-lg p-3 text-center">
+                        <p className="text-sm text-gray-500">Наше предложение</p>
+                        <p className="text-lg font-bold text-green-600">{price} ₽</p>
+                    </div>
+                </div>
+
+                {/* Модель телефона */}
+                <div className="text-center mb-4">
+                    <p className="text-lg font-semibold">{phoneModel}</p>
+                    <p className="text-sm text-gray-600">
+                        Мы готовы предложить за вашу модель отличную цену!
+                    </p>
+                </div>
+
+                {/* Кнопка */}
+                <a
+                    href={redirectTo}
+                    className="block bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl text-center transition"
+                >
+                    Связаться с нами
+                </a>
             </div>
         </div>
     )

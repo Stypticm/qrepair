@@ -276,6 +276,7 @@ const BrandPage = () => {
           phoneModel={modelname}
           phoneImage={photoUrls[0] as string}
           redirectTo="/"
+          priceNewPhone={basePrices[modelname]}
           onClose={() => setShowPhotoSuccess(false)}
         />
       )}
