@@ -28,8 +28,6 @@ export const SuccessPopup = ({
         router.push(redirectTo);
     };
 
-    const displayPrice = price ? Math.floor(price / 100) * 100 : 0;
-
     return (
         <div
             onClick={handleClick}
@@ -44,14 +42,14 @@ export const SuccessPopup = ({
                     <Image
                         src={phoneImage}
                         alt="phone"
-                        width={400}
-                        height={400}
+                        width={200}
+                        height={200}
                         className='rounded-md'
                     />
                 </section>
                 <section className="flex flex-row items-center gap-4 text-2xl font-bold text-black border-3 !border-slate-700 bg-amber-500 p-2 w-full rounded-md">
                     <span>{phoneModel}</span>
-                    <span>~ {displayPrice} ₽</span>
+                    <span>~ {price} ₽</span>
                 </section>
                 <p className="text-3xl font-bold text-black border-3 !border-slate-700 bg-orange-600 p-2 w-full rounded-md">Связаться с нами</p>
                 <p className="fixed bottom-4 text-sm text-gray-500 mt-2">(Нажмите, чтобы вернуться на главную)</p>
