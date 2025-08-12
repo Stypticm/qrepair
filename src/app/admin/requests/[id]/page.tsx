@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ConditionStatus, SkupkaRequest } from '@/core/lib/interfaces'
+import { SkupkaRequest } from '@/core/lib/interfaces'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -79,21 +79,6 @@ const RequestById = () => {
         }
     };
 
-    const formatCondition = (condition: ConditionStatus[] | string | undefined) => {
-        if (!condition) return 'Состояние: Не указано';
-        const condArray = Array.isArray(condition) ? condition : [condition]; // Преобразуем строку в массив, если нужно
-
-        const displayDamaged = condArray.includes('display_with_damage');
-        const bodyDamaged = condArray.includes('body_with_damage');
-        const displayWhole = condArray.includes('display') && !displayDamaged;
-        const bodyWhole = condArray.includes('body') && !bodyDamaged;
-
-        const displayText = `Дисплей битый, но работает - ${displayDamaged ? 'Да' : 'Нет'}`;
-        const bodyText = `Корпус целый - ${bodyWhole ? 'Да' : 'Нет'}`;
-
-        return `Состояние: ${displayText}, ${bodyText}`;
-    };
-
     return (
         <div className="max-w-xl mx-auto mt-10 p-2">
             <Card className="mt-10 bg-slate-400">
@@ -103,7 +88,6 @@ const RequestById = () => {
                 <CardContent className="max-h-80 overflow-y-auto flex flex-col">
                     <CardDescription>
                         <p className="text-slate-50">Модель телефона: {application?.modelname}</p>
-                        <p className="text-slate-50">{formatCondition(application?.condition)}</p>
                         <p className="text-slate-50">
                             Статус:{' '}
                             <Badge className='bg-emerald-300'>
