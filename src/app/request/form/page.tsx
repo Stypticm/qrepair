@@ -270,16 +270,18 @@ const BrandPage = () => {
         </div>
       </section>
       <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true} />
-      {showPhotoSuccess && (
-        <SuccessPopup
-          text="Ваш заявка принята"
-          phoneModel={modelname}
-          phoneImage={photoUrls[0] as string}
-          redirectTo="/"
-          priceNewPhone={basePrices[modelname]}
-          onClose={() => setShowPhotoSuccess(false)}
-        />
-      )}
+      <section className="h-full">
+        {showPhotoSuccess && (
+          <SuccessPopup
+            text="Ваш заявка принята"
+            phoneModel={modelname}
+            phoneImage={photoUrls[0] as string}
+            redirectTo="/"
+            priceNewPhone={basePrices[modelname]}
+            onClose={() => setShowPhotoSuccess(false)}
+          />
+        )}
+      </section>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="p-4 flex flex-col items-center" aria-describedby={undefined}>
           <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>

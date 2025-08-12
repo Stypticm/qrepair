@@ -34,14 +34,14 @@ export const SuccessPopup = ({
     return (
         <div
             onClick={handleClick}
-            className="fixed inset-0 bg-background z-50 flex items-center justify-center cursor-pointer animate-slideUpFull rounded-md"
+            className="h-[100vh] fixed inset-0 bg-background z-50 flex items-center justify-center cursor-pointer animate-slideUpFull rounded-md"
         >
             <div className="flex flex-col items-center text-center px-4 gap-6">
                 <div className="flex flex-col items-center text-center mb-4">
                     <CheckCircle size={48} className="text-green-500 mb-2" />
-                    <h2 className="text-xl font-bold">{text}</h2>
+                    <h2 className="text-xl font-bold text-black">{text}</h2>
                 </div>
-                <section>
+                {/* <section>
                     <Image
                         src={phoneImage}
                         alt="phone"
@@ -49,22 +49,21 @@ export const SuccessPopup = ({
                         height={200}
                         className='rounded-md'
                     />
-                </section>
+                </section> */}
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     <div className="bg-gray-100 rounded-lg p-3 text-center">
                         <p className="text-sm text-gray-500">Новый</p>
-                        <p className="text-lg font-bold">{priceNewPhone.toLocaleString()} ₽</p>
+                        <p className="text-lg font-bold text-black">{priceNewPhone.toLocaleString()} ₽</p>
                     </div>
                     <div className="bg-green-100 rounded-lg p-3 text-center">
-                        <p className="text-sm text-gray-500">Наше предложение</p>
+                        <p className="text-sm text-bold text-gray-500">Наше предложение</p>
                         <p className="text-lg font-bold text-green-600">{price} ₽</p>
                     </div>
                 </div>
 
-                {/* Модель телефона */}
                 <div className="text-center mb-4">
-                    <p className="text-lg font-semibold">{phoneModel}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-lg font-semibold text-black">{phoneModel}</p>
+                    <p className="text-xl font-bold text-gray-600">
                         Мы готовы предложить за вашу модель отличную цену!
                     </p>
                 </div>

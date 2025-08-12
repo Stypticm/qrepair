@@ -50,6 +50,7 @@ export async function PATCH(req: Request) {
   if (modelname?.trim()) {
     dataToUpdate.modelname = modelname.trim()
     dataToUpdate.price = price
+    dataToUpdate.status = 'accepted'
   } else {
     return NextResponse.json(
       { error: 'Insufficient data to update brand info' },
