@@ -85,7 +85,7 @@ const BrandPage = () => {
     } else {
       getData();
     }
-  }, []);
+  }, [telegramId, setTelegramId, setModel, setPhotoUrls]);
 
   useEffect(() => {
     const fetchWebhookSecret = async () => {
