@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const body = await req.json()
-  const { telegramId, modelname } = body
+  const { telegramId, modelname, price } = body
 
   if (!telegramId) {
     return NextResponse.json(
@@ -49,6 +49,7 @@ export async function PATCH(req: Request) {
 
   if (modelname?.trim()) {
     dataToUpdate.modelname = modelname.trim()
+    dataToUpdate.price = price
   } else {
     return NextResponse.json(
       { error: 'Insufficient data to update brand info' },
