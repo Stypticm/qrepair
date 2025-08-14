@@ -205,7 +205,7 @@ const BrandPage = () => {
           </Button>
           {showQuestionsSuccess && (
             <Badge variant="secondary" className="bg-green-600 text-center">
-              Идеальное состояние
+              Вы ответили на все вопросы
             </Badge>
           )}
         </div>
