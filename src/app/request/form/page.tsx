@@ -271,7 +271,7 @@ const BrandPage = () => {
       </section>
       <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true} />
       <section className="h-full">
-        {!showPhotoSuccess && (
+        {showPhotoSuccess && (
           <SuccessPopup
             text="Ваш заявка принята"
             phoneModel={modelname}
