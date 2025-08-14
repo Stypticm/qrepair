@@ -1,32 +1,34 @@
-'use client';
+"use client";
 export const dynamic = 'force-dynamic';
 
+import { useState, useEffect } from 'react';
 import FooterButton from '@/components/FooterButton/FooterButton';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Page } from '@/components/Page';
-import React, { useRef, useState } from 'react';
-import Image from 'next/image';
 import UploadPhotos from '@/components/UploadPhotos/UploadPhotos';
 
 const PhotosPage = () => {
   const { telegramId, photoUrls, setPhotoUrls } = useStartForm();
+  const initialPhotos = photoUrls || [null, null, null];
 
-  const initialPhotos = photoUrls || new Array(3).fill(null);
   const [photos, setPhotos] = useState<(string | null)[]>(initialPhotos);
+  const [photoLoading, setPhotoLoading] = useState<boolean[]>(initialPhotos.map(() => false));
 
-  const [uploading, setUploading] = useState(false);
+  useEffect(() => {
+    if (photoUrls) setPhotos(photoUrls);
+  }, [photoUrls]);
 
   const isNextDisabled = photos.filter((photo) => photo !== null).length >= 3;
-
+  
   const handleNext = async () => {
+    if (!telegramId) return;
     const payload = { telegramId, photoUrls: photos };
     const response = await fetch('/api/request/photos', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await response.json();
-
+    await response.json();
     setPhotoUrls(photos);
   };
 
@@ -42,8 +44,8 @@ const PhotosPage = () => {
         <UploadPhotos
           photoUrls={photos}
           setPhotoUrls={setPhotos}
-          uploading={uploading}
-          setUploading={setUploading}
+          photoLoading={photoLoading}
+          setPhotoLoading={setPhotoLoading}
         />
         <FooterButton nextPath="/request/form" isNextDisabled={isNextDisabled} onNext={handleNext} />
       </section>

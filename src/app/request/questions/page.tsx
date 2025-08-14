@@ -23,6 +23,7 @@ const questions = [
 const QuestionsPage = () => {
     const { telegramId, answers, setAnswers, setShowQuestionsSuccess } = useStartForm();
     const [localAnswers, setLocalAnswers] = useState<number[]>(answers || new Array(8).fill(0));
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const getData = async () => {
@@ -33,19 +34,21 @@ const QuestionsPage = () => {
                     return;
                 }
                 const data = await res.json();
-                if (data && data.draft) {
-                    const newAnswers = data.draft.answers
-                    setLocalAnswers(newAnswers);
-                    setAnswers(newAnswers);
+                if (data?.draft?.answers) {
+                    setLocalAnswers(data.draft.answers);
+                    setAnswers(data.draft.answers);
                 }
             } catch (e) {
                 console.error(e);
+            } finally {
+                setLoading(false);
             }
         };
         if (telegramId) getData();
     }, [telegramId]);
 
     const handleSelect = (id: string, value: boolean) => {
+        if (loading) return;
         const index = parseInt(id) - 1;
         const updated = [...localAnswers];
         updated[index] = value ? 1 : 0;
@@ -70,39 +73,43 @@ const QuestionsPage = () => {
                 <h2 className="w-full text-3xl font-extrabold uppercase text-black flex justify-center items-center">
                     ❓вопросы
                 </h2>
-                <div className="flex flex-col gap-4">
-                    {questions.map((q) => (
-                        <div key={q.id} className="flex items-center justify-between">
-                            <Label htmlFor={q.id} className="text-black text-xl font-bold">
-                                {q.text}
-                            </Label>
-                            <div className="flex gap-3">
-                                <Button
-                                    className={cn(
-                                        'flex-1 py-2 rounded-lg font-semibold border',
-                                        localAnswers[parseInt(q.id) - 1] === 1
-                                            ? 'bg-green-500 text-white border-green-500'
-                                            : 'bg-white text-green-500 border-green-500'
-                                    )}
-                                    onClick={() => handleSelect(q.id, true)}
-                                >
-                                    Да
-                                </Button>
-                                <Button
-                                    className={cn(
-                                        'flex-1 py-2 rounded-lg font-semibold border',
-                                        localAnswers[parseInt(q.id) - 1] === 0
-                                            ? 'bg-red-500 text-white border-red-500'
-                                            : 'bg-white text-red-500 border-red-500'
-                                    )}
-                                    onClick={() => handleSelect(q.id, false)}
-                                >
-                                    Нет
-                                </Button>
+                {loading ? (
+                    <div className="text-center text-lg font-semibold">Загрузка вопросов...</div>
+                ) : (
+                    <div className="flex flex-col gap-4">
+                        {questions.map((q) => (
+                            <div key={q.id} className="flex items-center justify-between">
+                                <Label htmlFor={q.id} className="text-black text-xl font-bold">
+                                    {q.text}
+                                </Label>
+                                <div className="flex gap-3">
+                                    <Button
+                                        className={cn(
+                                            'flex-1 py-2 rounded-lg font-semibold border',
+                                            localAnswers[parseInt(q.id) - 1] === 1
+                                                ? 'bg-green-500 text-white border-green-500'
+                                                : 'bg-white text-green-500 border-green-500'
+                                        )}
+                                        onClick={() => handleSelect(q.id, true)}
+                                    >
+                                        Да
+                                    </Button>
+                                    <Button
+                                        className={cn(
+                                            'flex-1 py-2 rounded-lg font-semibold border',
+                                            localAnswers[parseInt(q.id) - 1] === 0
+                                                ? 'bg-red-500 text-white border-red-500'
+                                                : 'bg-white text-red-500 border-red-500'
+                                        )}
+                                        onClick={() => handleSelect(q.id, false)}
+                                    >
+                                        Нет
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
                 <FooterButton nextPath="/request/form" isNextDisabled={true} onNext={handleNext} />
             </section>
         </Page>

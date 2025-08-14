@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,15 +17,15 @@ type PhotoLabel = {
 type Props = {
   photoUrls: (string | null)[];
   setPhotoUrls: (urls: (string | null)[]) => void;
-  uploading: boolean;
-  setUploading: (value: boolean) => void;
+  photoLoading: boolean[];
+  setPhotoLoading: (loading: boolean[]) => void;
 };
 
 export default function UploadPhotos({
   photoUrls,
   setPhotoUrls,
-  uploading,
-  setUploading,
+  photoLoading,
+  setPhotoLoading,
 }: Props) {
   const inputRefs = [
     useRef<HTMLInputElement | null>(null),
@@ -41,8 +41,11 @@ export default function UploadPhotos({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0] || null;
-    if (!file || photoUrls[index]) return;
-    setUploading(true);
+    if (!file) return;
+
+    const newLoading = [...photoLoading];
+    newLoading[index] = true;
+    setPhotoLoading(newLoading);
 
     try {
       const preview = URL.createObjectURL(file);
@@ -51,15 +54,17 @@ export default function UploadPhotos({
       setPhotoUrls(newPhotos);
 
       const url = await uploadImageToSupabase(file);
-      newPhotos[index] = url; // Заменяем на постоянную URL
+      newPhotos[index] = url; // заменяем на постоянную URL
       setPhotoUrls(newPhotos);
     } catch (error) {
       console.error(error);
       const newPhotos = [...photoUrls];
-      newPhotos[index] = null; // Сбрасываем при ошибке
+      newPhotos[index] = null;
       setPhotoUrls(newPhotos);
     } finally {
-      setUploading(false);
+      const newLoading = [...photoLoading];
+      newLoading[index] = false;
+      setPhotoLoading(newLoading);
       e.target.value = "";
     }
   };
@@ -67,7 +72,10 @@ export default function UploadPhotos({
   const deleteImage = async (index: number) => {
     if (!photoUrls[index]) return;
 
-    setUploading(true);
+    const newLoading = [...photoLoading];
+    newLoading[index] = true;
+    setPhotoLoading(newLoading);
+
     try {
       await deleteImageFromSupabase(photoUrls[index]!);
       const newPhotos = [...photoUrls];
@@ -76,7 +84,9 @@ export default function UploadPhotos({
     } catch (error) {
       console.error(error);
     } finally {
-      setUploading(false);
+      const newLoading = [...photoLoading];
+      newLoading[index] = false;
+      setPhotoLoading(newLoading);
     }
   };
 
@@ -100,16 +110,11 @@ export default function UploadPhotos({
                     onClick={() => deleteImage(index)}
                   />
                 </>
+              ) : photoLoading[index] ? (
+                <div className="w-full h-full flex justify-center items-center bg-gray-100 text-gray-500 font-bold">
+                  Загрузка...
+                </div>
               ) : (
-                <Input
-                  type="file"
-                  ref={inputRefs[index]}
-                  onChange={(e) => handleFileChange(e, index)}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              )}
-              {!photoUrls[index] && (
                 <Image
                   src={item.pic}
                   alt={item.text}
@@ -119,41 +124,44 @@ export default function UploadPhotos({
                   onClick={() => inputRefs[index]?.current?.click()}
                 />
               )}
+              <Input
+                type="file"
+                ref={inputRefs[index]}
+                onChange={(e) => handleFileChange(e, index)}
+                className="hidden"
+                disabled={photoLoading[index]}
+              />
             </div>
-            <Label htmlFor={`photo-${index}`} className="text-black font-bold text-xl flex justify-center items-center">
+            <Label className="text-black font-bold text-xl flex justify-center items-center">
               {item.text}
             </Label>
           </div>
         ))}
       </div>
+
       <div className="flex justify-center w-full">
         {photoLabels.slice(2).map((item, index) => (
-          <div key={index} className="flex flex-col gap-2">
+          <div key={index + 2} className="flex flex-col gap-2">
             <div className="relative flex items-center justify-center">
               {photoUrls[index + 2] ? (
                 <>
                   <Image
-                    src={photoUrls[index + 2] || ""}
+                    src={photoUrls[index + 2]!}
                     alt={`${item.text} фото`}
                     width={200}
                     height={150}
-                    className="rounded-md w-full h-full object-cover flex justify-center items-center"
+                    className="rounded-md w-full h-full object-cover"
                   />
                   <X
                     className="text-red-600 cursor-pointer absolute top-1 right-1"
                     onClick={() => deleteImage(index + 2)}
                   />
                 </>
+              ) : photoLoading[index + 2] ? (
+                <div className="w-full h-full flex justify-center items-center bg-gray-100 text-gray-500 font-bold">
+                  Загрузка...
+                </div>
               ) : (
-                <Input
-                  type="file"
-                  ref={inputRefs[index + 2]}
-                  onChange={(e) => handleFileChange(e, index + 2)}
-                  disabled={uploading}
-                  className="hidden"
-                />
-              )}
-              {!photoUrls[index + 2] && (
                 <Image
                   src={item.pic}
                   alt={item.text}
@@ -163,8 +171,15 @@ export default function UploadPhotos({
                   onClick={() => inputRefs[index + 2]?.current?.click()}
                 />
               )}
+              <Input
+                type="file"
+                ref={inputRefs[index + 2]}
+                onChange={(e) => handleFileChange(e, index + 2)}
+                className="hidden"
+                disabled={photoLoading[index + 2]}
+              />
             </div>
-            <Label htmlFor={`photo-${index + 2}`} className="text-black font-bold text-xl flex justify-center items-center">
+            <Label className="text-black font-bold text-xl flex justify-center items-center">
               {item.text}
             </Label>
           </div>
