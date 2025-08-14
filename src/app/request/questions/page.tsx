@@ -34,7 +34,7 @@ const QuestionsPage = () => {
                 }
                 const data = await res.json();
                 if (data && data.draft) {
-                    const newAnswers = data.draft.answers || new Array(8).fill(0);
+                    const newAnswers = data.draft.answers
                     setLocalAnswers(newAnswers);
                     setAnswers(newAnswers);
                 }
@@ -55,15 +55,14 @@ const QuestionsPage = () => {
 
     const handleNext = async () => {
         if (!telegramId) return;
-        await fetch('/api/questions', {
+        const res = await fetch('/api/questions', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ telegramId, answers: localAnswers, questionsAnswered: true }),
         });
+        const data = await res.json();
         setShowQuestionsSuccess(true);
     };
-
-    const isAllNo = localAnswers.every((answer) => answer === 0);
 
     return (
         <Page back={true}>

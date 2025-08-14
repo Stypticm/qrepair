@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const body = await req.json()
-  const { telegramId, modelname, price } = body
+  const { telegramId, price, comment } = body
 
   if (!telegramId) {
     return NextResponse.json(
@@ -47,13 +47,15 @@ export async function PATCH(req: Request) {
 
   const dataToUpdate: Record<string, unknown> = {}
 
-  if (modelname?.trim()) {
-    dataToUpdate.modelname = modelname.trim()
-    dataToUpdate.price = price
+  if (price !== undefined) dataToUpdate.price = price
+  if (comment?.trim()) dataToUpdate.comment = comment.trim()
+
+  // Если есть обновляемые поля, можно менять статус
+  if (Object.keys(dataToUpdate).length > 0) {
     dataToUpdate.status = 'accepted'
   } else {
     return NextResponse.json(
-      { error: 'Insufficient data to update brand info' },
+      { error: 'No data provided to update' },
       { status: 400 }
     )
   }

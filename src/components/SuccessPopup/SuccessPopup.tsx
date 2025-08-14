@@ -25,7 +25,6 @@ export const SuccessPopup = ({
     redirectTo = '/',
     onClose }:
     Props) => {
-    const { price } = useStartForm();
     const router = useRouter()
 
     const handleClick = () => {

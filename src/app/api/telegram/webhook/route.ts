@@ -51,7 +51,7 @@ export async function POST(req: Request) {
               skupkaRequest.status === 'draft'
                 ? 'Черновик'
                 : skupkaRequest?.status === 'accepted'
-                ? 'Принята'
+                ? `Принята, предварительная цена ${skupkaRequest.price}`
                 : skupkaRequest?.status === 'in_progress'
                 ? 'На проверке'
                 : skupkaRequest?.status === 'on_the_way'
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
             skupkaRequest.status === 'draft'
               ? 'Черновик'
               : skupkaRequest?.status === 'accepted'
-              ? 'Принята'
+              ? `Принята, предварительная цена ${skupkaRequest.price}`
               : skupkaRequest?.status === 'in_progress'
               ? 'На проверке'
               : skupkaRequest?.status === 'on_the_way'

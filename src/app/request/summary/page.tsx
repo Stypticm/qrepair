@@ -20,7 +20,6 @@ const SummaryPage = () => {
         const res = await fetch(`/api/request/summary?telegramId=${telegramId}`);
         if (res.ok) {
           const json = await res.json();
-          console.log(json);
           setData(json);
           setLoading(false);
         }

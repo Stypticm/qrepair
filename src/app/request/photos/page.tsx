@@ -26,7 +26,6 @@ const PhotosPage = () => {
       body: JSON.stringify(payload),
     });
     const data = await response.json();
-    console.log('API response:', data);
 
     setPhotoUrls(photos);
   };

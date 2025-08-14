@@ -111,7 +111,7 @@ const BrandPage = () => {
       modelname,
       price,
     };
-
+    
     await fetch('/api/request/form', {
       method: 'PATCH',
       headers: {
@@ -160,13 +160,13 @@ const BrandPage = () => {
 
   const handleModelChange = async (value: string) => {
     setModel(value);
-    if (telegramId) {
-      await fetch('/api/request/form', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telegramId, modelname: value }),
-      });
-    }
+    if (!telegramId) return;
+
+    await fetch('/api/request/model', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegramId, modelname: value }),
+    });
   };
 
   return (
