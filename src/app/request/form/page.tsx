@@ -74,6 +74,7 @@ const BrandPage = () => {
         if (data && data.draft) {
           setModel(data.draft.modelname)
           setPhotoUrls(data.draft.photoUrls);
+          setPrice(data.draft.price);
           setShowQuestionsSuccess(Boolean(data.draft.questionsAnswered));
         }
       } catch (e) {
@@ -270,7 +271,7 @@ const BrandPage = () => {
       </section>
       <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true} />
       <section className="h-full">
-        {showPhotoSuccess && (
+        {!showPhotoSuccess && (
           <SuccessPopup
             text="Ваш заявка принята"
             phoneModel={modelname}

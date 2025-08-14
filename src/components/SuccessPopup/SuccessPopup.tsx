@@ -62,16 +62,16 @@ export const SuccessPopup = ({
                         <p className="text-lg font-bold text-green-600">{finalPrice?.toLocaleString()} ₽</p>
                     </div>
                 </div>
-            </div>
 
-            <div className="text-center mb-4">
-                <p className="text-lg font-semibold text-black">{phoneModel}</p>
-                <p className="text-xl font-bold text-gray-600">
-                    Мы готовы предложить за вашу модель отличную цену!
-                </p>
+                <div className="text-center mb-4">
+                    <p className="text-lg font-semibold text-black">{phoneModel}</p>
+                    <p className="text-xl font-bold text-gray-600">
+                        Мы готовы предложить за вашу модель отличную цену!
+                    </p>
+                </div>
+                <p className="text-3xl font-bold text-black border-3 !border-slate-700 bg-orange-600 p-2 w-full rounded-md">Связаться с нами</p>
+                <p className="fixed bottom-4 text-sm text-gray-500 mt-2">(Нажмите, чтобы вернуться на главную)</p>
             </div>
-            <p className="text-3xl font-bold text-black border-3 !border-slate-700 bg-orange-600 p-2 w-full rounded-md">Связаться с нами</p>
-            <p className="fixed bottom-4 text-sm text-gray-500 mt-2">(Нажмите, чтобы вернуться на главную)</p>
         </div>
     )
 }
