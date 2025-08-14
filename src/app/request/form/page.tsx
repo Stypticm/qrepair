@@ -45,19 +45,19 @@ const BrandPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showPhotoSuccess, setShowPhotoSuccess] = useState(false);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
-  const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(true);
   const {
     telegramId,
     modelname,
     comment,
     photoUrls,
-    answers,
+    showQuestionsSuccess,
     price,
     setTelegramId,
     setModel,
     setComment,
     setPhotoUrls,
     setPrice,
+    setShowQuestionsSuccess
   } = useStartForm();
   const [webhookSecret, setWebhookSecret] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -74,17 +74,16 @@ const BrandPage = () => {
         if (data && data.draft) {
           setModel(data.draft.modelname)
           setPhotoUrls(data.draft.photoUrls);
+          setShowQuestionsSuccess(Boolean(data.draft.questionsAnswered));
         }
       } catch (e) {
         console.error(e)
       }
     }
-    if (telegramId === null) {
+    if (!telegramId) {
       setTelegramId('1');
-      getData();
-    } else {
-      getData();
     }
+    getData();
   }, [telegramId, setTelegramId, setModel, setPhotoUrls]);
 
   useEffect(() => {
@@ -105,21 +104,11 @@ const BrandPage = () => {
   const isPhotoAdded = photoUrls.some((url) => url !== null);
   const isValid = !!modelname && isPhotoAdded && showQuestionsSuccess;
 
-  const calculatePrice = () => {
-    const basePrice = basePrices[modelname] || 0;
-    const discountPercentage = answers.reduce((sum, val) => sum + val, 0) * 5; // 5% за каждый "Да"
-    let finalPrice = basePrice * (1 - discountPercentage / 100);
-    return Math.floor(finalPrice / 100) * 100;
-  };
-
   const handleNext = async () => {
-    const calculatedPrice = calculatePrice();
-    setPrice(calculatedPrice);
-
     const payload = {
       telegramId,
       modelname,
-      price: calculatedPrice,
+      price,
     };
 
     await fetch('/api/request/form', {
@@ -166,8 +155,18 @@ const BrandPage = () => {
 
   const handleTransferToQuestions = () => {
     router.push('/request/questions');
-    // setShowQuestionsSuccess(true);
   }
+
+  const handleModelChange = async (value: string) => {
+    setModel(value);
+    if (telegramId) {
+      await fetch('/api/request/form', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ telegramId, modelname: value }),
+      });
+    }
+  };
 
   return (
     <Page back={true}>
@@ -179,7 +178,7 @@ const BrandPage = () => {
           <Label htmlFor="brand" className="text-black text-2xl font-bold">
             Выбор модели
           </Label>
-          <Select defaultValue={modelname} onValueChange={setModel}>
+          <Select defaultValue={modelname} onValueChange={handleModelChange}>
             <SelectTrigger className="w-full !border-slate-700 border-3">
               <SelectValue placeholder="Выберите модель" />
             </SelectTrigger>
@@ -276,8 +275,9 @@ const BrandPage = () => {
             text="Ваш заявка принята"
             phoneModel={modelname}
             phoneImage={photoUrls[0] as string}
+            basePrice={basePrices[modelname]}
+            finalPrice={price as number}
             redirectTo="/"
-            priceNewPhone={basePrices[modelname]}
             onClose={() => setShowPhotoSuccess(false)}
           />
         )}

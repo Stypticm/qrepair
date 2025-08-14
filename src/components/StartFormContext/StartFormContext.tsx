@@ -20,6 +20,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [contractUrl, setContractUrl] = useState<string | null>(null);
     const [imei, setImei] = useState<string | null>(null);
     const [answers, setAnswers] = useState<number[]>(new Array(8).fill(0));
+    const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(false);
     const [price, setPrice] = useState<number | null>(null);
     const [onNext, setOnNext] = useState<(() => Promise<void>) | undefined>(undefined);
 
@@ -45,6 +46,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 imei,
                 answers,
                 price,
+                showQuestionsSuccess,
                 onNext,
                 setOnNext,
                 setVideoUrl,
@@ -57,6 +59,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setUsername,
                 setUserPhotoUrl,
                 setAnswers,
+                setShowQuestionsSuccess,
                 setPrice
             }}
         >

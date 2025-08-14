@@ -43,6 +43,9 @@ export type FormState = {
 
   onNext?: () => Promise<void>
   setOnNext: (cb?: () => Promise<void>) => void
+
+  showQuestionsSuccess: boolean
+  setShowQuestionsSuccess: (v: boolean) => void
 }
 
 export interface SkupkaRequest {

@@ -21,7 +21,7 @@ const questions = [
 
 
 const QuestionsPage = () => {
-    const { telegramId, answers, setAnswers } = useStartForm();
+    const { telegramId, answers, setAnswers, setShowQuestionsSuccess } = useStartForm();
     const [localAnswers, setLocalAnswers] = useState<number[]>(answers || new Array(8).fill(0));
 
     useEffect(() => {
@@ -54,14 +54,13 @@ const QuestionsPage = () => {
     };
 
     const handleNext = async () => {
-        const payload = { telegramId, answers: localAnswers };
-        const response = await fetch('/api/questions', {
+        if (!telegramId) return;
+        await fetch('/api/questions', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ telegramId, answers: localAnswers, questionsAnswered: true }),
         });
-        const data = await response.json();
-        console.log("API response:", data);
+        setShowQuestionsSuccess(true);
     };
 
     const isAllNo = localAnswers.every((answer) => answer === 0);
