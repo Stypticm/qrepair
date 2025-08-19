@@ -65,7 +65,7 @@ const BrandPage = () => {
       }
     })();
     return () => controller.abort();
-  }, [telegramId]);
+  }, [telegramId, setModel, setPhotoUrls, setPrice, setShowQuestionsSuccess]);
 
   const firstPhoto = photoUrls.find(Boolean) as string | undefined;
   const isPhotoAdded = photoUrls.some(Boolean);

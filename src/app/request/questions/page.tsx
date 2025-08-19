@@ -45,7 +45,7 @@ const QuestionsPage = () => {
             }
         };
         if (telegramId) getData();
-    }, [telegramId]);
+    }, [telegramId, setAnswers]);
 
     const handleSelect = (id: string, value: boolean) => {
         if (loading) return;

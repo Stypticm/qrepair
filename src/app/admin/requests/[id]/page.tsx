@@ -8,6 +8,7 @@ import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { acceptRequest, courierReceived, fetchApplication, markPaid, reviewRequest } from '@/core/lib/requestActions';
+import Image from 'next/image'
 
 const RequestById = () => {
     const params = useParams()
@@ -108,7 +109,13 @@ const RequestById = () => {
                         {showPhotos && application?.photoUrls && application.photoUrls.length > 0 && (
                             <div className="mt-3 grid grid-cols-3 gap-2">
                                 {application.photoUrls.map((url, idx) => (
-                                    <img key={idx} src={url} alt={`Фото ${idx + 1}`} className="w-full h-24 object-cover rounded" />
+                                    <Image
+                                        key={idx}
+                                        src={url}
+                                        alt={`Фото ${idx + 1}`} className="w-full h-24 object-cover rounded"
+                                        width={100}
+                                        height={100}
+                                    />
                                 ))}
                             </div>
                         )}

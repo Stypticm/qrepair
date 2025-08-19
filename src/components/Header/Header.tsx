@@ -35,10 +35,12 @@ const Header = () => {
                     </section>
                     {
                         userPhotoUrl ? (
-                            <img
+                            <Image
                                 src={userPhotoUrl}
                                 className="w-12 h-12 rounded-full"
                                 alt="User photo"
+                                width={48}
+                                height={48}
                             />
                         ) : (
                             <Image
