@@ -35,6 +35,7 @@ const BrandPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showPhotoSuccess, setShowPhotoSuccess] = useState(false);
   const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
   const {
     telegramId,
     modelname,
@@ -66,6 +67,24 @@ const BrandPage = () => {
     })();
     return () => controller.abort();
   }, [telegramId, setModel, setPhotoUrls, setPrice, setShowQuestionsSuccess]);
+
+  // Prefetch questions data and block the button until loaded
+  useEffect(() => {
+    if (!telegramId) return;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`/api/questions?telegramId=${telegramId}`, { signal: controller.signal })
+        // Regardless of result, we consider loading finished
+        await res.text().catch(() => {})
+      } catch (_) {
+        // ignore
+      } finally {
+        setQuestionsLoading(false);
+      }
+    })();
+    return () => controller.abort();
+  }, [telegramId]);
 
   const firstPhoto = photoUrls.find(Boolean) as string | undefined;
   const isPhotoAdded = photoUrls.some(Boolean);
@@ -160,7 +179,7 @@ const BrandPage = () => {
           <Label htmlFor="condition" className="text-black text-2xl font-bold">
             Состояние
           </Label>
-          <Button onClick={handleTransferToQuestions}>
+          <Button onClick={handleTransferToQuestions} disabled={questionsLoading}>
             <span className="font-bold">Ответить на вопросы</span>
           </Button>
           {showQuestionsSuccess && (

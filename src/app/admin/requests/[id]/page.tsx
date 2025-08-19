@@ -103,8 +103,8 @@ const RequestById = () => {
                         <div className="flex items-center gap-2 mt-2">
                             {(() => {
                                 // Цена редактируется только до отправки пользователю окончательной цены
-                                // Т.е. на этапах accepted и in_progress, но после review (on_the_way) — уже нельзя
-                                const isEditable = application?.status === 'accepted' || application?.status === 'in_progress'
+                                // Разрешено ТОЛЬКО на этапе accepted; после отправки (in_progress и далее) — нельзя
+                                const isEditable = application?.status === 'accepted'
                                 return (
                                     <input
                                         className={`rounded px-2 py-1 text-black ${!isEditable ? 'opacity-60 cursor-not-allowed' : ''}`}
@@ -120,7 +120,7 @@ const RequestById = () => {
                                 {showPhotos ? 'Скрыть фото' : 'Посмотреть фото'}
                             </Button>
                         </div>
-                        {!(application?.status === 'accepted' || application?.status === 'in_progress') && (
+                        {application?.status !== 'accepted' && (
                             <p className="text-slate-50 text-sm mt-1">Цена уже отправлена клиенту и недоступна для изменения.</p>
                         )}
                         {showPhotos && application?.photoUrls && application.photoUrls.length > 0 && (
