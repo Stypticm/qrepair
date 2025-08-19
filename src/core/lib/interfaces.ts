@@ -49,7 +49,7 @@ export type FormState = {
 }
 
 export interface SkupkaRequest {
-  id: number
+  id: string
   telegramId: string | null
   modelname?: string
   photoUrls?: string[]
@@ -60,4 +60,5 @@ export interface SkupkaRequest {
   contractUrl?: string
   answers?: number[]
   price?: number
+  priceConfirmed?: boolean
 }

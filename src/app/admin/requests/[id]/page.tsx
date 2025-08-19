@@ -37,6 +37,12 @@ const RequestById = () => {
         };
 
         if (id) getApplication();
+
+        // live polling for status updates (priceConfirmed, status)
+        const interval = setInterval(() => {
+            getApplication();
+        }, 4000);
+        return () => clearInterval(interval);
     }, [id]);
 
     const handleAcceptRequest = async () => {
@@ -136,23 +142,33 @@ const RequestById = () => {
                                 ))}
                             </div>
                         )}
-                        <p className="text-slate-50">
-                            Статус:{' '}
-                            <Badge className='bg-emerald-300'>
-                                {
-                                    application?.status === 'draft'
-                                        ? 'Черновик'
-                                        : application?.status === 'accepted'
-                                            ? 'Принята'
-                                            : application?.status === 'in_progress'
-                                                ? 'На проверке'
-                                                : application?.status === 'on_the_way'
-                                                    ? 'В пути'
-                                                    : application?.status === 'paid'
-                                                        ? 'Оплачено'
-                                                        : application?.status === 'completed' && 'Выполнена'
-                                }
-                            </Badge>
+                        <p className="text-slate-50 flex flex-col gap-1">
+                            <span>
+                                Статус:{' '}
+                                <Badge className='bg-emerald-300'>
+                                    {
+                                        application?.status === 'draft'
+                                            ? 'Черновик'
+                                            : application?.status === 'accepted'
+                                                ? 'Принята'
+                                                : application?.status === 'in_progress'
+                                                    ? 'На проверке'
+                                                    : application?.status === 'on_the_way'
+                                                        ? 'В пути'
+                                                        : application?.status === 'paid'
+                                                            ? 'Оплачено'
+                                                            : application?.status === 'completed' && 'Выполнена'
+                                    }
+                                </Badge>
+                            </span>
+                            {(application?.status === 'in_progress' || application?.status === 'on_the_way') && (
+                                <span>
+                                    Ответ пользователя:{' '}
+                                    <Badge className={application?.priceConfirmed ? 'bg-green-600' : 'bg-red-600'}>
+                                        {application?.priceConfirmed ? 'Цена подтверждена' : 'Цена не подтверждена'}
+                                    </Badge>
+                                </span>
+                            )}
                         </p>
                     </CardDescription>
                     <CardAction className="self-center pt-2 gap-2">

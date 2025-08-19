@@ -81,11 +81,15 @@ export async function POST(req: Request) {
           } catch (e) {
             // ignore if already confirmed or missing
           }
+          const updated = await prisma.skupka.findUnique({
+            where: { id },
+          })
           await sendTelegramMessage(
             telegramId,
             '✅ Спасибо за подтверждение. Ожидайте, с вами свяжется наш менеджер для организации забора устройства (в ближайшее время).',
             { parse_mode: 'Markdown' }
           )
+          // Подтолкнуть фронтенд к обновлению через webhook: опционально можно дернуть сторонний канал (сейчас пропускаем)
         }
       } else if (data?.startsWith('price_confirm_no:')) {
         const id = data.split(':')[1]

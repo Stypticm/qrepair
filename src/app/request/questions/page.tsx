@@ -22,7 +22,9 @@ const questions = [
 
 const QuestionsPage = () => {
     const { telegramId, answers, setAnswers, setShowQuestionsSuccess } = useStartForm();
-    const [localAnswers, setLocalAnswers] = useState<number[]>(answers || new Array(8).fill(0));
+    const [localAnswers, setLocalAnswers] = useState<number[]>(
+        Array.isArray(answers) && answers.length === 8 ? answers : new Array(8).fill(-1)
+    );
     const [loading, setLoading] = useState(true);
     const [hasEdited, setHasEdited] = useState(false);
 
@@ -60,6 +62,8 @@ const QuestionsPage = () => {
 
     const handleNext = async () => {
         if (!telegramId) return;
+        const allAnswered = localAnswers.every((v) => v === 0 || v === 1)
+        if (!allAnswered) return;
         const res = await fetch('/api/questions', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -112,7 +116,15 @@ const QuestionsPage = () => {
                         ))}
                     </div>
                 )}
-                <FooterButton nextPath="/request/form" isNextDisabled={true} onNext={handleNext} />
+                {
+                    (() => {
+                        const allAnswered = localAnswers.every((v) => v === 0 || v === 1)
+                        const canSubmit = !loading && allAnswered
+                        return (
+                            <FooterButton nextPath="/request/form" isNextDisabled={canSubmit} onNext={handleNext} />
+                        )
+                    })()
+                }
             </section>
         </Page>
     );
