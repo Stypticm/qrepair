@@ -243,7 +243,7 @@ const BrandPage = () => {
           </Dialog>
         </div>
       </section>
-      <FooterButton isNextDisabled={!isValid || submitting} onNext={handleNext} preventRedirect={true} />
+      <FooterButton isNextDisabled={isValid && !submitting} onNext={handleNext} preventRedirect={true} />
       <section className="h-full">
         {showPhotoSuccess && (
           <SuccessPopup
