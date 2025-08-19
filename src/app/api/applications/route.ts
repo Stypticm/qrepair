@@ -6,7 +6,16 @@ export async function GET() {
   try {
     const applications = await prisma.skupka.findMany({
       where: {
-        status: 'accepted',
+        status: {
+          in: [
+            'draft',
+            'accepted',
+            'in_progress',
+            'on_the_way',
+            'completed',
+            'paid',
+          ],
+        },
       },
     })
     return NextResponse.json(applications)

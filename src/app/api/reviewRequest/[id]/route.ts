@@ -43,16 +43,9 @@ export async function PATCH(
       )
     }
 
-    // Обновляем статус и (опционально) цену
+    // Обновляем только статус. Цена на этом шаге не меняется
     const dataToUpdate: Record<string, unknown> = {
       status: 'on_the_way',
-    }
-    if (
-      maybePrice !== undefined &&
-      maybePrice !== null &&
-      !Number.isNaN(Number(maybePrice))
-    ) {
-      dataToUpdate.price = Number(maybePrice)
     }
 
     const updatedRequest = await prisma.skupka.update({
@@ -64,11 +57,7 @@ export async function PATCH(
 
     // Отправляем сообщение пользователю
     const finalPrice = updatedRequest.price
-    const priceLine =
-      typeof finalPrice === 'number'
-        ? `\n💰 Итоговая цена: ${Math.round(finalPrice)} ₽.`
-        : ''
-    const message = `📦 Ваша заявка рассмотрена.${priceLine}\n🚚 Курьер скоро заберёт телефон.`
+    const message = `📦 Ваша заявка рассмотрена.\n🚚 Курьер скоро заберёт телефон.`
     await sendTelegramMessage(
       updatedRequest.telegramId,
       message,

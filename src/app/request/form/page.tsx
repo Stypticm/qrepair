@@ -92,23 +92,6 @@ const BrandPage = () => {
         throw new Error('Failed to save form');
       }
 
-      const statusResponse = await fetch('/api/telegram/webhook', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          callback_query: {
-            from: { id: telegramId },
-            data: 'check_status',
-          },
-        }),
-      });
-
-      if (!statusResponse.ok) {
-        throw new Error('Failed to send status command');
-      }
-
       setShowPhotoSuccess(true);
     } catch (error) {
       console.error(error);

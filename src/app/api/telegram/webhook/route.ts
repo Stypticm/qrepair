@@ -69,6 +69,35 @@ export async function POST(req: Request) {
             parse_mode: 'Markdown',
           }
         )
+      } else if (data?.startsWith('price_confirm_yes:')) {
+        const id = data.split(':')[1]
+        if (id) {
+          // подтверждение цены: оставляем заявку и информируем
+          await sendTelegramMessage(
+            telegramId,
+            '✅ Спасибо за подтверждение. Ожидайте, с вами свяжется наш менеджер для организации забора устройства (в ближайшее время).',
+            { parse_mode: 'Markdown' }
+          )
+        }
+      } else if (data?.startsWith('price_confirm_no:')) {
+        const id = data.split(':')[1]
+        if (id) {
+          try {
+            await prisma.skupka.delete({ where: { id } })
+            await sendTelegramMessage(
+              telegramId,
+              '❌ Спасибо, что воспользовались нашим сервисом. Заявка отменена.',
+              { parse_mode: 'Markdown' }
+            )
+          } catch (e) {
+            // если уже удалена или некорректный id
+            await sendTelegramMessage(
+              telegramId,
+              'Произошла ошибка при отмене заявки. Пожалуйста, свяжитесь с поддержкой: @QtweRepairSupport',
+              { parse_mode: 'Markdown' }
+            )
+          }
+        }
       } else if (data === 'contact_support') {
         await sendTelegramMessage(
           telegramId,

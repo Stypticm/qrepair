@@ -10,9 +10,16 @@ export const fetchApplication = async (id: string) => {
   return data
 }
 
-export const acceptRequest = async (id: string) => {
+export const acceptRequest = async (
+  id: string,
+  price?: number | null
+) => {
   const res = await fetch(`/api/acceptRequest/${id}`, {
     method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(
+      price !== undefined ? { price } : {}
+    ),
   })
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}))

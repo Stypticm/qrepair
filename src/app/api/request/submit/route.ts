@@ -43,23 +43,12 @@ export async function POST(req: Request) {
       data: dataToUpdate,
     })
 
-    const statusText = `Статус вашей заявки: *${
-      updated.status === 'draft'
-        ? 'Черновик'
-        : updated.status === 'accepted'
-        ? `Принята, предварительная цена ${updated.price}`
-        : updated.status === 'in_progress'
-        ? 'На проверке'
-        : updated.status === 'on_the_way'
-        ? 'В пути'
-        : updated.status === 'paid'
-        ? 'Оплачено'
-        : 'Выполнена'
-    }*`
-
-    await sendTelegramMessage(telegramId, statusText, {
-      parse_mode: 'Markdown',
-    })
+    // Отправляем пользователю базовое уведомление о принятии заявки
+    await sendTelegramMessage(
+      telegramId,
+      '📱 Ваша заявка принята в работу. Ожидайте, с вами свяжется наш менеджер в ближайшее время.',
+      { parse_mode: 'Markdown' }
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -70,5 +59,3 @@ export async function POST(req: Request) {
     )
   }
 }
-
-

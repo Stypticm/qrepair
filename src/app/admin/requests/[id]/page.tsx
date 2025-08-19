@@ -41,7 +41,13 @@ const RequestById = () => {
 
     const handleAcceptRequest = async () => {
         try {
-            const data = await acceptRequest(id as string);
+            const maybePrice = priceInput.trim() === '' ? undefined : Number(priceInput)
+            const data = await acceptRequest(
+                id as string,
+                Number.isFinite(maybePrice as number)
+                    ? (maybePrice as number)
+                    : undefined
+            );
             setApplication(data);
             setError(null);
         } catch (err) {
@@ -95,17 +101,26 @@ const RequestById = () => {
                         <p className="text-slate-50">Модель телефона: {application?.modelname}</p>
                         <p className="text-slate-50">Предварительная цена: {application?.price ?? '—'}</p>
                         <div className="flex items-center gap-2 mt-2">
-                            <input
-                                className="rounded px-2 py-1 text-black"
-                                type="number"
-                                placeholder="Итоговая цена"
-                                value={priceInput}
-                                onChange={(e) => setPriceInput(e.target.value)}
-                            />
+                            {(() => {
+                                const isEditable = application?.status === 'accepted' || application?.status === 'in_progress'
+                                return (
+                                    <input
+                                        className={`rounded px-2 py-1 text-black ${!isEditable ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                        type="number"
+                                        placeholder="Итоговая цена"
+                                        value={priceInput}
+                                        onChange={(e) => setPriceInput(e.target.value)}
+                                        disabled={!isEditable}
+                                    />
+                                )
+                            })()}
                             <Button variant="secondary" onClick={() => setShowPhotos((v) => !v)}>
                                 {showPhotos ? 'Скрыть фото' : 'Посмотреть фото'}
                             </Button>
                         </div>
+                        {!(application?.status === 'accepted' || application?.status === 'in_progress') && (
+                            <p className="text-slate-50 text-sm mt-1">Цена уже отправлена клиенту и недоступна для изменения.</p>
+                        )}
                         {showPhotos && application?.photoUrls && application.photoUrls.length > 0 && (
                             <div className="mt-3 grid grid-cols-3 gap-2">
                                 {application.photoUrls.map((url, idx) => (

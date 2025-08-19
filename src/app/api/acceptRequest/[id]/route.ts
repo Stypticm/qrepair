@@ -7,6 +7,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  let body: unknown = null
+  try {
+    body = await req.json()
+  } catch (_) {
+    // empty body allowed
+  }
+  const maybeObj =
+    body && typeof body === 'object'
+      ? (body as Record<string, unknown>)
+      : {}
+  const maybePrice = maybeObj.price
 
   if (!id) {
     console.error('Missing id in params:', params)
@@ -32,19 +43,53 @@ export async function PATCH(
       )
     }
 
-    // Обновляем статус
+    // Обновляем статус и фиксируем окончательную цену (если передана)
+    const dataToUpdate: Record<string, unknown> = {
+      status: 'in_progress',
+    }
+    if (
+      maybePrice !== undefined &&
+      maybePrice !== null &&
+      !Number.isNaN(Number(maybePrice))
+    ) {
+      dataToUpdate.price = Number(maybePrice)
+    }
+
     const updatedRequest = await prisma.skupka.update({
       where: { id },
-      data: { status: 'in_progress' },
+      data: dataToUpdate,
     })
 
     console.log('Updated request:', updatedRequest)
 
-    // Отправляем сообщение пользователю
+    // Отправляем сообщение пользователю с окончательной ценой
+    const finalPrice = updatedRequest.price
+    const priceText =
+      typeof finalPrice === 'number'
+        ? `${Math.round(finalPrice)} ₽`
+        : '—'
+    const message = `📄 После ознакомления с вашими фото мы определили окончательную цену: ${priceText}.
+Если вы согласны, подтвердите, пожалуйста.`
     await sendTelegramMessage(
       updatedRequest.telegramId,
-      '📱 Ваша заявка принята в работу. Ожидайте, скоро с вами свяжется мастер.',
-      { parse_mode: 'Markdown' }
+      message,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Да',
+                callback_data: `price_confirm_yes:${updatedRequest.id}`,
+              },
+              {
+                text: 'Нет',
+                callback_data: `price_confirm_no:${updatedRequest.id}`,
+              },
+            ],
+          ],
+        },
+      }
     )
 
     return NextResponse.json({
