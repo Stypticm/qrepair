@@ -14,6 +14,8 @@ const RequestById = () => {
     const id = Array.isArray(params.id) ? params.id[0] : params.id
     const [application, setApplication] = useState<SkupkaRequest | null>(null)
     const [error, setError] = useState<string | null>(null)
+    const [priceInput, setPriceInput] = useState<string>('')
+    const [showPhotos, setShowPhotos] = useState<boolean>(false)
 
     useEffect(() => {
         const getApplication = async () => {
@@ -25,6 +27,7 @@ const RequestById = () => {
             try {
                 const data = await fetchApplication(id);
                 setApplication(data);
+                if (data?.price != null) setPriceInput(String(data.price))
                 setError(null);
             } catch (err) {
                 console.error('Error fetching application:', err);
@@ -48,7 +51,8 @@ const RequestById = () => {
 
     const handleReviewRequest = async () => {
         try {
-            const data = await reviewRequest(id as string);
+            const maybePrice = priceInput.trim() === '' ? undefined : Number(priceInput)
+            const data = await reviewRequest(id as string, Number.isFinite(maybePrice as number) ? (maybePrice as number) : undefined);
             setApplication(data);
             setError(null);
         } catch (err) {
@@ -88,6 +92,26 @@ const RequestById = () => {
                 <CardContent className="max-h-80 overflow-y-auto flex flex-col">
                     <CardDescription>
                         <p className="text-slate-50">Модель телефона: {application?.modelname}</p>
+                        <p className="text-slate-50">Предварительная цена: {application?.price ?? '—'}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                            <input
+                                className="rounded px-2 py-1 text-black"
+                                type="number"
+                                placeholder="Итоговая цена"
+                                value={priceInput}
+                                onChange={(e) => setPriceInput(e.target.value)}
+                            />
+                            <Button variant="secondary" onClick={() => setShowPhotos((v) => !v)}>
+                                {showPhotos ? 'Скрыть фото' : 'Посмотреть фото'}
+                            </Button>
+                        </div>
+                        {showPhotos && application?.photoUrls && application.photoUrls.length > 0 && (
+                            <div className="mt-3 grid grid-cols-3 gap-2">
+                                {application.photoUrls.map((url, idx) => (
+                                    <img key={idx} src={url} alt={`Фото ${idx + 1}`} className="w-full h-24 object-cover rounded" />
+                                ))}
+                            </div>
+                        )}
                         <p className="text-slate-50">
                             Статус:{' '}
                             <Badge className='bg-emerald-300'>

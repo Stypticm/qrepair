@@ -7,6 +7,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  let body: unknown = null
+  try {
+    body = await req.json()
+  } catch (_) {
+    // no body provided
+  }
+  const maybeObj =
+    body && typeof body === 'object'
+      ? (body as Record<string, unknown>)
+      : {}
+  const maybePrice = maybeObj.price
 
   if (!id) {
     console.error('Missing id in params:', params)
@@ -32,18 +43,35 @@ export async function PATCH(
       )
     }
 
-    // Обновляем статус
+    // Обновляем статус и (опционально) цену
+    const dataToUpdate: Record<string, unknown> = {
+      status: 'on_the_way',
+    }
+    if (
+      maybePrice !== undefined &&
+      maybePrice !== null &&
+      !Number.isNaN(Number(maybePrice))
+    ) {
+      dataToUpdate.price = Number(maybePrice)
+    }
+
     const updatedRequest = await prisma.skupka.update({
       where: { id },
-      data: { status: 'on_the_way' },
+      data: dataToUpdate,
     })
 
     console.log('Updated request:', updatedRequest)
 
     // Отправляем сообщение пользователю
+    const finalPrice = updatedRequest.price
+    const priceLine =
+      typeof finalPrice === 'number'
+        ? `\n💰 Итоговая цена: ${Math.round(finalPrice)} ₽.`
+        : ''
+    const message = `📦 Ваша заявка рассмотрена.${priceLine}\n🚚 Курьер скоро заберёт телефон.`
     await sendTelegramMessage(
       updatedRequest.telegramId,
-      '📦 Ваша заявка рассмотрена. Курьер скоро заберёт телефон.',
+      message,
       { parse_mode: 'Markdown' }
     )
 

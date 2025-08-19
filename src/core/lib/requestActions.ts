@@ -24,9 +24,16 @@ export const acceptRequest = async (id: string) => {
   return data.application
 }
 
-export const reviewRequest = async (id: string) => {
+export const reviewRequest = async (
+  id: string,
+  price?: number | null
+) => {
   const res = await fetch(`/api/reviewRequest/${id}`, {
     method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(
+      price !== undefined ? { price } : {}
+    ),
   })
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}))

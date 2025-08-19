@@ -1,5 +1,4 @@
 'use client';
-export const dynamic = 'force-dynamic';
 
 import FooterButton from '@/components/FooterButton/FooterButton';
 import { Page } from '@/components/Page';
@@ -20,25 +19,16 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const models = [
-  { id: '1', name: 'Apple Iphone 13' },
-  { id: '2', name: 'Apple Iphone 13 Pro' },
-  { id: '3', name: 'Apple Iphone 13 Pro Max' },
-  { id: '4', name: 'Apple Iphone 14' },
-  { id: '5', name: 'Apple Iphone 14 Pro' },
-  { id: '6', name: 'Apple Iphone 14 Pro Max' },
-]
-
-const basePrices: Record<string, number> = {
-  'Apple Iphone 13': 48000,
-  'Apple Iphone 13 Pro': 56000,
-  'Apple Iphone 13 Pro Max': 64000,
-  'Apple Iphone 14': 56000,
-  'Apple Iphone 14 Pro': 72000,
-  'Apple Iphone 14 Pro Max': 80000,
-};
+const deviceCatalog= {
+  'Apple Iphone 13': { name: 'Apple Iphone 13', basePrice: 48000 },
+  'Apple Iphone 13 Pro': { name: 'Apple Iphone 13 Pro', basePrice: 56000 },
+  'Apple Iphone 13 Pro Max': { name: 'Apple Iphone 13 Pro Max', basePrice: 64000 },
+  'Apple Iphone 14': { name: 'Apple Iphone 14', basePrice: 56000 },
+  'Apple Iphone 14 Pro': { name: 'Apple Iphone 14 Pro', basePrice: 72000 },
+  'Apple Iphone 14 Pro Max': { name: 'Apple Iphone 14 Pro Max', basePrice: 80000 },
+} as const;
 
 const BrandPage = () => {
   const router = useRouter();
@@ -52,93 +42,79 @@ const BrandPage = () => {
     photoUrls,
     showQuestionsSuccess,
     price,
-    setTelegramId,
     setModel,
     setComment,
     setPhotoUrls,
     setPrice,
     setShowQuestionsSuccess
   } = useStartForm();
-  const [webhookSecret, setWebhookSecret] = useState<string>('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const res = await fetch(`/api/request/form?telegramId=${telegramId}`)
-        if (!res.ok) {
-          console.error("Fetch error:", res.status, await res.text());
-          return;
-        }
-        const data = await res.json();
-        if (data && data.draft) {
-          setModel(data.draft.modelname)
-          setPhotoUrls(data.draft.photoUrls);
-          setPrice(data.draft.price);
-          setShowQuestionsSuccess(Boolean(data.draft.questionsAnswered));
-        }
-      } catch (e) {
-        console.error(e)
+    if (!telegramId) return;
+    const controller = new AbortController();
+    (async () => {
+      const res = await fetch(`/api/request/form?telegramId=${telegramId}`, { signal: controller.signal })
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && data.draft) {
+        setModel(data.draft.modelname)
+        setPhotoUrls(data.draft.photoUrls);
+        setPrice(data.draft.price);
+        setShowQuestionsSuccess(Boolean(data.draft.questionsAnswered));
       }
-    }
-    if (!telegramId) {
-      setTelegramId('1');
-    }
-    getData();
-  }, [telegramId, setTelegramId, setModel, setPhotoUrls]);
-
-  useEffect(() => {
-    const fetchWebhookSecret = async () => {
-      try {
-        const res = await fetch('/api/telegram/secret');
-        if (res.ok) {
-          const { secret } = await res.json();
-          setWebhookSecret(secret);
-        }
-      } catch (error) {
-        console.error('Ошибка при получении секретного токена:', error);
-      }
-    };
-    fetchWebhookSecret();
+    })();
+    return () => controller.abort();
   }, [telegramId]);
 
-  const isPhotoAdded = photoUrls.some((url) => url !== null);
+  const firstPhoto = photoUrls.find(Boolean) as string | undefined;
+  const isPhotoAdded = photoUrls.some(Boolean);
   const isValid = !!modelname && isPhotoAdded && showQuestionsSuccess;
 
   const handleNext = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     const payload = {
       telegramId,
       modelname,
       price,
     };
-    
-    await fetch('/api/request/form', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const statusResponse = await fetch('/api/telegram/webhook', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Telegram-Bot-Api-Secret-Token': webhookSecret,
-      },
-      body: JSON.stringify({
-        callback_query: {
-          from: { id: telegramId },
-          data: 'check_status',
+    try {
+      const saveResponse = await fetch('/api/request/form', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
-    });
+        body: JSON.stringify(payload),
+      });
 
-    if (!statusResponse.ok) {
-      throw new Error('Failed to send status command');
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save form');
+      }
+
+      const statusResponse = await fetch('/api/telegram/webhook', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          callback_query: {
+            from: { id: telegramId },
+            data: 'check_status',
+          },
+        }),
+      });
+
+      if (!statusResponse.ok) {
+        throw new Error('Failed to send status command');
+      }
+
+      setShowPhotoSuccess(true);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSubmitting(false);
     }
-
-    setShowPhotoSuccess(true);
   };
 
   const handleCommentDialogOpen = () => {
@@ -179,16 +155,16 @@ const BrandPage = () => {
           <Label htmlFor="brand" className="text-black text-2xl font-bold">
             Выбор модели
           </Label>
-          <Select defaultValue={modelname} onValueChange={handleModelChange}>
+          <Select value={modelname ?? ''} onValueChange={handleModelChange}>
             <SelectTrigger className="w-full !border-slate-700 border-3">
               <SelectValue placeholder="Выберите модель" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup className='text-black'>
                 {
-                  models.map((model) => (
-                    <SelectItem key={model.id} value={model.name}>
-                      <span className='text-black font-bold'>{model.name}</span>
+                  Object.entries(deviceCatalog).map(([key, value]) => (
+                    <SelectItem key={key} value={key}>
+                      <span className='text-black font-bold'>{value.name}</span>
                     </SelectItem>
                   ))
                 }
@@ -244,7 +220,6 @@ const BrandPage = () => {
             Комментарии (Не обязательно)
           </Label>
           <Textarea
-            ref={textareaRef}
             value={comment || ''}
             readOnly
             onClick={handleCommentDialogOpen}
@@ -252,10 +227,9 @@ const BrandPage = () => {
             className="!border-slate-700 border-3 text-black font-bold h-24"
           />
           <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
-            <DialogContent className="p-4 flex flex-col items-center top-0 transform translate-y-0 fixed w-full max-w-md rounded-b-none" aria-describedby='modal-description'>
+            <DialogContent className="p-4 flex flex-col items-center top-0 transform translate-y-0 fixed w-full max-w-md rounded-b-none">
               <DialogTitle className="text-lg text-black font-bold mb-2">Введите комментарий</DialogTitle>
               <Textarea
-                ref={textareaRef}
                 value={comment || ''}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Ваш комментарий"
@@ -269,14 +243,14 @@ const BrandPage = () => {
           </Dialog>
         </div>
       </section>
-      <FooterButton isNextDisabled={isValid} onNext={handleNext} preventRedirect={true} />
+      <FooterButton isNextDisabled={!isValid || submitting} onNext={handleNext} preventRedirect={true} />
       <section className="h-full">
         {showPhotoSuccess && (
           <SuccessPopup
             text="Ваш заявка принята"
             phoneModel={modelname}
-            phoneImage={photoUrls[0] as string}
-            basePrice={basePrices[modelname]}
+            phoneImage={(firstPhoto as string) || '/photo_phone.png'}
+            basePrice={deviceCatalog[modelname as keyof typeof deviceCatalog]?.basePrice ?? 0}
             finalPrice={price as number}
             redirectTo="/"
             onClose={() => setShowPhotoSuccess(false)}
@@ -284,7 +258,7 @@ const BrandPage = () => {
         )}
       </section>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="p-4 flex flex-col items-center" aria-describedby={undefined}>
+        <DialogContent className="p-4 flex flex-col items-center">
           <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>
           <Image
             src="/banan.gif"
