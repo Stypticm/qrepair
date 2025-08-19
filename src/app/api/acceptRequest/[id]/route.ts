@@ -46,6 +46,7 @@ export async function PATCH(
     // Обновляем статус и фиксируем окончательную цену (если передана)
     const dataToUpdate: Record<string, unknown> = {
       status: 'in_progress',
+      priceConfirmed: false,
     }
     if (
       maybePrice !== undefined &&

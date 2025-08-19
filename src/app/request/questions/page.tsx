@@ -24,6 +24,7 @@ const QuestionsPage = () => {
     const { telegramId, answers, setAnswers, setShowQuestionsSuccess } = useStartForm();
     const [localAnswers, setLocalAnswers] = useState<number[]>(answers || new Array(8).fill(0));
     const [loading, setLoading] = useState(true);
+    const [hasEdited, setHasEdited] = useState(false);
 
     useEffect(() => {
         const getData = async () => {
@@ -34,7 +35,7 @@ const QuestionsPage = () => {
                     return;
                 }
                 const data = await res.json();
-                if (data?.draft?.answers) {
+                if (data?.draft?.answers && !hasEdited) {
                     setLocalAnswers(data.draft.answers);
                     setAnswers(data.draft.answers);
                 }
@@ -45,13 +46,14 @@ const QuestionsPage = () => {
             }
         };
         if (telegramId) getData();
-    }, [telegramId, setAnswers]);
+    }, [telegramId, setAnswers, hasEdited]);
 
     const handleSelect = (id: string, value: boolean) => {
-        if (loading) return;
+        // Разрешаем отвечать сразу, даже пока идёт загрузка
         const index = parseInt(id) - 1;
         const updated = [...localAnswers];
         updated[index] = value ? 1 : 0;
+        setHasEdited(true);
         setLocalAnswers(updated);
         setAnswers(updated);
     };

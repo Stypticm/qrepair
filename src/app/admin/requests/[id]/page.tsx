@@ -155,7 +155,11 @@ const RequestById = () => {
                     </CardDescription>
                     <CardAction className="self-center pt-2 gap-2">
                         {application?.status === 'accepted' && <Button onClick={handleAcceptRequest}>Принять заявку</Button>}
-                        {application?.status === 'in_progress' && <Button onClick={handleReviewRequest}>Заявка рассмотрена</Button>}
+                        {application?.status === 'in_progress' && (
+                            <Button onClick={handleReviewRequest} disabled={!application?.price || !(application as any)?.priceConfirmed}>
+                                Заявка рассмотрена
+                            </Button>
+                        )}
                         {application?.status === 'on_the_way' && <Button onClick={handleCourierReceived}>Телефон у курьера</Button>}
                         {application?.status === 'paid' && <Button onClick={handleMarkPaid}>Оплачено</Button>}
                         {

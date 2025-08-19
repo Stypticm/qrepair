@@ -72,7 +72,15 @@ export async function POST(req: Request) {
       } else if (data?.startsWith('price_confirm_yes:')) {
         const id = data.split(':')[1]
         if (id) {
-          // подтверждение цены: оставляем заявку и информируем
+          // подтверждение цены: ставим флаг подтверждения и информируем
+          try {
+            await prisma.skupka.update({
+              where: { id },
+              data: { priceConfirmed: true },
+            })
+          } catch (e) {
+            // ignore if already confirmed or missing
+          }
           await sendTelegramMessage(
             telegramId,
             '✅ Спасибо за подтверждение. Ожидайте, с вами свяжется наш менеджер для организации забора устройства (в ближайшее время).',

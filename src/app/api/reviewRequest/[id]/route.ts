@@ -43,6 +43,13 @@ export async function PATCH(
       )
     }
 
+    // Разрешаем переход дальше только при подтверждённой цене
+    if (!request.price || !request.priceConfirmed) {
+      return NextResponse.json(
+        { error: 'Price is not confirmed by user yet' },
+        { status: 400 }
+      )
+    }
     // Обновляем только статус. Цена на этом шаге не меняется
     const dataToUpdate: Record<string, unknown> = {
       status: 'on_the_way',

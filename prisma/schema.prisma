@@ -23,6 +23,7 @@ model Skupka {
   price             Float?
   damagePercent     Float        @default(0)
   questionsAnswered Boolean      @default(false)
+  priceConfirmed    Boolean      @default(false)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 }
