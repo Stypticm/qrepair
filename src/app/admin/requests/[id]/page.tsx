@@ -16,6 +16,7 @@ const RequestById = () => {
     const [application, setApplication] = useState<SkupkaRequest | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [priceInput, setPriceInput] = useState<string>('')
+    const [priceDirty, setPriceDirty] = useState<boolean>(false)
     const [showPhotos, setShowPhotos] = useState<boolean>(false)
 
     useEffect(() => {
@@ -28,7 +29,7 @@ const RequestById = () => {
             try {
                 const data = await fetchApplication(id);
                 setApplication(data);
-                if (data?.price != null) setPriceInput(String(data.price))
+                if (!priceDirty && data?.price != null) setPriceInput(String(data.price))
                 setError(null);
             } catch (err) {
                 console.error('Error fetching application:', err);
@@ -43,7 +44,7 @@ const RequestById = () => {
             getApplication();
         }, 4000);
         return () => clearInterval(interval);
-    }, [id]);
+    }, [id, priceDirty]);
 
     const handleAcceptRequest = async () => {
         try {
@@ -55,6 +56,7 @@ const RequestById = () => {
                     : undefined
             );
             setApplication(data);
+            setPriceDirty(false);
             setError(null);
         } catch (err) {
             console.error('Error accepting request:', err);
@@ -117,7 +119,7 @@ const RequestById = () => {
                                         type="number"
                                         placeholder="Итоговая цена"
                                         value={priceInput}
-                                        onChange={(e) => setPriceInput(e.target.value)}
+                                        onChange={(e) => { setPriceDirty(true); setPriceInput(e.target.value); }}
                                         disabled={!isEditable}
                                     />
                                 )
