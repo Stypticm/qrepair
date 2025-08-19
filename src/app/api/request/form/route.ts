@@ -78,12 +78,15 @@ export async function PATCH(req: Request) {
       data: dataToUpdate,
     })
 
-    // Отправляем уведомление пользователю о принятии заявки в работу
-    await sendTelegramMessage(
-      telegramId,
-      '📱 Ваша заявка принята в работу. Ожидайте, с вами свяжется наш менеджер в ближайшее время.',
-      { parse_mode: 'Markdown' }
-    )
+    // Отправляем уведомление пользователю о принятии заявки в работу с предварительной ценой
+    const prelimPrice =
+      typeof updated.price === 'number'
+        ? `${Math.round(updated.price)} ₽`
+        : '—'
+    const acceptMessage = `📱 Ваша заявка принята в работу. Ожидайте, с вами свяжется наш менеджер в ближайшее время.\n💰 Предварительная цена: ${prelimPrice}.`
+    await sendTelegramMessage(telegramId, acceptMessage, {
+      parse_mode: 'Markdown',
+    })
 
     return NextResponse.json({ success: true, updated })
   } catch (error) {

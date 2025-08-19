@@ -102,6 +102,8 @@ const RequestById = () => {
                         <p className="text-slate-50">Предварительная цена: {application?.price ?? '—'}</p>
                         <div className="flex items-center gap-2 mt-2">
                             {(() => {
+                                // Цена редактируется только до отправки пользователю окончательной цены
+                                // Т.е. на этапах accepted и in_progress, но после review (on_the_way) — уже нельзя
                                 const isEditable = application?.status === 'accepted' || application?.status === 'in_progress'
                                 return (
                                     <input

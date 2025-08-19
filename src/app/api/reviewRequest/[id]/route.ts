@@ -64,7 +64,11 @@ export async function PATCH(
 
     // Отправляем сообщение пользователю
     const finalPrice = updatedRequest.price
-    const message = `📦 Ваша заявка рассмотрена.\n🚚 Курьер скоро заберёт телефон.`
+    const priceText =
+      typeof finalPrice === 'number'
+        ? `${Math.round(finalPrice)} ₽`
+        : '—'
+    const message = `🚚 Курьер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.`
     await sendTelegramMessage(
       updatedRequest.telegramId,
       message,
