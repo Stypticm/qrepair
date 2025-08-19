@@ -1,5 +1,6 @@
 import prisma from '@/core/lib/prisma'
 import { NextResponse } from 'next/server'
+import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -76,6 +77,14 @@ export async function PATCH(req: Request) {
       where: { id: draft.id },
       data: dataToUpdate,
     })
+
+    // Отправляем уведомление пользователю о принятии заявки в работу
+    await sendTelegramMessage(
+      telegramId,
+      '📱 Ваша заявка принята в работу. Ожидайте, с вами свяжется наш менеджер в ближайшее время.',
+      { parse_mode: 'Markdown' }
+    )
+
     return NextResponse.json({ success: true, updated })
   } catch (error) {
     console.error(error)
