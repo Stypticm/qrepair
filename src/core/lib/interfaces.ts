@@ -61,4 +61,9 @@ export interface SkupkaRequest {
   answers?: number[]
   price?: number
   priceConfirmed?: boolean
+  courierTelegramId?: string
+  courierScheduledAt?: string
+  courierTimeSlot?: string
+  courierUserConfirmed?: boolean
+  courierReminderSent?: boolean
 }
