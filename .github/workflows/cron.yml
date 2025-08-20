@@ -5,7 +5,7 @@ on:
     # Main cron (10 min, commented for dev test)
     #- cron: '*/10 7-20 * * *'
     # Dev test cron (5 min, for checking reminders in 5 min interval)
-    - cron: '*/5 * * * *'
+    - cron: '*/1 * * * *'
   workflow_dispatch: {}
 
 jobs:
