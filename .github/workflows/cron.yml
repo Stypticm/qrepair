@@ -2,8 +2,10 @@ name: Courier reminders
 
 on:
   schedule:
-    # Every 10 minutes from 07:00 to 20:59 UTC (tune as needed)
-    - cron: "*/10 7-20 * * *"
+    # Main cron (10 min, commented for dev test)
+    #- cron: '*/10 7-20 * * *'
+    # Dev test cron (5 min, for checking reminders in 5 min interval)
+    - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
 jobs:
@@ -21,5 +23,3 @@ jobs:
           fi
           # Use query param secret to match API guard
           curl -sS --max-time 20 "$CRON_ENDPOINT/api/cron?secret=${CRON_SECRET}" || true
-
-
