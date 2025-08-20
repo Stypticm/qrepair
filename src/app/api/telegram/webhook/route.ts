@@ -190,18 +190,18 @@ export async function POST(req: Request) {
                   },
                 },
               ],
-              // [
-              //   {
-              //     text: 'Проверить статус',
-              //     callback_data: 'check_status',
-              //   },
-              // ],
-              // [
-              //   {
-              //     text: 'Связаться с поддержкой',
-              //     callback_data: 'contact_support',
-              //   },
-              // ],
+              [
+                {
+                  text: 'Проверить статус',
+                  callback_data: 'check_status',
+                },
+              ],
+              [
+                {
+                  text: 'Связаться с поддержкой',
+                  callback_data: 'contact_support',
+                },
+              ],
             ],
           },
         }
