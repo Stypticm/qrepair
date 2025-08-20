@@ -199,31 +199,6 @@ const RequestById = () => {
                                 Назначить курьера
                             </Button>
                         )}
-                        {application && (
-                            <Button
-                                variant="secondary"
-                                onClick={async () => {
-                                    try {
-                                        const res = await fetch(`/api/ai/estimate/${application.id}`, {
-                                            method: 'POST',
-                                            headers: {
-                                                'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '',
-                                            },
-                                        })
-                                        const data = await res.json()
-                                        if (!res.ok) throw new Error(data?.error || 'Ошибка AI оценки')
-                                        const confirmed = confirm(`AI предложил цену: ${data.suggestedPrice} ₽.\nПричина: ${data.reasoning || '—'}\n\nПрименить эту цену?`)
-                                        if (confirmed) {
-                                            setPriceInput(String(data.suggestedPrice))
-                                        }
-                                    } catch (e) {
-                                        alert(String(e))
-                                    }
-                                }}
-                            >
-                                Оценка с помощью ИИ
-                            </Button>
-                        )}
                         {application?.status === 'on_the_way' && <Button onClick={handleCourierReceived}>Телефон у курьера</Button>}
                         {application?.status === 'paid' && <Button onClick={handleMarkPaid}>Оплачено</Button>}
                         {
