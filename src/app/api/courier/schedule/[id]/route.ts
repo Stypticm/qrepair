@@ -43,9 +43,25 @@ export async function POST(
     },
   })
 
+  // DEV-only dynamic slots for quick cron testing: now +10m, +11m
+  // PROD: use TIME_SLOTS defined above
+  const isDev = process.env.NODE_ENV !== 'production'
+  const fmt = (d: Date) =>
+    `${String(d.getHours()).padStart(2, '0')}:${String(
+      d.getMinutes()
+    ).padStart(2, '0')}`
+  let slots: string[] = TIME_SLOTS
+  if (isDev) {
+    const now = new Date()
+    const plus10 = new Date(now.getTime() + 10 * 60 * 1000)
+    const plus11 = new Date(now.getTime() + 11 * 60 * 1000)
+    slots = [fmt(plus10), fmt(plus11)]
+    // For PROD, comment out above and rely on TIME_SLOTS
+  }
+
   const keyboard = {
     inline_keyboard: [
-      TIME_SLOTS.map((t) => ({
+      slots.map((t) => ({
         text: t,
         callback_data: `courier_time:${id}:${t}`,
       })),
@@ -54,7 +70,9 @@ export async function POST(
 
   await sendTelegramMessage(
     app.telegramId,
-    '🚚 Назначен курьер. Выберите удобное время завтра:',
+    isDev
+      ? '🚚 Назначен курьер. Выберите удобное время (для теста):'
+      : '🚚 Назначен курьер. Выберите удобное время завтра:',
     { parse_mode: 'Markdown', reply_markup: keyboard }
   )
 

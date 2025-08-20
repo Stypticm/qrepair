@@ -116,7 +116,7 @@ export async function POST(req: Request) {
         if (id && time) {
           const now = new Date()
           const [hh, mm] = time.split(':').map(Number)
-          // DEV: назначаем на СЕГОДНЯ для удобства тестирования
+          // DEV: назначаем на СЕГОДНЯ для удобства тестирования (оставьте это в dev)
           const today = new Date(
             now.getFullYear(),
             now.getMonth(),
@@ -124,12 +124,8 @@ export async function POST(req: Request) {
           )
           const scheduled = new Date(today)
           scheduled.setHours(hh, mm, 0, 0)
-          // PROD: назначать на ЗАВТРА
-          // const tomorrow = new Date(
-          //   now.getFullYear(),
-          //   now.getMonth(),
-          //   now.getDate() + 1
-          // )
+          // PROD: на проде переключите на «завтра»
+          // const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
           // const scheduled = new Date(tomorrow)
           // scheduled.setHours(hh, mm, 0, 0)
           await prisma.skupka.update({
@@ -140,9 +136,19 @@ export async function POST(req: Request) {
               courierUserConfirmed: true,
             } as any,
           })
+          const reqForPrice =
+            await prisma.skupka.findUnique({
+              where: { id },
+            })
+          const priceText =
+            typeof (reqForPrice as any)?.price === 'number'
+              ? `${Math.round(
+                  (reqForPrice as any).price
+                )} ₽`
+              : '—'
           await sendTelegramMessage(
             telegramId,
-            `🗓 Мастер будет у вас в назначенное время: ${time}.`,
+            `👨‍🔧 Мастер назначен для забора устройства.\n🗓 Время визита: ${time}.\n💰 Окончательная цена: ${priceText}.`,
             { parse_mode: 'Markdown' }
           )
         }

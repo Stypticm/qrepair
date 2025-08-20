@@ -173,41 +173,83 @@ const RequestById = () => {
                             )}
                         </p>
                     </CardDescription>
-                    <CardAction className="self-center pt-2 gap-2">
-                        {application?.status === 'accepted' && <Button onClick={handleAcceptRequest}>Принять заявку</Button>}
-                        {application?.status === 'in_progress' && (
-                            <Button onClick={handleReviewRequest} disabled={!application?.price || !(application as any)?.priceConfirmed}>
-                                Заявка рассмотрена
-                            </Button>
-                        )}
-                        {application && (
-                            <Button
-                                variant="outline"
-                                onClick={async () => {
-                                    const courierId = prompt('Введите telegramId курьера:')
-                                    if (!courierId) return
-                                    const res = await fetch(`/api/courier/schedule/${application.id}`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ courierTelegramId: courierId }),
-                                    })
-                                    const data = await res.json()
-                                    if (!res.ok) alert(data?.error || 'Ошибка назначения курьера')
-                                    else alert('Курьер назначен. Пользователю отправлен выбор времени.')
-                                }}
-                            >
-                                Назначить курьера
-                            </Button>
-                        )}
-                        {application?.status === 'on_the_way' && <Button onClick={handleCourierReceived}>Телефон у курьера</Button>}
-                        {application?.status === 'paid' && <Button onClick={handleMarkPaid}>Оплачено</Button>}
-                        {
-                            application?.status === 'completed' &&
-                            <section className="text-black !border-3 rounded-md !border-slate-700 p-2">
-                                Заявка выполнена
-                            </section>
-                        }
+                    <CardAction className="self-center pt-2 w-full">
+                        <div className="flex flex-wrap justify-center gap-2 w-full">
+                            {application?.status === 'accepted' && (
+                                <Button className="min-w-[200px]" onClick={handleAcceptRequest}>Принять заявку</Button>
+                            )}
+                            {application?.status === 'in_progress' && (
+                                <Button
+                                    className="min-w-[200px]"
+                                    onClick={handleReviewRequest}
+                                    disabled={!application?.price || !(application as any)?.priceConfirmed}
+                                >
+                                    Заявка рассмотрена
+                                </Button>
+                            )}
+                            {application && (
+                                <Button
+                                    className="min-w-[200px]"
+                                    variant="outline"
+                                    disabled={Boolean((application as any)?.courierTelegramId)}
+                                    onClick={async () => {
+                                        if ((application as any)?.courierTelegramId) return
+                                        const courierId = prompt('Введите telegramId курьера:')
+                                        if (!courierId) return
+                                        const res = await fetch(`/api/courier/schedule/${application.id}`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ courierTelegramId: courierId }),
+                                        })
+                                        const data = await res.json()
+                                        if (!res.ok) alert(data?.error || 'Ошибка назначения курьера')
+                                        else {
+                                            alert('Курьер назначен. Пользователю отправлен выбор времени.')
+                                            setApplication((prev) => prev ? ({
+                                                ...prev,
+                                                courierTelegramId: courierId,
+                                            } as any) : prev)
+                                        }
+                                    }}
+                                >
+                                    {Boolean((application as any)?.courierTelegramId) ? 'Курьер назначен' : 'Назначить курьера'}
+                                </Button>
+                            )}
+                            {application?.status === 'on_the_way' && (
+                                <Button className="min-w-[200px]" onClick={handleCourierReceived}>Телефон у курьера</Button>
+                            )}
+                            {application?.status === 'paid' && (
+                                <Button className="min-w-[200px]" onClick={handleMarkPaid}>Оплачено</Button>
+                            )}
+                            {application?.status === 'completed' && (
+                                <section className="text-black !border-3 rounded-md !border-slate-700 p-2 min-w-[200px] text-center">
+                                    Заявка выполнена
+                                </section>
+                            )}
+                        </div>
                     </CardAction>
+                    {(application as any)?.courierTelegramId && (
+                        <div className="mt-3 p-3 rounded-md border !border-slate-700 bg-white/30 text-black">
+                            <p className="font-semibold">Детали выезда мастера</p>
+                            <p>Курьер TG: {(application as any).courierTelegramId}</p>
+                            {(application as any).courierTimeSlot && (
+                                <p>Выбранное время: {(application as any).courierTimeSlot}</p>
+                            )}
+                            {(application as any).courierScheduledAt && (
+                                <p>
+                                    Назначено на: {(() => {
+                                        try {
+                                            const d = new Date((application as any).courierScheduledAt as any)
+                                            return d.toLocaleString()
+                                        } catch { return String((application as any).courierScheduledAt) }
+                                    })()}
+                                </p>
+                            )}
+                            <p>
+                                Подтверждение клиента: {(application as any).courierUserConfirmed ? 'Да' : 'Нет'}
+                            </p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             <section className='flex flex-col gap-2 p-4'>
