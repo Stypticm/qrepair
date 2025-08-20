@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 interface QuestionsRequest {
   telegramId: string
   answers: number[]
+  comment?: string
 }
 
 // Пункты "штрафов" за каждый дефект (в %)
@@ -40,7 +41,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const body = (await req.json()) as QuestionsRequest
-  const { telegramId, answers } = body
+  const { telegramId, answers, comment } = body
 
   if (
     !telegramId ||
@@ -84,6 +85,9 @@ export async function PATCH(req: Request) {
       questionsAnswered: true,
       damagePercent,
       price: finalPrice,
+      ...(comment && comment.trim()
+        ? { comment: comment.trim() }
+        : {}),
     },
   })
 

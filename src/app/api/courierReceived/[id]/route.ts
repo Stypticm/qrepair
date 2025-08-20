@@ -43,7 +43,7 @@ export async function PATCH(
     // Отправляем сообщение пользователю
     await sendTelegramMessage(
       updatedRequest.telegramId,
-      '📦 Телефон получен курьером. Ожидайте оплату.',
+      '📦 Телефон получен мастером. Ожидайте оплату.',
       { parse_mode: 'Markdown' }
     )
 

@@ -9,23 +9,32 @@ datasource db {
 }
 
 model Skupka {
-  id                String       @id @default(cuid())
-  telegramId        String
-  username          String
-  modelname         String?
-  photoUrls         String[]
-  videoUrl          String?
-  status            SkupkaStatus @default(draft)
-  comment           String?
-  imei              String?
-  contractUrl       String?
-  answers           Int[]        @default([0, 0, 0, 0, 0, 0, 0, 0])
-  price             Float?
-  damagePercent     Float        @default(0)
-  questionsAnswered Boolean      @default(false)
-  priceConfirmed    Boolean      @default(false)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  id                   String       @id @default(cuid())
+  telegramId           String
+  username             String
+  modelname            String?
+  photoUrls            String[]
+  videoUrl             String?
+  status               SkupkaStatus @default(draft)
+  comment              String?
+  imei                 String?
+  contractUrl          String?
+  answers              Int[]        @default([0, 0, 0, 0, 0, 0, 0, 0])
+  price                Float?
+  damagePercent        Float        @default(0)
+  questionsAnswered    Boolean      @default(false)
+  priceConfirmed       Boolean      @default(false)
+  inspection           Json?
+  inspectionCompleted  Boolean      @default(false)
+  inspectionToken      String?
+  imeiInfo             Json?
+  courierTelegramId    String?
+  courierScheduledAt   DateTime?
+  courierTimeSlot      String?
+  courierUserConfirmed Boolean      @default(false)
+  courierReminderSent  Boolean      @default(false)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 }
 
 enum SkupkaStatus {

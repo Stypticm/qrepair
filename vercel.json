@@ -1,0 +1,8 @@
+{
+    "crons": [
+        {
+            "path": "/api/cron?secret=Styptic",
+            "schedule": "*/10 7-20 * * *"
+        }
+    ]
+}

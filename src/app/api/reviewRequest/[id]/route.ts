@@ -68,7 +68,7 @@ export async function PATCH(
       typeof finalPrice === 'number'
         ? `${Math.round(finalPrice)} ₽`
         : '—'
-    const message = `🚚 Курьер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.`
+    const message = `👨‍🔧 Мастер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.`
     await sendTelegramMessage(
       updatedRequest.telegramId,
       message,

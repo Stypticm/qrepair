@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   const body = await req.json()
-  const { telegramId, price, comment } = body
+  const { telegramId, price, comment, imei } = body
 
   if (!telegramId) {
     return NextResponse.json(
@@ -50,6 +50,8 @@ export async function PATCH(req: Request) {
 
   if (price !== undefined) dataToUpdate.price = price
   if (comment?.trim()) dataToUpdate.comment = comment.trim()
+  if (typeof imei === 'string' && imei.trim())
+    dataToUpdate.imei = imei.trim()
 
   // Если есть обновляемые поля, можно менять статус
   if (Object.keys(dataToUpdate).length > 0) {

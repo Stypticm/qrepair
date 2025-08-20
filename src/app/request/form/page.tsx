@@ -6,7 +6,7 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { SuccessPopup } from '@/components/SuccessPopup/SuccessPopup';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -34,17 +33,16 @@ const BrandPage = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showPhotoSuccess, setShowPhotoSuccess] = useState(false);
-  const [isCommentDialogOpen, setIsCommentDialogOpen] = useState(false);
   const [questionsLoading, setQuestionsLoading] = useState(true);
   const {
     telegramId,
     modelname,
-    comment,
+    imei,
     photoUrls,
     showQuestionsSuccess,
     price,
     setModel,
-    setComment,
+    setImei,
     setPhotoUrls,
     setPrice,
     setShowQuestionsSuccess
@@ -63,6 +61,7 @@ const BrandPage = () => {
         setPhotoUrls(data.draft.photoUrls);
         setPrice(data.draft.price);
         setShowQuestionsSuccess(Boolean(data.draft.questionsAnswered));
+        if (data.draft.imei) setImei(data.draft.imei)
       }
     })();
     return () => controller.abort();
@@ -97,6 +96,7 @@ const BrandPage = () => {
       telegramId,
       modelname,
       price,
+      imei,
     };
     try {
       const saveResponse = await fetch('/api/request/form', {
@@ -117,19 +117,6 @@ const BrandPage = () => {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleCommentDialogOpen = () => {
-    setIsCommentDialogOpen(true);
-  };
-
-  const handleCommentSave = (value: string) => {
-    setComment(value);
-    setIsCommentDialogOpen(false);
-  };
-
-  const handleCommentCancel = () => {
-    setIsCommentDialogOpen(false);
   };
 
   const handleTransferToQuestions = () => {
@@ -218,31 +205,16 @@ const BrandPage = () => {
         </div>
 
         <div>
-          <Label htmlFor="comment" className="text-black text-2xl font-bold mb-2">
-            Комментарии (Не обязательно)
+          <Label htmlFor="imei" className="text-black text-2xl font-bold mb-2">
+            IMEI (не обязательно)
           </Label>
-          <Textarea
-            value={comment || ''}
-            readOnly
-            onClick={handleCommentDialogOpen}
-            placeholder="Нажмите для ввода комментария"
-            className="!border-slate-700 border-3 text-black font-bold h-24"
+          <input
+            id="imei"
+            value={imei || ''}
+            onChange={(e) => setImei(e.target.value)}
+            placeholder="Введите IMEI"
+            className="w-full rounded px-2 py-2 text-black !border-slate-700 border-3"
           />
-          <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
-            <DialogContent className="p-4 flex flex-col items-center top-0 transform translate-y-0 fixed w-full max-w-md rounded-b-none">
-              <DialogTitle className="text-lg text-black font-bold mb-2">Введите комментарий</DialogTitle>
-              <Textarea
-                value={comment || ''}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Ваш комментарий"
-                className="!border-slate-700 border-3 text-black font-bold h-40"
-              />
-              <DialogFooter className="mt-4 flex flex-row gap-2">
-                <Button onClick={() => handleCommentSave(comment || '')}>OK</Button>
-                <Button variant="outline" onClick={handleCommentCancel}>Отмена</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </section>
       <FooterButton isNextDisabled={isValid && !submitting} onNext={handleNext} preventRedirect={true} />

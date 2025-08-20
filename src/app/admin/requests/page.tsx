@@ -33,7 +33,10 @@ const RequestsPage = () => {
                 <Table className="!border !border-black">
                     <TableHeader>
                         <TableRow className="!border !border-black">
+                            <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>ID</TableHead>
                             <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Model</TableHead>
+                            <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Статус</TableHead>
+                            <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Курьер</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -49,9 +52,15 @@ const RequestsPage = () => {
                                         <TableCell className='text-center text-black !text-bold'>
                                             {bid.modelname}
                                         </TableCell>
-                                        {/* <TableCell className='text-center'>
-                                    {bid.condition}
-                                </TableCell> */}
+                                        <TableCell className='text-center text-black'>
+                                            <span className='px-2 py-1 rounded text-white'
+                                                style={{ backgroundColor: bid.status === 'draft' ? '#64748b' : bid.status === 'accepted' ? '#22c55e' : bid.status === 'in_progress' ? '#fbbf24' : bid.status === 'on_the_way' ? '#3b82f6' : bid.status === 'paid' ? '#10b981' : '#111827' }}>
+                                                {bid.status}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className='text-center text-black'>
+                                            {bid.courierTimeSlot ? `Назначено ${bid.courierTimeSlot}` : 'Не назначен'}
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                     </TableBody>

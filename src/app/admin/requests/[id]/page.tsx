@@ -180,6 +180,50 @@ const RequestById = () => {
                                 Заявка рассмотрена
                             </Button>
                         )}
+                        {application && (
+                            <Button
+                                variant="outline"
+                                onClick={async () => {
+                                    const courierId = prompt('Введите telegramId курьера:')
+                                    if (!courierId) return
+                                    const res = await fetch(`/api/courier/schedule/${application.id}`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ courierTelegramId: courierId }),
+                                    })
+                                    const data = await res.json()
+                                    if (!res.ok) alert(data?.error || 'Ошибка назначения курьера')
+                                    else alert('Курьер назначен. Пользователю отправлен выбор времени.')
+                                }}
+                            >
+                                Назначить курьера
+                            </Button>
+                        )}
+                        {application && (
+                            <Button
+                                variant="secondary"
+                                onClick={async () => {
+                                    try {
+                                        const res = await fetch(`/api/ai/estimate/${application.id}`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'x-admin-secret': process.env.NEXT_PUBLIC_ADMIN_SECRET || '',
+                                            },
+                                        })
+                                        const data = await res.json()
+                                        if (!res.ok) throw new Error(data?.error || 'Ошибка AI оценки')
+                                        const confirmed = confirm(`AI предложил цену: ${data.suggestedPrice} ₽.\nПричина: ${data.reasoning || '—'}\n\nПрименить эту цену?`)
+                                        if (confirmed) {
+                                            setPriceInput(String(data.suggestedPrice))
+                                        }
+                                    } catch (e) {
+                                        alert(String(e))
+                                    }
+                                }}
+                            >
+                                Оценка с помощью ИИ
+                            </Button>
+                        )}
                         {application?.status === 'on_the_way' && <Button onClick={handleCourierReceived}>Телефон у курьера</Button>}
                         {application?.status === 'paid' && <Button onClick={handleMarkPaid}>Оплачено</Button>}
                         {

@@ -7,6 +7,7 @@ import { Page } from '@/components/Page';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { Textarea } from '@/components/ui/textarea'
 
 const questions = [
     { id: '1', text: 'Имеются ли глубокие царапины?' },
@@ -21,7 +22,7 @@ const questions = [
 
 
 const QuestionsPage = () => {
-    const { telegramId, answers, setAnswers, setShowQuestionsSuccess } = useStartForm();
+    const { telegramId, answers, setAnswers, setShowQuestionsSuccess, comment, setComment } = useStartForm();
     const [localAnswers, setLocalAnswers] = useState<number[]>(
         Array.isArray(answers) && answers.length === 8 ? answers : new Array(8).fill(-1)
     );
@@ -67,7 +68,7 @@ const QuestionsPage = () => {
         const res = await fetch('/api/questions', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ telegramId, answers: localAnswers, questionsAnswered: true }),
+            body: JSON.stringify({ telegramId, answers: localAnswers, questionsAnswered: true, comment }),
         });
         const data = await res.json();
         setShowQuestionsSuccess(true);
@@ -114,6 +115,16 @@ const QuestionsPage = () => {
                                 </div>
                             </div>
                         ))}
+                        <div className="flex flex-col gap-2">
+                            <Label htmlFor="comment" className="text-black text-xl font-bold">Комментарий (не обязательно)</Label>
+                            <Textarea
+                                id="comment"
+                                placeholder="Комментарий мастеру"
+                                className="!border-slate-700 border-3 text-black font-bold h-24"
+                                value={comment || ''}
+                                onChange={(e) => setComment(e.target.value)}
+                            />
+                        </div>
                     </div>
                 )}
                 {

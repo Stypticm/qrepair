@@ -110,6 +110,42 @@ export async function POST(req: Request) {
             )
           }
         }
+      } else if (data?.startsWith('courier_time:')) {
+        // courier_time:<id>:<HH:mm>
+        const [, id, time] = data.split(':')
+        if (id && time) {
+          const now = new Date()
+          const [hh, mm] = time.split(':').map(Number)
+          // DEV: назначаем на СЕГОДНЯ для удобства тестирования
+          const today = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          )
+          const scheduled = new Date(today)
+          scheduled.setHours(hh, mm, 0, 0)
+          // PROD: назначать на ЗАВТРА
+          // const tomorrow = new Date(
+          //   now.getFullYear(),
+          //   now.getMonth(),
+          //   now.getDate() + 1
+          // )
+          // const scheduled = new Date(tomorrow)
+          // scheduled.setHours(hh, mm, 0, 0)
+          await prisma.skupka.update({
+            where: { id },
+            data: {
+              courierTimeSlot: time,
+              courierScheduledAt: scheduled,
+              courierUserConfirmed: true,
+            } as any,
+          })
+          await sendTelegramMessage(
+            telegramId,
+            `🗓 Мастер будет у вас в назначенное время: ${time}.`,
+            { parse_mode: 'Markdown' }
+          )
+        }
       } else if (data === 'contact_support') {
         await sendTelegramMessage(
           telegramId,
