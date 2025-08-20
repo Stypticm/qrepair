@@ -114,8 +114,30 @@ export async function POST(req: Request) {
         // courier_time:<id>:<HH:mm>
         const [, id, time] = data.split(':')
         if (id && time) {
+          const [hh, mm = '00'] = time.split(':') // Если минут нет, используем 00
+          const hours = parseInt(hh, 10)
+          const minutes = parseInt(mm, 10)
+
+          if (
+            isNaN(hours) ||
+            isNaN(minutes) ||
+            hours < 0 ||
+            hours > 23 ||
+            minutes < 0 ||
+            minutes > 59
+          ) {
+            await sendTelegramMessage(
+              telegramId,
+              '❌ Неверный формат времени. Укажите время в формате HH:mm (например, 14:00).',
+              { parse_mode: 'Markdown' }
+            )
+            return NextResponse.json(
+              { error: 'Invalid time format' },
+              { status: 400 }
+            )
+          }
+
           const now = new Date()
-          const [hh, mm] = time.split(':').map(Number)
           // DEV: назначаем на СЕГОДНЯ для удобства тестирования (оставьте это в dev)
           const today = new Date(
             now.getFullYear(),
