@@ -40,9 +40,7 @@ export async function POST(req: Request) {
                 ],
               },
             },
-            orderBy: {
-              createdAt: 'desc',
-            },
+            orderBy: { createdAt: 'desc' },
           }
         )
 
@@ -65,31 +63,25 @@ export async function POST(req: Request) {
         await sendTelegramMessage(
           telegramId,
           responseText,
-          {
-            parse_mode: 'Markdown',
-          }
+          { parse_mode: 'Markdown' }
         )
       } else if (data?.startsWith('price_confirm_yes:')) {
         const id = data.split(':')[1]
         if (id) {
-          // подтверждение цены: ставим флаг подтверждения и информируем
           try {
             await prisma.skupka.update({
               where: { id },
               data: { priceConfirmed: true },
             })
-          } catch (e) {
-            // ignore if already confirmed or missing
-          }
+          } catch (e) {}
           const updated = await prisma.skupka.findUnique({
             where: { id },
           })
           await sendTelegramMessage(
             telegramId,
-            '✅ Спасибо за подтверждение. Ожидайте, с вами свяжется наш менеджер для организации забора устройства (в ближайшее время).',
+            '✅ Спасибо за подтверждение. Ожидайте, с вами свяжется наш менеджер для организации забора устройства.',
             { parse_mode: 'Markdown' }
           )
-          // Подтолкнуть фронтенд к обновлению через webhook: опционально можно дернуть сторонний канал (сейчас пропускаем)
         }
       } else if (data?.startsWith('price_confirm_no:')) {
         const id = data.split(':')[1]
@@ -102,33 +94,30 @@ export async function POST(req: Request) {
               { parse_mode: 'Markdown' }
             )
           } catch (e) {
-            // если уже удалена или некорректный id
             await sendTelegramMessage(
               telegramId,
-              'Произошла ошибка при отмене заявки. Пожалуйста, свяжитесь с поддержкой: @QtweRepairSupport',
+              'Произошла ошибка при отмене заявки. Свяжитесь с поддержкой: @QtweRepairSupport',
               { parse_mode: 'Markdown' }
             )
           }
         }
       } else if (data?.startsWith('courier_time:')) {
-        // courier_time:<id>:<HH:mm>
         const [, id, time] = data.split(':')
         if (id && time) {
-          const [hh, mm = '00'] = time.split(':') // Если минут нет, используем 00
-          const hours = parseInt(hh, 10)
-          const minutes = parseInt(mm, 10)
-
+          const [hh, mm = '00'] = time
+            .split(':')
+            .map(Number)
           if (
-            isNaN(hours) ||
-            isNaN(minutes) ||
-            hours < 0 ||
-            hours > 23 ||
-            minutes < 0 ||
-            minutes > 59
+            isNaN(hh) ||
+            isNaN(mm) ||
+            hh < 0 ||
+            hh > 23 ||
+            mm < 0 ||
+            mm > 59
           ) {
             await sendTelegramMessage(
               telegramId,
-              '❌ Неверный формат времени. Укажите время в формате HH:mm (например, 14:00).',
+              '❌ Неверный формат времени. Укажите HH:mm (например, 14:00).',
               { parse_mode: 'Markdown' }
             )
             return NextResponse.json(
@@ -136,9 +125,7 @@ export async function POST(req: Request) {
               { status: 400 }
             )
           }
-
           const now = new Date()
-          // DEV: назначаем на СЕГОДНЯ для удобства тестирования (оставьте это в dev)
           const today = new Date(
             now.getFullYear(),
             now.getMonth(),
@@ -146,38 +133,62 @@ export async function POST(req: Request) {
           )
           const scheduled = new Date(today)
           scheduled.setHours(hh, mm, 0, 0)
-          // PROD: на проде переключите на «завтра»
-          // const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
-          // const scheduled = new Date(tomorrow)
-          // scheduled.setHours(hh, mm, 0, 0)
+
           await prisma.skupka.update({
             where: { id },
             data: {
-              courierTimeSlot: time,
+              courierTimeSlot: `${hh
+                .toString()
+                .padStart(2, '0')}:${mm
+                .toString()
+                .padStart(2, '0')}`,
               courierScheduledAt: scheduled,
               courierUserConfirmed: true,
-            } as any,
+            },
           })
+
           const reqForPrice =
             await prisma.skupka.findUnique({
               where: { id },
             })
           const priceText =
-            typeof (reqForPrice as any)?.price === 'number'
-              ? `${Math.round(
-                  (reqForPrice as any).price
-                )} ₽`
+            typeof reqForPrice?.price === 'number'
+              ? `${Math.round(reqForPrice.price)} ₽`
               : '—'
           await sendTelegramMessage(
             telegramId,
-            `👨‍🔧 Мастер назначен для забора устройства.\n🗓 Время визита: ${time}.\n💰 Окончательная цена: ${priceText}.`,
-            { parse_mode: 'Markdown' }
+            `👨‍🔧 Мастер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.\n🕒 Выберите удобное время:`,
+            {
+              parse_mode: 'Markdown',
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: '14:00',
+                      callback_data: `courier_time:${id}:14:00`,
+                    },
+                  ],
+                  [
+                    {
+                      text: '15:00',
+                      callback_data: `courier_time:${id}:15:00`,
+                    },
+                  ],
+                  [
+                    {
+                      text: '16:00',
+                      callback_data: `courier_time:${id}:16:00`,
+                    },
+                  ],
+                ],
+              },
+            }
           )
         }
       } else if (data === 'contact_support') {
         await sendTelegramMessage(
           telegramId,
-          'Свяжитесь с нашей поддержкой: @QtweRepairSupport',
+          'Свяжитесь с поддержкой: @QtweRepairSupport',
           { parse_mode: 'Markdown' }
         )
       }

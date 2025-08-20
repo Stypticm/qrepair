@@ -1,73 +1,91 @@
-'use client'
+'use client';
 
-import { Page } from '@/components/Page'
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
-import { SkupkaRequest } from '@/core/lib/interfaces'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { Page } from '@/components/Page';
+import { SkupkaRequest } from '@/core/lib/interfaces';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 const RequestsPage = () => {
-    const [applications, setApplications] = useState([])
-    const router = useRouter()
+    const [applications, setApplications] = useState<SkupkaRequest[]>([]);
+    const router = useRouter();
 
     useEffect(() => {
         const getBids = async () => {
-            const res = await fetch('/api/applications')
-            const data = await res.json()
-            setApplications(data)
-        }
-        getBids()
-    }, [])
+            const res = await fetch('/api/applications');
+            const data = await res.json();
+            setApplications(data);
+        };
+        getBids();
+    }, []);
 
     return (
         <Page back={true}>
             <div className="flex flex-col items-center justify-start w-full h-full p-4">
-                <h2 className="text-2xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">Таблица заявок</h2>
-                <Table className="!border !border-black">
-                    <TableHeader>
-                        <TableRow className="!border !border-black">
-                            <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>ID</TableHead>
-                            <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Model</TableHead>
-                            <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Статус</TableHead>
-                            <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Курьер</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {
-                            applications.length === 0 ?
-                                <TableRow>
-                                    <TableCell className='text-center text-black !text-bold'>Нет заявок</TableCell>
-                                </TableRow>
-                                :
-                                applications.map((bid: SkupkaRequest) => (
-                                    <TableRow key={bid.id} onClick={() => router.push(`/admin/requests/${bid.id}`)}>
-                                        <TableCell className='text-center text-black !text-bold'>{bid.id}</TableCell>
-                                        <TableCell className='text-center text-black !text-bold'>
-                                            {bid.modelname}
-                                        </TableCell>
-                                        <TableCell className='text-center text-black'>
-                                            <span className='px-2 py-1 rounded text-white'
-                                                style={{ backgroundColor: bid.status === 'draft' ? '#64748b' : bid.status === 'accepted' ? '#22c55e' : bid.status === 'in_progress' ? '#fbbf24' : bid.status === 'on_the_way' ? '#3b82f6' : bid.status === 'paid' ? '#10b981' : '#111827' }}>
-                                                {bid.status}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell className='text-center text-black'>
+                <h2 className="text-2xl font-extrabold uppercase text-black tracking-tight mb-4 text-center">Заявки</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                    {applications.length === 0 ? (
+                        <Card className="w-full bg-gray-200">
+                            <CardContent className="p-4 text-center">
+                                <p className="text-black font-bold">Нет заявок</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        applications.map((bid: SkupkaRequest) => (
+                            <Card
+                                key={bid.id}
+                                className="w-full bg-slate-400 cursor-pointer hover:bg-slate-500 transition-colors"
+                                onClick={() => router.push(`/admin/requests/${bid.id}`)}
+                            >
+                                <CardHeader>
+                                    <CardTitle className="text-slate-50">Заявка {bid.id}</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <CardDescription className="text-slate-50">
+                                        <p>Модель: {bid.modelname || '—'}</p>
+                                        <p>
+                                            Статус:{' '}
+                                            <Badge
+                                                className={`px-2 py-1 rounded text-white ${bid.status === 'draft'
+                                                        ? 'bg-gray-500'
+                                                        : bid.status === 'accepted'
+                                                            ? 'bg-green-500'
+                                                            : bid.status === 'in_progress'
+                                                                ? 'bg-yellow-500'
+                                                                : bid.status === 'on_the_way'
+                                                                    ? 'bg-blue-500'
+                                                                    : bid.status === 'paid'
+                                                                        ? 'bg-emerald-500'
+                                                                        : 'bg-gray-800'
+                                                    }`}
+                                            >
+                                                {bid.status === 'draft'
+                                                    ? 'Черновик'
+                                                    : bid.status === 'accepted'
+                                                        ? 'Принята'
+                                                        : bid.status === 'in_progress'
+                                                            ? 'На проверке'
+                                                            : bid.status === 'on_the_way'
+                                                                ? 'В пути'
+                                                                : bid.status === 'paid'
+                                                                    ? 'Оплачено'
+                                                                    : 'Выполнена'}
+                                            </Badge>
+                                        </p>
+                                        <p>
+                                            Мастер:{' '}
                                             {bid.courierTimeSlot ? `Назначено ${bid.courierTimeSlot}` : 'Не назначен'}
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                    </TableBody>
-                </Table>
+                                        </p>
+                                    </CardDescription>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
+                </div>
             </div>
         </Page>
-    )
-}
+    );
+};
 
-export default RequestsPage
+export default RequestsPage;
