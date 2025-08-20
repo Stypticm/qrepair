@@ -1,0 +1,25 @@
+name: Courier reminders
+
+on:
+  schedule:
+    # Every 10 minutes from 07:00 to 20:59 UTC (tune as needed)
+    - cron: "*/10 7-20 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping-reminder-endpoint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call reminder endpoint
+        env:
+          CRON_ENDPOINT: ${{ secrets.CRON_ENDPOINT }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_ENDPOINT" ] || [ -z "$CRON_SECRET" ]; then
+            echo "CRON_ENDPOINT or CRON_SECRET not set in repo secrets" >&2
+            exit 1
+          fi
+          # Use query param secret to match API guard
+          curl -sS --max-time 20 "$CRON_ENDPOINT/api/cron?secret=${CRON_SECRET}" || true
+
+
