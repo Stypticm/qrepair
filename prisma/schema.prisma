@@ -33,6 +33,7 @@ model Skupka {
   courierTimeSlot      String?
   courierUserConfirmed Boolean      @default(false)
   courierReminderSent  Boolean      @default(false)
+  courierTimeSlotSent  Boolean      @default(false)
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 }

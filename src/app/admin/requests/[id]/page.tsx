@@ -1,23 +1,23 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { SkupkaRequest } from '@/core/lib/interfaces'
-import { useParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { useEffect, useState } from 'react';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { SkupkaRequest } from '@/core/lib/interfaces';
+import { useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { acceptRequest, courierReceived, fetchApplication, markPaid, reviewRequest } from '@/core/lib/requestActions';
-import Image from 'next/image'
+import Image from 'next/image';
 
 const RequestById = () => {
-    const params = useParams()
-    const id = Array.isArray(params.id) ? params.id[0] : params.id
-    const [application, setApplication] = useState<SkupkaRequest | null>(null)
-    const [error, setError] = useState<string | null>(null)
-    const [priceInput, setPriceInput] = useState<string>('')
-    const [priceDirty, setPriceDirty] = useState<boolean>(false)
-    const [showPhotos, setShowPhotos] = useState<boolean>(false)
+    const params = useParams();
+    const id = Array.isArray(params.id) ? params.id[0] : params.id;
+    const [application, setApplication] = useState<SkupkaRequest | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [priceInput, setPriceInput] = useState<string>('');
+    const [priceDirty, setPriceDirty] = useState<boolean>(false);
+    const [showPhotos, setShowPhotos] = useState<boolean>(false);
 
     useEffect(() => {
         const getApplication = async () => {
@@ -25,11 +25,10 @@ const RequestById = () => {
                 setError('ID заявки не указан');
                 return;
             }
-
             try {
                 const data = await fetchApplication(id);
                 setApplication(data);
-                if (!priceDirty && data?.price != null) setPriceInput(String(data.price))
+                if (!priceDirty && data?.price != null) setPriceInput(String(data.price));
                 setError(null);
             } catch (err) {
                 console.error('Error fetching application:', err);
@@ -39,7 +38,6 @@ const RequestById = () => {
 
         if (id) getApplication();
 
-        // live polling for status updates (priceConfirmed, status)
         const interval = setInterval(() => {
             getApplication();
         }, 4000);
@@ -48,13 +46,8 @@ const RequestById = () => {
 
     const handleAcceptRequest = async () => {
         try {
-            const maybePrice = priceInput.trim() === '' ? undefined : Number(priceInput)
-            const data = await acceptRequest(
-                id as string,
-                Number.isFinite(maybePrice as number)
-                    ? (maybePrice as number)
-                    : undefined
-            );
+            const maybePrice = priceInput.trim() === '' ? undefined : Number(priceInput);
+            const data = await acceptRequest(id as string, Number.isFinite(maybePrice as number) ? maybePrice : undefined);
             setApplication(data);
             setPriceDirty(false);
             setError(null);
@@ -66,8 +59,8 @@ const RequestById = () => {
 
     const handleReviewRequest = async () => {
         try {
-            const maybePrice = priceInput.trim() === '' ? undefined : Number(priceInput)
-            const data = await reviewRequest(id as string, Number.isFinite(maybePrice as number) ? (maybePrice as number) : undefined);
+            const maybePrice = priceInput.trim() === '' ? undefined : Number(priceInput);
+            const data = await reviewRequest(id as string, Number.isFinite(maybePrice as number) ? maybePrice : undefined);
             setApplication(data);
             setError(null);
         } catch (err) {
@@ -181,7 +174,7 @@ const RequestById = () => {
                                     {(() => {
                                         try {
                                             const d = new Date((application as any).courierScheduledAt);
-                                            return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }); // Фиксируем часовой пояс
+                                            return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
                                         } catch {
                                             return String((application as any).courierScheduledAt);
                                         }
@@ -214,12 +207,12 @@ const RequestById = () => {
                                     disabled={Boolean((application as any)?.courierTelegramId)}
                                     onClick={async () => {
                                         if ((application as any)?.courierTelegramId) return;
-                                        const courierId = prompt('Введите telegramId мастера:');
-                                        if (!courierId) return;
+                                        const masterId = prompt('Введите telegramId мастера:');
+                                        if (!masterId) return;
                                         const res = await fetch(`/api/courier/schedule/${application.id}`, {
                                             method: 'POST',
                                             headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ courierTelegramId: courierId }),
+                                            body: JSON.stringify({ courierTelegramId: masterId }),
                                         });
                                         const data = await res.json();
                                         if (!res.ok) alert(data?.error || 'Ошибка назначения мастера');
@@ -229,14 +222,14 @@ const RequestById = () => {
                                                 prev
                                                     ? ({
                                                         ...prev,
-                                                        courierTelegramId: courierId,
+                                                        courierTelegramId: masterId,
                                                     } as any)
                                                     : prev
                                             );
                                         }
                                     }}
                                 >
-                                    {Boolean((application as any)?.courierTelegramId) ? 'Мастер назначен' : 'Назначить мастера'}
+                                    {Boolean((application as any)?.courierTelegramId) ? `Мастер назначен (${(application as any).courierTimeSlot || 'время не выбрано'})` : 'Назначить время мастера'}
                                 </Button>
                             )}
                             {application?.status === 'on_the_way' && (
@@ -267,4 +260,4 @@ const RequestById = () => {
     );
 };
 
-export default RequestById
+export default RequestById;

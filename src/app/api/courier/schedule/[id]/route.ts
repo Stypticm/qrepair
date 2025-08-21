@@ -35,46 +35,68 @@ export async function POST(
       { status: 404 }
     )
 
+  // Проверяем, отправлялось ли сообщение ранее
+  const isSent = app.courierTimeSlotSent
   await prisma.skupka.update({
     where: { id },
     data: {
       courierTelegramId,
       courierUserConfirmed: false,
+      // Устанавливаем флаг только если не отправлялось
+      ...(isSent ? {} : { courierTimeSlotSent: false }),
     },
   })
 
-  // DEV-only dynamic slots for quick cron testing: now +10m, +11m
-  // PROD: use TIME_SLOTS defined above
-  const isDev = process.env.NODE_ENV !== 'production'
-  const fmt = (d: Date) =>
-    `${String(d.getHours()).padStart(2, '0')}:${String(
-      d.getMinutes()
-    ).padStart(2, '0')}`
-  let slots: string[] = TIME_SLOTS
-  if (isDev) {
-    const now = new Date()
-    const plus10 = new Date(now.getTime() + 10 * 60 * 1000)
-    const plus11 = new Date(now.getTime() + 11 * 60 * 1000)
-    slots = [fmt(plus10), fmt(plus11)]
-    // For PROD, comment out above and rely on TIME_SLOTS
+  // Генерация слотов в зависимости от времени
+  const now = new Date()
+  const currentHour = now.getHours()
+  let slots: string[] = []
+  if (currentHour >= 10 && currentHour < 20) {
+    slots = TIME_SLOTS.filter((slot) => {
+      const [slotHour] = slot.split(':').map(Number)
+      return slotHour >= currentHour + 1 && slotHour <= 20
+    })
+  } else {
+    slots = TIME_SLOTS.filter((slot) => {
+      const [slotHour] = slot.split(':').map(Number)
+      return slotHour >= 10 && slotHour <= 12 // Завтра с 10:00
+    })
+  }
+
+  // DEV: Динамические слоты для теста
+  if (process.env.NODE_ENV !== 'production') {
+    const plus1 = new Date(now.getTime() + 1 * 60 * 1000)
+    const plus2 = new Date(now.getTime() + 2 * 60 * 1000)
+    slots = [
+      `${String(plus1.getHours()).padStart(
+        2,
+        '0'
+      )}:${String(plus1.getMinutes()).padStart(2, '0')}`,
+      `${String(plus2.getHours()).padStart(
+        2,
+        '0'
+      )}:${String(plus2.getMinutes()).padStart(2, '0')}`,
+    ]
+    // PROD: Раскомментируй для продакшена
+    // slots = TIME_SLOTS;
   }
 
   const keyboard = {
-    inline_keyboard: [
-      slots.map((t) => ({
-        text: t,
-        callback_data: `courier_time:${id}:${t}`,
-      })),
-    ],
+    inline_keyboard: slots.map((t) => [
+      { text: t, callback_data: `courier_time:${id}:${t}` },
+    ]),
   }
 
-  await sendTelegramMessage(
-    app.telegramId,
-    isDev
-      ? '🚚 Назначен курьер. Выберите удобное время (для теста):'
-      : '🚚 Назначен курьер. Выберите удобное время завтра:',
-    { parse_mode: 'Markdown', reply_markup: keyboard }
-  )
+  // Отправляем только если не отправлялось ранее
+  if (!isSent) {
+    await sendTelegramMessage(
+      app.telegramId,
+      process.env.NODE_ENV !== 'production'
+        ? '🚚 Назначен мастер. Выберите удобное время (для теста):'
+        : '🚚 Назначен мастер. Выберите удобное время завтра:',
+      { parse_mode: 'Markdown', reply_markup: keyboard }
+    )
+  }
 
   return NextResponse.json({ success: true })
 }

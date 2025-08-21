@@ -144,6 +144,7 @@ export async function POST(req: Request) {
                 .padStart(2, '0')}`,
               courierScheduledAt: scheduled,
               courierUserConfirmed: true,
+              courierTimeSlotSent: true,
             },
           })
 
@@ -155,35 +156,22 @@ export async function POST(req: Request) {
             typeof reqForPrice?.price === 'number'
               ? `${Math.round(reqForPrice.price)} ₽`
               : '—'
-          await sendTelegramMessage(
-            telegramId,
-            `👨‍🔧 Мастер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.\n🕒 Выберите удобное время:`,
-            {
-              parse_mode: 'Markdown',
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: '14:00',
-                      callback_data: `courier_time:${id}:14:00`,
-                    },
-                  ],
-                  [
-                    {
-                      text: '15:00',
-                      callback_data: `courier_time:${id}:15:00`,
-                    },
-                  ],
-                  [
-                    {
-                      text: '16:00',
-                      callback_data: `courier_time:${id}:16:00`,
-                    },
-                  ],
-                ],
-              },
-            }
-          )
+          // DEV: Отправляем только подтверждение выбора времени
+          if (process.env.NODE_ENV !== 'production') {
+            await sendTelegramMessage(
+              telegramId,
+              `✅ Время выбрано: ${time}. Мастер назначен.\n💰 Окончательная цена: ${priceText}.`,
+              { parse_mode: 'Markdown' }
+            )
+          }
+          // PROD: Комментируем для теста, раскомментируй для продакшена
+          // else {
+          //   await sendTelegramMessage(
+          //     telegramId,
+          //     `👨‍🔧 Мастер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.\n🕒 Выбор времени подтверждён: ${time}.`,
+          //     { parse_mode: 'Markdown' }
+          //   );
+          // }
         }
       } else if (data === 'contact_support') {
         await sendTelegramMessage(
