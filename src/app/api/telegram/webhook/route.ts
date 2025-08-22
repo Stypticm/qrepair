@@ -219,15 +219,52 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    const telegramId = message?.chat?.id.toString()
+    const telegramId = message?.chat?.id?.toString()
     const text = message?.text
 
+    // Обработка события из WebApp без текста (например, write_access_allowed)
+    if (telegramId && !text) {
+      if (message?.write_access_allowed) {
+        await sendTelegramMessage(
+          telegramId,
+          'Добро пожаловать в QtweRepair! 📱\nВыберите действие:',
+          {
+            parse_mode: 'Markdown',
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: '🚀 Открыть приложение',
+                    web_app: {
+                      url: 'https://qrepair-git-dev-stypticms-projects.vercel.app',
+                    },
+                  },
+                ],
+                [
+                  {
+                    text: 'Проверить статус',
+                    callback_data: 'check_status',
+                  },
+                ],
+                [
+                  {
+                    text: 'Связаться с поддержкой',
+                    callback_data: 'contact_support',
+                  },
+                ],
+              ],
+            },
+          }
+        )
+        return NextResponse.json({ ok: true })
+      }
+      // Игнорируем прочие сообщения без текста
+      return NextResponse.json({ ok: true })
+    }
+
     if (!telegramId || !text) {
-      console.error('Invalid update:', update)
-      return NextResponse.json(
-        { error: 'Invalid update' },
-        { status: 400 }
-      )
+      // Ничего полезного, просто подтверждаем обработку
+      return NextResponse.json({ ok: true })
     }
 
     if (text === '/start') {
