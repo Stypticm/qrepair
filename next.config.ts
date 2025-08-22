@@ -17,9 +17,17 @@ try {
 
 const nextConfig: NextConfig = {
   images: {
+    // Разрешаем как конкретные домены, так и шаблон для Supabase
     domains: [
       'aygvejwrrifuhbkbivoa.supabase.co',
       ...(supabaseHost ? [supabaseHost] : []),
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
 }
