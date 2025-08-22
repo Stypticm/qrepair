@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -182,7 +183,7 @@ const BrandPage = () => {
           <section className="flex flex-row gap-1 justify-center items-end">
             <section className="flex flex-col gap-1">
               <Image
-                src="/photo_phone.png"
+                src={getPictureUrl('photo_phone.png') || '/photo_phone.png'}
                 alt="Картинка телефона"
                 width={150}
                 height={150}
@@ -194,7 +195,7 @@ const BrandPage = () => {
               )}
             </section>
             <Image
-              src="/video_phone.png"
+              src={getPictureUrl('video_phone.png') || '/video_phone.png'}
               alt="Видео телефона"
               width={150}
               height={150}
@@ -235,7 +236,7 @@ const BrandPage = () => {
         <DialogContent className="p-4 flex flex-col items-center">
           <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>
           <Image
-            src="/banan.gif"
+            src={getPictureUrl('banan.gif') || '/banan.gif'}
             alt="Banan"
             width={400}
             height={300}

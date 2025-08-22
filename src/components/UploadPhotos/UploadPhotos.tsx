@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { deleteImageFromSupabase } from "@/core/lib/deleteImageFromSupabase";
 import { uploadImageToSupabase } from "@/core/lib/uploadImageToSupabase";
+import { getPictureUrl } from "@/core/lib/assets";
 
 type PhotoLabel = {
   id: number;
@@ -34,9 +35,9 @@ export default function UploadPhotos({
   ];
 
   const photoLabels: PhotoLabel[] = [
-    { id: 0, text: "спереди", pic: "/front.png" },
-    { id: 1, text: "сзади", pic: "/back.png" },
-    { id: 2, text: "сбоку", pic: "/right_side.png" },
+    { id: 0, text: "спереди", pic: getPictureUrl("front.png") || "/front.png" },
+    { id: 1, text: "сзади", pic: getPictureUrl("back.png") || "/back.png" },
+    { id: 2, text: "сбоку", pic: getPictureUrl("right_side.png") || "/right_side.png" },
   ];
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {

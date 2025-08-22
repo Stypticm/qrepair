@@ -1,5 +1,6 @@
 import { Page } from '@/components/Page';
 import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 
 const questions = [
     {
@@ -34,7 +35,7 @@ const QuestionsPage = () => {
                         questions.map((question, index) => (
                             <div className="flex flex-row items-start justify-center gap-4" key={index}>
                                 <Image
-                                    src="/questionImage.png"
+                                    src={getPictureUrl('questionImage.png') || '/questionImage.png'}
                                     alt="Знак вопроса"
                                     width={150}
                                     height={150}

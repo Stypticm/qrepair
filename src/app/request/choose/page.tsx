@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 const ChoosePage = () => {
@@ -37,7 +38,7 @@ const ChoosePage = () => {
       <section className="flex flex-col gap-4">
         <section className=' rounded-sm border-3 !border-slate-700'>
           <Image
-            src="/photo_manual.png"
+            src={getPictureUrl('photo_manual.png') || '/photo_manual.png'}
             alt="Ручное заполнение"
             width={400}
             height={300}
@@ -57,7 +58,7 @@ const ChoosePage = () => {
         <DialogContent className="max-w-[90%] max-h-[90%] p-4 flex flex-col items-center" aria-describedby={undefined}>
           <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>
           <Image
-            src="/banan.gif"
+            src={getPictureUrl('banan.gif') || '/banan.gif'}
             alt="Banan"
             width={400}
             height={300}

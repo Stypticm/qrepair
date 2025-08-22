@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '../ui/button';
 import { useStartForm } from '../StartFormContext/StartFormContext';
 import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 
 const Header = () => {
     const { telegramId, username, userPhotoUrl } = useStartForm();
@@ -44,7 +45,7 @@ const Header = () => {
                             />
                         ) : (
                             <Image
-                                src="/banan.gif"
+                                src={getPictureUrl('banan.gif') || '/banan.gif'}
                                 alt="Banan"
                                 width={400}
                                 height={300}
