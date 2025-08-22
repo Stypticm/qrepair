@@ -14,6 +14,7 @@ import MainButtons from '@/components/MainButtons/MainButtons';
 import Footer from '@/components/Footer/Footer';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
+import { getPictureUrl } from '@/core/lib/assets';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
@@ -83,7 +84,7 @@ export default function Home() {
             <br />Мы оценим его по фото, приедем и заберём. Деньги — сразу на карту или наличными.
           </p>
           <Image
-            src="/courier.png"
+            src={getPictureUrl('courier.png') || '/courier.png'}
             alt="Курьер с телефоном"
             width={400}
             height={200}
