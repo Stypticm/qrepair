@@ -190,7 +190,7 @@ export async function POST(req: Request) {
           if (process.env.NODE_ENV !== 'production') {
             await sendTelegramMessage(
               telegramId,
-              `✅ Время выбрано: ${time}. Мастер назначен.\n💰 Окончательная цена: ${priceText}.`,
+              `👨‍🔧 Мастер назначен.\n🕒 Время выбрано: ${time}.\n💰 Окончательная цена: ${priceText}.`,
               { parse_mode: 'Markdown' }
             )
           }
@@ -198,7 +198,7 @@ export async function POST(req: Request) {
           // else {
           //   await sendTelegramMessage(
           //     telegramId,
-          //     `👨‍🔧 Мастер назначен для забора устройства.\n🕒 Время: ${time}.\n💰 Окончательная цена: ${priceText}.`,
+          //     `👨‍🔧 Мастер назначен.\n🕒 Время выбрано: ${time}.\n💰 Окончательная цена: ${priceText}.`,
           //     { parse_mode: 'Markdown' }
           //   )
           // }

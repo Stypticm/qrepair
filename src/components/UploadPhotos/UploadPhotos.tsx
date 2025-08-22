@@ -166,7 +166,7 @@ export default function UploadPhotos({
                 <Image
                   src={item.pic}
                   alt={item.text}
-                  width={200}
+                  width={150}
                   height={150}
                   className="object-cover rounded-md w-full cursor-pointer"
                   onClick={() => inputRefs[index + 2]?.current?.click()}
