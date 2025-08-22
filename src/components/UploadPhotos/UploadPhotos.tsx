@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
+import SafeImage from "@/components/ui/safe-image";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -98,7 +99,7 @@ export default function UploadPhotos({
             <div className="relative flex items-center justify-center">
               {photoUrls[index] ? (
                 <>
-                  <Image
+                  <SafeImage
                     src={photoUrls[index]}
                     alt={`${item.text} фото`}
                     width={120}
@@ -115,7 +116,7 @@ export default function UploadPhotos({
                   Загрузка...
                 </div>
               ) : (
-                <Image
+                <SafeImage
                   src={item.pic}
                   alt={item.text}
                   width={150}
@@ -145,7 +146,7 @@ export default function UploadPhotos({
             <div className="relative flex items-center justify-center">
               {photoUrls[index + 2] ? (
                 <>
-                  <Image
+                  <SafeImage
                     src={photoUrls[index + 2]!}
                     alt={`${item.text} фото`}
                     width={200}
@@ -162,7 +163,7 @@ export default function UploadPhotos({
                   Загрузка...
                 </div>
               ) : (
-                <Image
+                <SafeImage
                   src={item.pic}
                   alt={item.text}
                   width={200}
