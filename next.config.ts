@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
         pathname: '/storage/v1/object/public/**',
       },
     ],
+    // DEV/TELEGRAM: отключаем оптимизацию изображений, чтобы избежать проблем в webview Telegram
+    // PROD: можно убрать, если оптимизация критична
+    unoptimized: true,
   },
 }
 
