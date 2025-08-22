@@ -4,10 +4,16 @@ import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
 
 const TIME_SLOTS = [
   '10:00',
+  '11:00',
   '12:00',
+  '13:00',
   '14:00',
+  '15:00',
   '16:00',
+  '17:00',
   '18:00',
+  '19:00',
+  '20:00',
 ]
 
 export async function POST(
@@ -87,15 +93,21 @@ export async function POST(
     ]),
   }
 
-  // Отправляем только если не отправлялось ранее
+  // Отправляем только если не отправлялось ранее и сразу ставим флаг, чтобы исключить дубли
   if (!isSent) {
-    await sendTelegramMessage(
+    const sent = await sendTelegramMessage(
       app.telegramId,
       process.env.NODE_ENV !== 'production'
         ? '🚚 Назначен мастер. Выберите удобное время (для теста):'
-        : '🚚 Назначен мастер. Выберите удобное время завтра:',
+        : '🚚 Назначен мастер. Выберите удобное время:',
       { parse_mode: 'Markdown', reply_markup: keyboard }
     )
+    // На всякий случай, если захотим потом убирать клавиатуру по message_id
+    // const messageId = sent?.result?.message_id
+    await prisma.skupka.update({
+      where: { id },
+      data: { courierTimeSlotSent: true },
+    })
   }
 
   return NextResponse.json({ success: true })

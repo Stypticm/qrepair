@@ -62,18 +62,21 @@ export async function PATCH(
 
     console.log('Updated request:', updatedRequest)
 
-    // Отправляем сообщение пользователю
-    const finalPrice = updatedRequest.price
-    const priceText =
-      typeof finalPrice === 'number'
-        ? `${Math.round(finalPrice)} ₽`
-        : '—'
-    const message = `👨‍🔧 Мастер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.`
-    await sendTelegramMessage(
-      updatedRequest.telegramId,
-      message,
-      { parse_mode: 'Markdown' }
-    )
+    // Отправляем сообщение пользователю ТОЛЬКО если выбрано время
+    if ((updatedRequest as any).courierTimeSlot) {
+      const finalPrice = updatedRequest.price
+      const priceText =
+        typeof finalPrice === 'number'
+          ? `${Math.round(finalPrice)} ₽`
+          : '—'
+      const time = (updatedRequest as any).courierTimeSlot
+      const message = `👨‍🔧 Мастер назначен для забора устройства.\n🕒 Время: ${time}.\n💰 Окончательная цена: ${priceText}.`
+      await sendTelegramMessage(
+        updatedRequest.telegramId,
+        message,
+        { parse_mode: 'Markdown' }
+      )
+    }
 
     return NextResponse.json({
       success: true,

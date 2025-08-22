@@ -71,12 +71,14 @@ export async function GET(req: Request) {
               .substring(11, 16)
           : '')
       const msg =
-        `⏰ Напоминание: через ~1 час визит мастера.\n` +
+        (process.env.NODE_ENV !== 'production'
+          ? `⏰ DEV: Напоминание: через ~1 минут визит мастера.\n`
+          : `⏰ Напоминание: через ~1 час визит мастера.\n`) +
         `Заявка: ${app.id}\n` +
         `Модель: ${app.modelname || '—'}\n` +
         `Время: ${hhmm || '—'}\n` +
-        `Курьер TG: ${app.courierTelegramId || '—'}\n` +
-        `Свяжитесь с курьером и подтвердите выезд к клиенту.`
+        `Мастер TG: ${app.courierTelegramId || '—'}\n` +
+        `Свяжитесь с мастером и подтвердите выезд к клиенту.`
       for (const adminId of adminIds) {
         try {
           await sendTelegramMessage(adminId, msg, {

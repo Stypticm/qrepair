@@ -22,6 +22,13 @@ export async function GET(req: Request) {
       }
     }
     const now = new Date()
+    // DEV: 1 минута, PROD: 30/60 минут (оставлено закомментированным)
+    const inOneMinute = new Date(
+      now.getTime() + 1 * 60 * 1000
+    )
+    const inThirtyMinutes = new Date(
+      now.getTime() + 30 * 60 * 1000
+    )
     const inOneHour = new Date(
       now.getTime() + 60 * 60 * 1000
     )
@@ -31,7 +38,10 @@ export async function GET(req: Request) {
         courierReminderSent: false as any,
         courierScheduledAt: {
           gt: now,
-          lte: inOneHour,
+          lte:
+            process.env.NODE_ENV !== 'production'
+              ? inOneMinute
+              : inOneHour,
         } as any,
       } as any,
       orderBy: { courierScheduledAt: 'asc' } as any,
@@ -66,12 +76,21 @@ export async function GET(req: Request) {
               .substring(11, 16)
           : '')
       const msg =
-        `⏰ Напоминание: через ~1 час визит мастера.\n` +
+        (process.env.NODE_ENV !== 'production'
+          ? `⏰ DEV: Напоминание: через ~1 минут визит мастера.\n`
+          : `⏰ Напоминание: через ~1 час визит мастера.\n`) +
         `Заявка: ${app.id}\n` +
         `Модель: ${app.modelname || '—'}\n` +
         `Время: ${hhmm || '—'}\n` +
-        `Курьер TG: ${app.courierTelegramId || '—'}\n` +
-        `Свяжитесь с курьером и подтвердите выезд к клиенту.`
+        `Мастер TG: ${app.courierTelegramId || '—'}\n` +
+        `Свяжитесь с мастером и подтвердите выезд к клиенту.`
+
+      // PROD: Доп. вариант за 30 минут (закомментирован для продакшена)
+      // if (process.env.NODE_ENV === 'production' && app.courierScheduledAt && app.courierReminder30mSent !== true) {
+      //   if (app.courierScheduledAt.getTime() - now.getTime() <= 30 * 60 * 1000) {
+      //     // отправить напоминание за 30 минут
+      //   }
+      // }
       for (const adminId of adminIds) {
         try {
           await sendTelegramMessage(adminId, msg, {

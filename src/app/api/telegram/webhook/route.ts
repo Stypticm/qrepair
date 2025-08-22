@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/core/lib/prisma'
-import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
+import {
+  sendTelegramMessage,
+  editTelegramReplyMarkup,
+  answerCallbackQuery,
+} from '@/core/lib/sendTelegramMessage'
 
 export async function POST(req: Request) {
   try {
@@ -24,6 +28,8 @@ export async function POST(req: Request) {
     if (callbackQuery) {
       const telegramId = callbackQuery.from.id.toString()
       const data = callbackQuery.data
+      const callbackId = callbackQuery.id
+      const messageId = callbackQuery.message?.message_id
 
       if (data === 'check_status') {
         const skupkaRequest = await prisma.skupka.findFirst(
@@ -134,6 +140,19 @@ export async function POST(req: Request) {
           const scheduled = new Date(today)
           scheduled.setHours(hh, mm, 0, 0)
 
+          // Не даём выбрать время повторно
+          const existing = await prisma.skupka.findUnique({
+            where: { id },
+          })
+          if ((existing as any)?.courierUserConfirmed) {
+            await sendTelegramMessage(
+              telegramId,
+              '⏱️ Время уже подтверждено. Изменение через поддержку: @QtweRepairSupport',
+              { parse_mode: 'Markdown' }
+            )
+            return NextResponse.json({ ok: true })
+          }
+
           await prisma.skupka.update({
             where: { id },
             data: {
@@ -156,7 +175,18 @@ export async function POST(req: Request) {
             typeof reqForPrice?.price === 'number'
               ? `${Math.round(reqForPrice.price)} ₽`
               : '—'
-          // DEV: Отправляем только подтверждение выбора времени
+          // Удаляем клавиатуру под исходным сообщением выбора времени
+          if (messageId) {
+            try {
+              await editTelegramReplyMarkup(
+                telegramId,
+                messageId,
+                null
+              )
+            } catch {}
+          }
+
+          // DEV: упрощённое подтверждение
           if (process.env.NODE_ENV !== 'production') {
             await sendTelegramMessage(
               telegramId,
@@ -164,14 +194,19 @@ export async function POST(req: Request) {
               { parse_mode: 'Markdown' }
             )
           }
-          // PROD: Комментируем для теста, раскомментируй для продакшена
+          // PROD: отправляем финальное подтверждение с временем
           // else {
           //   await sendTelegramMessage(
           //     telegramId,
-          //     `👨‍🔧 Мастер назначен для забора устройства.\n💰 Окончательная цена: ${priceText}.\n🕒 Выбор времени подтверждён: ${time}.`,
+          //     `👨‍🔧 Мастер назначен для забора устройства.\n🕒 Время: ${time}.\n💰 Окончательная цена: ${priceText}.`,
           //     { parse_mode: 'Markdown' }
-          //   );
+          //   )
           // }
+
+          // Подтверждаем callback, чтобы Telegram убрал "часики"
+          try {
+            await answerCallbackQuery(callbackId)
+          } catch {}
         }
       } else if (data === 'contact_support') {
         await sendTelegramMessage(

@@ -197,7 +197,7 @@ const RequestById = () => {
                                     onClick={handleReviewRequest}
                                     disabled={!application?.price || !(application as any)?.priceConfirmed}
                                 >
-                                    Заявка рассмотрена
+                                    Цена подтверждена
                                 </Button>
                             )}
                             {application && (
@@ -229,10 +229,14 @@ const RequestById = () => {
                                         }
                                     }}
                                 >
-                                    {Boolean((application as any)?.courierTelegramId) ? `Мастер назначен (${(application as any).courierTimeSlot || 'время не выбрано'})` : 'Назначить время мастера'}
+                                    {Boolean((application as any)?.courierTelegramId)
+                                        ? `Мастер назначен${(application as any).courierTimeSlot ? ` — ${
+                                              (application as any).courierTimeSlot
+                                          }` : ' — время не выбрано'}`
+                                        : 'Назначить мастера и время '}
                                 </Button>
                             )}
-                            {application?.status === 'on_the_way' && (
+                            {(application as any)?.courierUserConfirmed && application?.status === 'on_the_way' && (
                                 <Button className="min-w-[200px]" onClick={handleCourierReceived}>
                                     Телефон у мастера
                                 </Button>
