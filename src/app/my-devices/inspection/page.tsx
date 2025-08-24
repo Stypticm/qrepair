@@ -29,7 +29,7 @@ export default function DeviceInspectionPage() {
   // Генерация OTP токена
   const generateOTP = async () => {
     if (!skupkaId || !masterUsername) {
-      setError('Введите ID заявки и username мастера')
+      setError('Введите ID заявки и Telegram username мастера')
       return
     }
 
@@ -173,7 +173,7 @@ export default function DeviceInspectionPage() {
             </div>
 
             <div>
-              <Label htmlFor="masterUsername">Username мастера</Label>
+              <Label htmlFor="masterUsername">Telegram username</Label>
               <Input
                 id="masterUsername"
                 value={masterUsername}
@@ -272,7 +272,11 @@ export default function DeviceInspectionPage() {
                       <Checkbox
                         id={`${currentTest.id}-pass`}
                         checked={testResults.find(r => r.testId === currentTest.id)?.passed === true}
-                        onCheckedChange={(checked) => updateTestResult(currentTest.id, checked === true)}
+                        onCheckedChange={(checked) => {
+                          if (checked === true) {
+                            updateTestResult(currentTest.id, true)
+                          }
+                        }}
                       />
                       <Label htmlFor={`${currentTest.id}-pass`}>Работает</Label>
                     </div>
@@ -281,7 +285,11 @@ export default function DeviceInspectionPage() {
                       <Checkbox
                         id={`${currentTest.id}-fail`}
                         checked={testResults.find(r => r.testId === currentTest.id)?.passed === false}
-                        onCheckedChange={(checked) => updateTestResult(currentTest.id, checked === true ? false : true)}
+                        onCheckedChange={(checked) => {
+                          if (checked === true) {
+                            updateTestResult(currentTest.id, false)
+                          }
+                        }}
                       />
                       <Label htmlFor={`${currentTest.id}-fail`}>Не работает</Label>
                     </div>

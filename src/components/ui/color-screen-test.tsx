@@ -30,6 +30,11 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
     onResult(testId, value, notes)
   }
 
+  const handleFail = () => {
+    setPassed(false)
+    onResult(testId, false, notes)
+  }
+
   return (
     <div className="flex flex-col items-center gap-4 p-4 border rounded-lg">
       <h3 className="text-lg font-semibold text-center">
@@ -66,7 +71,11 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
             <Checkbox
               id={`${testId}-fail`}
               checked={passed === false}
-              onCheckedChange={(checked) => handleResult(checked === true ? false : null)}
+              onCheckedChange={(checked) => {
+                if (checked === true) {
+                  handleFail()
+                }
+              }}
             />
             <Label htmlFor={`${testId}-fail`}>Не работает</Label>
           </div>
