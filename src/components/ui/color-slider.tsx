@@ -72,28 +72,6 @@ export function ColorSlider({ onResult, onComplete }: ColorSliderProps): JSX.Ele
       <div 
         className={`w-full h-screen rounded-lg border-2 border-gray-300 ${colorStyles[currentColor.color as keyof typeof colorStyles]}`}
         style={{ backgroundColor: currentColor.color === 'white' ? '#ffffff' : currentColor.color === 'black' ? '#000000' : undefined }}
-        onTouchStart={(e) => {
-          const touch = e.touches[0]
-          const startX = touch.clientX
-          
-          const handleTouchEnd = (e: React.TouchEvent) => {
-            const touch = e.changedTouches[0]
-            const endX = touch.clientX
-            const diffX = startX - endX
-            
-            if (Math.abs(diffX) > 50) { // Минимальное расстояние для свайпа
-              if (diffX > 0) {
-                handleSwipe('left')
-              } else {
-                handleSwipe('right')
-              }
-            }
-            
-            document.removeEventListener('touchend', handleTouchEnd)
-          }
-          
-          document.addEventListener('touchend', handleTouchEnd)
-        }}
       >
         <div className="w-full h-full flex items-center justify-center">
           <span className={`text-lg font-bold ${currentColor.color === 'white' || currentColor.color === 'black' ? 'text-gray-600' : 'text-white'}`}>
