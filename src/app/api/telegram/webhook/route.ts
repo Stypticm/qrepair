@@ -191,6 +191,26 @@ export async function POST(req: Request) {
             },
           })
 
+          // Отправляем уведомление мастеру о выбранном времени
+          const masterNotification =
+            await prisma.skupka.findUnique({
+              where: { id },
+            })
+
+          if (masterNotification?.courierTelegramId) {
+            const deviceInfo =
+              masterNotification.modelname || 'Не указано'
+            const priceInfo = masterNotification.price
+              ? `${Math.round(masterNotification.price)} ₽`
+              : 'Не указана'
+
+            await sendTelegramMessage(
+              masterNotification.courierTelegramId,
+              `✅ Время подтверждено!\n\n📱 Устройство: ${deviceInfo}\n💰 Цена: ${priceInfo}\n🕒 Время встречи: ${time}\n\nКлиент ожидает вас в указанное время.`,
+              { parse_mode: 'Markdown' }
+            )
+          }
+
           const reqForPrice =
             await prisma.skupka.findUnique({
               where: { id },
@@ -219,7 +239,7 @@ export async function POST(req: Request) {
             // Удаляем старое сообщение и отправляем новое
             try {
               await fetch(
-                `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteMessage`,
+                `https://api.telegram.org/bot${process.env.BOT_TOKEN}/deleteMessage`,
                 {
                   method: 'POST',
                   headers: {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from './button'
-import { Checkbox } from './checkbox'
 import { Label } from './label'
 
 interface ColorSliderProps {
@@ -69,49 +68,22 @@ export function ColorSlider({ onResult, onComplete }: ColorSliderProps): JSX.Ele
         Тест: {currentColor.name}
       </h3>
       
-      <div 
-        className={`w-full h-screen rounded-lg border-2 border-gray-300 ${colorStyles[currentColor.color as keyof typeof colorStyles]}`}
-        style={{ backgroundColor: currentColor.color === 'white' ? '#ffffff' : currentColor.color === 'black' ? '#000000' : undefined }}
-      >
-        <div className="w-full h-full flex items-center justify-center">
-          <span className={`text-lg font-bold ${currentColor.color === 'white' || currentColor.color === 'black' ? 'text-gray-600' : 'text-white'}`}>
-            {currentColor.name.toUpperCase()}
-          </span>
-        </div>
-      </div>
+                    <div 
+                className={`w-full h-screen rounded-lg border-2 border-gray-300 cursor-pointer ${colorStyles[currentColor.color as keyof typeof colorStyles]}`}
+                style={{ backgroundColor: currentColor.color === 'white' ? '#ffffff' : currentColor.color === 'black' ? '#000000' : undefined }}
+                onClick={() => handleResult(true)}
+              >
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className={`text-lg font-bold ${currentColor.color === 'white' || currentColor.color === 'black' ? 'text-gray-600' : 'text-white'}`}>
+                    {currentColor.name.toUpperCase()}
+                  </span>
+                </div>
+              </div>
 
-      <div className="flex flex-col gap-2 w-full max-w-xs">
-        <Label className="text-sm font-medium text-white">
-          Проверьте экран на наличие дефектов пикселей
-        </Label>
-        
-        <div className="flex gap-4 justify-center">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id={`${currentColor.id}-pass`}
-              checked={results[currentColor.id]?.passed === true}
-              onCheckedChange={(checked) => {
-                if (checked === true) {
-                  handleResult(true)
-                }
-              }}
-            />
-            <Label htmlFor={`${currentColor.id}-pass`} className="text-white">Работает</Label>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id={`${currentColor.id}-fail`}
-              checked={results[currentColor.id]?.passed === false}
-              onCheckedChange={(checked) => {
-                if (checked === true) {
-                  handleResult(false)
-                }
-              }}
-            />
-            <Label htmlFor={`${currentColor.id}-fail`} className="text-white">Не работает</Label>
-          </div>
-        </div>
+              <div className="flex flex-col gap-2 w-full max-w-xs">
+          <Label className="text-sm font-medium text-white">
+            Кликните на экран для перехода к следующему цвету
+          </Label>
 
         <div className="mt-2">
           <Label htmlFor={`${currentColor.id}-notes`} className="text-sm text-white">

@@ -68,10 +68,11 @@ export async function POST(
   const now = new Date()
   const currentHour = now.getHours()
   let slots: string[] = []
-  // PROD логика (по умолчанию): показываем оставшиеся часы текущего дня
+
+  // Логика: показываем оставшиеся часы текущего дня
   // - до 10:00 → все слоты 10:00–20:00
   // - 10:00–19:59 → слоты (currentHour+1)–20:00
-  // - после 20:00 → слоты на завтра 10:00–20:00
+  // - после 20:00 → все слоты 10:00–20:00 (для выбора на следующий день)
   if (currentHour < 10) {
     slots = TIME_SLOTS.filter((slot) => {
       const [slotHour] = slot.split(':').map(Number)
@@ -83,11 +84,8 @@ export async function POST(
       return slotHour >= currentHour + 1 && slotHour <= 20
     })
   } else {
-    // завтра
-    slots = TIME_SLOTS.filter((slot) => {
-      const [slotHour] = slot.split(':').map(Number)
-      return slotHour >= 10 && slotHour <= 20
-    })
+    // После 20:00 показываем все слоты для выбора времени на следующий день
+    slots = TIME_SLOTS
   }
 
   // DEV: тестовый слот ровно через 5 минут от текущего времени
@@ -108,13 +106,32 @@ export async function POST(
 
   // Отправляем только если не отправлялось ранее и сразу ставим флаг, чтобы исключить дубли
   if (!isSent) {
-    const sent = await sendTelegramMessage(
-      app.telegramId,
+    const messageText =
       process.env.NODE_ENV !== 'production'
         ? '🚚 Назначен мастер. Выберите удобное время (для теста):'
-        : '🚚 Назначен мастер. Выберите удобное время:',
+        : currentHour >= 20
+        ? '🚚 Назначен мастер. Выберите удобное время на завтра:'
+        : '🚚 Назначен мастер. Выберите удобное время:'
+
+    const sent = await sendTelegramMessage(
+      app.telegramId,
+      messageText,
       { parse_mode: 'Markdown', reply_markup: keyboard }
     )
+
+    // Отправляем уведомление мастеру о назначенной встрече
+    const masterMessageText = `👨‍🔧 Вам назначена встреча!\n\n📱 Устройство: ${
+      app.modelname || 'Не указано'
+    }\n💰 Цена: ${
+      app.price || 'Не указана'
+    } ₽\n\n⏰ Выберите удобное время для клиента выше.`
+
+    await sendTelegramMessage(
+      master.telegramId,
+      masterMessageText,
+      { parse_mode: 'Markdown' }
+    )
+
     // На всякий случай, если захотим потом убирать клавиатуру по message_id
     // const messageId = sent?.result?.message_id
     await prisma.skupka.update({
