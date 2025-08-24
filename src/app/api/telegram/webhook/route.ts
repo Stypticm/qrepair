@@ -212,6 +212,23 @@ export async function POST(req: Request) {
 
           // DEV: упрощённое подтверждение
           if (process.env.NODE_ENV !== 'production') {
+            // Удаляем старое сообщение и отправляем новое
+            try {
+              await fetch(
+                `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/deleteMessage`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    chat_id: telegramId,
+                    message_id: messageId,
+                  }),
+                }
+              )
+            } catch {}
+
             await sendTelegramMessage(
               telegramId,
               `👨‍🔧 Мастер назначен.\n🕒 Время выбрано: ${time}.\n💰 Окончательная цена: ${priceText}.\n\n🔍 Для проверки устройства:\n1. Откройте приложение\n2. Перейдите в "Мои устройства"\n3. Нажмите "🔍 Проверить устройство"\n4. Введите свой Telegram username\n5. Получите OTP код`,

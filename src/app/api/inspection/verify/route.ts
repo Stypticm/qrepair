@@ -38,15 +38,22 @@ export async function POST(req: Request) {
     }
 
     // Проверяем, что мастер назначен к этой заявке
-    // Ищем пользователя с таким username и проверяем его telegramId
-    const masterUser = await prisma.skupka.findFirst({
+    // Ищем мастера в таблице Master
+    const master = await prisma.master.findUnique({
       where: { username: masterUsername },
     })
 
+    if (!master) {
+      return NextResponse.json(
+        { error: 'Master not found' },
+        { status: 404 }
+      )
+    }
+
+    // Проверяем, что мастер назначен к этой заявке
     if (
-      !masterUser ||
       inspection.skupka.courierTelegramId !==
-        masterUser.telegramId
+      master.telegramId
     ) {
       return NextResponse.json(
         { error: 'Master not assigned to this request' },

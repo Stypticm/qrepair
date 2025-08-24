@@ -22,13 +22,24 @@ export async function POST(
 ) {
   const { id } = await params
   const body = await req.json().catch(() => ({}))
-  const { courierTelegramId } = body as {
-    courierTelegramId?: string
+  const { masterUsername } = body as {
+    masterUsername?: string
   }
-  if (!id || !courierTelegramId) {
+  if (!id || !masterUsername) {
     return NextResponse.json(
-      { error: 'Missing id or courierTelegramId' },
+      { error: 'Missing id or masterUsername' },
       { status: 400 }
+    )
+  }
+
+  // Находим мастера по username
+  const master = await prisma.master.findUnique({
+    where: { username: masterUsername },
+  })
+  if (!master) {
+    return NextResponse.json(
+      { error: 'Master not found' },
+      { status: 404 }
     )
   }
 
@@ -46,7 +57,7 @@ export async function POST(
   await prisma.skupka.update({
     where: { id },
     data: {
-      courierTelegramId,
+      courierTelegramId: master.telegramId,
       courierUserConfirmed: false,
       // Устанавливаем флаг только если не отправлялось
       ...(isSent ? {} : { courierTimeSlotSent: false }),

@@ -231,16 +231,16 @@ export default function DeviceInspectionPage() {
 
         {deviceInfo && (
           <div className="w-full max-w-md mb-6 p-4 bg-gray-100 rounded-lg">
-            <h3 className="font-semibold mb-2">Информация об устройстве</h3>
-            <p><strong>Модель:</strong> {deviceInfo.modelname || 'Не указана'}</p>
-            <p><strong>Базовая цена:</strong> {deviceInfo.price ? `${Math.round(deviceInfo.price)} ₽` : 'Не указана'}</p>
-            <p><strong>Статус:</strong> {deviceInfo.status}</p>
+            <h3 className="font-semibold mb-2 text-gray-900">Информация об устройстве</h3>
+            <p className="text-gray-900"><strong>Модель:</strong> {deviceInfo.modelname || 'Не указана'}</p>
+            <p className="text-gray-900"><strong>Базовая цена:</strong> {deviceInfo.price ? `${Math.round(deviceInfo.price)} ₽` : 'Не указана'}</p>
+            <p className="text-gray-900"><strong>Статус:</strong> {deviceInfo.status}</p>
           </div>
         )}
 
         <div className="w-full max-w-md mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium">Прогресс проверки</span>
+            <span className="text-sm font-medium text-gray-900">Прогресс проверки</span>
             <span className="text-sm text-gray-600">
               {testResults.length} / {DEVICE_TESTS.length}
             </span>
@@ -260,7 +260,7 @@ export default function DeviceInspectionPage() {
               />
             ) : (
               <div className="flex flex-col items-center gap-4 p-4 border rounded-lg">
-                <h3 className="text-lg font-semibold text-center">
+                <h3 className="text-lg font-semibold text-center text-gray-900">
                   {currentTest.name}
                 </h3>
                 
@@ -280,7 +280,7 @@ export default function DeviceInspectionPage() {
                           }
                         }}
                       />
-                      <Label htmlFor={`${currentTest.id}-pass`}>Работает</Label>
+                      <Label htmlFor={`${currentTest.id}-pass`} className="text-gray-900">Работает</Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
@@ -293,7 +293,7 @@ export default function DeviceInspectionPage() {
                           }
                         }}
                       />
-                      <Label htmlFor={`${currentTest.id}-fail`}>Не работает</Label>
+                      <Label htmlFor={`${currentTest.id}-fail`} className="text-gray-900">Не работает</Label>
                     </div>
                   </div>
                 )}

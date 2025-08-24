@@ -171,7 +171,7 @@ const RequestById = () => {
                                     {(application as any)?.courierTelegramId && (
                                         <div className="mt-3 p-3 rounded-md border border-gray-600 bg-gray-700 text-white">
                                             <p className="font-semibold">Детали выезда мастера</p>
-                                            <p>Мастер TG: {(application as any).courierTelegramId}</p>
+                                            <p>Мастер: @{(application as any).courierTelegramId}</p>
                                             {(application as any).courierTimeSlot && <p>Выбранное время: {(application as any).courierTimeSlot}</p>}
                                             {(application as any).courierScheduledAt && (
                                                 <p>
@@ -212,12 +212,12 @@ const RequestById = () => {
                                                     disabled={Boolean((application as any)?.courierTelegramId)}
                                                     onClick={async () => {
                                                         if ((application as any)?.courierTelegramId) return;
-                                                        const masterId = prompt('Введите telegramId мастера:');
-                                                        if (!masterId) return;
+                                                        const masterUsername = prompt('Введите Telegram username мастера (без @):');
+                                                        if (!masterUsername) return;
                                                         const res = await fetch(`/api/courier/schedule/${application.id}`, {
                                                             method: 'POST',
                                                             headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ courierTelegramId: masterId }),
+                                                            body: JSON.stringify({ masterUsername }),
                                                         });
                                                         const data = await res.json();
                                                         if (!res.ok) alert(data?.error || 'Ошибка назначения мастера');
@@ -227,7 +227,7 @@ const RequestById = () => {
                                                                 prev
                                                                     ? ({
                                                                         ...prev,
-                                                                        courierTelegramId: masterId,
+                                                                        courierTelegramId: masterUsername,
                                                                     } as any)
                                                                     : prev
                                                             );
