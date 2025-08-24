@@ -139,8 +139,12 @@ export default function DeviceInspectionPage() {
 
       const data = await response.json()
       alert(`Проверка завершена! Окончательная цена: ${Math.round(data.finalPrice)} ₽`)
-      // Перенаправляем на страницу "Мои устройства"
-      router.push('/my-devices')
+      // Показываем сообщение о редиректе
+      setError('Перенаправление на страницу "Мои устройства"...')
+      // Перенаправляем на страницу "Мои устройства" с небольшой задержкой
+      setTimeout(() => {
+        router.push('/my-devices')
+      }, 1000)
     } catch (err: any) {
       setError(err.message)
     } finally {

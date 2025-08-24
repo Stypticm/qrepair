@@ -119,19 +119,6 @@ export async function POST(
       { parse_mode: 'Markdown', reply_markup: keyboard }
     )
 
-    // Отправляем уведомление мастеру о назначенной встрече
-    const masterMessageText = `👨‍🔧 Вам назначена встреча!\n\n📱 Устройство: ${
-      app.modelname || 'Не указано'
-    }\n💰 Цена: ${
-      app.price || 'Не указана'
-    } ₽\n\n⏰ Выберите удобное время для клиента выше.`
-
-    await sendTelegramMessage(
-      master.telegramId,
-      masterMessageText,
-      { parse_mode: 'Markdown' }
-    )
-
     // На всякий случай, если захотим потом убирать клавиатуру по message_id
     // const messageId = sent?.result?.message_id
     await prisma.skupka.update({

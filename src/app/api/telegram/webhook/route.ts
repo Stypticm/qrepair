@@ -206,7 +206,7 @@ export async function POST(req: Request) {
 
             await sendTelegramMessage(
               masterNotification.courierTelegramId,
-              `✅ Время подтверждено!\n\n📱 Устройство: ${deviceInfo}\n💰 Цена: ${priceInfo}\n🕒 Время встречи: ${time}\n\nКлиент ожидает вас в указанное время.`,
+              `👨‍🔧 Вам назначена встреча!\n\n📱 Устройство: ${deviceInfo}\n💰 Цена: ${priceInfo}\n🕒 Время встречи: ${time}\n\nКлиент ожидает вас в указанное время для проверки устройства.`,
               { parse_mode: 'Markdown' }
             )
           }
