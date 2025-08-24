@@ -154,7 +154,7 @@ export default function DeviceInspectionPage() {
       const timeout = setTimeout(saveProgress, 1000)
       return () => clearTimeout(timeout)
     }
-  }, [testResults, isVerified])
+  }, [testResults, isVerified, saveProgress])
 
   const currentTest = DEVICE_TESTS[currentTestIndex]
   const progress = (testResults.length / DEVICE_TESTS.length) * 100
@@ -166,7 +166,7 @@ export default function DeviceInspectionPage() {
       // но сохраняем результаты в testResults
       // Это поможет избежать проблем с отображением предыдущих выборов
     }
-  }, [currentTestIndex, isVerified, currentTest?.id])
+  }, [currentTestIndex, isVerified, currentTest?.id, currentTest])
 
   // Сброс состояния чекбоксов при переходе между тестами
   const resetCheckboxState = () => {
@@ -187,7 +187,7 @@ export default function DeviceInspectionPage() {
         ))
       }
     }
-  }, [currentTestIndex, isVerified, currentTest?.id, testResults])
+  }, [currentTestIndex, isVerified, currentTest?.id, testResults, currentTest])
 
   if (!isVerified) {
     return (

@@ -66,7 +66,7 @@ const BrandPage = () => {
       }
     })();
     return () => controller.abort();
-  }, [telegramId, setModel, setPhotoUrls, setPrice, setShowQuestionsSuccess]);
+  }, [telegramId, setModel, setPhotoUrls, setPrice, setShowQuestionsSuccess, setImei]);
 
   // Prefetch questions data and block the button until loaded
   useEffect(() => {
