@@ -28,7 +28,7 @@ const colorStyles = {
 
 export function ColorSlider({ onResult, onComplete }: ColorSliderProps): JSX.Element {
   const [currentColorIndex, setCurrentColorIndex] = useState(0)
-  const [results, setResults] = useState<{[key: string]: { passed: boolean | null, notes: string }>>({})
+  const [results, setResults] = useState<Record<string, { passed: boolean | null, notes: string }>>({})
   const [notes, setNotes] = useState('')
 
   const currentColor = colorTests[currentColorIndex]
@@ -76,7 +76,7 @@ export function ColorSlider({ onResult, onComplete }: ColorSliderProps): JSX.Ele
           const touch = e.touches[0]
           const startX = touch.clientX
           
-          const handleTouchEnd = (e: TouchEvent) => {
+          const handleTouchEnd = (e: React.TouchEvent) => {
             const touch = e.changedTouches[0]
             const endX = touch.clientX
             const diffX = startX - endX
