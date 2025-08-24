@@ -92,7 +92,7 @@ export async function POST(req: Request) {
 
     // Отправляем уведомление мастеру
     // Ищем мастера по username для получения telegramId
-    const masterUser = await prisma.skupka.findFirst({
+    const masterUser = await prisma.master.findFirst({
       where: { username: inspection.masterUsername },
     })
 

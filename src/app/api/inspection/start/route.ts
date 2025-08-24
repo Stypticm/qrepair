@@ -33,10 +33,11 @@ export async function POST(req: Request) {
       )
     }
 
-    // Ищем мастера по username в базе данных
-    const masterUser = await prisma.skupka.findFirst({
+    // Ищем мастера по username в таблице мастеров
+    const masterUser = await prisma.master.findFirst({
       where: {
         username: masterUsername,
+        isActive: true,
       },
     })
 

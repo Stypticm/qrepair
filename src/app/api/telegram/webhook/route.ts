@@ -83,9 +83,21 @@ export async function POST(req: Request) {
           const updated = await prisma.skupka.findUnique({
             where: { id },
           })
+
+          // Удаляем клавиатуру под исходным сообщением
+          if (messageId) {
+            try {
+              await editTelegramReplyMarkup(
+                telegramId,
+                messageId,
+                null
+              )
+            } catch {}
+          }
+
           await sendTelegramMessage(
             telegramId,
-            '✅ Спасибо за подтверждение. Ожидайте, с вами свяжется наш менеджер для организации забора устройства.',
+            '✅ Вы нажали "Да". Спасибо за подтверждение. Ожидайте, с вами свяжется наш менеджер для организации забора устройства.',
             { parse_mode: 'Markdown' }
           )
         }
@@ -94,9 +106,21 @@ export async function POST(req: Request) {
         if (id) {
           try {
             await prisma.skupka.delete({ where: { id } })
+
+            // Удаляем клавиатуру под исходным сообщением
+            if (messageId) {
+              try {
+                await editTelegramReplyMarkup(
+                  telegramId,
+                  messageId,
+                  null
+                )
+              } catch {}
+            }
+
             await sendTelegramMessage(
               telegramId,
-              '❌ Спасибо, что воспользовались нашим сервисом. Заявка отменена.',
+              '❌ Вы нажали "Нет". Спасибо, что воспользовались нашим сервисом. Заявка отменена.',
               { parse_mode: 'Markdown' }
             )
           } catch (e) {
@@ -190,7 +214,7 @@ export async function POST(req: Request) {
           if (process.env.NODE_ENV !== 'production') {
             await sendTelegramMessage(
               telegramId,
-              `👨‍🔧 Мастер назначен.\n🕒 Время выбрано: ${time}.\n💰 Окончательная цена: ${priceText}.`,
+              `👨‍🔧 Мастер назначен.\n🕒 Время выбрано: ${time}.\n💰 Окончательная цена: ${priceText}.\n\n🔍 Для проверки устройства:\n1. Откройте приложение\n2. Перейдите в "Мои устройства"\n3. Нажмите "🔍 Проверить устройство"\n4. Введите свой Telegram username\n5. Получите OTP код`,
               { parse_mode: 'Markdown' }
             )
           }
@@ -198,7 +222,7 @@ export async function POST(req: Request) {
           // else {
           //   await sendTelegramMessage(
           //     telegramId,
-          //     `👨‍🔧 Мастер назначен.\n🕒 Время выбрано: ${time}.\n💰 Окончательная цена: ${priceText}.`,
+          //     `👨‍🔧 Мастер назначен.\n🕒 Время выбрано: ${time}.\n💰 Окончательная цена: ${priceText}.\n\n🔍 Для проверки устройства:\n1. Откройте приложение\n2. Перейдите в "Мои устройства"\n3. Нажмите "🔍 Проверить устройство"\n4. Введите свой Telegram username\n5. Получите OTP код`,
           //     { parse_mode: 'Markdown' }
           //   )
           // }

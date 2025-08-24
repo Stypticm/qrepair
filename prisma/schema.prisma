@@ -42,10 +42,23 @@ model Skupka {
   inspections         DeviceInspection[]
 }
 
+model Master {
+  id          String   @id @default(cuid())
+  telegramId  String   @unique
+  username    String   @unique
+  name        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Связи
+  inspections DeviceInspection[]
+}
+
 model DeviceInspection {
   id                  String   @id @default(cuid())
   skupkaId            String   // Связь с заявкой
-  masterUsername      String   // Username мастера (без @)
+  masterUsername      String   // Username мастера
   inspectionToken     String   // OTP токен для проверки
   tokenExpiresAt      DateTime // Время истечения токена
   testsResults        Json     // Результаты всех тестов
@@ -56,6 +69,7 @@ model DeviceInspection {
   
   // Связи
   skupka              Skupka   @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
+  master              Master?  @relation(fields: [masterUsername], references: [username])
   
   @@index([skupkaId])
   @@index([masterUsername])

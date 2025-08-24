@@ -49,6 +49,7 @@ const MyDevices = () => {
                   <TableCell className='text-center text-black !text-bold'>
                     <Button
                       size="sm"
+                      className="bg-gray-800 hover:bg-gray-700 text-white"
                       onClick={() => router.push(`/my-devices/status?status=${bid.status}`)}>
                       Check status
                     </Button>
