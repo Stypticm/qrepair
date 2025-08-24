@@ -162,21 +162,23 @@ export default function DeviceInspectionPage() {
           </h2>
 
           <div className="w-full max-w-md space-y-4">
-            <div>
+            <div className="text-black !text-extrabold">
               <Label htmlFor="skupkaId">ID заявки</Label>
               <Input
                 id="skupkaId"
                 value={skupkaId || ''}
+                
                 placeholder="Введите ID заявки"
                 disabled={true}
               />
             </div>
 
             <div>
-              <Label htmlFor="masterUsername">Telegram username</Label>
+              <Label htmlFor="masterUsername" className="text-black !text-extrabold">Telegram username</Label>
               <Input
                 id="masterUsername"
                 value={masterUsername}
+                className="text-black !text-extrabold"
                 onChange={(e) => setMasterUsername(e.target.value)}
                 placeholder="Введите ваш username (без @)"
               />
@@ -191,7 +193,7 @@ export default function DeviceInspectionPage() {
             </Button>
 
             <div className="border-t pt-4">
-              <Label htmlFor="inspectionToken">OTP код</Label>
+              <Label htmlFor="inspectionToken" className="text-black !text-extrabold">OTP код</Label>
               <Input
                 id="inspectionToken"
                 value={inspectionToken}

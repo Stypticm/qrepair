@@ -58,7 +58,7 @@ const MyDevices = () => {
                     {bid.status === 'on_the_way' && bid.courierUserConfirmed && (
                       <Button
                         size="sm"
-                        variant="outline"
+                        className="bg-gray-800 hover:bg-gray-700 text-white"
                         onClick={() => router.push(`/my-devices/inspection?id=${bid.id}`)}>
                         🔍 Проверить устройство
                       </Button>
