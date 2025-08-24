@@ -76,7 +76,10 @@ export default function DeviceInspectionPage() {
       }
 
       const data = await response.json()
-      setDeviceInfo(data.skupka)
+      setDeviceInfo({
+        ...data.skupka,
+        inspectionId: data.inspection.id
+      })
       setIsVerified(true)
       setError('')
     } catch (err: any) {
@@ -109,7 +112,7 @@ export default function DeviceInspectionPage() {
       })
     } catch (err) {
       console.error('Error saving progress:', err)
-    }
+    } 
   }
 
   // Завершение проверки
@@ -153,32 +156,62 @@ export default function DeviceInspectionPage() {
   const currentTest = DEVICE_TESTS[currentTestIndex]
   const progress = (testResults.length / DEVICE_TESTS.length) * 100
 
+  // Сброс результатов при изменении текущего теста
+  useEffect(() => {
+    if (isVerified && currentTest) {
+      // При переходе между тестами сбрасываем локальное состояние
+      // но сохраняем результаты в testResults
+      // Это поможет избежать проблем с отображением предыдущих выборов
+    }
+  }, [currentTestIndex, isVerified, currentTest?.id])
+
+  // Сброс состояния чекбоксов при переходе между тестами
+  const resetCheckboxState = () => {
+    // Принудительно обновляем состояние чекбоксов
+    // чтобы они отображали правильное состояние
+  }
+
+  // Сброс состояния чекбоксов при переходе между тестами
+  useEffect(() => {
+    if (isVerified && currentTest) {
+      // Принудительно обновляем состояние чекбоксов
+      // чтобы они отображали правильное состояние
+      const currentTestResult = testResults.find(r => r.testId === currentTest.id)
+      if (currentTestResult) {
+        // Обновляем состояние, чтобы синхронизировать с результатами
+        setTestResults(prev => prev.map(r => 
+          r.testId === currentTest.id ? { ...r, value: r.passed } : r
+        ))
+      }
+    }
+  }, [currentTestIndex, isVerified, currentTest?.id, testResults])
+
   if (!isVerified) {
     return (
       <Page back={true}>
-        <div className="flex flex-col items-center justify-start w-full h-full p-4">
-          <h2 className="text-2xl font-extrabold uppercase text-black tracking-tight mb-6 text-center">
+        <div className="flex flex-col items-center justify-start w-full h-full p-4 bg-gray-900 min-h-screen">
+          <h2 className="text-2xl font-extrabold uppercase text-white tracking-tight mb-6 text-center">
             🔍 Проверка устройства
           </h2>
 
           <div className="w-full max-w-md space-y-4">
-            <div className="text-black !text-extrabold">
-              <Label htmlFor="skupkaId">ID заявки</Label>
+            <div className="text-white">
+              <Label htmlFor="skupkaId" className="text-white">ID заявки</Label>
               <Input
                 id="skupkaId"
                 value={skupkaId || ''}
-                
                 placeholder="Введите ID заявки"
                 disabled={true}
+                className="bg-gray-800 text-white border-gray-600"
               />
             </div>
 
             <div>
-              <Label htmlFor="masterUsername" className="text-black !text-extrabold">Telegram username</Label>
+              <Label htmlFor="masterUsername" className="text-white">Telegram username</Label>
               <Input
                 id="masterUsername"
                 value={masterUsername}
-                className="text-black !text-extrabold"
+                className="bg-gray-800 text-white border-gray-600"
                 onChange={(e) => setMasterUsername(e.target.value)}
                 placeholder="Введите ваш username (без @)"
               />
@@ -187,13 +220,13 @@ export default function DeviceInspectionPage() {
             <Button 
               onClick={generateOTP} 
               disabled={loading || !skupkaId || !masterUsername}
-              className="w-full"
+              className="w-full bg-blue-600 hover:bg-blue-700"
             >
               {loading ? 'Отправка...' : 'Получить OTP код'}
             </Button>
 
-            <div className="border-t pt-4">
-              <Label htmlFor="inspectionToken" className="text-black !text-extrabold">OTP код</Label>
+            <div className="border-t border-gray-600 pt-4">
+              <Label htmlFor="inspectionToken" className="text-white">OTP код</Label>
               <Input
                 id="inspectionToken"
                 value={inspectionToken}
@@ -224,24 +257,24 @@ export default function DeviceInspectionPage() {
 
   return (
     <Page back={true}>
-      <div className="flex flex-col items-center justify-start w-full h-full p-4">
-        <h2 className="text-2xl font-extrabold uppercase text-black tracking-tight mb-4 text-center">
+      <div className="flex flex-col items-center justify-start w-full h-full p-4 bg-gray-900 min-h-screen">
+        <h2 className="text-2xl font-extrabold uppercase text-white tracking-tight mb-4 text-center">
           🔍 Проверка устройства
         </h2>
 
         {deviceInfo && (
-          <div className="w-full max-w-md mb-6 p-4 bg-gray-100 rounded-lg">
-            <h3 className="font-semibold mb-2 text-gray-900">Информация об устройстве</h3>
-            <p className="text-gray-900"><strong>Модель:</strong> {deviceInfo.modelname || 'Не указана'}</p>
-            <p className="text-gray-900"><strong>Базовая цена:</strong> {deviceInfo.price ? `${Math.round(deviceInfo.price)} ₽` : 'Не указана'}</p>
-            <p className="text-gray-900"><strong>Статус:</strong> {deviceInfo.status}</p>
+          <div className="w-full max-w-md mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
+            <h3 className="font-semibold mb-2 text-white">Информация об устройстве</h3>
+            <p className="text-white"><strong>Модель:</strong> {deviceInfo.modelname || 'Не указана'}</p>
+            <p className="text-white"><strong>Базовая цена:</strong> {deviceInfo.price ? `${Math.round(deviceInfo.price)} ₽` : 'Не указана'}</p>
+            <p className="text-white"><strong>Статус:</strong> {deviceInfo.status}</p>
           </div>
         )}
 
         <div className="w-full max-w-md mb-6">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-900">Прогресс проверки</span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm font-medium text-white">Прогресс проверки</span>
+            <span className="text-sm text-gray-300">
               {testResults.length} / {DEVICE_TESTS.length}
             </span>
           </div>
@@ -252,6 +285,7 @@ export default function DeviceInspectionPage() {
           <div className="w-full max-w-2xl">
             {currentTest.type === 'color' ? (
               <ColorScreenTest
+                key={currentTest.id}
                 testId={currentTest.id}
                 color={currentTest.id.replace('display_', '')}
                 colorName={currentTest.name}
@@ -259,12 +293,12 @@ export default function DeviceInspectionPage() {
                 required={currentTest.required}
               />
             ) : (
-              <div className="flex flex-col items-center gap-4 p-4 border rounded-lg">
-                <h3 className="text-lg font-semibold text-center text-gray-900">
+              <div key={currentTest.id} className="flex flex-col items-center gap-4 p-4 border border-gray-600 rounded-lg bg-gray-800">
+                <h3 className="text-lg font-semibold text-center text-white">
                   {currentTest.name}
                 </h3>
                 
-                <p className="text-center text-gray-600 max-w-md">
+                <p className="text-center text-gray-300 max-w-md">
                   {currentTest.description}
                 </p>
 
@@ -280,7 +314,7 @@ export default function DeviceInspectionPage() {
                           }
                         }}
                       />
-                      <Label htmlFor={`${currentTest.id}-pass`} className="text-gray-900">Работает</Label>
+                      <Label htmlFor={`${currentTest.id}-pass`} className="text-white">Работает</Label>
                     </div>
                     
                     <div className="flex items-center space-x-2">
@@ -293,7 +327,7 @@ export default function DeviceInspectionPage() {
                           }
                         }}
                       />
-                      <Label htmlFor={`${currentTest.id}-fail`} className="text-gray-900">Не работает</Label>
+                      <Label htmlFor={`${currentTest.id}-fail`} className="text-white">Не работает</Label>
                     </div>
                   </div>
                 )}
@@ -308,8 +342,9 @@ export default function DeviceInspectionPage() {
                           name={currentTest.id}
                           value={option}
                           onChange={(e) => updateTestResult(currentTest.id, true, e.target.value)}
+                          className="text-white"
                         />
-                        <Label htmlFor={`${currentTest.id}-${option}`}>{option}</Label>
+                        <Label htmlFor={`${currentTest.id}-${option}`} className="text-white">{option}</Label>
                       </div>
                     ))}
                   </div>
@@ -328,6 +363,7 @@ export default function DeviceInspectionPage() {
                 onClick={() => setCurrentTestIndex(Math.max(0, currentTestIndex - 1))}
                 disabled={currentTestIndex === 0}
                 variant="outline"
+                className="border-gray-600 text-white hover:bg-gray-700"
               >
                 Назад
               </Button>
@@ -336,6 +372,7 @@ export default function DeviceInspectionPage() {
                 <Button
                   onClick={() => setCurrentTestIndex(currentTestIndex + 1)}
                   disabled={!testResults.find(r => r.testId === currentTest.id)}
+                  className="bg-blue-600 hover:bg-blue-700"
                 >
                   Следующий
                 </Button>
@@ -343,6 +380,7 @@ export default function DeviceInspectionPage() {
                 <Button
                   onClick={completeInspection}
                   disabled={loading || testResults.length < DEVICE_TESTS.length}
+                  className="bg-green-600 hover:bg-green-700"
                 >
                   {loading ? 'Завершение...' : 'Завершить проверку'}
                 </Button>
@@ -352,12 +390,12 @@ export default function DeviceInspectionPage() {
         )}
 
         <div className="w-full max-w-md mt-6">
-          <Label htmlFor="inspectionNotes">Заметки по проверке</Label>
+          <Label htmlFor="inspectionNotes" className="text-white">Заметки по проверке</Label>
           <textarea
             id="inspectionNotes"
             value={inspectionNotes}
             onChange={(e) => setInspectionNotes(e.target.value)}
-            className="w-full mt-1 p-2 border rounded"
+            className="w-full mt-1 p-2 border border-gray-600 rounded bg-gray-800 text-white"
             placeholder="Дополнительные заметки..."
             rows={3}
           />

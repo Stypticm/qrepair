@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from './button'
 import { Checkbox } from './checkbox'
 import { Label } from './label'
@@ -25,6 +25,17 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
   const [passed, setPassed] = useState<boolean | null>(null)
   const [notes, setNotes] = useState('')
 
+  // Сбрасываем состояние при изменении testId или colorName
+  useEffect(() => {
+    setPassed(null)
+    setNotes('')
+  }, [testId, colorName])
+
+  // Сброс состояния при изменении testId для гарантии
+  useEffect(() => {
+    setPassed(null)
+  }, [testId])
+
   const handleResult = (value: boolean) => {
     setPassed(value)
     onResult(testId, value, notes)
@@ -36,13 +47,13 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 border rounded-lg">
-      <h3 className="text-lg font-semibold text-center">
+    <div className="flex flex-col items-center gap-4 p-4 border border-gray-600 rounded-lg bg-gray-800 min-h-screen">
+      <h3 className="text-lg font-semibold text-center text-white">
         Тест: {colorName} экран
       </h3>
       
       <div 
-        className={`w-64 h-48 rounded-lg border-2 border-gray-300 ${colorStyles[color as keyof typeof colorStyles]}`}
+        className={`w-full h-96 rounded-lg border-2 border-gray-300 ${colorStyles[color as keyof typeof colorStyles]}`}
         style={{ backgroundColor: color === 'white' ? '#ffffff' : color === 'black' ? '#000000' : undefined }}
       >
         <div className="w-full h-full flex items-center justify-center">
@@ -53,7 +64,7 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
       </div>
 
       <div className="flex flex-col gap-2 w-full max-w-xs">
-        <Label className="text-sm font-medium">
+        <Label className="text-sm font-medium text-white">
           Проверьте экран на наличие дефектов пикселей
         </Label>
         
@@ -64,7 +75,7 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
               checked={passed === true}
               onCheckedChange={(checked) => handleResult(checked === true)}
             />
-            <Label htmlFor={`${testId}-pass`}>Работает</Label>
+            <Label htmlFor={`${testId}-pass`} className="text-white">Работает</Label>
           </div>
           
           <div className="flex items-center space-x-2">
@@ -77,7 +88,7 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
                 }
               }}
             />
-            <Label htmlFor={`${testId}-fail`}>Не работает</Label>
+            <Label htmlFor={`${testId}-fail`} className="text-white">Не работает</Label>
           </div>
         </div>
 
@@ -88,7 +99,7 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
         )}
 
         <div className="mt-2">
-          <Label htmlFor={`${testId}-notes`} className="text-sm">
+          <Label htmlFor={`${testId}-notes`} className="text-sm text-white">
             Заметки (необязательно)
           </Label>
           <textarea
@@ -100,7 +111,7 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
                 onResult(testId, passed, e.target.value)
               }
             }}
-            className="w-full mt-1 p-2 border rounded text-sm"
+            className="w-full mt-1 p-2 border border-gray-600 rounded text-sm bg-gray-700 text-white"
             placeholder="Опишите найденные дефекты..."
             rows={2}
           />
