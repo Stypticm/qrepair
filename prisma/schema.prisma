@@ -34,8 +34,32 @@ model Skupka {
   courierUserConfirmed Boolean      @default(false)
   courierReminderSent  Boolean      @default(false)
   courierTimeSlotSent  Boolean      @default(false)
+  finalPrice           Float?       // Окончательная цена после проверки
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
+  
+  // Связи
+  inspections         DeviceInspection[]
+}
+
+model DeviceInspection {
+  id                  String   @id @default(cuid())
+  skupkaId            String   // Связь с заявкой
+  masterUsername      String   // Username мастера (без @)
+  inspectionToken     String   // OTP токен для проверки
+  tokenExpiresAt      DateTime // Время истечения токена
+  testsResults        Json     // Результаты всех тестов
+  finalPrice          Float?   // Окончательная цена
+  inspectionNotes     String?  // Заметки мастера
+  completedAt         DateTime? // Время завершения
+  createdAt           DateTime @default(now())
+  
+  // Связи
+  skupka              Skupka   @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
+  
+  @@index([skupkaId])
+  @@index([masterUsername])
+  @@index([inspectionToken])
 }
 
 enum SkupkaStatus {

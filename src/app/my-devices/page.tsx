@@ -38,6 +38,7 @@ const MyDevices = () => {
             <TableRow className="!border !border-black">
               <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Model</TableHead>
               <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Status</TableHead>
+              <TableHead className='font-bold text-center text-black !text-extrabold text-xl'>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -51,6 +52,16 @@ const MyDevices = () => {
                       onClick={() => router.push(`/my-devices/status?status=${bid.status}`)}>
                       Check status
                     </Button>
+                  </TableCell>
+                  <TableCell className='text-center text-black !text-bold'>
+                    {bid.status === 'on_the_way' && bid.courierUserConfirmed && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/my-devices/inspection?id=${bid.id}`)}>
+                        🔍 Проверить устройство
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

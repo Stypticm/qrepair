@@ -31,7 +31,7 @@ export type FormState = {
 
   // imei
   imei: string | null
-  setImei: (imei: string | null) => void
+  setImei: (value: string | null) => void
 
   // answers
   answers: number[]
@@ -39,7 +39,7 @@ export type FormState = {
 
   // price
   price: number | null
-  setPrice: (price: number | null) => void
+  setPrice: (value: number | null) => void
 
   onNext?: () => Promise<void>
   setOnNext: (cb?: () => Promise<void>) => void
@@ -66,4 +66,44 @@ export interface SkupkaRequest {
   courierTimeSlot?: string
   courierUserConfirmed?: boolean
   courierReminderSent?: boolean
+  finalPrice?: number
+  inspectionCompleted?: boolean
+}
+
+// Новые интерфейсы для проверки устройств
+export interface DeviceTest {
+  id: string
+  name: string
+  description: string
+  type: 'checkbox' | 'radio' | 'color' | 'input'
+  options?: string[]
+  required: boolean
+  value?: any
+}
+
+export interface TestResult {
+  testId: string
+  passed: boolean
+  value: any
+  notes?: string
+}
+
+export interface DeviceInspection {
+  id: string
+  skupkaId: string
+  masterUsername: string
+  inspectionToken: string
+  tokenExpiresAt: string
+  testsResults: TestResult[]
+  finalPrice?: number
+  inspectionNotes?: string
+  completedAt?: string
+  createdAt: string
+}
+
+export interface InspectionFormData {
+  masterUsername: string
+  inspectionToken?: string
+  testsResults: TestResult[]
+  inspectionNotes?: string
 }
