@@ -53,7 +53,7 @@ export function ColorScreenTest({ testId, color, colorName, onResult, required =
       </h3>
       
       <div 
-        className={`w-full h-96 rounded-lg border-2 border-gray-300 ${colorStyles[color as keyof typeof colorStyles]}`}
+        className={`w-full h-screen rounded-lg border-2 border-gray-300 ${colorStyles[color as keyof typeof colorStyles]}`}
         style={{ backgroundColor: color === 'white' ? '#ffffff' : color === 'black' ? '#000000' : undefined }}
       >
         <div className="w-full h-full flex items-center justify-center">

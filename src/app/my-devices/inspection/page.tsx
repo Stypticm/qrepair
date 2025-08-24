@@ -8,12 +8,14 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { ColorScreenTest } from '@/components/ui/color-screen-test'
+import { ColorSlider } from '@/components/ui/color-slider'
 import { DEVICE_TESTS, calculatePriceAdjustment } from '@/core/lib/deviceTests'
 import { DeviceTest, TestResult } from '@/core/lib/interfaces'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 export default function DeviceInspectionPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const skupkaId = searchParams.get('id')
   
   const [masterUsername, setMasterUsername] = useState('')
@@ -137,7 +139,8 @@ export default function DeviceInspectionPage() {
 
       const data = await response.json()
       alert(`Проверка завершена! Окончательная цена: ${Math.round(data.finalPrice)} ₽`)
-      // Можно перенаправить на страницу результатов
+      // Перенаправляем на страницу "Мои устройства"
+      router.push('/my-devices')
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -278,19 +281,25 @@ export default function DeviceInspectionPage() {
               {testResults.length} / {DEVICE_TESTS.length}
             </span>
           </div>
-          <Progress value={progress} className="w-full" />
+          <Progress value={progress} className="w-full bg-gray-200" />
         </div>
 
         {currentTest && (
           <div className="w-full max-w-2xl">
             {currentTest.type === 'color' ? (
-              <ColorScreenTest
-                key={currentTest.id}
-                testId={currentTest.id}
-                color={currentTest.id.replace('display_', '')}
-                colorName={currentTest.name}
+              <ColorSlider
                 onResult={updateTestResult}
-                required={currentTest.required}
+                onComplete={() => {
+                  // После завершения цветовых тестов переходим к следующему тесту
+                  // Ищем первый тест после цветовых (начиная с индекса 5, так как цветовые тесты идут с 4 по 8)
+                  const nextTestIndex = 9 // Индекс первого теста после цветовых
+                  if (nextTestIndex < DEVICE_TESTS.length) {
+                    setCurrentTestIndex(nextTestIndex)
+                  } else {
+                    // Если нет следующих тестов, завершаем проверку
+                    setCurrentTestIndex(DEVICE_TESTS.length - 1)
+                  }
+                }}
               />
             ) : (
               <div key={currentTest.id} className="flex flex-col items-center gap-4 p-4 border border-gray-600 rounded-lg bg-gray-800">
@@ -363,7 +372,7 @@ export default function DeviceInspectionPage() {
                 onClick={() => setCurrentTestIndex(Math.max(0, currentTestIndex - 1))}
                 disabled={currentTestIndex === 0}
                 variant="outline"
-                className="border-gray-600 text-white hover:bg-gray-700"
+                className="border-gray-600 text-black hover:bg-gray-700"
               >
                 Назад
               </Button>

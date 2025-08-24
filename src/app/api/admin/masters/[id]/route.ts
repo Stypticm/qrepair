@@ -37,6 +37,30 @@ export async function DELETE(
   try {
     const { id } = await params
 
+    // Проверяем, есть ли связанные проверки
+    const relatedInspections =
+      await prisma.deviceInspection.findMany({
+        where: {
+          master: {
+            id: id,
+          },
+        },
+      })
+
+    if (relatedInspections.length > 0) {
+      // Если есть связанные проверки, обновляем их, убирая связь с мастером
+      await prisma.deviceInspection.updateMany({
+        where: {
+          master: {
+            id: id,
+          },
+        },
+        data: {
+          masterUsername: '',
+        },
+      })
+    }
+
     await prisma.master.delete({
       where: { id },
     })

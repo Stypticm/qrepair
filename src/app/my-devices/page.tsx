@@ -55,7 +55,7 @@ const MyDevices = () => {
                     </Button>
                   </TableCell>
                   <TableCell className='text-center text-black !text-bold'>
-                    {bid.status === 'on_the_way' && bid.courierUserConfirmed && (
+                    {bid.status === 'on_the_way' && bid.courierUserConfirmed && !bid.inspectionCompleted && (
                       <Button
                         size="sm"
                         className="bg-gray-800 hover:bg-gray-700 text-white"

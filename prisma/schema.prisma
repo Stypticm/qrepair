@@ -69,7 +69,7 @@ model DeviceInspection {
   
   // Связи
   skupka              Skupka   @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
-  master              Master?  @relation(fields: [masterUsername], references: [username])
+  master              Master?  @relation(fields: [masterUsername], references: [username], onDelete: SetNull)
   
   @@index([skupkaId])
   @@index([masterUsername])
