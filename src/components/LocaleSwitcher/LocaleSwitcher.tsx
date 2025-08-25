@@ -1,19 +1,26 @@
 'use client';
 
 import { Select } from '@telegram-apps/telegram-ui';
-import { useLocale } from 'next-intl';
-import { FC } from 'react';
+import { FC, useState, useEffect } from 'react';
 
 import { localesMap } from '@/core/i18n/config';
 import { setLocale } from '@/core/i18n/locale';
 import { Locale } from '@/core/i18n/types';
 
 export const LocaleSwitcher: FC = () => {
-  const locale = useLocale();
+  const [locale, setCurrentLocale] = useState('en');
+
+  useEffect(() => {
+    // Получаем текущую локаль из localStorage или cookie
+    const savedLocale = localStorage.getItem('NEXT_LOCALE') || 'en';
+    setCurrentLocale(savedLocale);
+  }, []);
 
   const onChange = (value: string) => {
-    const locale = value as Locale;
-    setLocale(locale);
+    const newLocale = value as Locale;
+    setCurrentLocale(newLocale);
+    localStorage.setItem('NEXT_LOCALE', newLocale);
+    setLocale(newLocale);
   };
 
   return (

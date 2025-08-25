@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { Link } from '@/components/Link/Link';
@@ -18,7 +17,6 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const t = useTranslations('i18n');
   const { telegramId, setModel, setPhotoUrls } = useStartForm();
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();

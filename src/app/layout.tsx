@@ -1,6 +1,6 @@
+'use client';
+
 import type { PropsWithChildren } from 'react';
-import type { Metadata } from 'next';
-import { getLocale } from 'next-intl/server';
 
 import { Root } from '@/components/Root/Root';
 import { I18nProvider } from '@/core/i18n/provider';
@@ -18,17 +18,9 @@ const comicNeue = Comic_Neue({
   weight: ['400', '700'],
 });
 
-
-export const metadata: Metadata = {
-  title: 'QtweRepair',
-  description: 'Repair your phone with QtweRepair',
-};
-
-export default async function RootLayout({ children }: PropsWithChildren) {
-  const locale = await getLocale();
-
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
-    <html lang={locale} suppressHydrationWarning className="h-full overflow-hidden">
+    <html lang="en" suppressHydrationWarning className="h-full overflow-hidden">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
