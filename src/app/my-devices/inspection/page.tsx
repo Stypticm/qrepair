@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+// Оптимизировано с useCallback для предотвращения лишних перерендеров
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,7 +30,7 @@ export default function DeviceInspectionPage() {
   const [deviceInfo, setDeviceInfo] = useState<any>(null)
 
   // Генерация OTP токена
-  const generateOTP = async () => {
+  const generateOTP = useCallback(async () => {
     if (!skupkaId || !masterUsername) {
       setError('Введите ID заявки и Telegram username мастера')
       return
@@ -55,10 +56,10 @@ export default function DeviceInspectionPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [skupkaId, masterUsername])
 
   // Проверка OTP токена
-  const verifyOTP = async () => {
+  const verifyOTP = useCallback(async () => {
     if (!skupkaId || !masterUsername || !inspectionToken) {
       setError('Заполните все поля')
       return
@@ -89,10 +90,10 @@ export default function DeviceInspectionPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [skupkaId, masterUsername, inspectionToken])
 
   // Обновление результатов теста
-  const updateTestResult = (testId: string, passed: boolean, notes?: string) => {
+  const updateTestResult = useCallback((testId: string, passed: boolean, notes?: string) => {
     setTestResults(prev => {
       const existing = prev.find(r => r.testId === testId)
       if (existing) {
@@ -100,10 +101,10 @@ export default function DeviceInspectionPage() {
       }
       return [...prev, { testId, passed, notes, value: passed }]
     })
-  }
+  }, [])
 
   // Сохранение промежуточных результатов
-  const saveProgress = async () => {
+  const saveProgress = useCallback(async () => {
     if (!isVerified) return
 
     try {
@@ -115,10 +116,10 @@ export default function DeviceInspectionPage() {
     } catch (err) {
       console.error('Error saving progress:', err)
     } 
-  }
+  }, [isVerified, deviceInfo?.inspectionId, testResults])
 
   // Завершение проверки
-  const completeInspection = async () => {
+  const completeInspection = useCallback(async () => {
     if (!isVerified) return
 
     setLoading(true)
@@ -150,7 +151,7 @@ export default function DeviceInspectionPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isVerified, deviceInfo?.inspectionId, inspectionNotes, router])
 
   // Автосохранение при изменении результатов
   useEffect(() => {
@@ -170,7 +171,7 @@ export default function DeviceInspectionPage() {
       // но сохраняем результаты в testResults
       // Это поможет избежать проблем с отображением предыдущих выборов
     }
-  }, [currentTestIndex, isVerified, currentTest?.id, currentTest])
+  }, [currentTestIndex, isVerified, currentTest])
 
   // Сброс состояния чекбоксов при переходе между тестами
   const resetCheckboxState = () => {
@@ -191,7 +192,7 @@ export default function DeviceInspectionPage() {
         ))
       }
     }
-  }, [currentTestIndex, isVerified, currentTest?.id, testResults, currentTest])
+  }, [currentTestIndex, isVerified, currentTest?.id, currentTest, testResults])
 
   if (!isVerified) {
     return (

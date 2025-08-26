@@ -6,18 +6,19 @@ import FooterButton from '@/components/FooterButton/FooterButton';
 import { Page } from '@/components/Page';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Textarea } from '@/components/ui/textarea'
 
 const questions = [
-    { id: '1', text: 'Имеются ли глубокие царапины?' },
-    { id: '2', text: 'Есть ли мелкие царапины?' },
-    { id: '3', text: 'Устройство выглядит как новое?' },
-    { id: '4', text: 'Есть ли повреждения?' },
-    { id: '5', text: 'Остаточная ёмкость аккумулятора более 85%?' },
-    { id: '6', text: 'Есть ли трещины, вмятины или сколы на устройстве?' },
-    { id: '7', text: 'На дисплее есть битые пиксели, выгорания или пятна?' },
-    { id: '8', text: 'Устройство включается и выключается?' },
+    { id: '1', text: 'Дисплей треснул или разбит?', category: 'Экран', weight: 35 },
+    { id: '2', text: 'Есть серьезные повреждения LCD/сенсора?', category: 'Экран', weight: 30 },
+    { id: '3', text: 'На дисплее есть мертвые пиксели или выгорание?', category: 'Экран', weight: 25 },
+    { id: '4', text: 'Есть сильные царапины или сколы на дисплее?', category: 'Экран', weight: 20 },
+    { id: '5', text: 'Есть легкие царапины на стекле?', category: 'Экран', weight: 15 },
+    { id: '6', text: 'Не работает TrueTone?', category: 'Экран', weight: 8 },
+    { id: '7', text: 'Сенсор неотзывчивый или есть фантомные касания?', category: 'Экран', weight: 20 },
+    { id: '8', text: 'Устройство включается и работает стабильно?', category: 'Функциональность', weight: 15 },
 ]
 
 
@@ -55,7 +56,15 @@ const QuestionsPage = () => {
         // Разрешаем отвечать сразу, даже пока идёт загрузка
         const index = parseInt(id) - 1;
         const updated = [...localAnswers];
-        updated[index] = value ? 1 : 0;
+        
+        // Для последнего вопроса (функциональность) логика обратная:
+        // "Да" = работает хорошо = нет штрафа
+        if (id === '8') {
+            updated[index] = value ? 0 : 1; // 0 = хорошо, 1 = плохо
+        } else {
+            updated[index] = value ? 1 : 0; // 1 = есть дефект, 0 = нет дефекта
+        }
+        
         setHasEdited(true);
         setLocalAnswers(updated);
         setAnswers(updated);
@@ -80,37 +89,76 @@ const QuestionsPage = () => {
                 <h2 className="w-full text-3xl font-extrabold uppercase text-black flex justify-center items-center">
                     ❓вопросы
                 </h2>
+                <div className="text-center text-sm text-gray-600 mb-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="font-semibold">💡 Как рассчитывается цена:</p>
+                    <p>За каждый дефект снимается указанный процент от базовой цены</p>
+                    <p>Максимальный штраф: 80% (минимальная цена: 20% от базовой)</p>
+                    {(() => {
+                        const answeredQuestions = localAnswers.filter(v => v === 0 || v === 1).length;
+                        if (answeredQuestions > 0) {
+                            const currentPenalty = localAnswers.reduce((sum, val, i) => {
+                                if (val === 1) {
+                                    if (i === 7) return sum + 15; // Последний вопрос
+                                    return sum + [35, 30, 25, 20, 15, 8, 20, 15][i];
+                                }
+                                return sum;
+                            }, 0);
+                            const maxPenalty = Math.min(currentPenalty, 80);
+                            return (
+                                <div className="mt-2 p-2 bg-yellow-50 rounded border">
+                                    <p className="font-semibold text-yellow-800">
+                                        Текущий штраф: {maxPenalty}%
+                                    </p>
+                                    <p className="text-yellow-700">
+                                        Ответили на {answeredQuestions}/8 вопросов
+                                    </p>
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
+                </div>
                 {loading ? (
                     <div className="text-center text-lg font-semibold">Загрузка вопросов...</div>
                 ) : (
                     <div className="flex flex-col gap-4">
                         {questions.map((q) => (
-                            <div key={q.id} className="flex items-center justify-between">
-                                <Label htmlFor={q.id} className="text-black text-xl font-bold">
+                            <div key={q.id} className="flex flex-col gap-2 p-4 border border-gray-200 rounded-lg">
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="text-xs">
+                                            {q.category}
+                                        </Badge>
+                                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                                            -{q.weight}%
+                                        </Badge>
+                                    </div>
+                                </div>
+                                <Label htmlFor={q.id} className="text-black text-lg font-bold">
                                     {q.text}
                                 </Label>
-                                <div className="flex gap-3">
+                                <div className="flex gap-3 mt-2">
                                     <Button
                                         className={cn(
                                             'flex-1 py-2 rounded-lg font-semibold border',
-                                            localAnswers[parseInt(q.id) - 1] === 1
+                                            (q.id === '8' ? localAnswers[parseInt(q.id) - 1] === 0 : localAnswers[parseInt(q.id) - 1] === 1)
                                                 ? 'bg-green-500 text-white border-green-500'
                                                 : 'bg-white text-green-500 border-green-500'
                                         )}
                                         onClick={() => handleSelect(q.id, true)}
                                     >
-                                        Да
+                                        {q.id === '8' ? 'Да, работает' : 'Да, есть'}
                                     </Button>
                                     <Button
                                         className={cn(
                                             'flex-1 py-2 rounded-lg font-semibold border',
-                                            localAnswers[parseInt(q.id) - 1] === 0
+                                            (q.id === '8' ? localAnswers[parseInt(q.id) - 1] === 1 : localAnswers[parseInt(q.id) - 1] === 0)
                                                 ? 'bg-red-500 text-white border-red-500'
                                                 : 'bg-white text-red-500 border-red-500'
                                         )}
                                         onClick={() => handleSelect(q.id, false)}
                                     >
-                                        Нет
+                                        {q.id === '8' ? 'Нет, не работает' : 'Нет, нет'}
                                     </Button>
                                 </div>
                             </div>

@@ -8,13 +8,24 @@ interface QuestionsRequest {
 }
 
 // Пункты "штрафов" за каждый дефект (в %)
-const penalties = [3, 2, 4, 5, 2, 3, 6, 4]
+// Вопросы: 1-7: "Да" = есть дефект, "Нет" = нет дефекта
+// Вопрос 8: "Да" = работает хорошо, "Нет" = не работает
+const penalties = [35, 30, 25, 20, 15, 8, 20, 15]
 
 function calculateDamage(answers: number[]) {
-  return answers.reduce(
-    (sum, val, i) => sum + (val === 1 ? penalties[i] : 0),
-    0
-  )
+  const totalDamage = answers.reduce((sum, val, i) => {
+    // Для последнего вопроса (индекс 7) логика обратная:
+    // 0 = работает хорошо, 1 = не работает
+    if (i === 7) {
+      return sum + (val === 1 ? penalties[i] : 0)
+    }
+    // Для остальных вопросов: 1 = есть дефект, 0 = нет дефекта
+    return sum + (val === 1 ? penalties[i] : 0)
+  }, 0)
+
+  // Ограничиваем максимальный штраф 80% от базовой цены
+  // Это означает, что минимальная цена будет 20% от базовой
+  return Math.min(totalDamage, 80)
 }
 
 export async function GET(req: Request) {
