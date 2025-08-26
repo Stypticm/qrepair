@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { acceptRequest, courierReceived, fetchApplication, markPaid, reviewRequest } from '@/core/lib/requestActions';
 import Image from 'next/image';
 import { Page } from '@/components/Page';
+import { QRCodeSVG } from 'qrcode.react';
 
 const RequestById = () => {
     const params = useParams();
@@ -29,6 +30,25 @@ const RequestById = () => {
         side: null,
         back: null
     });
+    const [showQRCode, setShowQRCode] = useState(false);
+    const [appLink] = useState('https://u.expo.dev/72024ff9-1b03-4e73-be31-fc7028bc1a3d');
+    
+    const copyToClipboard = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            alert('Ссылка скопирована в буфер обмена!');
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            // Fallback для старых браузеров
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert('Ссылка скопирована в буфер обмена!');
+        }
+    };
 
     useEffect(() => {
         const getApplication = async () => {
@@ -113,7 +133,7 @@ const RequestById = () => {
         }
 
         try {
-            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **Expo Go**:\n   • iOS: https://apps.apple.com/app/expo-go/id982107779\n   • Android: https://play.google.com/store/apps/details?id=host.exp.exponent\n\n2️⃣ Мастер покажет вам QR-код приложения\n3️⃣ **Мастер проведет тест** устройства через приложение\n4️⃣ Вы просто наблюдаете и подтверждаете результаты\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** данные передаются только мастеру\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
+            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Установите **Expo Go** (если еще не установлено):\n   • iOS: https://apps.apple.com/app/expo-go/id982107779\n   • Android: https://play.google.com/store/apps/details?id=host.exp.exponent\n\n2️⃣ **Мастер покажет QR-код** или отправит ссылку\n3️⃣ **Откройте приложение QRepair** через Expo Go\n4️⃣ **Мастер проведет тест** устройства\n5️⃣ Вы наблюдаете и подтверждаете результаты\n\n🚀 **Прямая ссылка на приложение:**\n${appLink}\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** данные передаются только мастеру\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
             
             const response = await fetch('/api/telegram/send-message', {
                 method: 'POST',
@@ -290,7 +310,7 @@ const RequestById = () => {
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {masterPhotos.map((url, idx) => (
                                                             <div key={idx} className="relative">
-                                                                <Image
+л                                                                <Image
                                                                     src={url}
                                                                     alt={`Фото мастера ${idx + 1}`}
                                                                     className="w-full h-24 object-cover rounded"
@@ -458,6 +478,16 @@ const RequestById = () => {
                                                     📱 Отправить ID заявки
                                                 </Button>
                                             )}
+                                            
+                                            {/* Кнопка показа QR-кода приложения */}
+                                            {(application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
+                                                <Button 
+                                                    className="min-w-[200px] bg-blue-600 hover:bg-blue-700 text-white"
+                                                    onClick={() => setShowQRCode(!showQRCode)}
+                                                >
+                                                    📱 {showQRCode ? 'Скрыть QR-код' : 'Показать QR-код'}
+                                                </Button>
+                                            )}
                                             {application?.status === 'paid' && (
                                                 <Button className="min-w-[200px] bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleMarkPaid}>
                                                     Оплачено
@@ -470,6 +500,42 @@ const RequestById = () => {
                                             )}
                                         </div>
                                     </CardAction>
+                                    
+                                    {/* QR-код приложения */}
+                                    {showQRCode && (application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
+                                        <div className="mt-4 p-4 border border-gray-600 rounded-md bg-gray-700">
+                                            <h4 className="text-white font-semibold mb-3 text-center">📱 QR-код приложения QRepair</h4>
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="bg-white p-4 rounded-lg">
+                                                    <QRCodeSVG 
+                                                        value={appLink}
+                                                        size={200}
+                                                        level="M"
+                                                        includeMargin={true}
+                                                    />
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-gray-300 text-sm mb-2">
+                                                        Мастер показывает этот QR-код клиенту
+                                                    </p>
+                                                    <p className="text-blue-400 text-xs">
+                                                        Клиент сканирует через Expo Go
+                                                    </p>
+                                                    <div className="mt-3 p-2 bg-gray-600 rounded text-xs text-gray-300">
+                                                        <p className="font-semibold">Ссылка:</p>
+                                                        <p className="break-all">{appLink}</p>
+                                                        <Button 
+                                                            className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1"
+                                                            onClick={() => copyToClipboard(appLink)}
+                                                        >
+                                                            📋 Скопировать ссылку
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
                                     <section className="flex flex-col gap-2 p-4">
                                         <Button className="bg-gray-600 hover:bg-gray-700 text-white">
                                             <Link href="/admin/requests">Все заявки</Link>
