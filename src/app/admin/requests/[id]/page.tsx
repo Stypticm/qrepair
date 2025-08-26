@@ -32,6 +32,10 @@ const RequestById = () => {
                 const data = await fetchApplication(id);
                 setApplication(data);
                 if (!priceDirty && data?.price != null) setPriceInput(String(data.price));
+                // Загружаем фото из базы данных
+                if (data?.photoUrls && Array.isArray(data.photoUrls)) {
+                    setMasterPhotos(data.photoUrls);
+                }
                 setError(null);
             } catch (err) {
                 console.error('Error fetching application:', err);
@@ -109,7 +113,10 @@ const RequestById = () => {
             
             if (response.ok) {
                 const data = await response.json();
-                setMasterPhotos(prev => [...prev, data.photoUrl]);
+                // Обновляем локальное состояние из ответа API
+                if (data.skupka?.photoUrls) {
+                    setMasterPhotos(data.skupka.photoUrls);
+                }
                 setPhotoFile(null);
                 // Обновляем заявку
                 const updatedApp = await fetchApplication(id as string);
@@ -173,44 +180,109 @@ const RequestById = () => {
                                             </div>
                                         )}
                                         
-                                        {/* Форма для загрузки фото мастером */}
-                                        <div className="mt-4 p-3 border border-gray-600 rounded-md bg-gray-700">
-                                            <h4 className="text-white font-semibold mb-2">Добавить фото мастера</h4>
-                                            <div className="flex flex-col gap-2">
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
-                                                    className="text-white text-sm"
-                                                />
-                                                <Button 
-                                                    onClick={handlePhotoUpload}
-                                                    disabled={!photoFile}
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                                                >
-                                                    Загрузить фото
-                                                </Button>
+                                        {/* Форма для загрузки фото мастером - доступна только когда мастер назначен */}
+                                        {(application as any)?.courierTelegramId && (
+                                            <div className="mt-4 p-3 border border-gray-600 rounded-md bg-gray-700">
+                                            <h4 className="text-white font-semibold mb-2">Добавить фото мастера (максимум 3)</h4>
+                                            <div className="flex flex-col gap-3">
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-white text-sm font-medium">
+                                                        Выберите файл:
+                                                    </label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                                                        className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                        disabled={masterPhotos.length >= 3}
+                                                    />
+                                                    {photoFile ? (
+                                                        <p className="text-green-400 text-sm">
+                                                            Выбран файл: {photoFile.name}
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-gray-400 text-sm">
+                                                            Файл не выбран
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="border-t border-gray-600 pt-2">
+                                                    <Button 
+                                                        onClick={handlePhotoUpload}
+                                                        disabled={!photoFile || masterPhotos.length >= 3}
+                                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                                    >
+                                                        {masterPhotos.length >= 3 ? 'Достигнут лимит фото' : 'Загрузить фото'}
+                                                    </Button>
+                                                </div>
                                             </div>
+                                            
+                                            {/* Разделитель */}
+                                            <div className="border-t border-gray-600 my-3"></div>
                                             
                                             {/* Отображение загруженных фото мастера */}
                                             {masterPhotos.length > 0 && (
                                                 <div className="mt-3">
-                                                    <h5 className="text-white font-semibold mb-2">Фото мастера:</h5>
+                                                    <h5 className="text-white font-semibold mb-2">
+                                                        Фото мастера: {masterPhotos.length}/3
+                                                    </h5>
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {masterPhotos.map((url, idx) => (
-                                                            <Image
-                                                                key={idx}
-                                                                src={url}
-                                                                alt={`Фото мастера ${idx + 1}`}
-                                                                className="w-full h-24 object-cover rounded"
-                                                                width={100}
-                                                                height={100}
-                                                            />
+                                                            <div key={idx} className="relative">
+                                                                <Image
+                                                                    src={url}
+                                                                    alt={`Фото мастера ${idx + 1}`}
+                                                                    className="w-full h-24 object-cover rounded"
+                                                                    width={100}
+                                                                    height={100}
+                                                                />
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            const response = await fetch(`/api/admin/delete-master-photo?requestId=${id}&photoUrl=${url}`, {
+                                                                                method: 'DELETE'
+                                                                            });
+                                                                            
+                                                                            if (response.ok) {
+                                                                                const data = await response.json();
+                                                                                // Обновляем локальное состояние
+                                                                                if (data.skupka?.photoUrls) {
+                                                                                    setMasterPhotos(data.skupka.photoUrls);
+                                                                                }
+                                                                                // Обновляем заявку
+                                                                                const updatedApp = await fetchApplication(id as string);
+                                                                                setApplication(updatedApp);
+                                                                            } else {
+                                                                                setError('Ошибка удаления фото');
+                                                                            }
+                                                                        } catch (err) {
+                                                                            console.error('Error deleting photo:', err);
+                                                                            setError('Ошибка удаления фото');
+                                                                        }
+                                                                    }}
+                                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 </div>
                                             )}
+                                            
+                                            {masterPhotos.length === 0 && (
+                                                <div className="text-center py-4">
+                                                    <p className="text-gray-400 text-sm">
+                                                        Загрузите фото устройства для оценки
+                                                    </p>
+                                                    <p className="text-gray-500 text-xs mt-1">
+                                                        Максимум 3 фото
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
+                                        )}
                                         <p className="text-white flex flex-col gap-1">
                                             <span>
                                                 Статус:{' '}

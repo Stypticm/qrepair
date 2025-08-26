@@ -32,6 +32,7 @@ const BrandPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showPhotoSuccess, setShowPhotoSuccess] = useState(false);
   const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [localModel, setLocalModel] = useState<string>('');
   const {
     telegramId,
     modelname,
@@ -54,6 +55,7 @@ const BrandPage = () => {
       const data = await res.json();
       if (data && data.draft) {
         setModel(data.draft.modelname)
+        setLocalModel(data.draft.modelname || '');
         setPrice(data.draft.price);
         setShowQuestionsSuccess(Boolean(data.draft.questionsAnswered));
         if (data.draft.imei) setImei(data.draft.imei)
@@ -118,6 +120,7 @@ const BrandPage = () => {
 
   const handleModelChange = async (value: string) => {
     setModel(value);
+    setLocalModel(value);
     if (!telegramId) return;
 
     await fetch('/api/request/model', {
@@ -137,7 +140,7 @@ const BrandPage = () => {
           <Label htmlFor="brand" className="text-black text-2xl font-bold">
             Выбор модели
           </Label>
-          <Select value={modelname ?? ''} onValueChange={handleModelChange}>
+          <Select value={localModel} onValueChange={handleModelChange}>
             <SelectTrigger className="w-full !border-slate-700 border-3">
               <SelectValue placeholder="Выберите модель" />
             </SelectTrigger>
@@ -154,7 +157,7 @@ const BrandPage = () => {
               </SelectGroup>
             </SelectContent>
           </Select>
-          {modelname && (
+          {localModel && (
             <Badge variant="secondary" className="bg-blue-600 text-white mt-2">
               Модель выбрана
             </Badge>

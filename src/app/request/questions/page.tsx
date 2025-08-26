@@ -89,35 +89,7 @@ const QuestionsPage = () => {
                 <h2 className="w-full text-3xl font-extrabold uppercase text-black flex justify-center items-center">
                     ❓вопросы
                 </h2>
-                <div className="text-center text-sm text-gray-600 mb-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="font-semibold">💡 Как рассчитывается цена:</p>
-                    <p>За каждый дефект снимается указанный процент от базовой цены</p>
-                    <p>Максимальный штраф: 80% (минимальная цена: 20% от базовой)</p>
-                    {(() => {
-                        const answeredQuestions = localAnswers.filter(v => v === 0 || v === 1).length;
-                        if (answeredQuestions > 0) {
-                            const currentPenalty = localAnswers.reduce((sum, val, i) => {
-                                if (val === 1) {
-                                    if (i === 7) return sum + 15; // Последний вопрос
-                                    return sum + [35, 30, 25, 20, 15, 8, 20, 15][i];
-                                }
-                                return sum;
-                            }, 0);
-                            const maxPenalty = Math.min(currentPenalty, 80);
-                            return (
-                                <div className="mt-2 p-2 bg-yellow-50 rounded border">
-                                    <p className="font-semibold text-yellow-800">
-                                        Текущий штраф: {maxPenalty}%
-                                    </p>
-                                    <p className="text-yellow-700">
-                                        Ответили на {answeredQuestions}/8 вопросов
-                                    </p>
-                                </div>
-                            );
-                        }
-                        return null;
-                    })()}
-                </div>
+
                 {loading ? (
                     <div className="text-center text-lg font-semibold">Загрузка вопросов...</div>
                 ) : (
@@ -158,7 +130,7 @@ const QuestionsPage = () => {
                                         )}
                                         onClick={() => handleSelect(q.id, false)}
                                     >
-                                        {q.id === '8' ? 'Нет, не работает' : 'Нет, нет'}
+                                        {q.id === '8' ? 'Нет, не работает' : 'Нет'}
                                     </Button>
                                 </div>
                             </div>
@@ -175,6 +147,38 @@ const QuestionsPage = () => {
                         </div>
                     </div>
                 )}
+                
+                {/* Информация о расчете цены */}
+                <div className="text-center text-sm text-gray-600 mt-6 p-3 bg-blue-50 rounded-lg">
+                    <p className="font-semibold">💡 Как рассчитывается цена:</p>
+                    <p>За каждый дефект снимается указанный процент от базовой цены</p>
+                    <p>Максимальный штраф: 80% (минимальная цена: 20% от базовой)</p>
+                    {(() => {
+                        const answeredQuestions = localAnswers.filter(v => v === 0 || v === 1).length;
+                        if (answeredQuestions > 0) {
+                            const currentPenalty = localAnswers.reduce((sum, val, i) => {
+                                if (val === 1) {
+                                    if (i === 7) return sum + 15; // Последний вопрос
+                                    return sum + [35, 30, 25, 20, 15, 8, 20, 15][i];
+                                }
+                                return sum;
+                            }, 0);
+                            const maxPenalty = Math.min(currentPenalty, 80);
+                            return (
+                                <div className="mt-2 p-2 bg-yellow-50 rounded border">
+                                    <p className="font-semibold text-yellow-800">
+                                        Текущий штраф: {maxPenalty}%
+                                    </p>
+                                    <p className="text-yellow-700">
+                                        Ответили на {answeredQuestions}/8 вопросов
+                                    </p>
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
+                </div>
+                
                 {
                     (() => {
                         const allAnswered = localAnswers.every((v) => v === 0 || v === 1)

@@ -23,9 +23,9 @@ const RequestsPage = () => {
 
     return (
         <Page back={true}>
-            <div className="min-h-screen bg-gray-900">
-                <div className="flex flex-col h-screen">
-                    <div className="flex-1 p-6">
+            <div className="min-h-screen bg-gray-900 w-full">
+                <div className="w-full">
+                    <div className="p-6">
                         <div className="max-w-7xl mx-auto">
                             <h2 className="text-3xl font-bold text-white mb-8 text-center">Заявки</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

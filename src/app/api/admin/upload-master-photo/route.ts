@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { uploadImageToSupabase } from '@/core/lib/uploadImageToSupabase'
+import prisma from '@/core/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,13 +18,21 @@ export async function POST(request: NextRequest) {
     // Загружаем фото в Supabase
     const photoUrl = await uploadImageToSupabase(photo)
 
-    // TODO: Сохранить URL фото в базе данных для конкретной заявки
-    // Пока что просто возвращаем URL
+    // Сохраняем URL фото в базе данных для конкретной заявки
+    const updatedSkupka = await prisma.skupka.update({
+      where: { id: requestId },
+      data: {
+        photoUrls: {
+          push: photoUrl,
+        },
+      },
+    })
 
     return NextResponse.json({
       success: true,
       photoUrl,
-      message: 'Фото успешно загружено',
+      message: 'Фото успешно загружено и сохранено',
+      skupka: updatedSkupka,
     })
   } catch (error) {
     console.error('Error uploading master photo:', error)
