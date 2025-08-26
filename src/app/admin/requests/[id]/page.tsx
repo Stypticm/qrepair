@@ -18,7 +18,7 @@ const RequestById = () => {
     const [error, setError] = useState<string | null>(null);
     const [priceInput, setPriceInput] = useState<string>('');
     const [priceDirty, setPriceDirty] = useState<boolean>(false);
-    const [showPhotos, setShowPhotos] = useState<boolean>(false);
+
     const [masterPhotos, setMasterPhotos] = useState<string[]>([]);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
 
@@ -105,7 +105,7 @@ const RequestById = () => {
         }
 
         try {
-            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **Expo Go** из App Store/Google Play\n2️⃣ Мастер покажет вам QR-код или ссылку\n3️⃣ Отсканируйте QR-код или нажмите на ссылку\n4️⃣ Пройдите тест из 15 вопросов о состоянии устройства\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** данные передаются только мастеру`;
+            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **Expo Go**:\n   • iOS: https://apps.apple.com/app/expo-go/id982107779\n   • Android: https://play.google.com/store/apps/details?id=host.exp.exponent\n\n2️⃣ Мастер покажет вам QR-код приложения\n3️⃣ **Мастер проведет тест** устройства через приложение\n4️⃣ Вы просто наблюдаете и подтверждаете результаты\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** данные передаются только мастеру\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
             
             const response = await fetch('/api/telegram/send-message', {
                 method: 'POST',
@@ -146,7 +146,11 @@ const RequestById = () => {
                 if (data.skupka?.photoUrls) {
                     setMasterPhotos(data.skupka.photoUrls);
                 }
+                // Сбрасываем выбранный файл и очищаем input
                 setPhotoFile(null);
+                // Очищаем input file
+                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                if (fileInput) fileInput.value = '';
                 // Обновляем заявку
                 const updatedApp = await fetchApplication(id as string);
                 setApplication(updatedApp);
@@ -161,9 +165,9 @@ const RequestById = () => {
 
     return (
         <Page back={true}>
-            <div className="min-h-screen bg-gray-900">
-                <div className="flex flex-col h-screen">
-                    <div className="flex-1 p-6">
+            <div className="min-h-screen bg-gray-900 w-full">
+                <div className="w-full">
+                    <div className="p-6">
                         <div className="max-w-4xl mx-auto">
                             <Card className="w-full bg-gray-800 border-gray-700 shadow-lg">
                                 <CardHeader>
@@ -187,32 +191,16 @@ const RequestById = () => {
                                                     />
                                                 );
                                             })()}
-                                            <Button variant="outline" onClick={() => setShowPhotos((v) => !v)} className="text-gray-700 border-gray-600 hover:bg-gray-700">
-                                                {showPhotos ? 'Скрыть фото' : 'Посмотреть фото'}
-                                            </Button>
                                         </div>
                                         {application?.status !== 'accepted' && (
                                             <p className="text-gray-400 text-sm mt-1">Цена уже отправлена клиенту и недоступна для изменения.</p>
-                                        )}
-                                        {showPhotos && application?.photoUrls && application.photoUrls.length > 0 && (
-                                            <div className="mt-3 grid grid-cols-3 gap-2">
-                                                {application.photoUrls.map((url, idx) => (
-                                                    <Image
-                                                        key={idx}
-                                                        src={url}
-                                                        alt={`Фото ${idx + 1}`}
-                                                        className="w-full h-24 object-cover rounded"
-                                                        width={100}
-                                                        height={100}
-                                                    />
-                                                ))}
-                                            </div>
                                         )}
                                         
                                         {/* Форма для загрузки фото мастером - доступна только когда мастер назначен */}
                                         {(application as any)?.courierTelegramId && (
                                             <div className="mt-4 p-3 border border-gray-600 rounded-md bg-gray-700">
-                                            <h4 className="text-white font-semibold mb-2">Добавить фото мастера (максимум 3)</h4>
+                                            <h4 className="text-white font-semibold mb-2">📸 Добавить фото устройства</h4>
+                                            <p className="text-gray-300 text-sm mb-3">Загрузите основные ракурсы для точной оценки</p>
                                             <div className="flex flex-col gap-3">
                                                 <div className="flex flex-col gap-2">
                                                     <label className="text-white text-sm font-medium">
@@ -254,8 +242,13 @@ const RequestById = () => {
                                             {masterPhotos.length > 0 && (
                                                 <div className="mt-3">
                                                     <h5 className="text-white font-semibold mb-2">
-                                                        Фото мастера: {masterPhotos.length}/3
+                                                        📱 Загруженные фото: {masterPhotos.length}/3
                                                     </h5>
+                                                    <div className="text-gray-300 text-sm mb-2">
+                                                        {masterPhotos.length === 1 && "1️⃣ Лицевая часть"}
+                                                        {masterPhotos.length === 2 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть"}
+                                                        {masterPhotos.length === 3 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть • 3️⃣ Задняя часть"}
+                                                    </div>
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {masterPhotos.map((url, idx) => (
                                                             <div key={idx} className="relative">
@@ -303,10 +296,10 @@ const RequestById = () => {
                                             {masterPhotos.length === 0 && (
                                                 <div className="text-center py-4">
                                                     <p className="text-gray-400 text-sm">
-                                                        Загрузите фото устройства для оценки
+                                                        📸 Загрузите фото устройства для оценки
                                                     </p>
                                                     <p className="text-gray-500 text-xs mt-1">
-                                                        Максимум 3 фото
+                                                        Рекомендуется: лицевая, боковая, задняя части
                                                     </p>
                                                 </div>
                                             )}
