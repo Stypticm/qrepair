@@ -98,6 +98,35 @@ const RequestById = () => {
         }
     };
 
+    const handleSendRequestId = async () => {
+        if (!application?.telegramId) {
+            setError('Telegram ID клиента не найден');
+            return;
+        }
+
+        try {
+            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **Expo Go** из App Store/Google Play\n2️⃣ Мастер покажет вам QR-код или ссылку\n3️⃣ Отсканируйте QR-код или нажмите на ссылку\n4️⃣ Пройдите тест из 15 вопросов о состоянии устройства\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** данные передаются только мастеру`;
+            
+            const response = await fetch('/api/telegram/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    telegramId: application.telegramId,
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                alert('ID заявки отправлен клиенту в Telegram!');
+            } else {
+                setError('Ошибка отправки сообщения');
+            }
+        } catch (err) {
+            console.error('Error sending request ID:', err);
+            setError('Ошибка отправки ID заявки');
+        }
+    };
+
     const handlePhotoUpload = async () => {
         if (!photoFile) return;
         
@@ -386,6 +415,16 @@ const RequestById = () => {
                                             {(application as any)?.courierUserConfirmed && application?.status === 'on_the_way' && (
                                                 <Button className="min-w-[200px] bg-purple-600 hover:bg-purple-700 text-white" onClick={handleCourierReceived}>
                                                     Телефон у мастера
+                                                </Button>
+                                            )}
+                                            
+                                            {/* Кнопка отправки ID заявки клиенту */}
+                                            {(application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
+                                                <Button 
+                                                    className="min-w-[200px] bg-orange-600 hover:bg-orange-700 text-white"
+                                                    onClick={handleSendRequestId}
+                                                >
+                                                    📱 Отправить ID заявки
                                                 </Button>
                                             )}
                                             {application?.status === 'paid' && (
