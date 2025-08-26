@@ -17,7 +17,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { telegramId, setModel, setPhotoUrls } = useStartForm();
+  const { telegramId, setModel } = useStartForm();
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
@@ -59,7 +59,6 @@ export default function Home() {
     //     if (data?.existing) {
     //       const req = data.existing
     //       setModel(req.modelname ?? '')
-    //       setPhotoUrls(req.photoUrls ?? [])
     //     }
     //   } catch (e) {
     //     console.error(e)

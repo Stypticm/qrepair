@@ -6,7 +6,6 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { SuccessPopup } from '@/components/SuccessPopup/SuccessPopup';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -16,8 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import Image from 'next/image';
-import { getPictureUrl } from '@/core/lib/assets';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -39,12 +36,10 @@ const BrandPage = () => {
     telegramId,
     modelname,
     imei,
-    photoUrls,
     showQuestionsSuccess,
     price,
     setModel,
     setImei,
-    setPhotoUrls,
     setPrice,
     setShowQuestionsSuccess
   } = useStartForm();
@@ -59,14 +54,13 @@ const BrandPage = () => {
       const data = await res.json();
       if (data && data.draft) {
         setModel(data.draft.modelname)
-        setPhotoUrls(data.draft.photoUrls);
         setPrice(data.draft.price);
         setShowQuestionsSuccess(Boolean(data.draft.questionsAnswered));
         if (data.draft.imei) setImei(data.draft.imei)
       }
     })();
     return () => controller.abort();
-  }, [telegramId, setModel, setPhotoUrls, setPrice, setShowQuestionsSuccess, setImei]);
+  }, [telegramId, setModel, setPrice, setShowQuestionsSuccess, setImei]);
 
   // Prefetch questions data and block the button until loaded
   useEffect(() => {
@@ -86,9 +80,7 @@ const BrandPage = () => {
     return () => controller.abort();
   }, [telegramId]);
 
-  const firstPhoto = photoUrls.find(Boolean) as string | undefined;
-  const isPhotoAdded = photoUrls.some(Boolean);
-  const isValid = !!modelname && isPhotoAdded && showQuestionsSuccess;
+  const isValid = !!modelname && showQuestionsSuccess;
 
   const handleNext = async () => {
     if (submitting) return;
@@ -162,6 +154,11 @@ const BrandPage = () => {
               </SelectGroup>
             </SelectContent>
           </Select>
+          {modelname && (
+            <Badge variant="secondary" className="bg-blue-600 text-white mt-2">
+              Модель выбрана
+            </Badge>
+          )}
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="condition" className="text-black text-2xl font-bold">
@@ -176,34 +173,6 @@ const BrandPage = () => {
             </Badge>
           )}
         </div>
-        <div>
-          <Label htmlFor="photos_and_video" className="text-black text-2xl font-bold">
-            Фотографии и видео
-          </Label>
-          <section className="flex flex-row gap-1 justify-center items-end">
-            <section className="flex flex-col gap-1">
-              <Image
-                src={getPictureUrl('photo_phone.png') || '/photo_phone.png'}
-                alt="Картинка телефона"
-                width={150}
-                height={150}
-                className="object-cover rounded-lg"
-                onClick={() => router.push('/request/photos')}
-              />
-              {isPhotoAdded && (
-                <Badge variant="secondary" className='bg-green-600'>Добавлено</Badge>
-              )}
-            </section>
-            <Image
-              src={getPictureUrl('video_phone.png') || '/video_phone.png'}
-              alt="Видео телефона"
-              width={150}
-              height={150}
-              className="object-cover rounded-lg blur-xs"
-              onClick={() => setIsOpen(true)}
-            />
-          </section>
-        </div>
 
         <div>
           <Label htmlFor="imei" className="text-black text-2xl font-bold mb-2">
@@ -216,6 +185,14 @@ const BrandPage = () => {
             placeholder="Введите IMEI"
             className="w-full rounded px-2 py-2 text-black !border-slate-700 border-3"
           />
+          {imei && (
+            <Badge variant="secondary" className="bg-purple-600 text-white mt-2">
+              IMEI добавлен
+            </Badge>
+          )}
+          <p className="text-sm text-gray-600 mt-2">
+            Как найти IMEI: Настройки → Основные → Об этом устройстве → IMEI
+          </p>
         </div>
       </section>
       <FooterButton isNextDisabled={isValid && !submitting} onNext={handleNext} preventRedirect={true} />
@@ -224,7 +201,7 @@ const BrandPage = () => {
           <SuccessPopup
             text="Ваш заявка принята"
             phoneModel={modelname}
-            phoneImage={(firstPhoto as string) || '/photo_phone.png'}
+            phoneImage="/photo_phone.png"
             basePrice={deviceCatalog[modelname as keyof typeof deviceCatalog]?.basePrice ?? 0}
             finalPrice={price as number}
             redirectTo="/"
@@ -232,18 +209,6 @@ const BrandPage = () => {
           />
         )}
       </section>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="p-4 flex flex-col items-center">
-          <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>
-          <Image
-            src={getPictureUrl('banan.gif') || '/banan.gif'}
-            alt="Banan"
-            width={400}
-            height={300}
-            className="w-16 h-16 rounded-full"
-          />
-        </DialogContent>
-      </Dialog>
     </Page>
   );
 };

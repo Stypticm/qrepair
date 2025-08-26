@@ -5,14 +5,6 @@ export type FormState = {
   modelname: string
   setModel: (value: string) => void
 
-  // uploaded photo
-  photoUrls: (string | null)[]
-  setPhotoUrls: (files: (string | null)[]) => void
-
-  // uploaded video
-  videoUrl: string | null
-  setVideoUrl: (url: string | null) => void
-
   // telegram id
   telegramId: string | null
   setTelegramId: (id: string | null) => void
@@ -24,10 +16,6 @@ export type FormState = {
   // comment
   comment: string
   setComment: (value: string) => void
-
-  // contract url
-  contractUrl: string | null
-  setContractUrl: (url: string | null) => void
 
   // imei
   imei: string | null
@@ -53,11 +41,9 @@ export interface SkupkaRequest {
   telegramId: string | null
   modelname?: string
   photoUrls?: string[]
-  videoUrl?: string
   status?: string
   comment?: string
   imei?: string
-  contractUrl?: string
   answers?: number[]
   price?: number
   priceConfirmed?: boolean

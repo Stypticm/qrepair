@@ -19,6 +19,8 @@ const RequestById = () => {
     const [priceInput, setPriceInput] = useState<string>('');
     const [priceDirty, setPriceDirty] = useState<boolean>(false);
     const [showPhotos, setShowPhotos] = useState<boolean>(false);
+    const [masterPhotos, setMasterPhotos] = useState<string[]>([]);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
 
     useEffect(() => {
         const getApplication = async () => {
@@ -92,6 +94,35 @@ const RequestById = () => {
         }
     };
 
+    const handlePhotoUpload = async () => {
+        if (!photoFile) return;
+        
+        try {
+            const formData = new FormData();
+            formData.append('photo', photoFile);
+            formData.append('requestId', id as string);
+            
+            const response = await fetch('/api/admin/upload-master-photo', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                setMasterPhotos(prev => [...prev, data.photoUrl]);
+                setPhotoFile(null);
+                // Обновляем заявку
+                const updatedApp = await fetchApplication(id as string);
+                setApplication(updatedApp);
+            } else {
+                setError('Ошибка загрузки фото');
+            }
+        } catch (err) {
+            console.error('Error uploading photo:', err);
+            setError('Ошибка загрузки фото');
+        }
+    };
+
     return (
         <Page back={true}>
             <div className="min-h-screen bg-gray-900">
@@ -141,6 +172,45 @@ const RequestById = () => {
                                                 ))}
                                             </div>
                                         )}
+                                        
+                                        {/* Форма для загрузки фото мастером */}
+                                        <div className="mt-4 p-3 border border-gray-600 rounded-md bg-gray-700">
+                                            <h4 className="text-white font-semibold mb-2">Добавить фото мастера</h4>
+                                            <div className="flex flex-col gap-2">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                                                    className="text-white text-sm"
+                                                />
+                                                <Button 
+                                                    onClick={handlePhotoUpload}
+                                                    disabled={!photoFile}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                                >
+                                                    Загрузить фото
+                                                </Button>
+                                            </div>
+                                            
+                                            {/* Отображение загруженных фото мастера */}
+                                            {masterPhotos.length > 0 && (
+                                                <div className="mt-3">
+                                                    <h5 className="text-white font-semibold mb-2">Фото мастера:</h5>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {masterPhotos.map((url, idx) => (
+                                                            <Image
+                                                                key={idx}
+                                                                src={url}
+                                                                alt={`Фото мастера ${idx + 1}`}
+                                                                className="w-full h-24 object-cover rounded"
+                                                                width={100}
+                                                                height={100}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                         <p className="text-white flex flex-col gap-1">
                                             <span>
                                                 Статус:{' '}

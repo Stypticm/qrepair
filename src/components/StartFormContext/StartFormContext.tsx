@@ -14,10 +14,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
 
     const [modelname, setModel] = useState<string>('Apple iPhone 11');
-    const [photoUrls, setPhotoUrls] = useState<(string | null)[]>(new Array(6).fill(null));
-    const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [comment, setComment] = useState<string>('');
-    const [contractUrl, setContractUrl] = useState<string | null>(null);
     const [imei, setImei] = useState<string | null>(null);
     const [answers, setAnswers] = useState<number[]>(new Array(8).fill(0));
     const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(false);
@@ -37,24 +34,18 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             value={{
                 username,
                 modelname,
-                photoUrls,
-                videoUrl,
                 telegramId,
                 userPhotoUrl,
                 comment,
-                contractUrl,
                 imei,
                 answers,
                 price,
                 showQuestionsSuccess,
                 onNext,
                 setOnNext,
-                setVideoUrl,
-                setPhotoUrls,
                 setTelegramId,
                 setComment,
                 setModel,
-                setContractUrl,
                 setImei,
                 setUsername,
                 setUserPhotoUrl,
