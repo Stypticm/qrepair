@@ -20,7 +20,15 @@ const RequestById = () => {
     const [priceDirty, setPriceDirty] = useState<boolean>(false);
 
     const [masterPhotos, setMasterPhotos] = useState<string[]>([]);
-    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoFiles, setPhotoFiles] = useState<{
+        front: File | null;
+        side: File | null;
+        back: File | null;
+    }>({
+        front: null,
+        side: null,
+        back: null
+    });
 
     useEffect(() => {
         const getApplication = async () => {
@@ -128,37 +136,44 @@ const RequestById = () => {
     };
 
     const handlePhotoUpload = async () => {
-        if (!photoFile) return;
+        const files = [photoFiles.front, photoFiles.side, photoFiles.back].filter(Boolean);
+        if (files.length === 0) return;
         
         try {
-            const formData = new FormData();
-            formData.append('photo', photoFile);
-            formData.append('requestId', id as string);
-            
-            const response = await fetch('/api/admin/upload-master-photo', {
-                method: 'POST',
-                body: formData,
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                // Обновляем локальное состояние из ответа API
-                if (data.skupka?.photoUrls) {
-                    setMasterPhotos(data.skupka.photoUrls);
+            // Загружаем все фото по очереди
+            for (const file of files) {
+                if (!file) continue;
+                
+                const formData = new FormData();
+                formData.append('photo', file);
+                formData.append('requestId', id as string);
+                
+                const response = await fetch('/api/admin/upload-master-photo', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки фото');
                 }
-                // Сбрасываем выбранный файл и очищаем input
-                setPhotoFile(null);
-                // Очищаем input file
-                const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-                if (fileInput) fileInput.value = '';
-                // Обновляем заявку
-                const updatedApp = await fetchApplication(id as string);
-                setApplication(updatedApp);
-            } else {
-                setError('Ошибка загрузки фото');
             }
+            
+            // Обновляем заявку и фото
+            const updatedApp = await fetchApplication(id as string);
+            setApplication(updatedApp);
+            if (updatedApp?.photoUrls && Array.isArray(updatedApp.photoUrls)) {
+                setMasterPhotos(updatedApp.photoUrls);
+            }
+            
+            // Сбрасываем все файлы
+            setPhotoFiles({ front: null, side: null, back: null });
+            
+            // Очищаем все input файлы
+            const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
+            fileInputs.forEach(input => input.value = '');
+            
         } catch (err) {
-            console.error('Error uploading photo:', err);
+            console.error('Error uploading photos:', err);
             setError('Ошибка загрузки фото');
         }
     };
@@ -201,37 +216,60 @@ const RequestById = () => {
                                             <div className="mt-4 p-3 border border-gray-600 rounded-md bg-gray-700">
                                             <h4 className="text-white font-semibold mb-2">📸 Добавить фото устройства</h4>
                                             <p className="text-gray-300 text-sm mb-3">Загрузите основные ракурсы для точной оценки</p>
-                                            <div className="flex flex-col gap-3">
+                                            <div className="flex flex-col gap-4">
+                                                {/* Лицевая часть */}
                                                 <div className="flex flex-col gap-2">
-                                                    <label className="text-white text-sm font-medium">
-                                                        Выберите файл:
-                                                    </label>
+                                                    <label className="text-white text-sm font-medium">📱 Лицевая часть устройства</label>
                                                     <input
                                                         type="file"
                                                         accept="image/*"
-                                                        onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, front: e.target.files?.[0] || null }))}
                                                         className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                        disabled={masterPhotos.length >= 3}
                                                     />
-                                                    {photoFile ? (
-                                                        <p className="text-green-400 text-sm">
-                                                            Выбран файл: {photoFile.name}
-                                                        </p>
-                                                    ) : (
-                                                        <p className="text-gray-400 text-sm">
-                                                            Файл не выбран
-                                                        </p>
-                                                    )}
+                                                    <p className="text-gray-400 text-xs">
+                                                        {photoFiles.front ? photoFiles.front.name : 'Файл не выбран'}
+                                                    </p>
                                                 </div>
-                                                
-                                                <div className="border-t border-gray-600 pt-2">
+
+                                                {/* Боковая часть */}
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-white text-sm font-medium">📐 Боковая часть устройства</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, side: e.target.files?.[0] || null }))}
+                                                        className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                    />
+                                                    <p className="text-gray-400 text-xs">
+                                                        {photoFiles.side ? photoFiles.side.name : 'Файл не выбран'}
+                                                    </p>
+                                                </div>
+
+                                                {/* Задняя часть */}
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-white text-sm font-medium">📷 Задняя часть устройства</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, back: e.target.files?.[0] || null }))}
+                                                        className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                    />
+                                                    <p className="text-gray-400 text-xs">
+                                                        {photoFiles.back ? photoFiles.back.name : 'Файл не выбран'}
+                                                    </p>
+                                                </div>
+
+                                                <div className="border-t border-gray-600 pt-3">
                                                     <Button 
                                                         onClick={handlePhotoUpload}
-                                                        disabled={!photoFile || masterPhotos.length >= 3}
+                                                        disabled={!photoFiles.front && !photoFiles.side && !photoFiles.back}
                                                         className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
                                                     >
-                                                        {masterPhotos.length >= 3 ? 'Достигнут лимит фото' : 'Загрузить фото'}
+                                                        📤 Загрузить выбранные фото
                                                     </Button>
+                                                    <p className="text-gray-400 text-xs text-center mt-2">
+                                                        Можно загрузить от 1 до 3 фото одновременно
+                                                    </p>
                                                 </div>
                                             </div>
                                             
