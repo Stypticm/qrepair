@@ -13,14 +13,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     switch (path) {
       case '/request/form':
         return {
-          nextPath: '/request/questions',
+          nextPath: '/request/display_scratches',
           isNextDisabled: !modelname,
           text: 'Далее'
         };
-      case '/request/questions':
+      case '/request/display_scratches':
+        return {
+          nextPath: '/request/display_cracks',
+          isNextDisabled: !answers || answers.length === 0 || answers[0] === undefined || answers[0] === null,
+          text: 'Далее'
+        };
+      case '/request/display_cracks':
         return {
           nextPath: '/request/cracks',
-          isNextDisabled: !answers || answers.length === 0 || answers[0] === undefined || answers[0] === null,
+          isNextDisabled: !answers || answers.length < 2 || answers[1] === undefined || answers[1] === null,
           text: 'Далее'
         };
       case '/request/cracks':
@@ -61,12 +67,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               Выбор модели
             </h2>
           )}
-          {path === '/request/questions' && (
+          {path === '/request/display_scratches' && (
             <h2 className="text-xl font-bold text-gray-800 mt-4">
               📱 Царапины на экране
             </h2>
           )}
-          {path === '/request/cracks' && (
+          {path === '/request/display_cracks' && (
             <h2 className="text-xl font-bold text-gray-800 mt-4">
               💥 Трещины на экране
             </h2>

@@ -20,7 +20,7 @@ const screenCracks = {
   ],
 };
 
-export default function CracksPage() {
+export default function DisplayCracksPage() {
   const { modelname, answers, setAnswers, telegramId } = useStartForm();
   const router = useRouter();
   const [localAnswer, setLocalAnswer] = useState<number | null>(null);
@@ -29,7 +29,6 @@ export default function CracksPage() {
   const [isClient, setIsClient] = useState(false);
   
   const fullscreenCheckmarkRef = useRef<HTMLDivElement>(null);
-  const elementCheckmarkRef = useRef<HTMLDivElement>(null);
 
   // Проверяем, что мы на клиенте
   useEffect(() => {
@@ -54,68 +53,45 @@ export default function CracksPage() {
     setShowCheckmark(true);
     setCheckmarkPosition('fullscreen');
     
-    // GSAP анимация появления на весь экран - более плавная
-    if (fullscreenCheckmarkRef.current) {
-      // Сначала устанавливаем начальное состояние
-      gsap.set(fullscreenCheckmarkRef.current, {
-        scale: 0,
-        opacity: 0,
-        rotation: -180
-      });
-      
-      // Затем анимируем к конечному состоянию с более плавными параметрами
-      gsap.to(fullscreenCheckmarkRef.current, {
-        scale: 1,
-        opacity: 1,
-        rotation: 0,
-        duration: 1.0,
-        ease: "elastic.out(1, 0.3)"
-      });
-    }
-    
-    // Через 1 секунду переводим на элемент
-    setTimeout(() => {
-      setCheckmarkPosition('element');
-      
-      // GSAP анимация перехода на элемент
-      if (elementCheckmarkRef.current) {
-        gsap.set(elementCheckmarkRef.current, {
-          scale: 0,
-          opacity: 0,
-          y: -40
-        });
-        
-        gsap.to(elementCheckmarkRef.current, {
-          scale: 1,
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "back.out(1.7)"
-        });
-      }
-    }, 1000);
-    
-    // Через 2.5 секунды скрываем
-    setTimeout(() => {
-      if (elementCheckmarkRef.current) {
-        gsap.to(elementCheckmarkRef.current, {
-          scale: 0,
-          opacity: 0,
-          duration: 0.4,
-          ease: "power2.in",
-          onComplete: () => {
-            setShowCheckmark(false);
-            setCheckmarkPosition('hidden');
-          }
-        });
-      }
-    }, 2500);
-    
     // Обновляем ответы
     const newAnswers = [...(answers || [])];
     newAnswers[1] = value;
     setAnswers(newAnswers);
   };
+
+  // useEffect для запуска анимации после рендеринга
+  useEffect(() => {
+    if (!isClient || !showCheckmark) return;
+    
+    if (checkmarkPosition === 'fullscreen') {
+      // Запускаем анимацию через небольшую задержку, чтобы элемент точно отрендерился
+      setTimeout(() => {
+        if (fullscreenCheckmarkRef.current) {
+          // Сначала устанавливаем начальное состояние
+          gsap.set(fullscreenCheckmarkRef.current, {
+            scale: 0,
+            opacity: 0,
+            rotation: -180
+          });
+          
+          // Затем анимируем к конечному состоянию с более плавными параметрами
+          gsap.to(fullscreenCheckmarkRef.current, {
+            scale: 1,
+            opacity: 1,
+            rotation: 0,
+            duration: 1.0, // Faster
+            ease: "elastic.out(1, 0.3)",
+            onComplete: () => {
+              // Через 1 секунду переводим на элемент
+              setTimeout(() => {
+                setCheckmarkPosition('element');
+              }, 1000); // Faster
+            }
+          });
+        }
+      }, 50); // Небольшая задержка для рендеринга
+    }
+  }, [checkmarkPosition, showCheckmark, isClient]);
 
   const isNextDisabled = localAnswer === null;
 
@@ -138,7 +114,7 @@ export default function CracksPage() {
                     key={level.value} 
                     className={`aspect-square cursor-pointer rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center p-4 relative ${
                       isSelected
-                        ? "border-black bg-gray-100 shadow-md" 
+                        ? "border-green-500 bg-green-50 shadow-md" 
                         : "border-black hover:bg-gray-50"
                     } bg-white`}
                     onClick={() => handleSelect(parseInt(level.value))}
@@ -163,24 +139,10 @@ export default function CracksPage() {
                         </div>
                     )}
                     
-                    {/* Постоянная галочка в углу выбранного элемента */}
-                    {isSelected && (
-                        <div className="absolute top-2 right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                            <span className="text-white text-sm font-bold">✓</span>
-                        </div>
-                    )}
-                    
-                    {/* Временная анимированная галочка для перехода */}
+                    {/* Галочка в углу выбранного элемента */}
                     {isSelected && checkmarkPosition === 'element' && (
-                        <div 
-                            ref={elementCheckmarkRef}
-                            className="absolute top-2 right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
-                            style={{
-                                transform: 'scale(0)',
-                                opacity: 0
-                            }}
-                        >
-                            <span className="text-white text-sm font-bold">✓</span>
+                        <div className="absolute top-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                            <span className="text-white text-base font-bold">✓</span>
                         </div>
                     )}
                     

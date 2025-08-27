@@ -34,12 +34,12 @@ const FooterButton = ({
           text: 'Далее',
           className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
         };
-      case '/request/questions':
+      case '/request/display_scratches':
         return {
           text: 'Далее',
           className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
         };
-      case '/request/cracks':
+      case '/request/display_cracks':
         return {
           text: 'Далее',
           className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'

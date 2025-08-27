@@ -20,7 +20,7 @@ const screenScratches = {
     ],
 };
 
-export default function QuestionsPage() {
+export default function DisplayScratchesPage() {
     const { modelname, answers, setAnswers, telegramId } = useStartForm();
     const router = useRouter();
     const [localAnswer, setLocalAnswer] = useState<number | null>(null);
@@ -29,22 +29,11 @@ export default function QuestionsPage() {
     const [isClient, setIsClient] = useState(false);
     
     const fullscreenCheckmarkRef = useRef<HTMLDivElement>(null);
-    const elementCheckmarkRef = useRef<HTMLDivElement>(null);
 
     // Проверяем, что мы на клиенте
     useEffect(() => {
         setIsClient(true);
     }, []);
-
-    // Проверяем GSAP только на клиенте
-    useEffect(() => {
-        if (!isClient) return;
-        
-        console.log('🔍 ===== Проверка GSAP =====');
-        console.log('🔍 GSAP загружен:', typeof gsap);
-        console.log('🔍 gsap.to доступен:', typeof gsap.to);
-        console.log('🔍 gsap.set доступен:', typeof gsap.set);
-    }, [isClient]);
 
     useEffect(() => {
         if (answers && answers.length > 0) {
@@ -54,28 +43,6 @@ export default function QuestionsPage() {
             setLocalAnswer(null);
         }
     }, [answers]);
-
-    // Отладка состояний только на клиенте
-    useEffect(() => {
-        if (!isClient) return;
-        
-        // Логи убраны для чистоты
-    }, [showCheckmark, checkmarkPosition, isClient]);
-
-    const handleSelect = (value: number) => {
-        if (!isClient) return;
-        
-        setLocalAnswer(value);
-        
-        // Показываем галочку на весь экран
-        setShowCheckmark(true);
-        setCheckmarkPosition('fullscreen');
-        
-        // Обновляем ответы
-        const newAnswers = [...(answers || [])];
-        newAnswers[0] = value;
-        setAnswers(newAnswers);
-    };
 
     // useEffect для запуска анимации после рендеринга
     useEffect(() => {
@@ -97,55 +64,34 @@ export default function QuestionsPage() {
                         scale: 1,
                         opacity: 1,
                         rotation: 0,
-                        duration: 1.0,
+                        duration: 1.0, // Faster
                         ease: "elastic.out(1, 0.3)",
                         onComplete: () => {
                             // Через 1 секунду переводим на элемент
                             setTimeout(() => {
                                 setCheckmarkPosition('element');
-                            }, 1000);
+                            }, 1000); // Faster
                         }
                     });
                 }
             }, 50); // Небольшая задержка для рендеринга
-            
-        } else if (checkmarkPosition === 'element') {
-            setTimeout(() => {
-                if (elementCheckmarkRef.current) {
-                    gsap.set(elementCheckmarkRef.current, {
-                        scale: 0,
-                        opacity: 0,
-                        y: -40
-                    });
-                    
-                    gsap.to(elementCheckmarkRef.current, {
-                        scale: 1,
-                        opacity: 1,
-                        y: 0,
-                        duration: 0.6,
-                        ease: "back.out(1.7)",
-                        onComplete: () => {
-                            // Через 1.5 секунды скрываем
-                            setTimeout(() => {
-                                if (elementCheckmarkRef.current) {
-                                    gsap.to(elementCheckmarkRef.current, {
-                                        scale: 0,
-                                        opacity: 0,
-                                        duration: 0.4,
-                                        ease: "power2.in",
-                                        onComplete: () => {
-                                            setShowCheckmark(false);
-                                            setCheckmarkPosition('hidden');
-                                        }
-                                    });
-                                }
-                            }, 1500);
-                        }
-                    });
-                }
-            }, 50);
         }
     }, [checkmarkPosition, showCheckmark, isClient]);
+
+    const handleSelect = (value: number) => {
+        if (!isClient) return;
+        
+        setLocalAnswer(value);
+        
+        // Показываем галочку на весь экран
+        setShowCheckmark(true);
+        setCheckmarkPosition('fullscreen');
+        
+        // Обновляем ответы
+        const newAnswers = [...(answers || [])];
+        newAnswers[0] = value;
+        setAnswers(newAnswers);
+    };
 
     const isNextDisabled = localAnswer === null;
 
@@ -168,12 +114,12 @@ export default function QuestionsPage() {
                                         key={level.value} 
                                         className={`aspect-square cursor-pointer rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center p-4 relative ${
                                             isSelected
-                                                ? "border-black bg-gray-100 shadow-md" 
+                                                ? "border-green-500 bg-green-50 shadow-md" 
                                                 : "border-black hover:bg-gray-50"
                                         } bg-white`}
                                         onClick={() => handleSelect(parseInt(level.value))}
                                     >
-                                        {/* Индикатор выбора с GSAP анимацией */}
+                                        {/* Большая галочка в центре экрана */}
                                         {showCheckmark && checkmarkPosition === 'fullscreen' && (
                                             <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
                                                 {/* Красивый фон */}
@@ -193,24 +139,10 @@ export default function QuestionsPage() {
                                             </div>
                                         )}
                                         
-                                        {/* Постоянная галочка в углу выбранного элемента */}
-                                        {isSelected && (
-                                            <div className="absolute top-2 right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                                                <span className="text-white text-sm font-bold">✓</span>
-                                            </div>
-                                        )}
-                                        
-                                        {/* Временная анимированная галочка для перехода */}
+                                        {/* Галочка в углу выбранного элемента */}
                                         {isSelected && checkmarkPosition === 'element' && (
-                                            <div 
-                                                ref={elementCheckmarkRef}
-                                                className="absolute top-2 right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center"
-                                                style={{
-                                                    transform: 'scale(0)',
-                                                    opacity: 0
-                                                }}
-                                            >
-                                                <span className="text-white text-sm font-bold">✓</span>
+                                            <div className="absolute top-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                                                <span className="text-white text-base font-bold">✓</span>
                                             </div>
                                         )}
                                         

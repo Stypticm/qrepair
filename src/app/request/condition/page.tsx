@@ -147,7 +147,7 @@ const ConditionPage = () => {
                 
                 {/* Кнопка подтверждения */}
                 <FooterButton 
-                    nextPath="/request/cracks" 
+                    nextPath="/request/display_cracks" 
                     isNextDisabled={!selectedLevel} 
                     onNext={handleNext} 
                 />
