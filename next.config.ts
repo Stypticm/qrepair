@@ -63,6 +63,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Добавляем заголовки для лучшего отображения на PC
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+        ],
+      },
     ]
   },
 

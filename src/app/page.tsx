@@ -73,10 +73,13 @@ export default function Home() {
   }, [telegramId])
 
   return (
-    <Page back={false}>
-      <div className="flex flex-col items-center justify-start p-4">
-        <div className="w-full">
-          <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f7e8cf]">
+      <div className="w-full max-w-md mx-auto text-center space-y-4">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-black mb-2">
+            QRepair
+          </h1>
+          <h2 className="text-2xl font-bold text-black mb-4">
             💰 ВЫКУП СМАРТФОНА
           </h2>
           <p className="text-lg font-bold text-black mb-4 leading-tight">
@@ -93,26 +96,26 @@ export default function Home() {
           <div className="flex flex-col gap-2 w-full">
             <Button
               variant="outline"
-              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/request/choose')}
             >
               ✅ ОЦЕНИТЬ СМАРТФОН
             </Button>
             <Button
               variant="outline"
-              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/my-devices')}
             >
               📋 МОИ УСТРОЙСТВА
             </Button>
             <Button
               variant="outline"
-              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/learn-more')}
             >
               📦 КАК ЭТО РАБОТАЕТ?
             </Button>
-
+            
             {/* Тестовая кнопка для разработки */}
             {process.env.NODE_ENV === 'development' && (
               <Button
@@ -120,10 +123,10 @@ export default function Home() {
                 className="w-full bg-red-500 text-white font-bold uppercase border-3 !border-red-700"
                 onClick={() => router.push('/safe-area-test')}
               >
-                🧪 ТЕСТ SAFE AREA
+                  🧪 ТЕСТ SAFE AREA
               </Button>
             )}
-
+            
             {/* Тестовая кнопка для устройства */}
             {process.env.NODE_ENV === 'development' && (
               <Button
@@ -131,12 +134,12 @@ export default function Home() {
                 className="w-full bg-green-500 text-white font-bold uppercase border-3 !border-green-700"
                 onClick={() => router.push('/device-test')}
               >
-                💻 ТЕСТ УСТРОЙСТВА
+                  💻 ТЕСТ УСТРОЙСТВА
               </Button>
             )}
             <Button
               variant="outline"
-              className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/questions')}
             >
               ❓ ЧАСТЫЕ ВОПРОСЫ
@@ -146,7 +149,7 @@ export default function Home() {
           <div className="mt-6 text-lg text-slate-700 w-full font-semibold">
             <p>🔐 Безопасно: договор и выезд с курьером</p>
             <p>💰 Гарантия честной цены</p>
-            <p>👽 Оценка через ИИ и вручную — на выбор</p>
+            {/* <p>👽 Оценка через ИИ и вручную — на выбор</p> */}
           </div>
         </div>
         <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2'>
@@ -159,44 +162,12 @@ export default function Home() {
             </Button>
           )}
         </div>
-        {/* <Link href="/init-data">Init data</Link> */}
-        {/* <div className="flex-1 flex items-center justify-center">
-            <Link
-            href="/learn-more"
-            className="text-blue-300 underline font-bold text-lg hover:text-blue-500 transition"
-            >
-            Learn more
-            </Link>
-            </div> */}
-        {/* <div className="flex-1 flex items-end justify-center">
-            <Footer />
-            </div> */}
-        {/* <List>
-        <Section
-        header="Features"
-        footer="You can use these pages to learn more about features, provided by Telegram Mini Apps and other useful projects"
-        >
-        <Link href="/ton-connect">
-        <Cell
-        before={
-          <Image
-          src={tonSvg.src}
-          style={{ backgroundColor: '#007AFF' }}
-          alt="TON Logo"
-          />
-          }
-          subtitle="Connect your TON wallet"
-          >
-          TON Connect
-          </Cell>
-          </Link>
-          </Section>
-          
-          <Section header={t('header')} footer={t('footer')}>
-          <LocaleSwitcher />
-          </Section>
-          </List> */}
+
+        {/* Ленивая загрузка компонентов */}
+        <Suspense fallback={<LoadingSpinner />}>
+          <MainButtons path="/request/choose" />
+        </Suspense>
       </div>
-    </Page>
+    </div>
   );
 }

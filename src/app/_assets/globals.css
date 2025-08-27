@@ -20,10 +20,33 @@
 }
 
 body {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 25%, #f59e0b 50%, #d97706 75%, #b45309 100%);
+  background: #f7e8cf; /* Возвращаем старый желтоватый фон */
   min-height: 100vh;
   margin: 0;
   padding: 0;
+}
+
+/* Фиксированный размер для PC */
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #f7e8cf; /* Фон остается желтоватым */
+  }
+  
+  #__next {
+    width: 100%;
+    max-width: 480px; /* Фиксированная ширина как в Telegram */
+    height: 100vh;
+    max-height: 800px; /* Максимальная высота */
+    margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background: #f7e8cf; /* Фон внутри окна тоже желтоватый */
+  }
 }
 
 /* Safe Area утилиты */

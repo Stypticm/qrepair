@@ -34,16 +34,16 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     if (!isTelegram) {
       // Браузер режим
       if (isDesktop) {
-        // Desktop - центрируем и ограничиваем размер
+        // Desktop - центрируем и ограничиваем размер как было раньше
         return {
-          container: "min-h-screen w-full flex flex-col bg-gray-50",
-          main: "flex-1 w-full max-w-4xl mx-auto p-6 shadow-lg bg-white rounded-lg my-8",
-          wrapper: "max-w-6xl mx-auto"
+          container: "min-h-screen w-full flex flex-col bg-[#f7e8cf] items-center justify-center",
+          main: "flex-1 w-full max-w-md mx-auto p-6 shadow-lg bg-[#f7e8cf] rounded-lg my-8",
+          wrapper: "w-full max-w-md mx-auto"
         };
       } else if (isMobile) {
         // Mobile браузер - полный экран
         return {
-          container: "min-h-screen w-full flex flex-col bg-gray-50",
+          container: "min-h-screen w-full flex flex-col bg-[#f7e8cf]",
           main: "flex-1 w-full p-4",
           wrapper: "w-full"
         };
@@ -52,7 +52,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     
     // Telegram режим - используем стандартные стили с дополнительным отступом сверху
     return {
-      container: "min-h-screen w-full flex flex-col",
+      container: "min-h-screen w-full flex flex-col bg-[#f7e8cf]",
       main: "flex-1 w-full max-w-full md:max-w-[800px] overflow-auto md:mx-auto md:my-4 md:max-h-[600px]",
       wrapper: "w-full"
     };
