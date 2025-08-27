@@ -3,19 +3,17 @@
 import Image from 'next/image';
 
 import { Link } from '@/components/Link/Link';
-import { LocaleSwitcher } from '@/components/LocaleSwitcher/LocaleSwitcher';
-import { Page } from '@/components/Page';
-
 import tonSvg from './_assets/ton.svg';
 import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
-import Footer from '@/components/Footer/Footer';
+
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
 import { getPictureUrl } from '@/core/lib/assets';
 import { useRouter } from 'next/navigation';
-import { Suspense } from 'react';
+
 import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
+import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 
 export default function Home() {
   const { telegramId, setModel } = useStartForm();
@@ -72,94 +70,74 @@ export default function Home() {
   }, [telegramId])
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f9ecb8]">
-      <div className="w-full max-w-md mx-auto text-center space-y-4">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-black mb-4">
-            💰 ВЫКУП ТЕЛЕФОНА
-          </h1>
-          <p className="text-lg font-bold text-black mb-4 leading-tight">
-            🚀 Продай свой смартфон за 3 минуты.
-            <br />Мы оценим его по фото, приедем и заберём. Деньги — сразу на карту или наличными.
-          </p>
-          <Image
-            src={getPictureUrl('courier.png') || '/courier.png'}
-            alt="Курьер с телефоном"
-            width={400}
-            height={200}
-            className="w-full h-auto object-contain mb-4"
-          />
-          <div className="flex flex-col gap-2 w-full">
-            <Button
-              variant="outline"
-              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
-              onClick={() => router.push('/request/choose')}
-            >
-              ✅ ОЦЕНИТЬ СМАРТФОН
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
-              onClick={() => router.push('/my-devices')}
-            >
-              📋 МОИ УСТРОЙСТВА
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
-              onClick={() => router.push('/learn-more')}
-            >
-              📦 КАК ЭТО РАБОТАЕТ?
-            </Button>
-            
-            {/* Тестовая кнопка для разработки */}
-            {process.env.NODE_ENV === 'development' && (
+    <AdaptiveContainer>
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f9ecb8]">
+        <div className="w-full max-w-md mx-auto text-center space-y-4">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold text-black mb-4">
+              💰 ВЫКУП ТЕЛЕФОНА
+            </h1>
+            <p className="text-lg font-bold text-black mb-4 leading-tight">
+              🚀 Продай свой смартфон за 3 минуты.
+              <br />Мы оценим его по фото, приедем и заберём. Деньги — сразу на карту или наличными.
+            </p>
+            <Image
+              src={getPictureUrl('courier.png') || '/courier.png'}
+              alt="Курьер с телефоном"
+              width={400}
+              height={200}
+              className="w-full h-auto object-contain mb-4"
+            />
+            <div className="flex flex-col gap-2 w-full">
               <Button
                 variant="outline"
-                className="w-full bg-red-500 text-white font-bold uppercase border-3 !border-red-700"
-                onClick={() => router.push('/safe-area-test')}
+                className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
+                onClick={() => router.push('/request/choose')}
               >
-                  🧪 ТЕСТ SAFE AREA
+                ✅ ОЦЕНИТЬ СМАРТФОН
               </Button>
-            )}
-            
-            {/* Тестовая кнопка для устройства */}
-            {process.env.NODE_ENV === 'development' && (
               <Button
                 variant="outline"
-                className="w-full bg-green-500 text-white font-bold uppercase border-3 !border-green-700"
-                onClick={() => router.push('/device-test')}
+                className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
+                onClick={() => router.push('/my-devices')}
               >
-                  💻 ТЕСТ УСТРОЙСТВА
+                📋 МОИ УСТРОЙСТВА
               </Button>
-            )}
-            <Button
-              variant="outline"
-              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
-              onClick={() => router.push('/questions')}
-            >
-              ❓ ЧАСТЫЕ ВОПРОСЫ
-            </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
+                onClick={() => router.push('/learn-more')}
+              >
+                📦 КАК ЭТО РАБОТАЕТ?
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
+                onClick={() => router.push('/questions')}
+              >
+                ❓ ЧАСТЫЕ ВОПРОСЫ
+              </Button>
 
+            </div>
+            <div className="mt-6 text-lg text-slate-700 w-full font-semibold">
+              <p>🔐 Безопасно: договор и выезд с курьером</p>
+              <p>💰 Гарантия честной цены</p>
+              {/* <p>👽 Оценка через ИИ и вручную — на выбор</p> */}
+            </div>
           </div>
-          <div className="mt-6 text-lg text-slate-700 w-full font-semibold">
-            <p>🔐 Безопасно: договор и выезд с курьером</p>
-            <p>💰 Гарантия честной цены</p>
-            {/* <p>👽 Оценка через ИИ и вручную — на выбор</p> */}
+
+          <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2'>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                className="w-full bg-slate-800 text-black font-bold uppercase !border-slate-700"
+              >
+                <Link href="/admin">АДМИН</Link>
+              </Button>
+            )}
           </div>
-        </div>
-        
-        <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2'>
-          {isAdmin && (
-            <Button
-              variant="outline"
-              className="w-full bg-slate-800 text-black font-bold uppercase !border-slate-700"
-            >
-              <Link href="/admin">АДМИН</Link>
-            </Button>
-          )}
         </div>
       </div>
-    </div>
+    </AdaptiveContainer>
   );
 }

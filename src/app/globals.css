@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Убедитесь, что эти импорты не дублируются в других файлах */
-
 @layer base {
   :root {
     --radius: 0.625rem;
@@ -35,8 +33,25 @@
     --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.705 0.015 286.067);
-    --background: #fae5ac;
+    --background: #f9ecb8; /* Основной цвет фона */
     --foreground: oklch(0.141 0.005 285.823);
+    
+    /* Safe Area переменные */
+    --safe-area-top: 0px;
+    --safe-area-right: 0px;
+    --safe-area-bottom: 0px;
+    --safe-area-left: 0px;
+    --main-bg-color: #f9ecb8;
+  }
+
+  /* iOS Safari поддержка */
+  @supports (padding: env(safe-area-inset-top)) {
+    :root {
+      --safe-area-top: env(safe-area-inset-top);
+      --safe-area-right: env(safe-area-inset-right);
+      --safe-area-bottom: env(safe-area-inset-bottom);
+      --safe-area-left: env(safe-area-inset-left);
+    }
   }
 
   /* Тёмная тема, синхронизированная с Telegram */
@@ -76,35 +91,200 @@
     }
   }
 
-  /* Интеграция с Telegram цветовой схемой */
-  @media (prefers-color-scheme: dark),
-  (prefers-color-scheme: light) {
+  /* Основные стили */
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    height: 100%;
+    overflow: hidden; /* Предотвращаем скролл на уровне HTML */
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    min-height: 100vh;
+    height: 100vh; /* Фиксированная высота */
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Предотвращаем скролл на уровне body */
+    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
+    position: fixed; /* Фиксируем позицию как в BotFather */
+    width: 100%;
+    top: 0;
+    left: 0;
+    transition: background-color 0.3s, color 0.3s;
+    box-sizing: border-box;
+  }
+
+  /* Фиксированный размер для PC */
+  @media (min-width: 1024px) {
     body {
-      background-color: var(--background);
-      color: var(--foreground);
-      transition: background-color 0.3s, color 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      height: auto;
+      background: var(--background);
+      position: static; /* Возвращаем нормальное позиционирование на PC */
+      overflow: auto;
+    }
+    
+    #__next {
+      width: 100%;
+      max-width: 480px; /* Фиксированная ширина как в BotFather */
+      height: auto;
+      min-height: 600px;
+      max-height: 90vh;
+      margin: 0 auto;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
   }
 
-  /* Безопасные зоны */
-  body {
-    padding: var(--safe-area-top, 0px) var(--safe-area-right, 0px) var(--safe-area-bottom, 0px) var(--safe-area-left, 0px);
-    margin: 0;
-    min-height: 100vh;
-    width: 100%;
-    box-sizing: border-box;
+  /* Мобильные устройства - фиксированный размер как раньше */
+  @media (max-width: 1023px) and (min-width: 320px) {
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      height: auto;
+      background: var(--background);
+      position: static;
+      overflow: auto;
+    }
+    
+    #__next {
+      width: 100%;
+      max-width: 480px; /* Фиксированная ширина для мобильных */
+      height: auto;
+      min-height: 600px;
+      max-height: 90vh;
+      margin: 0 auto;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
-  html,
-  body,
-  #__next {
-    height: 100%;
+  /* Только для очень маленьких экранов (например, старые телефоны) */
+  @media (max-width: 319px) {
+    body {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    #__next {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      margin: 0;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+    }
   }
 
+  /* Telegram WebApp специфичные стили */
+  .telegram-webapp {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Safe Area утилиты */
+  .safe-area-top {
+    padding-top: calc(var(--safe-area-top) + 1rem) !important;
+  }
+
+  .safe-area-bottom {
+    padding-bottom: calc(var(--safe-area-bottom) + 1rem) !important;
+  }
+
+  .safe-area-left {
+    padding-left: calc(var(--safe-area-left) + 1rem) !important;
+  }
+
+  .safe-area-right {
+    padding-right: calc(var(--safe-area-right) + 1rem) !important;
+  }
+
+  .safe-area-all {
+    padding: calc(var(--safe-area-top) + 1rem) calc(var(--safe-area-right) + 1rem) calc(var(--safe-area-bottom) + 1rem) calc(var(--safe-area-left) + 1rem) !important;
+  }
+
+  /* Fullscreen стили как в BotFather */
+  .fullscreen {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .fullscreen-safe {
+    width: 100vw;
+    height: 100vh;
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* Плавные переходы */
   * {
-    border-color: var(--border);
-    outline-color: var(--ring);
-    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Улучшенные кнопки как в BotFather */
+  .btn-telegram {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  .btn-telegram:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-telegram:active {
+    transform: translateY(0);
   }
 
   /* Анимации */
@@ -132,14 +312,6 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  html,
-  body,
-  #__next {
-    height: 100%;
-    overflow: auto;
-    /* Временная замена */
-  }
-
   /* Разрешить выделение текста в формах */
   input,
   textarea,
@@ -150,22 +322,23 @@
     user-select: auto !important;
     touch-action: auto !important;
   }
-}
 
-@media (max-width: 375px) {
-  main {
-    max-width: 100%;
+  /* Адаптивные breakpoints */
+  @media (max-width: 375px) {
+    main {
+      max-width: 100%;
+    }
   }
-}
 
-@media (min-width: 376px) and (max-width: 428px) {
-  main {
-    max-width: 90%;
+  @media (min-width: 376px) and (max-width: 428px) {
+    main {
+      max-width: 90%;
+    }
   }
-}
 
-@media (min-width: 429px) {
-  main {
-    max-width: 800px;
+  @media (min-width: 429px) {
+    main {
+      max-width: 800px;
+    }
   }
 }

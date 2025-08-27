@@ -28,9 +28,9 @@ const questions = [
 const QuestionsPage = () => {
     return (
         <Page back={true}>
-            <div className="flex flex-col items-center justify-start w-full h-full p-4">
+            <div className="min-h-full w-full my-auto p-4">
                 <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">❓Частые вопросы</h2>
-                <section className='flex flex-col gap-2'>
+                <section className='flex flex-col gap-2 w-full'>
                     {
                         questions.map((question, index) => (
                             <div className="flex flex-row items-start justify-center gap-4" key={index}>

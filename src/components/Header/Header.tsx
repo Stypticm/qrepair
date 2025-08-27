@@ -12,9 +12,16 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 const Header = () => {
     const { telegramId, username, userPhotoUrl } = useStartForm();
     const { safeAreaInsets, isReady, isTelegram } = useSafeArea();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Отладочная информация
     useEffect(() => {
+        if (!isMounted) return;
+        
         console.log('Header - Safe Area Insets:', safeAreaInsets);
         console.log('Header - Is Ready:', isReady);
         
@@ -26,7 +33,22 @@ const Header = () => {
             console.log('Header - Viewport Height:', webApp.viewportHeight);
             console.log('Header - Is Expanded:', webApp.isExpanded);
         }
-    }, [safeAreaInsets, isReady]);
+    }, [safeAreaInsets, isReady, isMounted]);
+
+    // Не рендерим ничего до монтирования
+    if (!isMounted) {
+        return (
+            <SafeAreaWrapper padding="top" className="bg-background border-b border-border">
+                <section className="container mx-auto px-4 py-3 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-gray-300 rounded animate-pulse"></div>
+                        <div className="w-20 h-6 bg-gray-300 rounded animate-pulse"></div>
+                    </div>
+                    <div className="w-16 h-6 bg-gray-300 rounded animate-pulse"></div>
+                </section>
+            </SafeAreaWrapper>
+        );
+    }
 
     return (
         <SafeAreaWrapper padding="top" className="bg-background border-b border-border">

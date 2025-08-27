@@ -24,12 +24,16 @@ export function useSafeArea() {
     'light'
   )
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
-    if (
-      typeof window !== 'undefined' &&
-      window.Telegram?.WebApp
-    ) {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isMounted) return
+
+    if (window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
@@ -136,7 +140,29 @@ export function useSafeArea() {
       setIsTelegram(false)
       setIsReady(true)
     }
-  }, [])
+  }, [isMounted])
+
+  // Не рендерим ничего до монтирования
+  if (!isMounted) {
+    return {
+      safeAreaInsets: {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+      },
+      isReady: false,
+      isTelegram: false,
+      theme: 'light',
+      isExpanded: false,
+      cssVars: {
+        '--safe-area-top': '0px',
+        '--safe-area-right': '0px',
+        '--safe-area-bottom': '0px',
+        '--safe-area-left': '0px',
+      },
+    }
+  }
 
   return {
     safeAreaInsets,

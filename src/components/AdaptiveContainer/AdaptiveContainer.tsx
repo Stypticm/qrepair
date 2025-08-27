@@ -12,8 +12,15 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   const { isTelegram, isReady, safeAreaInsets } = useSafeArea();
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
     // Определяем тип устройства
     const checkDevice = () => {
       const userAgent = navigator.userAgent;
@@ -27,7 +34,22 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     };
 
     checkDevice();
-  }, []);
+  }, [isMounted]);
+
+  // Не рендерим ничего до монтирования
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f9ecb8]">
+        <div className="w-full max-w-md mx-auto text-center">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-300 rounded mb-4"></div>
+            <div className="h-4 bg-gray-300 rounded mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Определяем стили в зависимости от контекста
   const getContainerStyles = () => {
@@ -43,9 +65,9 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       } else if (isMobile) {
         // Mobile браузер - фиксированный размер как раньше
         return {
-          container: "min-h-screen w-full flex flex-col bg-[#f9ecb8] items-center justify-center",
-          main: "flex-1 w-full max-w-md mx-auto p-6 shadow-lg bg-[#f9ecb8] rounded-lg my-8",
-          wrapper: "w-full max-w-md mx-auto"
+          container: "h-screen flex flex-col bg-[#f9ecb8] items-center justify-center",
+          main: "flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-[#f9ecb8] rounded-lg",
+          wrapper: "w-full h-full max-w-md mx-auto"
         };
       }
     }
@@ -63,7 +85,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Показываем загрузку только для Telegram
   if (isTelegram && !isReady) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f9ecb8]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Инициализация Telegram WebApp...</p>

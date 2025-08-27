@@ -7,7 +7,6 @@ import { ClientLayoutContent } from '@/components/ClientLayoutContent/ClientLayo
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import 'normalize.css/normalize.css';
-import './_assets/globals.css';
 import './globals.css';
 
 const comicNeue = Comic_Neue({

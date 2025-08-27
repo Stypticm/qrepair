@@ -3,7 +3,7 @@
 import { Page } from '@/components/Page';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { getStatusImage } from '@/core/lib/assets';
+import { getPictureUrl } from '@/core/lib/assets';
 
 export default function StatusPage() {
     const searchParams = useSearchParams();
@@ -28,7 +28,7 @@ export default function StatusPage() {
                                 className={`flex flex-col items-center ${status === item.key ? '' : 'blur-[2px]'}`}
                             >
                                 <Image
-                                    src={getStatusImage(item.image) || `/status/${item.image}.png`}
+                                    src={getPictureUrl(`${item.image as string}.png`) || `/status/${item.image}.png`}
                                     alt={item.label}
                                     width={200}
                                     height={200}
