@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { acceptRequest, courierReceived, fetchApplication, markPaid, reviewRequest } from '@/core/lib/requestActions';
 import Image from 'next/image';
 import { Page } from '@/components/Page';
-import { QRCodeSVG } from 'qrcode.react';
+
 
 const RequestById = () => {
     const params = useParams();
@@ -30,12 +30,9 @@ const RequestById = () => {
         side: null,
         back: null
     });
-    const [showQRCode, setShowQRCode] = useState(false);
-    const [selectedPlatform, setSelectedPlatform] = useState<'android' | 'ios'>('android');
-    
-    const getAppLink = (platform: 'android' | 'ios') => {
-        return `https://u.expo.dev/72024ff9-1b03-4e73-be31-fc7028bc1a3d?runtime-version=1.0.0&channel-name=main&platform=${platform}`;
-    };
+    const [otpCode, setOtpCode] = useState<string>('');
+    const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
+
     
     const copyToClipboard = async (text: string) => {
         try {
@@ -51,6 +48,43 @@ const RequestById = () => {
             document.execCommand('copy');
             document.body.removeChild(textArea);
             alert('Ссылка скопирована в буфер обмена!');
+        }
+    };
+
+    const generateOTP = async () => {
+        if (!application?.telegramId) {
+            setError('Telegram ID клиента не найден');
+            return;
+        }
+
+        setIsGeneratingOtp(true);
+        try {
+            // Генерируем случайный 6-значный OTP
+            const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            setOtpCode(newOtp);
+
+            // Отправляем OTP клиенту в Telegram
+            const message = `🔐 **OTP код для проверки устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n🔢 **Ваш OTP код:** \`${newOtp}\`\n\n💡 **Инструкция:**\n1️⃣ Скачайте приложение **QRepair** из App Store/Google Play\n2️⃣ Откройте приложение\n3️⃣ Введите ID заявки: \`${application.id}\`\n4️⃣ Введите имя мастера: \`${(application as any).courierTelegramId}\`\n5️⃣ Введите OTP код: \`${newOtp}\`\n\n⏰ **Код действителен 15 минут**\n\n🔐 **Безопасно:** код отправлен только вам`;
+
+            const response = await fetch('/api/telegram/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    telegramId: application.telegramId,
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                alert(`OTP код ${newOtp} отправлен клиенту! Код действителен 15 минут.`);
+            } else {
+                setError('Ошибка отправки OTP');
+            }
+        } catch (err) {
+            console.error('Error generating OTP:', err);
+            setError('Ошибка генерации OTP');
+        } finally {
+            setIsGeneratingOtp(false);
         }
     };
 
@@ -137,7 +171,7 @@ const RequestById = () => {
         }
 
         try {
-            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n💡 **Нажмите на ID выше, чтобы скопировать**\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Установите **Expo Go** (если еще не установлено):\n   • iOS: https://apps.apple.com/app/expo-go/id982107779\n   • Android: https://play.google.com/store/apps/details?id=host.exp.exponent\n\n2️⃣ **Мастер покажет QR-код** приложения\n3️⃣ **Откройте приложение QRepair** через Expo Go\n4️⃣ **Мастер проведет тест** устройства\n5️⃣ Вы наблюдаете и подтверждаете результаты\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** данные передаются только мастеру\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
+            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n💡 **Нажмите на ID выше, чтобы скопировать**\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **QRepair** из App Store/Google Play\n2️⃣ Откройте приложение\n3️⃣ Введите ID заявки: \`${application.id}\`\n4️⃣ Введите имя мастера: \`${(application as any).courierTelegramId}\`\n5️⃣ **Дождитесь OTP код** от мастера\n6️⃣ Введите OTP код в приложение\n7️⃣ **Мастер проведет тест** устройства\n8️⃣ Вы наблюдаете и подтверждаете результаты\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** OTP код отправляется только вам\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
             
             const response = await fetch('/api/telegram/send-message', {
                 method: 'POST',
@@ -483,14 +517,38 @@ const RequestById = () => {
                                                 </Button>
                                             )}
                                             
-                                            {/* Кнопка показа QR-кода приложения */}
+                                            {/* OTP система для мастера */}
                                             {(application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
-                                                <Button 
-                                                    className="min-w-[200px] bg-blue-600 hover:bg-blue-700 text-white"
-                                                    onClick={() => setShowQRCode(!showQRCode)}
-                                                >
-                                                    📱 {showQRCode ? 'Скрыть QR-код' : 'Показать QR-код'}
-                                                </Button>
+                                                <div className="min-w-[200px] p-3 bg-green-900 border border-green-600 rounded text-center">
+                                                    <p className="text-green-200 text-sm font-semibold">🔐 OTP система</p>
+                                                    
+                                                    {otpCode ? (
+                                                        <div className="mt-2">
+                                                            <p className="text-green-100 text-xs">Текущий OTP:</p>
+                                                            <p className="text-green-200 text-lg font-bold font-mono">{otpCode}</p>
+                                                            <p className="text-green-100 text-xs mt-1">Действителен 15 мин</p>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-green-100 text-xs mt-1">OTP не сгенерирован</p>
+                                                    )}
+                                                    
+                                                    <Button 
+                                                        className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white text-xs py-1"
+                                                        onClick={generateOTP}
+                                                        disabled={isGeneratingOtp}
+                                                    >
+                                                        {isGeneratingOtp ? '⏳ Генерирую...' : '🔢 Сгенерировать OTP'}
+                                                    </Button>
+                                                    
+                                                    {otpCode && (
+                                                        <Button 
+                                                            className="mt-1 w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs py-1"
+                                                            onClick={() => copyToClipboard(otpCode)}
+                                                        >
+                                                            📋 Скопировать OTP
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             )}
                                             
                                             {/* Кнопка копирования ID заявки */}
@@ -513,57 +571,7 @@ const RequestById = () => {
                                         </div>
                                     </CardAction>
                                     
-                                    {/* QR-код приложения */}
-                                    {showQRCode && (application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
-                                        <div className="mt-4 p-4 border border-gray-600 rounded-md bg-gray-700">
-                                            <h4 className="text-white font-semibold mb-3 text-center">📱 QR-код приложения QRepair</h4>
-                                            
-                                            {/* Выбор платформы */}
-                                            <div className="flex justify-center gap-4 mb-4">
-                                                <Button 
-                                                    className={`px-4 py-2 ${selectedPlatform === 'android' ? 'bg-green-600' : 'bg-gray-600'}`}
-                                                    onClick={() => setSelectedPlatform('android')}
-                                                >
-                                                    🤖 Android
-                                                </Button>
-                                                <Button 
-                                                    className={`px-4 py-2 ${selectedPlatform === 'ios' ? 'bg-blue-600' : 'bg-gray-600'}`}
-                                                    onClick={() => setSelectedPlatform('ios')}
-                                                >
-                                                    🍎 iOS
-                                                </Button>
-                                            </div>
-                                            
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="bg-white p-4 rounded-lg">
-                                                    <QRCodeSVG 
-                                                        value={getAppLink(selectedPlatform)}
-                                                        size={200}
-                                                        level="M"
-                                                        includeMargin={true}
-                                                    />
-                                                </div>
-                                                <div className="text-center">
-                                                    <p className="text-gray-300 text-sm mb-2">
-                                                        Мастер показывает этот QR-код клиенту
-                                                    </p>
-                                                    <p className="text-blue-400 text-xs">
-                                                        Клиент сканирует через Expo Go
-                                                    </p>
-                                                    <div className="mt-3 p-2 bg-gray-600 rounded text-xs text-gray-300">
-                                                        <p className="font-semibold">Ссылка для {selectedPlatform === 'android' ? 'Android' : 'iOS'}:</p>
-                                                        <p className="break-all">{getAppLink(selectedPlatform)}</p>
-                                                        <Button 
-                                                            className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs py-1"
-                                                            onClick={() => copyToClipboard(getAppLink(selectedPlatform))}
-                                                        >
-                                                            📋 Скопировать ссылку
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
+
                                     
                                     <section className="flex flex-col gap-2 p-4">
                                         <Button className="bg-gray-600 hover:bg-gray-700 text-white">

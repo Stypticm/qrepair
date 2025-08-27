@@ -22,11 +22,12 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.expand();
-    } else {
-      console.warn('Telegram WebApp not initialized');
-    }
+    // Telegram WebApp expand() теперь обрабатывается в хуке useSafeArea
+    // if (window.Telegram?.WebApp) {
+    //   window.Telegram.WebApp.expand();
+    // } else {
+    //   console.warn('Telegram WebApp not initialized');
+    // }
 
     if (!telegramId) return
 

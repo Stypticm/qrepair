@@ -12,43 +12,46 @@ import {
   themeParamsState,
   retrieveLaunchParams,
   emitEvent,
-} from '@telegram-apps/sdk-react';
+} from '@telegram-apps/sdk-react'
 
 /**
  * Initializes the application and configures its dependencies.
  */
 export async function init(options: {
-  debug: boolean;
-  eruda: boolean;
-  mockForMacOS: boolean;
+  debug: boolean
+  eruda: boolean
+  mockForMacOS: boolean
 }): Promise<void> {
   // Set @telegram-apps/sdk-react debug mode and initialize it.
-  setDebug(options.debug);
-  initSDK();
+  setDebug(options.debug)
+  initSDK()
 
   // Add Eruda if needed.
   options.eruda &&
     void import('eruda').then(({ default: eruda }) => {
-      eruda.init();
-      eruda.position({ x: window.innerWidth - 50, y: 0 });
-    });
+      eruda.init()
+      eruda.position({ x: window.innerWidth - 50, y: 0 })
+    })
 
   // Telegram for macOS has a ton of bugs, including cases, when the client doesn't
   // even response to the "web_app_request_theme" method. It also generates an incorrect
   // event for the "web_app_request_safe_area" method.
   if (options.mockForMacOS) {
-    let firstThemeSent = false;
+    let firstThemeSent = false
     mockTelegramEnv({
       onEvent(event, next) {
         if (event[0] === 'web_app_request_theme') {
-          let tp: ThemeParams = {};
+          let tp: ThemeParams = {}
           if (firstThemeSent) {
-            tp = themeParamsState();
+            tp = themeParamsState()
           } else {
-            firstThemeSent = true;
-            tp ||= retrieveLaunchParams().tgWebAppThemeParams;
+            firstThemeSent = true
+            tp ||=
+              retrieveLaunchParams().tgWebAppThemeParams
           }
-          return emitEvent('theme_changed', { theme_params: tp });
+          return emitEvent('theme_changed', {
+            theme_params: tp,
+          })
         }
 
         if (event[0] === 'web_app_request_safe_area') {
@@ -57,26 +60,123 @@ export async function init(options: {
             top: 0,
             right: 0,
             bottom: 0,
-          });
+          })
         }
 
-        next();
+        next()
       },
-    });
+    })
   }
 
   // Mount all components used in the project.
-  mountBackButton.ifAvailable();
-  restoreInitData();
+  mountBackButton.ifAvailable()
+  restoreInitData()
 
   if (mountMiniAppSync.isAvailable()) {
-    mountMiniAppSync();
-    bindThemeParamsCssVars();
+    mountMiniAppSync()
+    bindThemeParamsCssVars()
   }
 
   if (mountViewport.isAvailable()) {
     mountViewport().then(() => {
-      bindViewportCssVars();
-    });
+      bindViewportCssVars()
+    })
+  }
+
+  // Настройка Telegram WebApp для fullscreen режима
+  if (
+    typeof window !== 'undefined' &&
+    window.Telegram?.WebApp
+  ) {
+    const webApp = window.Telegram.WebApp
+
+    // Уведомляем Telegram о готовности приложения
+    webApp.ready()
+
+    // Расширяем приложение на весь экран
+    webApp.expand()
+
+    // Настраиваем обработчики для safe area
+    if (webApp.onViewportChanged) {
+      webApp.onViewportChanged(() => {
+        // Обновляем CSS переменные для safe area
+        const updateSafeAreaCSS = () => {
+          if (webApp.safeAreaInsets) {
+            document.documentElement.style.setProperty(
+              '--safe-area-top',
+              `${webApp.safeAreaInsets.top}px`
+            )
+            document.documentElement.style.setProperty(
+              '--safe-area-right',
+              `${webApp.safeAreaInsets.right}px`
+            )
+            document.documentElement.style.setProperty(
+              '--safe-area-bottom',
+              `${webApp.safeAreaInsets.bottom}px`
+            )
+            document.documentElement.style.setProperty(
+              '--safe-area-left',
+              `${webApp.safeAreaInsets.left}px`
+            )
+          } else if (webApp.safeArea) {
+            document.documentElement.style.setProperty(
+              '--safe-area-top',
+              `${webApp.safeArea.top}px`
+            )
+            document.documentElement.style.setProperty(
+              '--safe-area-right',
+              `${webApp.safeArea.right}px`
+            )
+            document.documentElement.style.setProperty(
+              '--safe-area-bottom',
+              `${webApp.safeArea.bottom}px`
+            )
+            document.documentElement.style.setProperty(
+              '--safe-area-left',
+              `${webApp.safeArea.left}px`
+            )
+          }
+        }
+
+        updateSafeAreaCSS()
+      })
+    }
+
+    // Инициализируем safe area CSS переменные
+    if (webApp.safeAreaInsets) {
+      document.documentElement.style.setProperty(
+        '--safe-area-top',
+        `${webApp.safeAreaInsets.top}px`
+      )
+      document.documentElement.style.setProperty(
+        '--safe-area-right',
+        `${webApp.safeAreaInsets.right}px`
+      )
+      document.documentElement.style.setProperty(
+        '--safe-area-bottom',
+        `${webApp.safeAreaInsets.bottom}px`
+      )
+      document.documentElement.style.setProperty(
+        '--safe-area-left',
+        `${webApp.safeAreaInsets.left}px`
+      )
+    } else if (webApp.safeArea) {
+      document.documentElement.style.setProperty(
+        '--safe-area-top',
+        `${webApp.safeArea.top}px`
+      )
+      document.documentElement.style.setProperty(
+        '--safe-area-right',
+        `${webApp.safeArea.right}px`
+      )
+      document.documentElement.style.setProperty(
+        '--safe-area-bottom',
+        `${webApp.safeArea.bottom}px`
+      )
+      document.documentElement.style.setProperty(
+        '--safe-area-left',
+        `${webApp.safeArea.left}px`
+      )
+    }
   }
 }

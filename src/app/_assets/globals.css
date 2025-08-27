@@ -3,3 +3,62 @@ body {
   padding: 0;
   margin: 0;
 }
+
+/* Safe Area переменные */
+:root {
+  --safe-area-top: 0px;
+  --safe-area-right: 0px;
+  --safe-area-bottom: 0px;
+  --safe-area-left: 0px;
+}
+
+/* Поддержка env() для safe area (iOS Safari) */
+@supports (padding-top: env(safe-area-inset-top)) {
+  :root {
+    --safe-area-top: env(safe-area-inset-top);
+    --safe-area-right: env(safe-area-inset-right);
+    --safe-area-bottom: env(safe-area-inset-bottom);
+    --safe-area-left: env(safe-area-inset-left);
+  }
+}
+
+/* Применение safe area отступов */
+.safe-area-top {
+  padding-top: var(--safe-area-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.safe-area-left {
+  padding-left: var(--safe-area-left);
+}
+
+.safe-area-right {
+  padding-right: var(--safe-area-right);
+}
+
+.safe-area-all {
+  padding: var(--safe-area-top) var(--safe-area-right) var(--safe-area-bottom) var(--safe-area-left);
+}
+
+/* Fullscreen режим */
+.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Учет safe area в fullscreen */
+.fullscreen-safe {
+  position: fixed;
+  top: var(--safe-area-top);
+  left: var(--safe-area-left);
+  right: var(--safe-area-right);
+  bottom: var(--safe-area-bottom);
+  overflow: hidden;
+}
