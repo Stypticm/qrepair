@@ -50,10 +50,10 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       }
     }
     
-    // Telegram режим - используем стандартные стили с дополнительным отступом сверху
+    // Telegram режим - используем полный экран
     return {
       container: "min-h-screen w-full flex flex-col bg-[#f9ecb8]",
-      main: "flex-1 w-full max-w-full md:max-w-[800px] overflow-auto md:mx-auto md:my-4 md:max-h-[600px]",
+      main: "flex-1 w-full p-4",
       wrapper: "w-full"
     };
   };

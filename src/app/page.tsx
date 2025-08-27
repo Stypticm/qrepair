@@ -75,12 +75,9 @@ export default function Home() {
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f9ecb8]">
       <div className="w-full max-w-md mx-auto text-center space-y-4">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-black mb-2">
-            QRepair
+          <h1 className="text-4xl font-bold text-black mb-4">
+            💰 ВЫКУП ТЕЛЕФОНА
           </h1>
-          <h2 className="text-2xl font-bold text-black mb-4">
-            💰 ВЫКУП СМАРТФОНА
-          </h2>
           <p className="text-lg font-bold text-black mb-4 leading-tight">
             🚀 Продай свой смартфон за 3 минуты.
             <br />Мы оценим его по фото, приедем и заберём. Деньги — сразу на карту или наличными.
@@ -151,6 +148,7 @@ export default function Home() {
             {/* <p>👽 Оценка через ИИ и вручную — на выбор</p> */}
           </div>
         </div>
+        
         <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2'>
           {isAdmin && (
             <Button
