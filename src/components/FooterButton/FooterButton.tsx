@@ -26,35 +26,48 @@ const FooterButton = ({
     }
   };
 
+  // Определяем текст и стили кнопки в зависимости от пути
+  const getButtonConfig = () => {
+    switch (path) {
+      case '/request/form':
+        return {
+          text: 'Далее',
+          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
+        };
+      case '/request/questions':
+        return {
+          text: 'Далее',
+          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
+        };
+      case '/request/cracks':
+        return {
+          text: 'Далее',
+          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
+        };
+      case '/request/photos':
+        return {
+          text: 'Отправить фото',
+          className: 'bg-yellow-400 w-full text-black font-extrabold !text-xl !border-3 !border-black'
+        };
+      default:
+        return {
+          text: 'Далее',
+          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
+        };
+    }
+  };
+
+  const buttonConfig = getButtonConfig();
+
   return (
-    <div className="flex flex-row justify-center p-2">
-      {
-        path === '/request/form' && (
-          <Button className="bg-green-700 w-full" onClick={handleClick} disabled={!isNextDisabled}>
-            Оценить телефон
-          </Button>
-        )
-      }
-      {
-        path === '/request/photos' && (
-          <Button
-            className="bg-yellow-400 w-full text-black font-extrabold !text-xl !border-3 !border-black"
-            onClick={handleClick}
-            disabled={!isNextDisabled}>
-            Отправить фото
-          </Button>
-        )
-      }
-      {
-        path === '/request/questions' && (
-          <Button
-            className="bg-yellow-400 w-full text-black font-extrabold !text-xl !border-3 !border-black"
-            onClick={handleClick}
-            disabled={!isNextDisabled}>
-            Ответить на вопросы
-          </Button>
-        )
-      }
+    <div className="flex justify-center w-full">
+      <Button 
+        className={buttonConfig.className}
+        onClick={handleClick} 
+        disabled={isNextDisabled}
+      >
+        {buttonConfig.text}
+      </Button>
     </div>
   );
 };

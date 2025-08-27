@@ -1,60 +1,51 @@
 import prisma from '@/core/lib/prisma'
 import { NextResponse } from 'next/server'
-import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const body = await req.json()
-    const { telegramId, modelname, price, comment } =
-      body || {}
+    const { telegramId, modelname, answers } =
+      await request.json()
 
-    if (!telegramId) {
+    if (!telegramId || !modelname) {
       return NextResponse.json(
-        { error: 'Invalid request: missing telegramId' },
+        { error: 'Telegram ID and modelname required' },
         { status: 400 }
       )
     }
 
-    const draft = await prisma.skupka.findFirst({
-      where: { telegramId, status: 'draft' },
+    // Ищем существующую заявку по telegramId
+    const existingRequest = await prisma.skupka.findFirst({
+      where: { telegramId },
     })
 
-    if (!draft) {
+    if (!existingRequest) {
       return NextResponse.json(
-        { error: 'No draft request found' },
-        { status: 400 }
+        { error: 'Request not found' },
+        { status: 404 }
       )
     }
 
-    const dataToUpdate: Record<string, unknown> = {}
-    if (typeof modelname === 'string' && modelname.trim()) {
-      dataToUpdate.modelname = modelname.trim()
-    }
-    if (price !== undefined) {
-      dataToUpdate.price = price
-    }
-    if (typeof comment === 'string' && comment.trim()) {
-      dataToUpdate.comment = comment.trim()
-    }
-    dataToUpdate.status = 'accepted'
-
-    const updated = await prisma.skupka.update({
-      where: { id: draft.id },
-      data: dataToUpdate,
+    // Обновляем заявку как завершенную
+    const updatedRequest = await prisma.skupka.update({
+      where: { id: existingRequest.id },
+      data: {
+        modelname,
+        answers: answers || [],
+        status: 'submitted',
+        submittedAt: new Date(),
+        updatedAt: new Date(),
+      },
     })
 
-    // Отправляем пользователю базовое уведомление о принятии заявки
-    await sendTelegramMessage(
-      telegramId,
-      '📱 Ваша заявка принята в работу. Ожидайте, с вами свяжется наш менеджер в ближайшее время.',
-      { parse_mode: 'Markdown' }
-    )
-
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      success: true,
+      requestId: updatedRequest.id,
+      message: 'Заявка успешно отправлена',
+    })
   } catch (error) {
-    console.error('Submit error:', error)
+    console.error('Error submitting request:', error)
     return NextResponse.json(
-      { error: 'Server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

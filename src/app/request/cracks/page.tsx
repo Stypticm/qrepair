@@ -8,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
 
-// Только царапины на экране
-const screenScratches = {
-    id: '1',
+// Трещины на экране
+const screenCracks = {
+    id: '2',
     category: 'Экран',
-    defect: 'Царапины на экране',
-    icon: '📱',
-    image: 'screen-scratches.png',
+    defect: 'Трещины на экране',
+    icon: '💥',
+    image: 'screen-cracks.png',
     levels: [
         { value: '0', label: 'Отсутствует', penalty: 0, color: 'bg-green-100 text-green-800' },
         { value: '1', label: 'Лёгкий', penalty: 5, color: 'bg-yellow-100 text-yellow-800' },
@@ -23,19 +23,21 @@ const screenScratches = {
     ]
 };
 
-export default function QuestionsPage() {
+export default function CracksPage() {
     const { answers, setAnswers } = useStartForm();
     const [localAnswer, setLocalAnswer] = useState<string>('');
 
     useEffect(() => {
-        if (answers && answers.length > 0) {
-            setLocalAnswer(String(answers[0] || ''));
+        if (answers && answers.length > 1) {
+            setLocalAnswer(String(answers[1] || ''));
         }
     }, [answers]);
 
     const handleSelect = (value: string) => {
         setLocalAnswer(value);
-        setAnswers([parseInt(value)]);
+        const newAnswers = [...(answers || [])];
+        newAnswers[1] = parseInt(value);
+        setAnswers(newAnswers);
     };
 
     const isNextDisabled = !localAnswer;
@@ -44,11 +46,11 @@ export default function QuestionsPage() {
         <div className="w-full">
             <div className="flex flex-col items-center justify-center w-full px-4">
                 <div className="w-full max-w-md">
-                    {screenScratches.image && (
+                    {screenCracks.image && (
                         <div className="flex justify-center mb-6">
                             <Image
-                                src={getPictureUrl(screenScratches.image)}
-                                alt={screenScratches.defect}
+                                src={getPictureUrl(screenCracks.image)}
+                                alt={screenCracks.defect}
                                 width={200}
                                 height={150}
                                 className="rounded-lg shadow-md"
@@ -57,7 +59,7 @@ export default function QuestionsPage() {
                     )}
 
                     <RadioGroup value={localAnswer} onValueChange={handleSelect} className="space-y-3 w-full">
-                        {screenScratches.levels.map((level) => (
+                        {screenCracks.levels.map((level) => (
                             <div key={level.value} className="flex items-center space-x-3 w-full">
                                 <RadioGroupItem value={level.value} id={`level-${level.value}`} />
                                 <Label 

@@ -34,38 +34,42 @@ const ChoosePage = () => {
 
   return (
     <Page back={true}>
-      <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">Выберите способ заполнения</h2>
-      <section className="flex flex-col gap-4">
-        <section className=' rounded-sm border-3 !border-slate-700'>
-          <Image
-            src={getPictureUrl('photo_manual.png') || '/photo_manual.png'}
-            alt="Ручное заполнение"
-            width={400}
-            height={300}
-            className="h-full w-full object-cover"
-            onClick={handleStart}
-          />
+      <section className="flex flex-col gap-2 p-3">
+        <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
+          Выберите<br />способ<br />заполнения
+        </h1>
+        <section className="flex flex-col gap-4">
+          <section className=' rounded-sm border-3 !border-slate-700'>
+            <Image
+              src={getPictureUrl('photo_manual.png') || '/photo_manual.png'}
+              alt="Ручное заполнение"
+              width={400}
+              height={300}
+              className="h-full w-full object-cover"
+              onClick={handleStart}
+            />
+          </section>
+          <Button
+            variant="outline"
+            className="w-full bg-background text-black uppercase border-3 !border-slate-700 h-full py-8 rounded-xl blur-xs"
+            onClick={() => setIsOpen(true)}
+          >
+            <span className='text-2xl font-bold disabled'>Оценка с помощью ИИ</span>
+          </Button>
         </section>
-        <Button
-          variant="outline"
-          className="w-full bg-background text-black uppercase border-3 !border-slate-700 h-full py-8 rounded-xl blur-xs"
-          onClick={() => setIsOpen(true)}
-        >
-          <span className='text-2xl font-bold disabled'>Оценка с помощью ИИ</span>
-        </Button>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent className="max-w-[90%] max-h-[90%] p-4 flex flex-col items-center" aria-describedby={undefined}>
+            <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>
+            <Image
+              src={getPictureUrl('banan.gif') || '/banan.gif'}
+              alt="Banan"
+              width={400}
+              height={300}
+              className="w-16 h-16 rounded-full"
+            />
+          </DialogContent>
+        </Dialog>
       </section>
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-[90%] max-h-[90%] p-4 flex flex-col items-center" aria-describedby={undefined}>
-          <DialogTitle className="text-lg text-black font-bold mb-2">Не работает же, очевидно</DialogTitle>
-          <Image
-            src={getPictureUrl('banan.gif') || '/banan.gif'}
-            alt="Banan"
-            width={400}
-            height={300}
-            className="w-16 h-16 rounded-full"
-          />
-        </DialogContent>
-      </Dialog>
     </Page>
   );
 };
