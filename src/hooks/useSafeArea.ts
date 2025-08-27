@@ -19,6 +19,7 @@ export function useSafeArea() {
     })
 
   const [isReady, setIsReady] = useState(false)
+  const [isTelegram, setIsTelegram] = useState(false)
 
   useEffect(() => {
     if (
@@ -26,14 +27,29 @@ export function useSafeArea() {
       window.Telegram?.WebApp
     ) {
       const webApp = window.Telegram.WebApp
+      setIsTelegram(true)
 
+      // Инициализация и расширение
       const setup = () => {
-        webApp.ready()
-        webApp.expand()
-        updateSafeArea()
-        setIsReady(true)
+        try {
+          webApp.ready()
+          webApp.expand()
+          updateSafeArea()
+          setIsReady(true)
+          console.log(
+            'Telegram WebApp initialized successfully'
+          )
+        } catch (error) {
+          console.error(
+            'Error initializing Telegram WebApp:',
+            error
+          )
+          // Fallback - показываем приложение даже при ошибке
+          setIsReady(true)
+        }
       }
 
+      // Обновление safe area
       const updateSafeArea = () => {
         let newInsets = {
           top: 0,
@@ -41,21 +57,34 @@ export function useSafeArea() {
           bottom: 0,
           left: 0,
         }
+
+        // Приоритет safeAreaInsets (новый API)
         if (webApp.safeAreaInsets) {
           newInsets = webApp.safeAreaInsets
-        } else if (webApp.safeArea) {
-          newInsets = webApp.safeArea
+          console.log('Using safeAreaInsets:', newInsets)
         }
+        // Fallback на safeArea (старый API)
+        else if (webApp.safeArea) {
+          newInsets = webApp.safeArea
+          console.log('Using safeArea:', newInsets)
+        }
+
         setSafeAreaInsets(newInsets)
-        console.log('Updated safeAreaInsets:', newInsets)
+        console.log('Final safe area insets:', newInsets)
       }
 
+      // Настройка при загрузке
       setup()
-      if (webApp.onViewportChanged)
-        webApp.onViewportChanged(updateSafeArea)
-      if (webApp.onEvent)
-        webApp.onEvent('viewport_changed', updateSafeArea)
 
+      // Обработчики изменений
+      if (webApp.onViewportChanged) {
+        webApp.onViewportChanged(updateSafeArea)
+      }
+      if (webApp.onEvent) {
+        webApp.onEvent('viewport_changed', updateSafeArea)
+      }
+
+      // Очистка при размонтировании
       return () => {
         if (webApp.offViewportChanged)
           webApp.offViewportChanged(updateSafeArea)
@@ -66,16 +95,20 @@ export function useSafeArea() {
           )
       }
     } else {
-      console.warn(
-        'Telegram.WebApp not available, using default insets'
+      // Не в Telegram - показываем приложение сразу
+      console.log(
+        'Not in Telegram environment, showing app immediately'
       )
-      setIsReady(true) // Разрешаем рендер вне Telegram
+      setIsTelegram(false)
+      setIsReady(true)
     }
   }, [])
 
   return {
     safeAreaInsets,
     isReady,
+    isTelegram,
+    // CSS переменные для использования в стилях
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,
       '--safe-area-right': `${safeAreaInsets.right}px`,

@@ -123,6 +123,17 @@ export default function Home() {
                   🧪 ТЕСТ SAFE AREA
               </Button>
             )}
+            
+            {/* Тестовая кнопка для устройства */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button
+                variant="outline"
+                className="w-full bg-green-500 text-white font-bold uppercase border-3 !border-green-700"
+                onClick={() => router.push('/device-test')}
+              >
+                  💻 ТЕСТ УСТРОЙСТВА
+              </Button>
+            )}
             <Button
               variant="outline"
               className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"

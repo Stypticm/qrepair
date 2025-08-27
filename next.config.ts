@@ -1,40 +1,18 @@
 import type { NextConfig } from 'next'
 
-// Определяем домен Supabase из переменных окружения,
-// чтобы картинки оставались доступными между окружениями
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-let supabaseHost: string | undefined
-try {
-  if (supabaseUrl) {
-    supabaseHost = new URL(supabaseUrl).host
-  }
-} catch {}
-
 const nextConfig: NextConfig = {
   // Оптимизация производительности
   experimental: {
-    optimizeCss: true, // Оптимизация CSS
+    // Убираем optimizeCss - вызывает проблемы с critters
+    // optimizeCss: true,
     optimizePackageImports: [
       '@telegram-apps/telegram-ui',
       '@radix-ui/react-dialog',
-    ], // Оптимизация импортов пакетов
+    ],
   },
 
   // Оптимизация изображений
   images: {
-    // Разрешаем как конкретные домены, так и шаблон для Supabase
-    domains: [
-      'aygvejwrrifuhbkbivoa.supabase.co',
-      ...(supabaseHost ? [supabaseHost] : []),
-    ],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-        pathname: '/storage/v1/object/public/**',
-      },
-    ],
-    // DEV/TELEGRAM: отключаем оптимизацию изображений, чтобы избежать проблем в webview Telegram
     // PROD: можно убрать, если оптимизация критична
     unoptimized: true,
 
@@ -45,12 +23,11 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Оптимизация компиляции
-  swcMinify: true,
+  // Убираем swcMinify - устарел в Next.js 15
+  // swcMinify: true,
 
   // Оптимизация бандла
   webpack: (config, { dev, isServer }) => {
-    // Оптимизация для production
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -77,23 +54,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-        ],
-      },
-      {
         source: '/api/(.*)',
         headers: [
           {
@@ -116,6 +76,10 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+
+  // Отключаем автоматическую генерацию 404 страницы
+  // чтобы избежать ошибки prerendering
+  trailingSlash: false,
 }
 
 export default nextConfig

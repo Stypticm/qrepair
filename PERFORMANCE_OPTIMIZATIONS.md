@@ -108,6 +108,19 @@ experimental: {
 - **Tree shaking** - удаление неиспользуемого кода
 - **Bundle splitting** - разделение больших пакетов
 
+## ⚠️ **Важные замечания по совместимости**
+
+### Next.js 15 изменения:
+- **`swcMinify` устарел** - убран из конфигурации
+- **`optimizeCss` вызывает проблемы** с модулем `critters` - отключен
+- **Добавлена кастомная 404 страница** для избежания ошибок prerendering
+
+### Решенные проблемы Vercel:
+- ✅ Убраны устаревшие опции
+- ✅ Отключена проблемная CSS оптимизация
+- ✅ Добавлена кастомная 404 страница
+- ✅ Упрощена конфигурация для стабильности
+
 ## 📈 **Метрики производительности**
 
 ### Core Web Vitals
@@ -251,6 +264,8 @@ webpack: (config) => {
 - [x] Webpack настроен
 - [x] HTTP заголовки оптимизированы
 - [x] Package imports оптимизированы
+- [x] Совместимость с Next.js 15
+- [x] Проблемы Vercel решены
 - [ ] Service Worker добавлен
 - [ ] Preload критических ресурсов
 - [ ] Intersection Observer для ленивой загрузки
@@ -289,3 +304,4 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 - [Lighthouse](https://developers.google.com/web/tools/lighthouse)
 - [Bundle Analyzer](https://www.npmjs.com/package/@next/bundle-analyzer)
 - [React Performance](https://reactjs.org/docs/optimizing-performance.html)
+- [Next.js 15 Migration Guide](https://nextjs.org/docs/upgrading)
