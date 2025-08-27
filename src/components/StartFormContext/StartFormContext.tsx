@@ -16,7 +16,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [modelname, setModel] = useState<string>('Apple iPhone 11');
     const [comment, setComment] = useState<string>('');
     const [imei, setImei] = useState<string | null>(null);
-    const [answers, setAnswers] = useState<number[]>(new Array(8).fill(0));
+    const [answers, setAnswers] = useState<number[]>([]);
     const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(false);
     const [price, setPrice] = useState<number | null>(null);
     const [onNext, setOnNext] = useState<(() => Promise<void>) | undefined>(undefined);

@@ -38,11 +38,8 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   return (
     <section
-      className="w-full flex flex-col flex-1"
-      style={{
-        ...cssVars,
-        minHeight: '100vh', // Гарантируем минимальную высоту
-      }}
+      className="w-full flex flex-col"
+      style={cssVars as React.CSSProperties}
     >
       {children}
     </section>

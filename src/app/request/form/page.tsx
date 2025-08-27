@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const deviceCatalog = {
@@ -30,28 +29,26 @@ export default function FormPage() {
     };
 
     return (
-        <div className="w-full">
-            <div className="flex flex-col items-center justify-center w-full px-4">
-                <div className="w-full max-w-md">
-                    <Select value={localModel} onValueChange={handleModelChange}>
-                        <SelectTrigger className="w-full !border-slate-700 border-3 !text-black">
-                            <SelectValue className='!text-black' placeholder="Выберите модель" />
-                        </SelectTrigger>
-                        <SelectContent className="z-[9999] bg-white border-2 border-gray-300 shadow-2xl rounded-lg">
-                            <SelectGroup className='text-black'>
-                                {
-                                    Object.entries(deviceCatalog).map(([key, value]) => (
-                                        <SelectItem key={key} value={key} className="hover:bg-gray-100 focus:bg-gray-100 cursor-pointer">
-                                            <span className='!text-black font-bold'>{value.name}</span>
-                                        </SelectItem>
-                                    ))
-                                }
-                            </SelectGroup>
-                        </SelectContent>
-                    </Select>
-                </div>
+        <Page back={true}>
+            <div className="w-full flex flex-col items-center justify-center">
+                <Select value={localModel} onValueChange={handleModelChange}>
+                    <SelectTrigger className="border-2 border-gray-300 bg-white !text-black w-full">
+                        <SelectValue placeholder="Выберите модель" className="!text-black" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-2 border-gray-300 shadow-lg rounded-lg">
+                        <SelectGroup>
+                            {
+                                Object.entries(deviceCatalog).map(([key, value]) => (
+                                    <SelectItem key={key} value={key} className="hover:bg-gray-100 text-black">
+                                        {value.name}
+                                    </SelectItem>
+                                ))
+                            }
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
             </div>
-        </div>
+        </Page>
     );
 }
 

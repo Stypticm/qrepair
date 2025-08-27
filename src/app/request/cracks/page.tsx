@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
+import { Page } from '@/components/Page';
 
 // Трещины на экране
 const screenCracks = {
@@ -29,61 +30,76 @@ export default function CracksPage() {
 
     useEffect(() => {
         if (answers && answers.length > 1) {
-            setLocalAnswer(String(answers[1] || ''));
+            // Проверяем, что значение существует
+            const currentAnswer = answers[1];
+            if (currentAnswer !== undefined && currentAnswer !== null) {
+                setLocalAnswer(String(currentAnswer));
+            } else {
+                setLocalAnswer('');
+            }
+        } else {
+            setLocalAnswer('');
         }
     }, [answers]);
 
     const handleSelect = (value: string) => {
         setLocalAnswer(value);
+        // Сохраняем текущий ответ, не теряя предыдущие
         const newAnswers = [...(answers || [])];
         newAnswers[1] = parseInt(value);
         setAnswers(newAnswers);
     };
 
-    const isNextDisabled = !localAnswer;
+    const isNextDisabled = localAnswer === '';
 
     return (
-        <div className="w-full">
-            <div className="flex flex-col items-center justify-center w-full px-4">
-                <div className="w-full max-w-md">
-                    {screenCracks.image && (
-                        <div className="flex justify-center mb-6">
-                            <Image
-                                src={getPictureUrl(screenCracks.image)}
-                                alt={screenCracks.defect}
-                                width={200}
-                                height={150}
-                                className="rounded-lg shadow-md"
-                            />
-                        </div>
-                    )}
-
-                    <RadioGroup value={localAnswer} onValueChange={handleSelect} className="space-y-3 w-full">
-                        {screenCracks.levels.map((level) => (
-                            <div key={level.value} className="flex items-center space-x-3 w-full">
-                                <RadioGroupItem value={level.value} id={`level-${level.value}`} />
-                                <Label 
-                                    htmlFor={`level-${level.value}`} 
-                                    className={cn(
-                                        "flex-1 cursor-pointer p-4 rounded-lg border-2 transition-all duration-200 w-full",
-                                        localAnswer === level.value 
-                                            ? "border-blue-500 bg-blue-50" 
-                                            : "border-gray-200 hover:border-gray-300",
-                                        level.color
-                                    )}
-                                >
-                                    <div className="flex justify-between items-center w-full">
-                                        <span className="font-medium">{level.label}</span>
-                                        <span className="text-sm font-bold">
-                                            {level.penalty > 0 ? `-${level.penalty}%` : '0%'}
-                                        </span>
-                                    </div>
-                                </Label>
+        <Page back={true}>
+            <div className="w-full">
+                <div className="flex flex-col items-center justify-center w-full px-4">
+                    <div className="w-full max-w-md">
+                        {screenCracks.image && (
+                            <div className="flex justify-center mb-6">
+                                <Image
+                                    src={getPictureUrl(screenCracks.image)}
+                                    alt={screenCracks.defect}
+                                    width={200}
+                                    height={150}
+                                    className="rounded-lg shadow-md"
+                                />
                             </div>
-                        ))}
-                    </RadioGroup>
+                        )}
+
+                        <RadioGroup value={localAnswer} onValueChange={handleSelect} className="space-y-3 w-full">
+                            {screenCracks.levels.map((level) => {
+                                const isSelected = localAnswer === level.value;
+                                
+                                return (
+                                    <div key={level.value} className="flex items-center space-x-3 w-full">
+                                        <RadioGroupItem value={level.value} id={`level-${level.value}`} />
+                                        <Label 
+                                            htmlFor={`level-${level.value}`} 
+                                            className={cn(
+                                                "flex-1 cursor-pointer p-4 rounded-lg border-2 transition-all duration-200 w-full",
+                                                isSelected
+                                                    ? "border-blue-500 bg-blue-50 shadow-md" 
+                                                    : "border-gray-200 hover:border-gray-300",
+                                                level.color
+                                            )}
+                                        >
+                                            <div className="flex justify-between items-center w-full">
+                                                <span className="font-medium">{level.label}</span>
+                                                <span className="text-sm font-bold">
+                                                    {level.penalty > 0 ? `-${level.penalty}%` : '0%'}
+                                                </span>
+                                            </div>
+                                        </Label>
+                                    </div>
+                                );
+                            })}
+                        </RadioGroup>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Page>
     );
 }
