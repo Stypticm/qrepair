@@ -9,7 +9,6 @@ import { Page } from '@/components/Page';
 import tonSvg from './_assets/ton.svg';
 import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
-import MainButtons from '@/components/MainButtons/MainButtons';
 import Footer from '@/components/Footer/Footer';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
@@ -73,7 +72,7 @@ export default function Home() {
   }, [telegramId])
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f7e8cf]">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f9ecb8]">
       <div className="w-full max-w-md mx-auto text-center space-y-4">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-black mb-2">
@@ -96,21 +95,21 @@ export default function Home() {
           <div className="flex flex-col gap-2 w-full">
             <Button
               variant="outline"
-              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/request/choose')}
             >
               ✅ ОЦЕНИТЬ СМАРТФОН
             </Button>
             <Button
               variant="outline"
-              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/my-devices')}
             >
               📋 МОИ УСТРОЙСТВА
             </Button>
             <Button
               variant="outline"
-              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/learn-more')}
             >
               📦 КАК ЭТО РАБОТАЕТ?
@@ -139,7 +138,7 @@ export default function Home() {
             )}
             <Button
               variant="outline"
-              className="w-full bg-[#f7e8cf] text-black font-bold uppercase border-3 !border-slate-700"
+              className="w-full bg-[#f9ecb8] text-black font-bold uppercase border-3 !border-slate-700"
               onClick={() => router.push('/questions')}
             >
               ❓ ЧАСТЫЕ ВОПРОСЫ
@@ -162,11 +161,6 @@ export default function Home() {
             </Button>
           )}
         </div>
-
-        {/* Ленивая загрузка компонентов */}
-        <Suspense fallback={<LoadingSpinner />}>
-          <MainButtons path="/request/choose" />
-        </Suspense>
       </div>
     </div>
   );

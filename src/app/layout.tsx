@@ -17,27 +17,25 @@ const comicNeue = Comic_Neue({
   preload: true,   // Предзагружает шрифт
 });
 
-export default function RootLayout({ children }: PropsWithChildren) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" suppressHydrationWarning className="h-full overflow-hidden">
+    <html lang="en">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-        <meta name="description" content="QtweRepair - быстрый выкуп смартфонов" />
-        <meta name="theme-color" content="#17212b" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="description" content="QRepair - Выкуп смартфонов" />
+        <meta name="theme-color" content="#f9ecb8" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>
-      <body className={`${comicNeue.className} antialiased w-full flex flex-col overflow-hidden`}>
-        <I18nProvider>
-          <Root>
-            <StartFormProvider>
-              <ClientLayoutContent>
-                {children}
-              </ClientLayoutContent>
-            </StartFormProvider>
-          </Root>
-        </I18nProvider>
+      <body>
+        <Root>
+          <ClientLayoutContent>{children}</ClientLayoutContent>
+        </Root>
       </body>
     </html>
-  );
+  )
 }

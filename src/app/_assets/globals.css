@@ -7,6 +7,7 @@
   --safe-area-right: 0px;
   --safe-area-bottom: 0px;
   --safe-area-left: 0px;
+  --main-bg-color: #f9ecb8; /* Основной цвет фона */
 }
 
 /* iOS Safari поддержка */
@@ -19,11 +20,28 @@
   }
 }
 
+/* Основные стили */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  overflow: hidden; /* Предотвращаем скролл на уровне HTML */
+}
+
 body {
-  background: #f7e8cf; /* Возвращаем старый желтоватый фон */
+  background: var(--main-bg-color); /* Используем CSS переменную */
   min-height: 100vh;
+  height: 100vh; /* Фиксированная высота */
   margin: 0;
   padding: 0;
+  overflow: hidden; /* Предотвращаем скролл на уровне body */
+  -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
+  position: fixed; /* Фиксируем позицию как в BotFather */
+  width: 100%;
+  top: 0;
+  left: 0;
 }
 
 /* Фиксированный размер для PC */
@@ -33,20 +51,36 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: #f7e8cf; /* Фон остается желтоватым */
+    height: auto;
+    background: var(--main-bg-color);
+    position: static; /* Возвращаем нормальное позиционирование на PC */
+    overflow: auto;
   }
   
   #__next {
     width: 100%;
-    max-width: 480px; /* Фиксированная ширина как в Telegram */
-    height: 100vh;
-    max-height: 800px; /* Максимальная высота */
+    max-width: 480px; /* Фиксированная ширина как в BotFather */
+    height: auto;
+    min-height: 600px;
+    max-height: 90vh;
     margin: 0 auto;
     border-radius: 12px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    background: #f7e8cf; /* Фон внутри окна тоже желтоватый */
+    background: var(--main-bg-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
+}
+
+/* Telegram WebApp специфичные стили */
+.telegram-webapp {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
 }
 
 /* Safe Area утилиты */
@@ -70,11 +104,16 @@ body {
   padding: calc(var(--safe-area-top) + 1rem) calc(var(--safe-area-right) + 1rem) calc(var(--safe-area-bottom) + 1rem) calc(var(--safe-area-left) + 1rem) !important;
 }
 
-/* Fullscreen стили */
+/* Fullscreen стили как в BotFather */
 .fullscreen {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .fullscreen-safe {
@@ -85,4 +124,35 @@ body {
   padding-left: var(--safe-area-left);
   padding-right: var(--safe-area-right);
   overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Плавные переходы */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Улучшенные кнопки как в BotFather */
+.btn-telegram {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.btn-telegram:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-telegram:active {
+  transform: translateY(0);
 }

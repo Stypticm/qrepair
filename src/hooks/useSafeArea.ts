@@ -20,6 +20,10 @@ export function useSafeArea() {
 
   const [isReady, setIsReady] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    'light'
+  )
+  const [isExpanded, setIsExpanded] = useState(false)
 
   useEffect(() => {
     if (
@@ -29,15 +33,34 @@ export function useSafeArea() {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
-      // Инициализация и расширение
+      // Инициализация и расширение как в BotFather
       const setup = () => {
         try {
+          // Основные настройки
           webApp.ready()
+
+          // Расширяем на весь экран как в BotFather
           webApp.expand()
+
+          // Включаем подтверждение закрытия
+          if (webApp.enableClosingConfirmation) {
+            webApp.enableClosingConfirmation()
+          }
+
+          // Получаем тему
+          if (webApp.colorScheme) {
+            setTheme(webApp.colorScheme)
+          }
+
+          // Проверяем статус расширения
+          if (webApp.isExpanded !== undefined) {
+            setIsExpanded(webApp.isExpanded)
+          }
+
           updateSafeArea()
           setIsReady(true)
           console.log(
-            'Telegram WebApp initialized successfully'
+            'Telegram WebApp initialized successfully like BotFather'
           )
         } catch (error) {
           console.error(
@@ -84,6 +107,15 @@ export function useSafeArea() {
         webApp.onEvent('viewport_changed', updateSafeArea)
       }
 
+      // Обработчик изменения темы
+      if (webApp.onEvent) {
+        webApp.onEvent('theme_changed', () => {
+          if (webApp.colorScheme) {
+            setTheme(webApp.colorScheme)
+          }
+        })
+      }
+
       // Очистка при размонтировании
       return () => {
         if (webApp.offViewportChanged)
@@ -93,6 +125,8 @@ export function useSafeArea() {
             'viewport_changed',
             updateSafeArea
           )
+        if (webApp.offEvent)
+          webApp.offEvent('theme_changed', () => {})
       }
     } else {
       // Не в Telegram - показываем приложение сразу
@@ -108,6 +142,8 @@ export function useSafeArea() {
     safeAreaInsets,
     isReady,
     isTelegram,
+    theme,
+    isExpanded,
     // CSS переменные для использования в стилях
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,
