@@ -140,7 +140,7 @@ export default function DisplayScratchesPage() {
                                         )}
                                         
                                         {/* Галочка в углу выбранного элемента */}
-                                        {isSelected && checkmarkPosition === 'element' && (
+                                        {isSelected && (
                                             <div className="absolute top-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
                                                 <span className="text-white text-base font-bold">✓</span>
                                             </div>
