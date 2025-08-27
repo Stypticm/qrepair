@@ -83,18 +83,12 @@ export async function init(options: {
     })
   }
 
-  // Настройка Telegram WebApp для fullscreen режима
+  // Настройка CSS переменных для safe area (без вызовов ready/expand)
   if (
     typeof window !== 'undefined' &&
     window.Telegram?.WebApp
   ) {
     const webApp = window.Telegram.WebApp
-
-    // Уведомляем Telegram о готовности приложения
-    webApp.ready()
-
-    // Расширяем приложение на весь экран
-    webApp.expand()
 
     // Настраиваем обработчики для safe area
     if (webApp.onViewportChanged) {

@@ -27,11 +27,46 @@ export function useSafeArea() {
 
       // Функция для обновления safe area
       const updateSafeArea = () => {
-        if (webApp.safeAreaInsets) {
-          setSafeAreaInsets(webApp.safeAreaInsets)
-        } else if (webApp.safeArea) {
-          setSafeAreaInsets(webApp.safeArea)
+        let newInsets = {
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
         }
+
+        // Приоритет safeAreaInsets (новый API)
+        if (webApp.safeAreaInsets) {
+          newInsets = webApp.safeAreaInsets
+          console.log('Using safeAreaInsets:', newInsets)
+        }
+        // Fallback на safeArea (старый API)
+        else if (webApp.safeArea) {
+          newInsets = webApp.safeArea
+          console.log('Using safeArea:', newInsets)
+        }
+
+        // Для iOS добавляем дополнительный отступ сверху если нужно
+        if (
+          webApp.platform === 'ios' &&
+          newInsets.top === 0
+        ) {
+          // Примерные значения для разных устройств iOS
+          const isIPhoneX = window.innerHeight >= 812
+          const isIPhone12Plus = window.innerHeight >= 844
+          const isIPhone14Plus = window.innerHeight >= 926
+
+          if (isIPhone14Plus) newInsets.top = 59
+          else if (isIPhone12Plus) newInsets.top = 47
+          else if (isIPhoneX) newInsets.top = 44
+
+          console.log(
+            'iOS device detected, added top inset:',
+            newInsets.top
+          )
+        }
+
+        setSafeAreaInsets(newInsets)
+        console.log('Final safe area insets:', newInsets)
       }
 
       // Функция для настройки fullscreen режима
@@ -54,6 +89,9 @@ export function useSafeArea() {
       // Слушаем изменения safe area
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged(() => {
+          console.log(
+            'Viewport changed, updating safe area'
+          )
           updateSafeArea()
         })
       }
@@ -61,6 +99,9 @@ export function useSafeArea() {
       // Слушаем изменения safe area (альтернативный способ)
       if (webApp.onEvent) {
         webApp.onEvent('viewport_changed', () => {
+          console.log(
+            'Viewport changed event, updating safe area'
+          )
           updateSafeArea()
         })
       }

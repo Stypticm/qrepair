@@ -110,6 +110,17 @@ export default function Home() {
             >
               📦 КАК ЭТО РАБОТАЕТ?
             </Button>
+            
+            {/* Тестовая кнопка для разработки */}
+            {process.env.NODE_ENV === 'development' && (
+              <Button
+                variant="outline"
+                className="w-full bg-red-500 text-white font-bold uppercase border-3 !border-red-700"
+                onClick={() => router.push('/safe-area-test')}
+              >
+                  🧪 ТЕСТ SAFE AREA
+              </Button>
+            )}
             <Button
               variant="outline"
               className="w-full bg-background text-black font-bold uppercase border-3 !border-slate-700"

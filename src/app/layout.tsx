@@ -1,6 +1,7 @@
 'use client';
 
 import type { PropsWithChildren } from 'react';
+import { useEffect } from 'react';
 
 import { Root } from '@/components/Root/Root';
 import { I18nProvider } from '@/core/i18n/provider';
@@ -20,20 +21,38 @@ const comicNeue = Comic_Neue({
 });
 
 function LayoutContent({ children }: PropsWithChildren) {
-  const { safeAreaInsets, cssVars } = useSafeArea();
+  const { safeAreaInsets } = useSafeArea();
+
+  // Отладочная информация
+  useEffect(() => {
+    console.log('Layout - Safe Area Insets:', safeAreaInsets);
+    
+    if (window.Telegram?.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      console.log('Layout - Platform:', webApp.platform);
+      console.log('Layout - Safe Area Insets:', webApp.safeAreaInsets);
+      console.log('Layout - Safe Area:', webApp.safeArea);
+      console.log('Layout - Viewport Height:', webApp.viewportHeight);
+      console.log('Layout - Is Expanded:', webApp.isExpanded);
+    }
+  }, [safeAreaInsets]);
 
   return (
-    <div 
-      className="min-h-screen w-full flex flex-col"
-      style={cssVars as React.CSSProperties}
-    >
+    <div className="min-h-screen w-full flex flex-col">
+      {/* Отладочная информация */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed top-0 right-0 bg-blue-500 text-white text-xs p-1 z-50">
+          Layout: T:{safeAreaInsets.top} R:{safeAreaInsets.right} B:{safeAreaInsets.bottom} L:{safeAreaInsets.left}
+        </div>
+      )}
+      
       <main 
         className="flex-1 w-full max-w-full md:max-w-[800px] overflow-auto md:mx-auto md:my-4 md:max-h-[600px]"
         style={{
-          paddingTop: `calc(env(safe-area-inset-top) + ${safeAreaInsets.top}px)`,
-          paddingBottom: `calc(env(safe-area-inset-bottom) + ${safeAreaInsets.bottom}px)`,
-          paddingLeft: `calc(env(safe-area-inset-left) + ${safeAreaInsets.left}px)`,
-          paddingRight: `calc(env(safe-area-inset-right) + ${safeAreaInsets.right}px)`,
+          paddingTop: `${safeAreaInsets.top}px`,
+          paddingBottom: `${safeAreaInsets.bottom}px`,
+          paddingLeft: `${safeAreaInsets.left}px`,
+          paddingRight: `${safeAreaInsets.right}px`,
         }}
       >
         {children}
