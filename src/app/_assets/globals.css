@@ -75,8 +75,39 @@ body {
   }
 }
 
-/* Telegram WebApp - полный экран */
-@media (max-width: 1023px) {
+/* Мобильные устройства - фиксированный размер как раньше */
+@media (max-width: 1023px) and (min-width: 320px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    height: auto;
+    background: var(--main-bg-color);
+    position: static;
+    overflow: auto;
+  }
+  
+  #__next {
+    width: 100%;
+    max-width: 480px; /* Фиксированная ширина для мобильных */
+    height: auto;
+    min-height: 600px;
+    max-height: 90vh;
+    margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background: var(--main-bg-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Только для очень маленьких экранов (например, старые телефоны) */
+@media (max-width: 319px) {
   body {
     position: fixed;
     top: 0;

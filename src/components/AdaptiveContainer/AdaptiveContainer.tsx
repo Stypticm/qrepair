@@ -32,20 +32,20 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Определяем стили в зависимости от контекста
   const getContainerStyles = () => {
     if (!isTelegram) {
-      // Браузер режим
+      // Браузер режим (PC или мобильный)
       if (isDesktop) {
-        // Desktop - центрируем и ограничиваем размер как было раньше
+        // Desktop - центрируем и ограничиваем размер
         return {
           container: "min-h-screen w-full flex flex-col bg-[#f9ecb8] items-center justify-center",
           main: "flex-1 w-full max-w-md mx-auto p-6 shadow-lg bg-[#f9ecb8] rounded-lg my-8",
           wrapper: "w-full max-w-md mx-auto"
         };
       } else if (isMobile) {
-        // Mobile браузер - полный экран
+        // Mobile браузер - фиксированный размер как раньше
         return {
-          container: "min-h-screen w-full flex flex-col bg-[#f9ecb8]",
-          main: "flex-1 w-full p-4",
-          wrapper: "w-full"
+          container: "min-h-screen w-full flex flex-col bg-[#f9ecb8] items-center justify-center",
+          main: "flex-1 w-full max-w-md mx-auto p-6 shadow-lg bg-[#f9ecb8] rounded-lg my-8",
+          wrapper: "w-full max-w-md mx-auto"
         };
       }
     }
