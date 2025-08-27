@@ -132,6 +132,14 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html,
+  body,
+  #__next {
+    height: 100%;
+    overflow: auto;
+    /* Временная замена */
+  }
+
   /* Разрешить выделение текста в формах */
   input,
   textarea,

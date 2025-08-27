@@ -15,6 +15,8 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
 import { getPictureUrl } from '@/core/lib/assets';
 import { useRouter } from 'next/navigation';
+import { Suspense } from 'react';
+import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
 
 export default function Home() {
   const { telegramId, setModel } = useStartForm();
@@ -147,9 +149,10 @@ export default function Home() {
           )}
         </div>
 
-        {/* <div className="p-2">
-            <MainButtons path={path} />
-            </div> */}
+        {/* Ленивая загрузка компонентов */}
+        <Suspense fallback={<LoadingSpinner />}>
+          <MainButtons path="/request/choose" />
+        </Suspense>
         {/* <Link href="/init-data">Init data</Link> */}
         {/* <div className="flex-1 flex items-center justify-center">
             <Link
