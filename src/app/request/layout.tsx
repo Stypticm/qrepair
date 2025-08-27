@@ -25,12 +25,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         };
       case '/request/display_cracks':
         return {
-          nextPath: '/request/cracks',
-          isNextDisabled: !answers || answers.length < 2 || answers[1] === undefined || answers[1] === null,
-          text: 'Далее'
-        };
-      case '/request/cracks':
-        return {
           nextPath: '/request/submit',
           isNextDisabled: !answers || answers.length < 2 || answers[1] === undefined || answers[1] === null,
           text: 'Далее'
