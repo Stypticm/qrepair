@@ -8,9 +8,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const { modelname, answers } = useStartForm();
 
-  // Временная отладка
-  console.log('Layout render:', { path, modelname, answers });
-
   // Определяем настройки кнопки в зависимости от страницы
   const getButtonConfig = () => {
     switch (path) {
@@ -53,7 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
       {/* Заголовок - только для страниц формы */}
       {path !== '/request/choose' && (
-        <div className="text-center py-6 flex-shrink-0">
+        <div className="text-center py-6">
           <h1 className="text-3xl font-extrabold uppercase text-black">
             Создание<br /> заявки
           </h1>
@@ -82,23 +79,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Основной контент и кнопка в одном контейнере */}
-      <div className="flex-1 flex flex-col">
-        {/* Контент страницы */}
-        <div className="flex flex-col items-center justify-start p-4 flex-1">
-          {children}
-        </div>
-
-        {/* Кнопка внизу - только для страниц формы */}
-        {path !== '/request/submit' && path !== '/request/choose' && (
-          <div className="p-4 flex-shrink-0">
-            <FooterButton 
-              nextPath={buttonConfig.nextPath}
-              isNextDisabled={buttonConfig.isNextDisabled}
-            />
-          </div>
-        )}
+      {/* Основной контент */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        {children}
       </div>
+
+      {/* Кнопка внизу - только для страниц формы */}
+      {path !== '/request/submit' && path !== '/request/choose' && (
+        <div className="p-4 relative z-50">
+
+          <FooterButton 
+            nextPath={buttonConfig.nextPath}
+            isNextDisabled={buttonConfig.isNextDisabled}
+          />
+        </div>
+      )}
     </div>
   );
 }
