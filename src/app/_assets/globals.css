@@ -1,10 +1,7 @@
-body {
-  background: var(--tg-theme-secondary-bg-color, '#f7e8cf');
-  padding: 0;
-  margin: 0;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Safe Area переменные */
 :root {
   --safe-area-top: 0px;
   --safe-area-right: 0px;
@@ -12,8 +9,8 @@ body {
   --safe-area-left: 0px;
 }
 
-/* Поддержка env() для safe area (iOS Safari) */
-@supports (padding-top: env(safe-area-inset-top)) {
+/* iOS Safari поддержка */
+@supports (padding: env(safe-area-inset-top)) {
   :root {
     --safe-area-top: env(safe-area-inset-top);
     --safe-area-right: env(safe-area-inset-right);
@@ -22,43 +19,47 @@ body {
   }
 }
 
-/* Применение safe area отступов */
+body {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 25%, #f59e0b 50%, #d97706 75%, #b45309 100%);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Safe Area утилиты */
 .safe-area-top {
-  padding-top: var(--safe-area-top) !important;
+  padding-top: calc(var(--safe-area-top) + 1rem) !important;
 }
 
 .safe-area-bottom {
-  padding-bottom: var(--safe-area-bottom) !important;
+  padding-bottom: calc(var(--safe-area-bottom) + 1rem) !important;
 }
 
 .safe-area-left {
-  padding-left: var(--safe-area-left) !important;
+  padding-left: calc(var(--safe-area-left) + 1rem) !important;
 }
 
 .safe-area-right {
-  padding-right: var(--safe-area-right) !important;
+  padding-right: calc(var(--safe-area-right) + 1rem) !important;
 }
 
 .safe-area-all {
-  padding: var(--safe-area-top) var(--safe-area-right) var(--safe-area-bottom) var(--safe-area-left) !important;
+  padding: calc(var(--safe-area-top) + 1rem) calc(var(--safe-area-right) + 1rem) calc(var(--safe-area-bottom) + 1rem) calc(var(--safe-area-left) + 1rem) !important;
 }
 
-/* Fullscreen режим */
+/* Fullscreen стили */
 .fullscreen {
-  position: fixed;
-  top: 0;
-  left: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
 }
 
-/* Учет safe area в fullscreen */
 .fullscreen-safe {
-  position: fixed;
-  top: var(--safe-area-top);
-  left: var(--safe-area-left);
-  right: var(--safe-area-right);
-  bottom: var(--safe-area-bottom);
+  width: 100vw;
+  height: 100vh;
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
   overflow: hidden;
 }

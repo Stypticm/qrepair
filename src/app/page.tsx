@@ -112,7 +112,7 @@ export default function Home() {
             >
               📦 КАК ЭТО РАБОТАЕТ?
             </Button>
-            
+
             {/* Тестовая кнопка для разработки */}
             {process.env.NODE_ENV === 'development' && (
               <Button
@@ -120,10 +120,10 @@ export default function Home() {
                 className="w-full bg-red-500 text-white font-bold uppercase border-3 !border-red-700"
                 onClick={() => router.push('/safe-area-test')}
               >
-                  🧪 ТЕСТ SAFE AREA
+                🧪 ТЕСТ SAFE AREA
               </Button>
             )}
-            
+
             {/* Тестовая кнопка для устройства */}
             {process.env.NODE_ENV === 'development' && (
               <Button
@@ -131,7 +131,7 @@ export default function Home() {
                 className="w-full bg-green-500 text-white font-bold uppercase border-3 !border-green-700"
                 onClick={() => router.push('/device-test')}
               >
-                  💻 ТЕСТ УСТРОЙСТВА
+                💻 ТЕСТ УСТРОЙСТВА
               </Button>
             )}
             <Button
@@ -159,11 +159,6 @@ export default function Home() {
             </Button>
           )}
         </div>
-
-        {/* Ленивая загрузка компонентов */}
-        <Suspense fallback={<LoadingSpinner />}>
-          <MainButtons path="/request/choose" />
-        </Suspense>
         {/* <Link href="/init-data">Init data</Link> */}
         {/* <div className="flex-1 flex items-center justify-center">
             <Link

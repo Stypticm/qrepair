@@ -11,7 +11,7 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 
 const Header = () => {
     const { telegramId, username, userPhotoUrl } = useStartForm();
-    const { safeAreaInsets, isReady } = useSafeArea();
+    const { safeAreaInsets, isReady, isTelegram } = useSafeArea();
 
     // Отладочная информация
     useEffect(() => {
@@ -29,58 +29,42 @@ const Header = () => {
     }, [safeAreaInsets, isReady]);
 
     return (
-        <SafeAreaWrapper padding="top">
-            <section className="p-2 flex items-center justify-between">
-                {/* Отладочная информация */}
-                {process.env.NODE_ENV === 'development' && (
-                    <div className="absolute top-0 left-0 bg-red-500 text-white text-xs p-1 z-50">
-                        Top: {safeAreaInsets.top}px | Ready: {isReady ? 'Y' : 'N'}
-                    </div>
+        <SafeAreaWrapper padding="top" className="bg-background border-b border-border">
+            <section className="container mx-auto px-4 py-3 flex items-center justify-between">
+                {/* Дополнительный отступ сверху для Telegram */}
+                {isTelegram && (
+                    <div 
+                        className="absolute top-0 left-0 w-full bg-transparent" 
+                        style={{ 
+                            height: `${Math.max(safeAreaInsets.top, 20)}px`,
+                            minHeight: '20px'
+                        }}
+                    />
                 )}
                 
-                <article className="p-2 bg-slate-700 border border-slate-700 rounded-md">
-                    <Link href="/">
-                        <span className="text-6xl text-slate-100 font-extrabold">
-                            Q
-                        </span>
-                    </Link>
-                </article>
-                <section className='border border-slate-700 rounded-md'>
-                    <Link href="/profile" className='flex items-center justify-center'>
-                        <section className="flex flex-col items-center">
-                            <Link href="/profile">
-                                <span className="text-2xl font-bold text-slate-100">
-                                    {username}
-                                </span>
-                            </Link>
-                            <p className="text-2xl font-bold text-slate-100">
-                                ID:
-                                <span className="text-xl font-bold text-slate-100 p-2">
-                                    {telegramId}
-                                </span>
-                            </p>
-                        </section>
-                        {
-                            userPhotoUrl ? (
-                                <Image
-                                    src={userPhotoUrl}
-                                    className="w-12 h-12 rounded-full"
-                                    alt="User photo"
-                                    width={48}
-                                    height={48}
-                                />
-                            ) : (
-                                <Image
-                                    src={getPictureUrl('banan.gif') || '/banan.gif'}
-                                    alt="Banan"
-                                    width={400}
-                                    height={300}
-                                    className="w-16 h-16 rounded-full"
-                                />
-                            )
-                        }
-                    </Link>
-                </section>
+                <div className="flex items-center space-x-2">
+                    <Image
+                        src="/vercel.svg"
+                        alt="Logo"
+                        width={24}
+                        height={24}
+                        className="w-6 h-6"
+                    />
+                    <span className="font-bold text-lg">QRepair</span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">{username || 'User'}</span>
+                    {userPhotoUrl && (
+                        <Image
+                            src={userPhotoUrl}
+                            alt="User"
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-full"
+                        />
+                    )}
+                </div>
             </section>
         </SafeAreaWrapper>
     );

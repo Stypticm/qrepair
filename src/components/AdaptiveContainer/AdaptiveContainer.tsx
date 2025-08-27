@@ -9,7 +9,7 @@ interface AdaptiveContainerProps {
 }
 
 export function AdaptiveContainer({ children, className = '' }: AdaptiveContainerProps) {
-  const { isTelegram, isReady } = useSafeArea();
+  const { isTelegram, isReady, safeAreaInsets } = useSafeArea();
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -50,7 +50,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       }
     }
     
-    // Telegram режим - используем стандартные стили
+    // Telegram режим - используем стандартные стили с дополнительным отступом сверху
     return {
       container: "min-h-screen w-full flex flex-col",
       main: "flex-1 w-full max-w-full md:max-w-[800px] overflow-auto md:mx-auto md:my-4 md:max-h-[600px]",
@@ -84,6 +84,17 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
           <div>Device: {isMobile ? 'Mobile' : isDesktop ? 'Desktop' : 'Unknown'}</div>
           <div>Ready: {isReady ? 'Yes' : 'No'}</div>
         </div>
+      )}
+      
+      {/* Дополнительный отступ сверху для Telegram */}
+      {isTelegram && (
+        <div 
+          className="w-full bg-transparent" 
+          style={{ 
+            height: `${Math.max(safeAreaInsets.top, 20)}px`,
+            minHeight: '20px'
+          }}
+        />
       )}
       
       <div className={styles.wrapper}>
