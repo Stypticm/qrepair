@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 
 interface SafeAreaInsets {
@@ -25,7 +27,15 @@ export function useSafeArea() {
     ) {
       const webApp = window.Telegram.WebApp
 
-      // Функция для обновления safe area
+      // Инициализация и расширение
+      const setup = () => {
+        webApp.ready()
+        webApp.expand()
+        updateSafeArea()
+        setIsReady(true)
+      }
+
+      // Обновление safe area
       const updateSafeArea = () => {
         let newInsets = {
           top: 0,
@@ -45,75 +55,30 @@ export function useSafeArea() {
           console.log('Using safeArea:', newInsets)
         }
 
-        // Для iOS добавляем дополнительный отступ сверху если нужно
-        if (
-          webApp.platform === 'ios' &&
-          newInsets.top === 0
-        ) {
-          // Примерные значения для разных устройств iOS
-          const isIPhoneX = window.innerHeight >= 812
-          const isIPhone12Plus = window.innerHeight >= 844
-          const isIPhone14Plus = window.innerHeight >= 926
-
-          if (isIPhone14Plus) newInsets.top = 59
-          else if (isIPhone12Plus) newInsets.top = 47
-          else if (isIPhoneX) newInsets.top = 44
-
-          console.log(
-            'iOS device detected, added top inset:',
-            newInsets.top
-          )
-        }
-
         setSafeAreaInsets(newInsets)
         console.log('Final safe area insets:', newInsets)
       }
 
-      // Функция для настройки fullscreen режима
-      const setupFullscreen = () => {
-        // Устанавливаем ready() для уведомления Telegram о готовности приложения
-        webApp.ready()
+      // Настройка при загрузке
+      setup()
 
-        // Расширяем приложение на весь экран
-        webApp.expand()
-
-        // Обновляем safe area
-        updateSafeArea()
-
-        setIsReady(true)
-      }
-
-      // Настраиваем fullscreen при загрузке
-      setupFullscreen()
-
-      // Слушаем изменения safe area
+      // Обработчики изменений
       if (webApp.onViewportChanged) {
-        webApp.onViewportChanged(() => {
-          console.log(
-            'Viewport changed, updating safe area'
-          )
-          updateSafeArea()
-        })
+        webApp.onViewportChanged(updateSafeArea)
       }
-
-      // Слушаем изменения safe area (альтернативный способ)
       if (webApp.onEvent) {
-        webApp.onEvent('viewport_changed', () => {
-          console.log(
-            'Viewport changed event, updating safe area'
-          )
-          updateSafeArea()
-        })
+        webApp.onEvent('viewport_changed', updateSafeArea)
       }
 
       // Очистка при размонтировании
       return () => {
-        if (webApp.offViewportChanged) {
-          webApp.offViewportChanged(() => {})
-        }
-        if (webApp.offEvent) {
-          webApp.offEvent('viewport_changed', () => {})
-        }
+        if (webApp.offViewportChanged)
+          webApp.offViewportChanged(updateSafeArea)
+        if (webApp.offEvent)
+          webApp.offEvent(
+            'viewport_changed',
+            updateSafeArea
+          )
       }
     }
   }, [])
@@ -121,7 +86,6 @@ export function useSafeArea() {
   return {
     safeAreaInsets,
     isReady,
-    // CSS переменные для использования в стилях
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,
       '--safe-area-right': `${safeAreaInsets.right}px`,

@@ -21,39 +21,26 @@ const comicNeue = Comic_Neue({
 });
 
 function LayoutContent({ children }: PropsWithChildren) {
-  const { safeAreaInsets } = useSafeArea();
+  const { safeAreaInsets, isReady, cssVars } = useSafeArea();
 
-  // Отладочная информация
   useEffect(() => {
-    console.log('Layout - Safe Area Insets:', safeAreaInsets);
-    
-    if (window.Telegram?.WebApp) {
-      const webApp = window.Telegram.WebApp;
-      console.log('Layout - Platform:', webApp.platform);
-      console.log('Layout - Safe Area Insets:', webApp.safeAreaInsets);
-      console.log('Layout - Safe Area:', webApp.safeArea);
-      console.log('Layout - Viewport Height:', webApp.viewportHeight);
-      console.log('Layout - Is Expanded:', webApp.isExpanded);
+    if (isReady && window.Telegram?.WebApp) {
+      console.log('Layout - Safe Area Insets:', safeAreaInsets);
+      console.log('Layout - Platform:', window.Telegram.WebApp.platform);
     }
-  }, [safeAreaInsets]);
+  }, [safeAreaInsets, isReady]);
+
+  if (!isReady) return null; // Предотвращаем рендер до готовности
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
-      {/* Отладочная информация */}
+    <div className="min-h-screen w-full flex flex-col" style={cssVars as React.CSSProperties}>
       {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-0 right-0 bg-blue-500 text-white text-xs p-1 z-50">
           Layout: T:{safeAreaInsets.top} R:{safeAreaInsets.right} B:{safeAreaInsets.bottom} L:{safeAreaInsets.left}
         </div>
       )}
-      
-      <main 
+      <main
         className="flex-1 w-full max-w-full md:max-w-[800px] overflow-auto md:mx-auto md:my-4 md:max-h-[600px]"
-        style={{
-          paddingTop: `${safeAreaInsets.top}px`,
-          paddingBottom: `${safeAreaInsets.bottom}px`,
-          paddingLeft: `${safeAreaInsets.left}px`,
-          paddingRight: `${safeAreaInsets.right}px`,
-        }}
       >
         {children}
       </main>
@@ -67,7 +54,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
-      <body className={`${comicNeue.className} antialiased w-full flex flex-col overflow-hidden`}>
+      <body className={`${comicNeue.className} antialiased w-full flex flex-col overflow-hidden`} style={{ padding: 'env(--safe-area-top) env(--safe-area-right) env(--safe-area-bottom) env(--safe-area-left)' }}>
         <I18nProvider>
           <Root>
             <StartFormProvider>
