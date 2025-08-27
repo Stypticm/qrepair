@@ -18,8 +18,10 @@ export default function NotFound() {
               🏠 Вернуться на главную
             </Link>
           </Button>
-          <Button variant="outline" onClick={() => window.history.back()}>
-            ⬅️ Назад
+          <Button variant="outline" asChild>
+            <Link href="/">
+              ⬅️ Назад
+            </Link>
           </Button>
         </div>
       </div>
