@@ -33,7 +33,11 @@ export default function RootLayout({
       </head>
       <body>
         <Root>
-          <ClientLayoutContent>{children}</ClientLayoutContent>
+          <I18nProvider>
+            <StartFormProvider>
+              <ClientLayoutContent>{children}</ClientLayoutContent>
+            </StartFormProvider>
+          </I18nProvider>
         </Root>
       </body>
     </html>
