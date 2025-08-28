@@ -91,12 +91,6 @@ export default function FormPage() {
         console.log('📍 Текущий URL:', window.location.href);
         
         try {
-            // Скрываем MainButton при переходе
-            console.log('🔧 Скрываем MainButton...');
-            callTelegramMethod('web_app_setup_main_button', {
-                is_visible: false
-            });
-            
             // НЕ очищаем состояние при переходе - оно может понадобиться при возврате
             if (typeof window !== 'undefined') {
                 console.log('💾 Состояние сохранено, переходим на следующую страницу...');
@@ -218,23 +212,7 @@ export default function FormPage() {
             optionsCount: Object.values(newOptions).filter(option => option !== '').length
         });
         
-        if (allOptionsSelected) {
-            // Показываем MainButton когда все выбрано
-            console.log('✅ Все опции выбраны, показываем MainButton');
-            callTelegramMethod('web_app_setup_main_button', {
-                is_visible: true,
-                text: 'Далее',
-                color: '#00FF00',
-                text_color: '#FFFFFF',
-                is_active: true
-            });
-        } else {
-            // Скрываем MainButton когда выбор неполный
-            console.log('❌ Не все опции выбраны, скрываем MainButton');
-            callTelegramMethod('web_app_setup_main_button', {
-                is_visible: false
-            });
-        }
+        // MainButton больше не используется, так как есть желтая кнопка
     };
 
     // Находим подходящий iPhone
@@ -283,17 +261,7 @@ export default function FormPage() {
                             sessionStorage.setItem('phoneSelection', JSON.stringify(result.data.phoneData));
                         }
                         
-                        // Проверяем, нужно ли показать MainButton
-                        const allOptionsSelected = Object.values(result.data.phoneData).every(option => option !== '');
-                        if (allOptionsSelected) {
-                            callTelegramMethod('web_app_setup_main_button', {
-                                is_visible: true,
-                                text: 'Продолжить',
-                                color: '#00FF00',
-                                text_color: '#FFFFFF',
-                                is_active: true
-                            });
-                        }
+                        // MainButton больше не используется, так как есть желтая кнопка
                     } else {
                         console.log('📝 Прогресс в БД не найден');
                     }
@@ -316,17 +284,7 @@ export default function FormPage() {
                         console.log('✅ Восстановлено из sessionStorage:', parsed);
                         setSelectedOptions(parsed);
                         
-                        // Проверяем, нужно ли показать MainButton
-                        const allOptionsSelected = Object.values(parsed).every(option => option !== '');
-                        if (allOptionsSelected) {
-                            callTelegramMethod('web_app_setup_main_button', {
-                                is_visible: true,
-                                text: 'Далее',
-                                color: '#00FF00',
-                                text_color: '#FFFFFF',
-                                is_active: true
-                            });
-                        }
+                        // MainButton больше не используется, так как есть желтая кнопка
                         
                         return; // Не загружаем из БД, если есть в sessionStorage
                     } catch (e) {
@@ -355,17 +313,7 @@ export default function FormPage() {
                                     sessionStorage.setItem('phoneSelection', JSON.stringify(parsed.data));
                                 }
                                 
-                                // Проверяем, нужно ли показать MainButton
-                                const allOptionsSelected = Object.values(parsed.data).every(option => option !== '');
-                                if (allOptionsSelected) {
-                                    callTelegramMethod('web_app_setup_main_button', {
-                                        is_visible: true,
-                                        text: 'Далее',
-                                        color: '#00FF00',
-                                        text_color: '#FFFFFF',
-                                        is_active: true
-                                    });
-                                }
+                                // MainButton больше не используется, так как есть желтая кнопка
                                 
                                 return; // Не загружаем из БД, если есть в CloudStorage
                             }
@@ -401,37 +349,6 @@ export default function FormPage() {
                         case 'web_app_data_send':
                             webApp.sendData(JSON.stringify(data));
                             console.log('📤 Данные отправлены в Telegram');
-                            break;
-                        case 'web_app_setup_main_button':
-                            console.log('🔧 Настройка MainButton:', data);
-                            try {
-                                if (data.is_visible) {
-                                    webApp.MainButton.setText(data.text);
-                                    webApp.MainButton.color = data.color;
-                                    webApp.MainButton.textColor = data.text_color;
-                                    webApp.MainButton.show();
-                                    console.log('📤 MainButton показана:', {
-                                        text: data.text,
-                                        color: data.color,
-                                        textColor: data.text_color,
-                                        isVisible: webApp.MainButton.isVisible
-                                    });
-                                    
-                                    // Проверяем, что MainButton действительно показана
-                                    setTimeout(() => {
-                                        console.log('🔍 Проверка MainButton после показа:', {
-                                            isVisible: webApp.MainButton.isVisible,
-                                            text: webApp.MainButton.text,
-                                            color: webApp.MainButton.color
-                                        });
-                                    }, 100);
-                                } else {
-                                    webApp.MainButton.hide();
-                                    console.log('📤 MainButton скрыта');
-                                }
-                            } catch (error) {
-                                console.error('❌ Ошибка при настройке MainButton:', error);
-                            }
                             break;
                         case 'web_app_trigger_haptic_feedback':
                             if (webApp.HapticFeedback) {
@@ -506,110 +423,15 @@ export default function FormPage() {
             // Запрашиваем информацию о viewport
             callTelegramMethod('web_app_request_viewport', {});
             
-            // Настраиваем MainButton (изначально скрыта)
-            console.log('🔧 Инициализация MainButton...');
-            callTelegramMethod('web_app_setup_main_button', {
-                is_visible: false,
-                text: 'Далее',
-                color: '#00FF00',
-                text_color: '#FFFFFF',
-                is_active: false
-            });
-            
-            // Проверяем, что MainButton доступна
-            if ((window as any).Telegram?.WebApp?.MainButton) {
-                console.log('✅ MainButton доступна:', {
-                    isVisible: (window as any).Telegram.WebApp.MainButton.isVisible,
-                    text: (window as any).Telegram.WebApp.MainButton.text,
-                    color: (window as any).Telegram.WebApp.MainButton.color
-                });
-            } else {
-                console.log('⚠️ MainButton недоступна');
-            }
+            // MainButton больше не используется, так как есть желтая кнопка
             
             console.log('🚀 Telegram WebApp инициализирован');
         }
     }, []);
 
-    // Обработчик событий Telegram WebApp
-    useEffect(() => {
-        console.log('🔧 Настраиваем обработчики событий MainButton...');
+    // MainButton больше не используется, так как есть желтая кнопка
         
-        // Используем официальный API для обработки событий MainButton
-        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-            const webApp = (window as any).Telegram.WebApp;
-            console.log('✅ Telegram WebApp найден:', webApp);
-            console.log('🔍 MainButton доступна:', webApp.MainButton);
-            
-            const handleMainButtonClick = () => {
-                console.log('🔘 MainButton нажат (официальный API)');
-                console.log('🚀 Вызываем goToNextPage...');
-                
-                // Добавляем небольшую задержку для отладки
-                setTimeout(() => {
-                    goToNextPage();
-                }, 100);
-            };
-            
-            // Добавляем обработчик события MainButton
-            webApp.MainButton.onClick(handleMainButtonClick);
-            console.log('✅ Обработчик MainButton.onClick добавлен');
-            
-            // Проверяем, что обработчик действительно добавлен
-            setTimeout(() => {
-                console.log('🔍 Проверка MainButton после добавления обработчика:', {
-                    isVisible: webApp.MainButton.isVisible,
-                    text: webApp.MainButton.text,
-                    color: webApp.MainButton.color
-                });
-            }, 200);
-            
-            return () => {
-                // Удаляем обработчик при размонтировании
-                webApp.MainButton.offClick(handleMainButtonClick);
-                console.log('🧹 Обработчик MainButton.onClick удален');
-            };
-        } else {
-            console.log('⚠️ Telegram WebApp не найден, используем fallback');
-        }
-        
-        // Fallback обработчик для других случаев
-        const handleTelegramEvent = (event: MessageEvent) => {
-            try {
-                if (event.origin === 'https://web.telegram.org' || event.origin === 'https://t.me') {
-                    const data = JSON.parse(event.data);
-                    console.log('📥 Получено событие от Telegram:', data);
-                    
-                    // Обрабатываем нажатие на MainButton (проверяем разные варианты)
-                    if (data.eventType === 'main_button_pressed' || 
-                        data.eventType === 'mainButtonPressed' ||
-                        data.eventType === 'main_button_clicked' ||
-                        data.eventType === 'mainButtonClicked' ||
-                        data.eventType === 'main_button_press' ||
-                        data.eventType === 'mainButtonPress' ||
-                        data.eventType === 'web_app_main_button_pressed' ||
-                        data.eventType === 'webAppMainButtonPressed') {
-                        console.log('🔘 MainButton нажат (fallback)');
-                        console.log('🚀 Вызываем goToNextPage...');
-                        
-                        // Добавляем небольшую задержку для отладки
-                        setTimeout(() => {
-                            goToNextPage();
-                        }, 100);
-                    }
-                }
-            } catch (e) {
-                console.log('❌ Ошибка при обработке события Telegram:', e);
-            }
-        };
 
-
-        
-        return () => {
-            window.removeEventListener('message', handleTelegramEvent);
-            console.log('🧹 Fallback обработчики удалены');
-        };
-    }, [goToNextPage]); // Добавляем зависимость
 
     // Компонент готов к использованию
 

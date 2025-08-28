@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Page } from '@/components/Page';
@@ -80,10 +80,10 @@ export default function DisplayCracksPage() {
                                         </div>
                                     </div>
                                     
-                                    {/* Галочка в углу выбранного элемента */}
+                                    {/* Маленькая галочка в углу выбранного элемента */}
                                     {isSelected && (
-                                        <div className="absolute top-2 right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                                            <span className="text-white text-base font-bold">✓</span>
+                                        <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                                            <span className="text-white text-xs font-bold">✓</span>
                                         </div>
                                     )}
                                 </div>
