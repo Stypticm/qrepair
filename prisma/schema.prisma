@@ -28,6 +28,8 @@ model Skupka {
   inspectionCompleted  Boolean      @default(false)
   inspectionToken      String?
   imeiInfo             Json?
+  phoneData            Json?        // Данные выбранного телефона
+  currentStep          String?      // Текущий шаг в процессе
   courierTelegramId    String?
   courierScheduledAt   DateTime?
   courierTimeSlot      String?
