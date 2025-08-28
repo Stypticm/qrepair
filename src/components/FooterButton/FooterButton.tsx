@@ -19,6 +19,11 @@ const FooterButton = ({
   const path = usePathname();
   const router = useRouter();
 
+  // Не показываем кнопку на странице формы, так как там уже есть желтая кнопка
+  if (path === '/request/form') {
+    return null;
+  }
+
   const handleClick = async () => {
     if (onNext) await onNext();
     if (!preventRedirect) {
@@ -29,11 +34,6 @@ const FooterButton = ({
   // Определяем текст и стили кнопки в зависимости от пути
   const getButtonConfig = () => {
     switch (path) {
-      case '/request/form':
-        return {
-          text: 'Далее',
-          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
-        };
       case '/request/display_scratches':
         return {
           text: 'Далее',

@@ -11,12 +11,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // Определяем настройки кнопки в зависимости от страницы
   const getButtonConfig = () => {
     switch (path) {
-      case '/request/form':
-        return {
-          nextPath: '/request/display_scratches',
-          isNextDisabled: !modelname,
-          text: 'Далее'
-        };
       case '/request/display_scratches':
         return {
           nextPath: '/request/display_cracks',
@@ -90,7 +84,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </div>
 
-      {/* Кнопка внизу - только для страниц формы */}
+      {/* Кнопка внизу - только для страниц формы, кроме /request/form */}
       {path !== '/request/submit' && path !== '/request/choose' && path !== '/request/form' && (
         <div className="p-4 relative z-50">
 
