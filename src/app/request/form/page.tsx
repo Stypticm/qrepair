@@ -468,16 +468,16 @@ export default function FormPage() {
     return (
         <Page back={true}>
             <div className="w-full max-w-4xl mx-auto">
-                <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700 text-center">
                         💡 <strong>Совет:</strong> Если нужные варианты заблокированы, попробуйте выбрать другую модель или вариант
                     </p>
                 </div>
                 
                 {/* Секция выбора модели */}
-                <div className="mb-6 p-4 border-2 border-gray-300 rounded-lg bg-white">
+                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Модель</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                         {models.map((model) => (
                             <button
                                 key={model}
@@ -495,9 +495,9 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора варианта */}
-                <div className="mb-6 p-4 border-2 border-gray-300 rounded-lg bg-white">
+                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Вариант</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                         {variants.map((variant) => {
                             const isDisabled = !availableVariants.includes(variant);
                             return (
@@ -523,7 +523,7 @@ export default function FormPage() {
                 {/* Секция выбора объема памяти */}
                 <div className="mb-6 p-4 border-2 border-gray-300 rounded-lg bg-white">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Объем памяти</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                         {storages.map((storage) => {
                             const isDisabled = !availableStorages.includes(storage);
                             return (
@@ -547,9 +547,9 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора цвета */}
-                <div className="mb-6 p-4 border-2 border-gray-300 rounded-lg bg-white">
+                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Цвет</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                         {colors.map((color) => {
                             const isDisabled = !availableColors.includes(color);
                             return (
@@ -579,9 +579,9 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора страны производителя */}
-                <div className="mb-6 p-4 border-2 border-gray-300 rounded-lg bg-white">
+                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Страна производитель</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                         {countries.map((country) => {
                             const isDisabled = !availableCountries.includes(country);
                             return (
@@ -610,7 +610,7 @@ export default function FormPage() {
                 {/* Сводка выбранной конфигурации */}
                 {matchingPhone && (
                     <div 
-                        className="mt-8 p-4 bg-yellow-400 border-2 border-yellow-500 rounded-lg cursor-pointer hover:bg-yellow-300 transition-colors duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        className="mt-2 p-4 bg-yellow-400 border-2 border-yellow-500 rounded-lg cursor-pointer hover:bg-yellow-300 transition-colors duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         onClick={goToNextPage}
                         title="Нажмите для перехода на следующую страницу"
                     >

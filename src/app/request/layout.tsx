@@ -51,29 +51,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Заголовок - только для страниц формы */}
       {path !== '/request/choose' && (
         <div className="text-center py-6">
-          <h1 className="text-3xl font-extrabold uppercase text-black">
-            Создание<br /> заявки
-          </h1>
-          
+
           {/* Заголовок страницы */}
           {path === '/request/form' && (
             <h2 className="text-xl font-bold text-gray-800 mt-4">
-              Выбери свой iPhone
+              Выбери<br />свой iPhone
             </h2>
           )}
           {path === '/request/display_scratches' && (
             <h2 className="text-xl font-bold text-gray-800 mt-4">
-              📱 Царапины на экране
+              📱 Царапины<br /> на экране
             </h2>
           )}
           {path === '/request/display_cracks' && (
             <h2 className="text-xl font-bold text-gray-800 mt-4">
-              💥 Трещины на экране
+              💥 Трещины<br /> на экране
             </h2>
           )}
           {path === '/request/submit' && (
             <h2 className="text-xl font-bold text-gray-800 mt-4">
-              📱 Отправка заявки
+              📱 Отправка<br /> заявки
             </h2>
           )}
         </div>
@@ -88,7 +85,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {path !== '/request/submit' && path !== '/request/choose' && path !== '/request/form' && (
         <div className="p-4 relative z-50">
 
-          <FooterButton 
+          <FooterButton
             nextPath={buttonConfig.nextPath}
             isNextDisabled={buttonConfig.isNextDisabled}
           />
