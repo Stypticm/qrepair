@@ -603,22 +603,10 @@ export default function FormPage() {
             }
         };
 
-        // Добавляем fallback обработчик для тестирования на ПК
-        const handleFallbackClick = (event: any) => {
-            // Проверяем, что это клик по кнопке "Далее" (для тестирования на ПК)
-            if (event.target && event.target.textContent === 'Далее') {
-                console.log('🔘 Кнопка "Далее" нажата (fallback для ПК)');
-                goToNextPage();
-            }
-        };
-        
-        // Добавляем fallback обработчик
-        document.addEventListener('click', handleFallbackClick);
-        console.log('✅ Fallback обработчик для ПК добавлен');
+
         
         return () => {
             window.removeEventListener('message', handleTelegramEvent);
-            document.removeEventListener('click', handleFallbackClick);
             console.log('🧹 Fallback обработчики удалены');
         };
     }, [goToNextPage]); // Добавляем зависимость
@@ -799,7 +787,11 @@ export default function FormPage() {
 
                 {/* Сводка выбранной конфигурации */}
                 {matchingPhone && (
-                    <div className="mt-8 p-4 bg-yellow-400 border-2 border-yellow-500 rounded-lg">
+                    <div 
+                        className="mt-8 p-4 bg-yellow-400 border-2 border-yellow-500 rounded-lg cursor-pointer hover:bg-yellow-300 transition-colors duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        onClick={goToNextPage}
+                        title="Нажмите для перехода на следующую страницу"
+                    >
                         <p className="text-lg font-bold text-gray-900 text-center">
                             iPhone {matchingPhone.model}
                             {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''}, 
@@ -808,20 +800,9 @@ export default function FormPage() {
                             {matchingPhone.country.split(' ')[0]}
                         </p>
                         
-                        {/* Кнопка "Далее" для тестирования на ПК */}
-                        {typeof window !== 'undefined' && !(window as any).Telegram?.WebApp && (
-                            <div className="mt-4 text-center">
-                                <button
-                                    onClick={goToNextPage}
-                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                                >
-                                    Далее →
-                                </button>
-                                <p className="text-xs text-gray-600 mt-2">
-                                    (Эта кнопка видна только при тестировании на ПК)
-                                </p>
-                            </div>
-                        )}
+                        <p className="text-sm text-gray-700 text-center mt-2">
+                            👆 Нажмите для продолжения
+                        </p>
                         
                     </div>
                 )}

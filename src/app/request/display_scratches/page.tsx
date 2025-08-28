@@ -311,33 +311,33 @@ export default function DisplayScratchesPage() {
                                             </div>
                                         )}
                                         
-                                        <div className="text-center">
-                                            <div className="font-bold text-lg text-black mb-2">
-                                                {level.label}
-                                            </div>
-                                            <div className="text-sm font-bold text-black">
-                                                {level.penalty > 0 ? `-${level.penalty}%` : '0%'}
-                                            </div>
-                                        </div>
+                                                                <div className="text-center">
+                            <div className="font-bold text-lg text-black mb-2">
+                                {level.label}
+                            </div>
+                            <div className="text-sm font-bold text-black">
+                                {level.penalty > 0 ? `-${level.penalty}%` : '0%'}
+                            </div>
+                        </div>
+                        
+                        {/* Информация о выборе для продолжения */}
+                        {isSelected && (
+                            <div 
+                                className="mt-3 p-3 bg-yellow-400 border-2 border-yellow-500 rounded-lg cursor-pointer hover:bg-yellow-300 transition-colors duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                                onClick={() => router.push('/request/condition')}
+                                title="Нажмите для перехода на следующую страницу"
+                            >
+                                <p className="text-sm font-bold text-gray-900 text-center">
+                                    👆 Нажмите для продолжения
+                                </p>
+                            </div>
+                        )}
                                     </div>
                                 );
                             })}
                         </div>
                         
-                        {/* Кнопка "Далее" для тестирования на ПК */}
-                        {typeof window !== 'undefined' && !(window as any).Telegram?.WebApp && localAnswer !== null && (
-                            <div className="mt-6 text-center">
-                                <button
-                                    onClick={() => router.push('/request/condition')}
-                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                                >
-                                    Далее →
-                                </button>
-                                <p className="text-xs text-gray-600 mt-2">
-                                    (Эта кнопка видна только при тестировании на ПК)
-                                </p>
-                            </div>
-                        )}
+
                         
                     </div>
                 </div>
