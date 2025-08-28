@@ -9,12 +9,27 @@ import { iphones, IPhone } from '@/core/appleModels';
 export default function FormPage() {
     const { modelname, setModel } = useStartForm();
     const router = useRouter();
-    const [selectedOptions, setSelectedOptions] = useState({
-        model: '',
-        variant: '',
-        storage: '',
-        color: '',
-        country: ''
+    
+    const [selectedOptions, setSelectedOptions] = useState(() => {
+        // Пытаемся восстановить состояние из localStorage
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('phoneSelection');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {
+                    console.log('Ошибка при восстановлении состояния:', e);
+                }
+            }
+        }
+        
+        return {
+            model: '',
+            variant: '',
+            storage: '',
+            color: '',
+            country: ''
+        };
     });
     
     // Таймер для автоматического перехода
@@ -89,6 +104,10 @@ export default function FormPage() {
         
         // Запускаем новый таймер на 2 секунды
         autoTransitionTimer.current = setTimeout(() => {
+            // Очищаем сохраненное состояние при переходе
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('phoneSelection');
+            }
             router.push('/request/display_scratches');
         }, 2000);
     };
@@ -97,6 +116,10 @@ export default function FormPage() {
     const goToNextPage = () => {
         if (autoTransitionTimer.current) {
             clearTimeout(autoTransitionTimer.current);
+        }
+        // Очищаем сохраненное состояние при переходе
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('phoneSelection');
         }
         router.push('/request/display_scratches');
     };
@@ -125,6 +148,11 @@ export default function FormPage() {
         }
         
         setSelectedOptions(newOptions);
+        
+        // Сохраняем состояние в localStorage
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('phoneSelection', JSON.stringify(newOptions));
+        }
         
         // Запускаем таймер автоматического перехода при изменении
         if (Object.values(newOptions).every(option => option !== '')) {
