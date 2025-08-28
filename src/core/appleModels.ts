@@ -2006,7 +2006,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '128GB',
     color: 'Bl',
     country: 'China 🇨🇳',
@@ -2015,7 +2015,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '128GB',
     color: 'Wh',
     country: 'China 🇨🇳',
@@ -2024,7 +2024,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '128GB',
     color: 'Bl',
     country: 'China 🇨🇳',
@@ -2033,7 +2033,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '256GB',
     color: 'Bl',
     country: 'China 🇨🇳',
@@ -2042,7 +2042,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '256GB',
     color: 'Wh',
     country: 'China 🇨🇳',
@@ -2051,7 +2051,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '256GB',
     color: 'Bl',
     country: 'China 🇨🇳',
@@ -2060,7 +2060,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '512GB',
     color: 'Bl',
     country: 'China 🇨🇳',
@@ -2069,7 +2069,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '512GB',
     color: 'Wh',
     country: 'China 🇨🇳',
@@ -2078,7 +2078,7 @@ export const iphones: IPhone[] = [
   },
   {
     model: '16',
-    variant: 'e',
+    variant: 'E',
     storage: '512GB',
     color: 'Bl',
     country: 'China 🇨🇳',

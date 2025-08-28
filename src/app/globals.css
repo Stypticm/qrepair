@@ -98,24 +98,35 @@
 
   html {
     height: 100%;
-    overflow: hidden; /* Предотвращаем скролл на уровне HTML */
   }
 
   body {
-    background: var(--background);
-    color: var(--foreground);
-    min-height: 100vh;
-    height: 100vh; /* Фиксированная высота */
+    height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* Предотвращаем скролл на уровне body */
-    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
-    position: fixed; /* Фиксируем позицию как в BotFather */
-    width: 100%;
-    top: 0;
-    left: 0;
-    transition: background-color 0.3s, color 0.3s;
-    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--background);
+    color: var(--foreground);
+    overflow-x: hidden;
+  }
+
+  /* Стили для диалогового окна с blur эффектом */
+  [data-radix-dialog-overlay] {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+
+  [data-radix-dialog-content] {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(229, 231, 235, 0.8);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   }
 
   /* Фиксированный размер для PC */

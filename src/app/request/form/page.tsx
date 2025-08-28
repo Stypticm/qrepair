@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { iphones, IPhone } from '@/core/appleModels';
 
 export default function FormPage() {
@@ -19,23 +20,9 @@ export default function FormPage() {
         country: ''
     });
 
-    // Предотвращаем дублирование API вызовов
-    const [isSaving, setIsSaving] = useState(false);
-
-    // Проверяем, все ли опции выбраны для активации кнопки "Далее"
-    const isAllOptionsSelected = Object.values(selectedOptions).every(option => option !== '');
-
-    // Получаем все возможные варианты
-    const models = [...new Set(iphones.map(phone => phone.model))].sort((a, b) => parseInt(a) - parseInt(b));
-    const variants = ['', ...new Set(iphones.map(phone => phone.variant).filter(v => v !== ''))].sort();
-    const storages = [...new Set(iphones.map(phone => phone.storage))].sort((a, b) => {
-        const aNum = parseInt(a.replace('GB', '').replace('TB', '000'));
-        const bNum = parseInt(b.replace('GB', '').replace('TB', '000'));
-        return aNum - bNum;
-    });
-    const colors = [...new Set(iphones.map(phone => phone.color))].sort();
-    const countries = [...new Set(iphones.map(phone => phone.country))].sort();
-
+    // Состояние для диалогового окна
+    const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+    
     // Функции для умной фильтрации
     const getAvailableVariants = () => {
         if (!selectedOptions.model) return [];
@@ -80,36 +67,6 @@ export default function FormPage() {
         return [...new Set(filteredPhones.map(phone => phone.country))];
     };
 
-    const availableVariants = getAvailableVariants();
-    const availableStorages = getAvailableStorages();
-    const availableColors = getAvailableColors();
-    const availableCountries = getAvailableCountries();
-
-    // Функция для перехода на следующую страницу
-    const goToNextPage = useCallback(() => {
-        console.log('🚀 Функция goToNextPage вызвана');
-        console.log('📍 Текущий URL:', window.location.href);
-        
-        try {
-            // НЕ очищаем состояние при переходе - оно может понадобиться при возврате
-            if (typeof window !== 'undefined') {
-                console.log('💾 Состояние сохранено, переходим на следующую страницу...');
-            }
-            
-            console.log('🧭 Выполняем router.push...');
-            router.push('/request/display_scratches');
-            console.log('✅ router.push выполнен');
-            
-            // Проверяем, что переход действительно произошел
-            setTimeout(() => {
-                console.log('🔍 Проверка URL после перехода:', window.location.href);
-            }, 500);
-            
-        } catch (error) {
-            console.error('❌ Ошибка в goToNextPage:', error);
-        }
-    }, [router]);
-
     const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
         const newOptions = {
             ...selectedOptions,
@@ -138,56 +95,15 @@ export default function FormPage() {
         // Сохраняем в sessionStorage для быстрого восстановления
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('phoneSelection', JSON.stringify(newOptions));
-            console.log('💾 Сохранено в sessionStorage:', newOptions);
         }
         
-        // Сохраняем прогресс в БД (асинхронно, без await)
-        if (!isSaving) {
-            setIsSaving(true);
-            fetch('/api/request/saveProgress', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    telegramId: 'test_user', // Временно, потом заменим на реальный ID
-                    phoneData: newOptions,
-                    step: 'phone_selection'
-                }),
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log('✅ Прогресс сохранен в БД');
-                } else {
-                    console.log('❌ Ошибка при сохранении в БД:', response.status, response.statusText);
-                    // Показываем пользователю, что произошла ошибка
-                    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-                        window.Telegram.WebApp.showAlert('Ошибка при сохранении прогресса. Попробуйте еще раз.');
-                    }
-                }
-            })
-            .catch(e => {
-                console.log('❌ Ошибка при сохранении в БД:', e);
-                // Показываем пользователю, что произошла ошибка
-                if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-                    window.Telegram.WebApp.showAlert('Ошибка сети. Проверьте подключение к интернету.');
-                }
-            })
-            .finally(() => {
-                setIsSaving(false);
-            });
-        }
-        
-        // Улучшенная интеграция с Telegram WebApp
-        // Сохраняем данные в Telegram CloudStorage для надежного восстановления
+        // Сохраняем в CloudStorage для сохранения между страницами
         callTelegramMethod('web_app_cloud_storage_set', {
             key: 'phoneSelection',
-            value: JSON.stringify({
-                type: 'phoneSelection',
-                data: newOptions,
-                timestamp: Date.now(),
-                step: 'phone_selection'
-            })
+            value: JSON.stringify({ data: newOptions }),
+            callback: () => {
+                console.log('☁️ Сохранено в CloudStorage:', newOptions);
+            }
         });
         
         // Отправляем данные в Telegram для возможного восстановления
@@ -204,15 +120,12 @@ export default function FormPage() {
             impact_style: 'light'
         });
         
-        // Управляем MainButton в зависимости от выбора
-        const allOptionsSelected = Object.values(newOptions).every(option => option !== '');
+        // MainButton больше не используется, так как есть желтая кнопка
         console.log('🔍 Проверяем выбор опций:', {
             selectedOptions: newOptions,
-            allOptionsSelected,
+            allOptionsSelected: isAllOptionsSelected,
             optionsCount: Object.values(newOptions).filter(option => option !== '').length
         });
-        
-        // MainButton больше не используется, так как есть желтая кнопка
     };
 
     // Находим подходящий iPhone
@@ -231,6 +144,7 @@ export default function FormPage() {
     };
 
     const matchingPhone = findMatchingPhone();
+    const isAllOptionsSelected = Object.values(selectedOptions).every(value => value !== '') && matchingPhone;
 
     useEffect(() => {
         if (matchingPhone) {
@@ -241,93 +155,124 @@ export default function FormPage() {
 
     // Загружаем прогресс из БД при загрузке страницы
     useEffect(() => {
-        console.log('🔄 Страница загружена, проверяем сохраненное состояние...');
-        
         const loadProgressFromDB = async () => {
             try {
-                console.log('🔄 Загружаем прогресс из БД...');
-                const response = await fetch('/api/request/saveProgress?telegramId=test_user');
-                
+                const response = await fetch('/api/request/getProgress', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ modelname }),
+                });
+
                 if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && result.data?.phoneData) {
-                        console.log('✅ Прогресс загружен из БД:', result.data.phoneData);
+                    const data = await response.json();
+                    
+                    if (data.success && data.data) {
+                        const { model, variant, storage, color, country } = data.data;
                         
-                        // Обновляем состояние
-                        setSelectedOptions(result.data.phoneData);
-                        
-                        // Сохраняем в sessionStorage для быстрого доступа
-                        if (typeof window !== 'undefined') {
-                            sessionStorage.setItem('phoneSelection', JSON.stringify(result.data.phoneData));
-                        }
-                        
-                        // MainButton больше не используется, так как есть желтая кнопка
-                    } else {
-                        console.log('📝 Прогресс в БД не найден');
+                        setSelectedOptions({
+                            model: model || '',
+                            variant: variant || '',
+                            storage: storage || '',
+                            color: color || '',
+                            country: country || ''
+                        });
                     }
-                } else {
-                    console.log('❌ Ошибка при загрузке прогресса из БД');
                 }
-            } catch (e) {
-                console.log('❌ Ошибка при загрузке прогресса из БД:', e);
+            } catch (error) {
+                console.error('❌ Ошибка при загрузке прогресса:', error);
             }
         };
 
         // Сначала пытаемся восстановить из sessionStorage
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('phoneSelection');
-            console.log('📱 Проверяем sessionStorage:', savedInSession);
             
-                            if (savedInSession) {
-                    try {
-                        const parsed = JSON.parse(savedInSession);
-                        console.log('✅ Восстановлено из sessionStorage:', parsed);
-                        setSelectedOptions(parsed);
-                        
-                        // MainButton больше не используется, так как есть желтая кнопка
-                        
-                        return; // Не загружаем из БД, если есть в sessionStorage
-                    } catch (e) {
-                        console.log('❌ Ошибка при парсинге sessionStorage:', e);
-                        sessionStorage.removeItem('phoneSelection'); // Очищаем поврежденные данные
-                    }
+            if (savedInSession) {
+                try {
+                    const parsed = JSON.parse(savedInSession);
+                    setSelectedOptions(parsed);
+                    return; // Не загружаем из БД, если есть в sessionStorage
+                } catch (e) {
+                    sessionStorage.removeItem('phoneSelection'); // Очищаем поврежденные данные
                 }
+            }
         }
 
-                    // Если нет данных в sessionStorage, пробуем загрузить из CloudStorage
-            console.log('📝 Данных в sessionStorage нет, пробуем CloudStorage...');
-            
-            // Загружаем из Telegram CloudStorage
-            callTelegramMethod('web_app_cloud_storage_get', {
-                key: 'phoneSelection',
-                callback: (value: string | null) => {
-                    if (value) {
-                        try {
-                            const parsed = JSON.parse(value);
-                            if (parsed.data) {
-                                console.log('✅ Восстановлено из CloudStorage:', parsed.data);
-                                setSelectedOptions(parsed.data);
-                                
-                                // Сохраняем в sessionStorage для быстрого доступа
-                                if (typeof window !== 'undefined') {
-                                    sessionStorage.setItem('phoneSelection', JSON.stringify(parsed.data));
-                                }
-                                
-                                // MainButton больше не используется, так как есть желтая кнопка
-                                
-                                return; // Не загружаем из БД, если есть в CloudStorage
+        // Если нет данных в sessionStorage, пробуем загрузить из CloudStorage
+        callTelegramMethod('web_app_cloud_storage_get', {
+            key: 'phoneSelection',
+            callback: (value: string | null) => {
+                if (value) {
+                    try {
+                        const parsed = JSON.parse(value);
+                        if (parsed.data) {
+                            setSelectedOptions(parsed.data);
+                            
+                            // Сохраняем в sessionStorage для быстрого доступа
+                            if (typeof window !== 'undefined') {
+                                sessionStorage.setItem('phoneSelection', JSON.stringify(parsed.data));
                             }
-                        } catch (e) {
-                            console.log('❌ Ошибка при парсинге CloudStorage:', e);
+                            
+                            return; // Не загружаем из БД, если есть в CloudStorage
                         }
+                    } catch (e) {
+                        // Игнорируем ошибки парсинга
                     }
-                    
-                    // Если CloudStorage пуст, загружаем из БД
-                    console.log('📝 Данных в CloudStorage нет, загружаем из БД...');
+                }
+                
+                // Если CloudStorage пуст, загружаем из БД
+                if (modelname) {
                     loadProgressFromDB();
                 }
-            });
+            }
+        });
+    }, [modelname]);
+
+    // Инициализация Telegram WebApp при загрузке
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // Уведомляем Telegram о готовности приложения
+            callTelegramMethod('web_app_ready', {});
+            
+            // Расширяем приложение на весь экран
+            callTelegramMethod('web_app_expand', {});
+            
+            // Запрашиваем информацию о viewport
+            callTelegramMethod('web_app_request_viewport', {});
+            
+            // MainButton больше не используется, так как есть желтая кнопка
+            
+            console.log('🚀 Telegram WebApp инициализирован');
+        }
     }, []);
+
+    // Автоматически открываем диалог когда все поля заполнены
+    useEffect(() => {
+        if (isAllOptionsSelected && matchingPhone) {
+            // Небольшая задержка для лучшего UX
+            setTimeout(() => {
+                setShowSummaryDialog(true);
+            }, 300);
+        }
+    }, [isAllOptionsSelected, matchingPhone]);
+
+    // Скрываем диалог если не все поля заполнены
+    useEffect(() => {
+        if (!isAllOptionsSelected) {
+            setShowSummaryDialog(false);
+        }
+    }, [isAllOptionsSelected]);
+
+    // Отслеживаем изменение пути и скрываем диалог при возврате с display_scratches
+    useEffect(() => {
+        // Упрощенная логика - просто скрываем диалог при загрузке страницы
+        setShowSummaryDialog(false);
+    }, []);
+
+    // MainButton больше не используется, так как есть желтая кнопка
+        
 
     // Универсальная функция для вызова методов Telegram WebApp
     const callTelegramMethod = (methodName: string, data?: any) => {
@@ -411,40 +356,7 @@ export default function FormPage() {
         }
     };
 
-    // Инициализация Telegram WebApp при загрузке
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            // Уведомляем Telegram о готовности приложения
-            callTelegramMethod('web_app_ready', {});
-            
-            // Расширяем приложение на весь экран
-            callTelegramMethod('web_app_expand', {});
-            
-            // Запрашиваем информацию о viewport
-            callTelegramMethod('web_app_request_viewport', {});
-            
-            // MainButton больше не используется, так как есть желтая кнопка
-            
-            console.log('🚀 Telegram WebApp инициализирован');
-        }
-    }, []);
-
-    // MainButton больше не используется, так как есть желтая кнопка
-        
-
-
     // Компонент готов к использованию
-
-    const getColorStyle = (color: string) => {
-        const colorMap: { [key: string]: string } = {
-            'G': '#FFD700', // Золотой
-            'R': '#FF3B30', // Красный
-            'Bl': '#007AFF', // Синий
-            'Wh': '#FFFFFF', // Белый
-            'C': '#000000'  // Черный
-        };
-        return colorMap[color] || '#808080';
-    };
 
     const getColorLabel = (color: string) => {
         const colorMap: { [key: string]: string } = {
@@ -457,32 +369,45 @@ export default function FormPage() {
         return colorMap[color] || color;
     };
 
-    const getCountryFlag = (country: string) => {
-        const flagMap: { [key: string]: string } = {
-            'China 🇨🇳': '🇨🇳',
-            'India 🇮🇳': '🇮🇳'
+    const getColorStyle = (color: string) => {
+        const colorMap: { [key: string]: string } = {
+            'G': '#FFD700', // Золотой
+            'R': '#FF3B30', // Красный
+            'Bl': '#007AFF', // Синий
+            'Wh': '#FFFFFF', // Белый
+            'C': '#000000'  // Черный
         };
-        return flagMap[country] || country;
+        return colorMap[color] || '#808080';
+    };
+
+    const handleContinueToNext = () => {
+        if (matchingPhone) {
+            // Сохраняем выбранную конфигурацию в контекст
+            setModel(matchingPhone.model);
+            
+            // Переходим на следующую страницу
+            router.push('/request/display_scratches');
+        }
     };
 
     return (
         <Page back={true}>
             <div className="w-full max-w-4xl mx-auto">
-                <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-700 text-center">
+                {/* <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700 text-center">
                         💡 <strong>Совет:</strong> Если нужные варианты заблокированы, попробуйте выбрать другую модель или вариант
                     </p>
-                </div>
+                </div> */}
                 
                 {/* Секция выбора модели */}
-                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Модель</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                        {models.map((model) => (
+                <div className="mb-2 p-3 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">Модель</h3>
+                    <div className="grid grid-cols-6 gap-1">
+                        {[...new Set(iphones.map(phone => phone.model))].sort((a, b) => parseInt(a) - parseInt(b)).map((model) => (
                             <button
                                 key={model}
                                 onClick={() => handleOptionSelect('model', model)}
-                                className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium ${
+                                className={`px-1 py-1 rounded-lg border-2 transition-all duration-200 text-xs font-medium ${
                                     selectedOptions.model === model
                                         ? 'border-green-500 bg-green-50 text-green-700'
                                         : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
@@ -495,142 +420,135 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора варианта */}
-                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Вариант</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                        {variants.map((variant) => {
-                            const isDisabled = !availableVariants.includes(variant);
-                            return (
-                                <button
-                                    key={variant}
-                                    onClick={() => !isDisabled && handleOptionSelect('variant', variant)}
-                                    disabled={isDisabled}
-                                    className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium ${
-                                        isDisabled 
-                                            ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
-                                            : selectedOptions.variant === variant
-                                                ? 'border-green-500 bg-green-50 text-green-700'
-                                                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                                    }`}
-                                >
-                                    {variant === 'e' ? 'E' : (variant || '')}
-                                </button>
-                            );
-                        })}
+                <div className="mb-2 p-3 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">Вариант</h3>
+                    <div className="grid grid-cols-4 gap-1">
+                        {getAvailableVariants().map((variant) => (
+                            <button
+                                key={variant}
+                                onClick={() => handleOptionSelect('variant', variant)}
+                                disabled={!getAvailableVariants().includes(variant)}
+                                className={`px-1 py-1 rounded-lg border-2 transition-all duration-200 text-xs font-medium ${
+                                    selectedOptions.variant === variant
+                                        ? 'border-green-500 bg-green-50 text-green-700'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                }`}
+                            >
+                                {variant || ''}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 {/* Секция выбора объема памяти */}
-                <div className="mb-6 p-4 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Объем памяти</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                        {storages.map((storage) => {
-                            const isDisabled = !availableStorages.includes(storage);
-                            return (
-                                <button
-                                    key={storage}
-                                    onClick={() => !isDisabled && handleOptionSelect('storage', storage)}
-                                    disabled={isDisabled}
-                                    className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium ${
-                                        isDisabled 
-                                            ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
-                                            : selectedOptions.storage === storage
-                                                ? 'border-green-500 bg-green-50 text-green-700'
-                                                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                                    }`}
-                                >
-                                    {storage}
-                                </button>
-                            );
-                        })}
+                <div className="mb-2 p-3 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">Объем памяти</h3>
+                    <div className="grid grid-cols-4 gap-1">
+                        {getAvailableStorages().map((storage) => (
+                            <button
+                                key={storage}
+                                onClick={() => handleOptionSelect('storage', storage)}
+                                disabled={!getAvailableStorages().includes(storage)}
+                                className={`px-1 py-1 rounded-lg border-2 transition-all duration-200 text-xs font-medium ${
+                                    selectedOptions.storage === storage
+                                        ? 'border-green-500 bg-green-50 text-green-700'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                }`}
+                            >
+                                {storage}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 {/* Секция выбора цвета */}
-                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Цвет</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                        {colors.map((color) => {
-                            const isDisabled = !availableColors.includes(color);
-                            return (
-                                <button
-                                    key={color}
-                                    onClick={() => !isDisabled && handleOptionSelect('color', color)}
-                                    disabled={isDisabled}
-                                    className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium relative ${
-                                        isDisabled 
-                                            ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
-                                            : selectedOptions.color === color
-                                                ? 'border-green-500 bg-green-50'
-                                                : 'border-gray-300 bg-white hover:border-gray-400'
-                                    }`}
-                                    style={{
-                                        backgroundColor: isDisabled ? '#f9fafb' : getColorStyle(color),
-                                        color: isDisabled ? '#d1d5db' : (color === 'Wh' || color === 'G' ? '#000' : '#fff')
-                                    }}
-                                >
-                                    <span className="relative z-10 text-center text-sm">
-                                        {getColorLabel(color)}
-                                    </span>
-                                </button>
-                            );
-                        })}
+                <div className="mb-2 p-3 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">Цвет</h3>
+                    <div className="grid grid-cols-5 gap-2">
+                        {getAvailableColors().map((color) => (
+                            <button
+                                key={color}
+                                onClick={() => handleOptionSelect('color', color)}
+                                disabled={!getAvailableColors().includes(color)}
+                                className={`w-10 h-10 rounded-lg border-2 transition-all duration-200 relative group ${
+                                    selectedOptions.color === color
+                                        ? 'border-green-500 ring-2 ring-green-300'
+                                        : 'border-gray-300 hover:border-gray-400'
+                                }`}
+                                style={{
+                                    backgroundColor: getColorStyle(color),
+                                    opacity: !getAvailableColors().includes(color) ? 0.3 : 1
+                                }}
+                                title={getColorLabel(color)}
+                            >
+                                {/* Подсказка при наведении */}
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                    {getColorLabel(color)}
+                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                                </div>
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 {/* Секция выбора страны производителя */}
-                <div className="mb-2 p-4 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Страна производитель</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                        {countries.map((country) => {
-                            const isDisabled = !availableCountries.includes(country);
-                            return (
-                                <button
-                                    key={country}
-                                    onClick={() => !isDisabled && handleOptionSelect('country', country)}
-                                    disabled={isDisabled}
-                                    className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium ${
-                                        isDisabled 
-                                            ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
-                                            : selectedOptions.country === country
-                                                ? 'border-green-500 bg-green-50 text-green-700'
-                                                : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                                    }`}
-                                >
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-2xl mb-1">{getCountryFlag(country)}</span>
-                                        <span className="text-xs">{country.split(' ')[0]}</span>
-                                    </div>
-                                </button>
-                            );
-                        })}
+                <div className="mb-2 p-3 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">Страна производитель</h3>
+                    <div className="grid grid-cols-3 gap-1">
+                        {getAvailableCountries().map((country) => (
+                            <button
+                                key={country}
+                                onClick={() => handleOptionSelect('country', country)}
+                                disabled={!getAvailableCountries().includes(country)}
+                                className={`px-1 py-1 rounded-lg border-2 transition-all duration-200 text-xs font-medium ${
+                                    selectedOptions.country === country
+                                        ? 'border-green-500 bg-green-50 text-green-700'
+                                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                }`}
+                            >
+                                <div className="flex flex-col items-center">
+                                    <span className="text-lg mb-1">{country.split(' ')[1]}</span>
+                                    <span className="text-xs">{country.split(' ')[0]}</span>
+                                </div>
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                {/* Сводка выбранной конфигурации */}
-                {matchingPhone && (
-                    <div 
-                        className="mt-2 p-4 bg-yellow-400 border-2 border-yellow-500 rounded-lg cursor-pointer hover:bg-yellow-300 transition-colors duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                        onClick={goToNextPage}
-                        title="Нажмите для перехода на следующую страницу"
+
+
+                {/* Диалоговое окно с итоговой информацией */}
+                <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
+                    <DialogContent 
+                        className="bg-yellow-400/95 border-yellow-500 cursor-pointer"
+                        onClick={handleContinueToNext}
+                        showCloseButton={false}
                     >
-                        <p className="text-lg font-bold text-gray-900 text-center">
-                            iPhone {matchingPhone.model}
-                            {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''}, 
-                            {matchingPhone.storage}, 
-                            {getColorLabel(matchingPhone.color)}, 
-                            {matchingPhone.country.split(' ')[0]}
-                        </p>
-                        
-                        <p className="text-sm text-gray-700 text-center mt-2">
-                            👆 Нажмите для продолжения
-                        </p>
-                        
-                    </div>
-                )}
+                        <DialogTitle className="text-center text-xl font-bold text-gray-900 mb-4">
+                            📱 Ваша конфигурация
+                        </DialogTitle>
+                        {matchingPhone && (
+                            <>
+                                <div className="text-center">
+                                    <p className="text-lg font-semibold text-gray-900 bg-white p-3 rounded-lg border border-gray-200">
+                                        iPhone {matchingPhone.model}
+                                        {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''},
+                                        {matchingPhone.storage},
+                                        {getColorLabel(matchingPhone.color)},
+                                        {matchingPhone.country.split(' ')[0]}
+                                    </p>
+                                </div>
+                                <p className="text-center text-sm text-gray-700 mt-4">
+                                    👆 Нажмите на окно для перехода к следующему шагу
+                                </p>
+                            </>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
         </Page>
     );
 }
+
 
 
