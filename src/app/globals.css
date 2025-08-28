@@ -96,8 +96,142 @@
     box-sizing: border-box;
   }
 
+
+
+
+
+
+
   html {
     height: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden;
+  }
+
+  body {
+    overflow-y: hidden;
+    max-height: 100vh;
+  }
+
+  /* Стили для кнопок формы */
+  .w-10.h-10 {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    max-width: 2.5rem;
+    max-height: 2.5rem;
+  }
+
+  .w-16.h-10 {
+    min-width: 4rem;
+    min-height: 2.5rem;
+    max-width: 4rem;
+    max-height: 2.5rem;
+  }
+
+  /* Предотвращение переполнения текста в кнопках */
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  /* Специальные стили для динамических кнопок (объем памяти, цвета) */
+  .flex.flex-row.justify-between .flex-1 {
+    min-width: 0;
+    flex-basis: 0;
+  }
+
+  .flex.flex-row.justify-between .flex-1 .truncate {
+    font-size: 0.7rem;
+    line-height: 0.875rem;
+  }
+
+  /* Специальные стили для кнопок цветов */
+  .flex.flex-row.justify-between .flex-1[style*="background-color"] {
+    min-width: 0;
+    flex-basis: 0;
+  }
+
+  /* Специальные стили для кнопок вариантов в сетке */
+  .grid-cols-3 .truncate {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  /* Оптимизация текста в кнопках */
+  button .text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 500;
+  }
+
+  /* Предотвращение вертикальной прокрутки */
+  .max-w-4xl {
+    max-height: 100vh;
+    overflow-y: hidden;
+    overflow-x: hidden;
+  }
+
+  /* Предотвращение прокрутки в контейнере формы */
+  .w-full.max-w-4xl.mx-auto.px-2 {
+    overflow: hidden;
+    max-height: 100vh;
+  }
+
+  /* Предотвращение прокрутки в диалоговом окне */
+  [data-radix-dialog-content] {
+    overflow: hidden !important;
+    max-height: 90vh !important;
+  }
+
+  /* Оптимизация отступов для мобильных устройств */
+  @media (max-width: 768px) {
+    .mb-1 {
+      margin-bottom: 0.25rem;
+    }
+    
+    .p-1 {
+      padding: 0.25rem;
+    }
+
+    .w-16.h-10 {
+      min-width: 3.5rem;
+      max-width: 3.5rem;
+    }
+
+    /* Оптимизация для динамических кнопок на мобильных */
+    .flex.flex-row.justify-between .flex-1 .truncate {
+      font-size: 0.65rem;
+      line-height: 0.8rem;
+    }
+
+    /* Оптимизация для кнопок вариантов на мобильных */
+    .grid-cols-3 .truncate {
+      font-size: 0.7rem;
+      line-height: 0.875rem;
+    }
+
+    /* Предотвращение прокрутки на мобильных */
+    html, body {
+      overflow-y: hidden !important;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  /* Оптимизация flex-контейнеров */
+  .flex.flex-row.justify-between {
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  /* Предотвращение переполнения в кнопках */
+  button[class*="w-10"], button[class*="w-16"] {
+    flex-shrink: 0;
+    flex-basis: auto;
   }
 
   body {
