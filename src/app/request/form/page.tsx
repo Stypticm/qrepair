@@ -19,6 +19,9 @@ export default function FormPage() {
         country: ''
     });
 
+    // Предотвращаем дублирование API вызовов
+    const [isSaving, setIsSaving] = useState(false);
+
     // Проверяем, все ли опции выбраны для активации кнопки "Далее"
     const isAllOptionsSelected = Object.values(selectedOptions).every(option => option !== '');
 
@@ -84,12 +87,14 @@ export default function FormPage() {
 
     // Функция для перехода на следующую страницу
     const goToNextPage = () => {
-        // Очищаем сохраненное состояние при переходе
+        // Скрываем MainButton при переходе
+        callTelegramMethod('web_app_setup_main_button', {
+            is_visible: false
+        });
+        
+        // НЕ очищаем состояние при переходе - оно может понадобиться при возврате
         if (typeof window !== 'undefined') {
-            console.log('🧹 Очищаем сохраненное состояние...');
-            // Очищаем только sessionStorage, localStorage больше не используем
-            sessionStorage.removeItem('phoneSelection');
-            console.log('✅ Состояние очищено');
+            console.log('🚀 Переходим на следующую страницу, состояние сохранено');
         }
         router.push('/request/display_scratches');
     };
@@ -126,29 +131,54 @@ export default function FormPage() {
         }
         
         // Сохраняем прогресс в БД (асинхронно, без await)
-        fetch('/api/request/saveProgress', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                telegramId: 'test_user', // Временно, потом заменим на реальный ID
-                phoneData: newOptions,
-                step: 'phone_selection'
-            }),
-        })
-        .then(response => {
-            if (response.ok) {
-                console.log('✅ Прогресс сохранен в БД');
-            } else {
-                console.log('❌ Ошибка при сохранении в БД');
-            }
-        })
-        .catch(e => {
-            console.log('❌ Ошибка при сохранении в БД:', e);
-        });
+        if (!isSaving) {
+            setIsSaving(true);
+            fetch('/api/request/saveProgress', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    telegramId: 'test_user', // Временно, потом заменим на реальный ID
+                    phoneData: newOptions,
+                    step: 'phone_selection'
+                }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Прогресс сохранен в БД');
+                } else {
+                    console.log('❌ Ошибка при сохранении в БД:', response.status, response.statusText);
+                    // Показываем пользователю, что произошла ошибка
+                    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+                        window.Telegram.WebApp.showAlert('Ошибка при сохранении прогресса. Попробуйте еще раз.');
+                    }
+                }
+            })
+            .catch(e => {
+                console.log('❌ Ошибка при сохранении в БД:', e);
+                // Показываем пользователю, что произошла ошибка
+                if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.showAlert('Ошибка сети. Проверьте подключение к интернету.');
+                }
+            })
+            .finally(() => {
+                setIsSaving(false);
+            });
+        }
         
         // Улучшенная интеграция с Telegram WebApp
+        // Сохраняем данные в Telegram CloudStorage для надежного восстановления
+        callTelegramMethod('web_app_cloud_storage_set', {
+            key: 'phoneSelection',
+            value: JSON.stringify({
+                type: 'phoneSelection',
+                data: newOptions,
+                timestamp: Date.now(),
+                step: 'phone_selection'
+            })
+        });
+        
         // Отправляем данные в Telegram для возможного восстановления
         callTelegramMethod('web_app_data_send', {
             type: 'phoneSelection',
@@ -163,15 +193,20 @@ export default function FormPage() {
             impact_style: 'light'
         });
         
-        // Если все опции выбраны, показываем MainButton
-        if (Object.values(newOptions).every(option => option !== '')) {
+        // Управляем MainButton в зависимости от выбора
+        const allOptionsSelected = Object.values(newOptions).every(option => option !== '');
+        
+        if (allOptionsSelected) {
+            // Показываем MainButton когда все выбрано
             callTelegramMethod('web_app_setup_main_button', {
                 is_visible: true,
-                text: 'Продолжить',
+                text: 'Далее',
                 color: '#00FF00',
-                text_color: '#FFFFFF'
+                text_color: '#FFFFFF',
+                is_active: true
             });
         } else {
+            // Скрываем MainButton когда выбор неполный
             callTelegramMethod('web_app_setup_main_button', {
                 is_visible: false
             });
@@ -223,6 +258,18 @@ export default function FormPage() {
                         if (typeof window !== 'undefined') {
                             sessionStorage.setItem('phoneSelection', JSON.stringify(result.data.phoneData));
                         }
+                        
+                        // Проверяем, нужно ли показать MainButton
+                        const allOptionsSelected = Object.values(result.data.phoneData).every(option => option !== '');
+                        if (allOptionsSelected) {
+                            callTelegramMethod('web_app_setup_main_button', {
+                                is_visible: true,
+                                text: 'Продолжить',
+                                color: '#00FF00',
+                                text_color: '#FFFFFF',
+                                is_active: true
+                            });
+                        }
                     } else {
                         console.log('📝 Прогресс в БД не найден');
                     }
@@ -239,36 +286,153 @@ export default function FormPage() {
             const savedInSession = sessionStorage.getItem('phoneSelection');
             console.log('📱 Проверяем sessionStorage:', savedInSession);
             
-            if (savedInSession) {
-                try {
-                    const parsed = JSON.parse(savedInSession);
-                    console.log('✅ Восстановлено из sessionStorage:', parsed);
-                    setSelectedOptions(parsed);
-                    return; // Не загружаем из БД, если есть в sessionStorage
-                } catch (e) {
-                    console.log('❌ Ошибка при парсинге sessionStorage:', e);
-                    sessionStorage.removeItem('phoneSelection'); // Очищаем поврежденные данные
+                            if (savedInSession) {
+                    try {
+                        const parsed = JSON.parse(savedInSession);
+                        console.log('✅ Восстановлено из sessionStorage:', parsed);
+                        setSelectedOptions(parsed);
+                        
+                        // Проверяем, нужно ли показать MainButton
+                        const allOptionsSelected = Object.values(parsed).every(option => option !== '');
+                        if (allOptionsSelected) {
+                            callTelegramMethod('web_app_setup_main_button', {
+                                is_visible: true,
+                                text: 'Далее',
+                                color: '#00FF00',
+                                text_color: '#FFFFFF',
+                                is_active: true
+                            });
+                        }
+                        
+                        return; // Не загружаем из БД, если есть в sessionStorage
+                    } catch (e) {
+                        console.log('❌ Ошибка при парсинге sessionStorage:', e);
+                        sessionStorage.removeItem('phoneSelection'); // Очищаем поврежденные данные
+                    }
                 }
-            }
         }
 
-        // Если нет данных в sessionStorage, загружаем из БД
-        console.log('📝 Данных в sessionStorage нет, загружаем из БД...');
-        loadProgressFromDB();
+                    // Если нет данных в sessionStorage, пробуем загрузить из CloudStorage
+            console.log('📝 Данных в sessionStorage нет, пробуем CloudStorage...');
+            
+            // Загружаем из Telegram CloudStorage
+            callTelegramMethod('web_app_cloud_storage_get', {
+                key: 'phoneSelection',
+                callback: (value: string | null) => {
+                    if (value) {
+                        try {
+                            const parsed = JSON.parse(value);
+                            if (parsed.data) {
+                                console.log('✅ Восстановлено из CloudStorage:', parsed.data);
+                                setSelectedOptions(parsed.data);
+                                
+                                // Сохраняем в sessionStorage для быстрого доступа
+                                if (typeof window !== 'undefined') {
+                                    sessionStorage.setItem('phoneSelection', JSON.stringify(parsed.data));
+                                }
+                                
+                                // Проверяем, нужно ли показать MainButton
+                                const allOptionsSelected = Object.values(parsed.data).every(option => option !== '');
+                                if (allOptionsSelected) {
+                                    callTelegramMethod('web_app_setup_main_button', {
+                                        is_visible: true,
+                                        text: 'Далее',
+                                        color: '#00FF00',
+                                        text_color: '#FFFFFF',
+                                        is_active: true
+                                    });
+                                }
+                                
+                                return; // Не загружаем из БД, если есть в CloudStorage
+                            }
+                        } catch (e) {
+                            console.log('❌ Ошибка при парсинге CloudStorage:', e);
+                        }
+                    }
+                    
+                    // Если CloudStorage пуст, загружаем из БД
+                    console.log('📝 Данных в CloudStorage нет, загружаем из БД...');
+                    loadProgressFromDB();
+                }
+            });
     }, []);
 
     // Универсальная функция для вызова методов Telegram WebApp
-    const callTelegramMethod = (methodName: string, data: any) => {
+    const callTelegramMethod = (methodName: string, data?: any) => {
         try {
             if (typeof window !== 'undefined') {
-                // Для Desktop и Mobile
+                // Используем официальный API Telegram WebApp
+                if ((window as any).Telegram?.WebApp) {
+                    const webApp = (window as any).Telegram.WebApp;
+                    
+                    switch (methodName) {
+                        case 'web_app_ready':
+                            webApp.ready();
+                            console.log('📤 WebApp готов');
+                            break;
+                        case 'web_app_expand':
+                            webApp.expand();
+                            console.log('📤 WebApp расширен');
+                            break;
+                        case 'web_app_data_send':
+                            webApp.sendData(JSON.stringify(data));
+                            console.log('📤 Данные отправлены в Telegram');
+                            break;
+                        case 'web_app_setup_main_button':
+                            if (data.is_visible) {
+                                webApp.MainButton.setText(data.text);
+                                webApp.MainButton.color = data.color;
+                                webApp.MainButton.textColor = data.text_color;
+                                webApp.MainButton.show();
+                                console.log('📤 MainButton показана');
+                            } else {
+                                webApp.MainButton.hide();
+                                console.log('📤 MainButton скрыта');
+                            }
+                            break;
+                        case 'web_app_trigger_haptic_feedback':
+                            if (webApp.HapticFeedback) {
+                                webApp.HapticFeedback.impactOccurred(data.impact_style || 'light');
+                                console.log('📤 Haptic feedback запущен');
+                            }
+                            break;
+                        case 'web_app_cloud_storage_set':
+                            if (webApp.CloudStorage) {
+                                webApp.CloudStorage.setItem(data.key, data.value, (error: any) => {
+                                    if (error) {
+                                        console.log('❌ Ошибка сохранения в CloudStorage:', error);
+                                    } else {
+                                        console.log('📤 Данные сохранены в CloudStorage');
+                                    }
+                                });
+                            }
+                            break;
+                        case 'web_app_cloud_storage_get':
+                            if (webApp.CloudStorage) {
+                                webApp.CloudStorage.getItem(data.key, (error: any, value: any) => {
+                                    if (error) {
+                                        console.log('❌ Ошибка чтения CloudStorage:', error);
+                                    } else {
+                                        console.log('📤 Данные получены из CloudStorage:', value);
+                                        data.callback && data.callback(value);
+                                    }
+                                });
+                            }
+                            break;
+                        default:
+                            console.log(`🌐 Неизвестный метод ${methodName}`);
+                    }
+                    return;
+                }
+                
+                // Fallback для Desktop и Mobile
                 if ((window as any).TelegramWebviewProxy?.postEvent) {
                     (window as any).TelegramWebviewProxy.postEvent(methodName, JSON.stringify(data));
                     console.log(`📤 Метод ${methodName} вызван через TelegramWebviewProxy`);
                     return;
                 }
                 
-                // Для Web версии
+                // Fallback для Web версии
                 if (window.parent && window.parent !== window) {
                     const message = {
                         eventType: methodName,
@@ -291,17 +455,21 @@ export default function FormPage() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             // Уведомляем Telegram о готовности приложения
-            callTelegramMethod('iframe_ready', { reload_supported: true });
+            callTelegramMethod('web_app_ready', {});
             
             // Расширяем приложение на весь экран
             callTelegramMethod('web_app_expand', {});
             
-            // Настраиваем MainButton
+            // Запрашиваем информацию о viewport
+            callTelegramMethod('web_app_request_viewport', {});
+            
+            // Настраиваем MainButton (изначально скрыта)
             callTelegramMethod('web_app_setup_main_button', {
                 is_visible: false,
-                text: 'Продолжить',
+                text: 'Далее',
                 color: '#00FF00',
-                text_color: '#FFFFFF'
+                text_color: '#FFFFFF',
+                is_active: false
             });
             
             console.log('🚀 Telegram WebApp инициализирован');
@@ -310,15 +478,41 @@ export default function FormPage() {
 
     // Обработчик событий Telegram WebApp
     useEffect(() => {
+        // Используем официальный API для обработки событий MainButton
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+            const webApp = (window as any).Telegram.WebApp;
+            
+            const handleMainButtonClick = () => {
+                console.log('🔘 MainButton нажат (официальный API)');
+                goToNextPage();
+            };
+            
+            // Добавляем обработчик события MainButton
+            webApp.MainButton.onClick(handleMainButtonClick);
+            
+            return () => {
+                // Удаляем обработчик при размонтировании
+                webApp.MainButton.offClick(handleMainButtonClick);
+            };
+        }
+        
+        // Fallback обработчик для других случаев
         const handleTelegramEvent = (event: MessageEvent) => {
             try {
                 if (event.origin === 'https://web.telegram.org' || event.origin === 'https://t.me') {
                     const data = JSON.parse(event.data);
                     console.log('📥 Получено событие от Telegram:', data);
                     
-                    // Обрабатываем нажатие на MainButton
-                    if (data.eventType === 'main_button_pressed') {
-                        console.log('🔘 MainButton нажат');
+                    // Обрабатываем нажатие на MainButton (проверяем разные варианты)
+                    if (data.eventType === 'main_button_pressed' || 
+                        data.eventType === 'mainButtonPressed' ||
+                        data.eventType === 'main_button_clicked' ||
+                        data.eventType === 'mainButtonClicked' ||
+                        data.eventType === 'main_button_press' ||
+                        data.eventType === 'mainButtonPress' ||
+                        data.eventType === 'web_app_main_button_pressed' ||
+                        data.eventType === 'webAppMainButtonPressed') {
+                        console.log('🔘 MainButton нажат (fallback)');
                         goToNextPage();
                     }
                 }
@@ -327,13 +521,13 @@ export default function FormPage() {
             }
         };
 
-        // Добавляем слушатель событий
+        // Добавляем fallback слушатель событий
         window.addEventListener('message', handleTelegramEvent);
         
         return () => {
             window.removeEventListener('message', handleTelegramEvent);
         };
-    }, []);
+    }, [goToNextPage]); // Добавляем зависимость
 
     // Компонент готов к использованию
 
@@ -512,7 +706,7 @@ export default function FormPage() {
                 {/* Сводка выбранной конфигурации */}
                 {matchingPhone && (
                     <div className="mt-8 p-4 bg-yellow-400 border-2 border-yellow-500 rounded-lg">
-                        <p className="text-lg font-bold text-gray-900 text-center mb-4">
+                        <p className="text-lg font-bold text-gray-900 text-center">
                             iPhone {matchingPhone.model}
                             {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''}, 
                             {matchingPhone.storage}, 
@@ -520,14 +714,11 @@ export default function FormPage() {
                             {matchingPhone.country.split(' ')[0]}
                         </p>
                         
-                        {/* Кнопка "Далее" */}
-                        <div className="text-center">
-                            <button
-                                onClick={goToNextPage}
-                                className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                            >
-                                Далее →
-                            </button>
+                        {/* Информация о Telegram кнопке */}
+                        <div className="mt-4 text-center">
+                            <p className="text-sm text-gray-700">
+                                Нажмите кнопку "Далее" внизу экрана
+                            </p>
                         </div>
                     </div>
                 )}

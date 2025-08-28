@@ -6,6 +6,65 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Page } from '@/components/Page';
 import { gsap } from 'gsap';
 
+// Универсальная функция для вызова методов Telegram WebApp
+const callTelegramMethod = (methodName: string, data?: any) => {
+    try {
+        if (typeof window !== 'undefined') {
+            // Используем официальный API Telegram WebApp
+            if ((window as any).Telegram?.WebApp) {
+                const webApp = (window as any).Telegram.WebApp;
+                
+                switch (methodName) {
+                    case 'web_app_setup_main_button':
+                        if (data.is_visible) {
+                            webApp.MainButton.setText(data.text);
+                            webApp.MainButton.color = data.color;
+                            webApp.MainButton.textColor = data.text_color;
+                            webApp.MainButton.show();
+                            console.log('📤 MainButton показана');
+                        } else {
+                            webApp.MainButton.hide();
+                            console.log('📤 MainButton скрыта');
+                        }
+                        break;
+                    case 'web_app_trigger_haptic_feedback':
+                        if (webApp.HapticFeedback) {
+                            webApp.HapticFeedback.impactOccurred(data.impact_style || 'light');
+                            console.log('📤 Haptic feedback запущен');
+                        }
+                        break;
+                    default:
+                        console.log(`🌐 Неизвестный метод ${methodName}`);
+                }
+                return;
+            }
+            
+            // Fallback для Desktop и Mobile
+            if ((window as any).TelegramWebviewProxy?.postEvent) {
+                (window as any).TelegramWebviewProxy.postEvent(methodName, JSON.stringify(data));
+                console.log(`📤 Метод ${methodName} вызван через TelegramWebviewProxy`);
+                return;
+            }
+            
+            // Fallback для Web версии
+            if (window.parent && window.parent !== window) {
+                const message = {
+                    eventType: methodName,
+                    eventData: data
+                };
+                window.parent.postMessage(JSON.stringify(message), 'https://web.telegram.org');
+                console.log(`📤 Метод ${methodName} вызван через postMessage`);
+                return;
+            }
+            
+            // Для обычного браузера (fallback)
+            console.log(`🌐 Метод ${methodName} недоступен в браузере`);
+        }
+    } catch (e) {
+        console.log(`❌ Ошибка при вызове метода ${methodName}:`, e);
+    }
+};
+
 // Только царапины на экране
 const screenScratches = {
     id: '1',
@@ -43,6 +102,100 @@ export default function DisplayScratchesPage() {
             setLocalAnswer(null);
         }
     }, [answers]);
+
+    // Управляем MainButton в зависимости от выбора
+    useEffect(() => {
+        if (localAnswer !== null) {
+            // Показываем MainButton когда выбор сделан
+            callTelegramMethod('web_app_setup_main_button', {
+                is_visible: true,
+                text: 'Далее',
+                color: '#00FF00',
+                text_color: '#FFFFFF',
+                is_active: true
+            });
+        } else {
+            // Скрываем MainButton когда выбор не сделан
+            callTelegramMethod('web_app_setup_main_button', {
+                is_visible: false
+            });
+        }
+    }, [localAnswer]);
+
+    // Инициализация MainButton при загрузке страницы
+    useEffect(() => {
+        // Скрываем MainButton при загрузке страницы
+        callTelegramMethod('web_app_setup_main_button', {
+            is_visible: false
+        });
+    }, []);
+
+    // Обработчик событий Telegram WebApp
+    useEffect(() => {
+        // Используем официальный API для обработки событий MainButton
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+            const webApp = (window as any).Telegram.WebApp;
+            
+            const handleMainButtonClick = () => {
+                console.log('🔘 MainButton нажат на странице царапин (официальный API)');
+                
+                // Скрываем MainButton при переходе
+                callTelegramMethod('web_app_setup_main_button', {
+                    is_visible: false
+                });
+                
+                // Переходим на следующую страницу
+                router.push('/request/condition');
+            };
+            
+            // Добавляем обработчик события MainButton
+            webApp.MainButton.onClick(handleMainButtonClick);
+            
+            return () => {
+                // Удаляем обработчик при размонтировании
+                webApp.MainButton.offClick(handleMainButtonClick);
+            };
+        }
+        
+        // Fallback обработчик для других случаев
+        const handleTelegramEvent = (event: MessageEvent) => {
+            try {
+                if (event.origin === 'https://web.telegram.org' || event.origin === 'https://t.me') {
+                    const data = JSON.parse(event.data);
+                    console.log('📥 Получено событие от Telegram:', data);
+                    
+                    // Обрабатываем нажатие на MainButton
+                    if (data.eventType === 'main_button_pressed' || 
+                        data.eventType === 'mainButtonPressed' ||
+                        data.eventType === 'main_button_clicked' ||
+                        data.eventType === 'mainButtonClicked' ||
+                        data.eventType === 'main_button_press' ||
+                        data.eventType === 'mainButtonPress' ||
+                        data.eventType === 'web_app_main_button_pressed' ||
+                        data.eventType === 'webAppMainButtonPressed') {
+                        console.log('🔘 MainButton нажат на странице царапин (fallback)');
+                        
+                        // Скрываем MainButton при переходе
+                        callTelegramMethod('web_app_setup_main_button', {
+                            is_visible: false
+                        });
+                        
+                        // Переходим на следующую страницу
+                        router.push('/request/condition');
+                    }
+                }
+            } catch (e) {
+                console.log('❌ Ошибка при обработке события Telegram:', e);
+            }
+        };
+
+        // Добавляем fallback слушатель событий
+        window.addEventListener('message', handleTelegramEvent);
+        
+        return () => {
+            window.removeEventListener('message', handleTelegramEvent);
+        };
+    }, [router]);
 
     // useEffect для запуска анимации после рендеринга
     useEffect(() => {
@@ -91,9 +244,12 @@ export default function DisplayScratchesPage() {
         const newAnswers = [...(answers || [])];
         newAnswers[0] = value;
         setAnswers(newAnswers);
+        
+        // MainButton автоматически покажется через useEffect
     };
 
-    const isNextDisabled = localAnswer === null;
+    // MainButton автоматически управляется через useEffect
+    // в зависимости от localAnswer
 
     // Не рендерим ничего до загрузки клиента
     if (!isClient) {
@@ -104,21 +260,30 @@ export default function DisplayScratchesPage() {
         <Page back={true}>
             <div className="w-full">
                 <div className="flex flex-col items-center justify-center w-full px-4">
-                    <div className="w-full max-w-md">
-                        <div className="grid grid-cols-2 gap-4 w-full">
-                            {screenScratches.levels.map((level) => {
-                                const isSelected = localAnswer === parseInt(level.value);
-                                
-                                return (
-                                    <div 
-                                        key={level.value} 
-                                        className={`aspect-square cursor-pointer rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center p-4 relative ${
-                                            isSelected
-                                                ? "border-green-500 bg-green-50 shadow-md" 
-                                                : "border-black hover:bg-gray-50"
-                                        } bg-white`}
-                                        onClick={() => handleSelect(parseInt(level.value))}
-                                    >
+                                            <div className="w-full max-w-md">
+                            <div className="text-center mb-6">
+                                <h1 className="text-2xl font-bold text-black mb-2">
+                                    📱 Царапины на экране
+                                </h1>
+                                <p className="text-gray-600">
+                                    Выберите уровень повреждения экрана
+                                </p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 w-full">
+                                {screenScratches.levels.map((level) => {
+                                    const isSelected = localAnswer === parseInt(level.value);
+                                    
+                                    return (
+                                        <div 
+                                            key={level.value} 
+                                            className={`aspect-square cursor-pointer rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center p-4 relative ${
+                                                isSelected
+                                                    ? "border-green-500 bg-green-50 shadow-md" 
+                                                    : "border-black hover:bg-gray-50"
+                                            } bg-white`}
+                                            onClick={() => handleSelect(parseInt(level.value))}
+                                        >
                                         {/* Большая галочка в центре экрана */}
                                         {showCheckmark && checkmarkPosition === 'fullscreen' && (
                                             <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
@@ -158,6 +323,15 @@ export default function DisplayScratchesPage() {
                                 );
                             })}
                         </div>
+                        
+                        {/* Информация о Telegram кнопке */}
+                        {localAnswer !== null && (
+                            <div className="mt-6 text-center">
+                                <p className="text-sm text-gray-700">
+                                    Нажмите кнопку "Далее" внизу экрана
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
