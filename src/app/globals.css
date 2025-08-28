@@ -110,7 +110,9 @@
 
   body {
     overflow-y: hidden;
-    max-height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Стили для кнопок формы */
@@ -168,21 +170,32 @@
 
   /* Предотвращение вертикальной прокрутки */
   .max-w-4xl {
-    max-height: 100vh;
+    min-height: 100vh;
     overflow-y: hidden;
     overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Предотвращение прокрутки в контейнере формы */
   .w-full.max-w-4xl.mx-auto.px-2 {
     overflow: hidden;
-    max-height: 100vh;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
 
   /* Предотвращение прокрутки в диалоговом окне */
   [data-radix-dialog-content] {
     overflow: hidden !important;
     max-height: 90vh !important;
+  }
+
+  /* Правильное отображение секций формы */
+  .mb-1.p-1.border-2.border-gray-300.rounded-lg.bg-white {
+    flex-shrink: 0;
+    width: 100%;
   }
 
   /* Оптимизация отступов для мобильных устройств */
@@ -215,9 +228,8 @@
     /* Предотвращение прокрутки на мобильных */
     html, body {
       overflow-y: hidden !important;
-      position: fixed;
+      min-height: 100vh;
       width: 100%;
-      height: 100%;
     }
   }
 
