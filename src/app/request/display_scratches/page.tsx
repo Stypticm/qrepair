@@ -324,14 +324,21 @@ export default function DisplayScratchesPage() {
                             })}
                         </div>
                         
-                        {/* Информация о Telegram кнопке */}
-                        {localAnswer !== null && (
+                        {/* Кнопка "Далее" для тестирования на ПК */}
+                        {typeof window !== 'undefined' && !(window as any).Telegram?.WebApp && localAnswer !== null && (
                             <div className="mt-6 text-center">
-                                <p className="text-sm text-gray-700">
-                                    Нажмите кнопку &ldquo;Далее&rdquo; внизу экрана
+                                <button
+                                    onClick={() => router.push('/request/condition')}
+                                    className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                >
+                                    Далее →
+                                </button>
+                                <p className="text-xs text-gray-600 mt-2">
+                                    (Эта кнопка видна только при тестировании на ПК)
                                 </p>
                             </div>
                         )}
+                        
                     </div>
                 </div>
             </div>
