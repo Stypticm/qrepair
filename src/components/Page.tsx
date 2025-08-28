@@ -38,7 +38,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   return (
     <section
-      className="w-full flex flex-col items-center justify-start p-4"
+      className="w-full flex flex-col items-center justify-start overflow-y-auto"
       style={cssVars as React.CSSProperties}
     >
       {children}

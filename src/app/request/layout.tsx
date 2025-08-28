@@ -25,6 +25,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         };
       case '/request/display_cracks':
         return {
+          nextPath: '/request/cracks',
+          isNextDisabled: !answers || answers.length < 2 || answers[1] === undefined || answers[1] === null,
+          text: 'Далее'
+        };
+      case '/request/cracks':
+        return {
           nextPath: '/request/submit',
           isNextDisabled: !answers || answers.length < 2 || answers[1] === undefined || answers[1] === null,
           text: 'Далее'
@@ -58,7 +64,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Заголовок страницы */}
           {path === '/request/form' && (
             <h2 className="text-xl font-bold text-gray-800 mt-4">
-              Выбор модели
+              Выбери свой iPhone
             </h2>
           )}
           {path === '/request/display_scratches' && (
@@ -85,7 +91,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Кнопка внизу - только для страниц формы */}
-      {path !== '/request/submit' && path !== '/request/choose' && (
+      {path !== '/request/submit' && path !== '/request/choose' && path !== '/request/form' && (
         <div className="p-4 relative z-50">
 
           <FooterButton 
