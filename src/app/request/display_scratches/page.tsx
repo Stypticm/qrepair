@@ -328,7 +328,7 @@ export default function DisplayScratchesPage() {
                         {localAnswer !== null && (
                             <div className="mt-6 text-center">
                                 <p className="text-sm text-gray-700">
-                                    Нажмите кнопку "Далее" внизу экрана
+                                    Нажмите кнопку &ldquo;Далее&rdquo; внизу экрана
                                 </p>
                             </div>
                         )}

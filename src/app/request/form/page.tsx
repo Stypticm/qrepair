@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
@@ -86,7 +86,7 @@ export default function FormPage() {
     const availableCountries = getAvailableCountries();
 
     // Функция для перехода на следующую страницу
-    const goToNextPage = () => {
+    const goToNextPage = useCallback(() => {
         // Скрываем MainButton при переходе
         callTelegramMethod('web_app_setup_main_button', {
             is_visible: false
@@ -97,7 +97,7 @@ export default function FormPage() {
             console.log('🚀 Переходим на следующую страницу, состояние сохранено');
         }
         router.push('/request/display_scratches');
-    };
+    }, [router]);
 
     const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
         const newOptions = {
@@ -717,7 +717,7 @@ export default function FormPage() {
                         {/* Информация о Telegram кнопке */}
                         <div className="mt-4 text-center">
                             <p className="text-sm text-gray-700">
-                                Нажмите кнопку "Далее" внизу экрана
+                                Нажмите кнопку &ldquo;Далее&rdquo; внизу экрана
                             </p>
                         </div>
                     </div>
