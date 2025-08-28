@@ -25,14 +25,24 @@ export default function FormPage() {
     
     // Функции для умной фильтрации
     const getAvailableVariants = () => {
-        if (!selectedOptions.model) return [];
+        if (!selectedOptions.model) {
+            // Если модель не выбрана, показываем все варианты
+            return ['', ...new Set(iphones.map(phone => phone.variant).filter(v => v !== ''))].sort();
+        }
         const filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
         const variants = [...new Set(filteredPhones.map(phone => phone.variant))];
         return ['', ...variants.filter(v => v !== '')].sort();
     };
 
     const getAvailableStorages = () => {
-        if (!selectedOptions.model) return [];
+        if (!selectedOptions.model) {
+            // Если модель не выбрана, показываем все объемы памяти
+            return [...new Set(iphones.map(phone => phone.storage))].sort((a, b) => {
+                const aNum = parseInt(a.replace('GB', '').replace('TB', '000'));
+                const bNum = parseInt(b.replace('GB', '').replace('TB', '000'));
+                return aNum - bNum;
+            });
+        }
         let filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
         if (selectedOptions.variant) {
             filteredPhones = filteredPhones.filter(phone => phone.variant === selectedOptions.variant);
@@ -41,7 +51,10 @@ export default function FormPage() {
     };
 
     const getAvailableColors = () => {
-        if (!selectedOptions.model) return [];
+        if (!selectedOptions.model) {
+            // Если модель не выбрана, показываем все цвета
+            return [...new Set(iphones.map(phone => phone.color))].sort();
+        }
         let filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
         if (selectedOptions.variant) {
             filteredPhones = filteredPhones.filter(phone => phone.variant === selectedOptions.variant);
@@ -53,7 +66,10 @@ export default function FormPage() {
     };
 
     const getAvailableCountries = () => {
-        if (!selectedOptions.model) return [];
+        if (!selectedOptions.model) {
+            // Если модель не выбрана, показываем все страны
+            return [...new Set(iphones.map(phone => phone.country))].sort();
+        }
         let filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
         if (selectedOptions.variant) {
             filteredPhones = filteredPhones.filter(phone => phone.variant === selectedOptions.variant);
