@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
@@ -32,8 +32,8 @@ export default function FormPage() {
         };
     });
     
-    // Таймер для автоматического перехода
-    const autoTransitionTimer = useRef<NodeJS.Timeout | null>(null);
+    // Проверяем, все ли опции выбраны для активации кнопки "Далее"
+    const isAllOptionsSelected = Object.values(selectedOptions).every(option => option !== '');
 
     // Получаем все возможные варианты
     const models = [...new Set(iphones.map(phone => phone.model))].sort((a, b) => parseInt(a) - parseInt(b));
@@ -95,28 +95,8 @@ export default function FormPage() {
     const availableColors = getAvailableColors();
     const availableCountries = getAvailableCountries();
 
-    // Функция для автоматического перехода
-    const startAutoTransition = () => {
-        // Очищаем предыдущий таймер
-        if (autoTransitionTimer.current) {
-            clearTimeout(autoTransitionTimer.current);
-        }
-        
-        // Запускаем новый таймер на 2 секунды
-        autoTransitionTimer.current = setTimeout(() => {
-            // Очищаем сохраненное состояние при переходе
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('phoneSelection');
-            }
-            router.push('/request/display_scratches');
-        }, 2000);
-    };
-
-    // Функция для немедленного перехода
+    // Функция для перехода на следующую страницу
     const goToNextPage = () => {
-        if (autoTransitionTimer.current) {
-            clearTimeout(autoTransitionTimer.current);
-        }
         // Очищаем сохраненное состояние при переходе
         if (typeof window !== 'undefined') {
             localStorage.removeItem('phoneSelection');
@@ -154,10 +134,8 @@ export default function FormPage() {
             localStorage.setItem('phoneSelection', JSON.stringify(newOptions));
         }
         
-        // Запускаем таймер автоматического перехода при изменении
-        if (Object.values(newOptions).every(option => option !== '')) {
-            startAutoTransition();
-        }
+        // Можно добавить логику для активации кнопки "Далее"
+        // когда все опции выбраны
     };
 
     // Находим подходящий iPhone
@@ -181,20 +159,10 @@ export default function FormPage() {
         if (matchingPhone) {
             const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${matchingPhone.variant}` : ''}`;
             setModel(fullName);
-            
-            // Автоматически переходим на следующую страницу через 2 секунды
-            startAutoTransition();
         }
     }, [matchingPhone, setModel]);
 
-    // Очищаем таймер при размонтировании компонента
-    useEffect(() => {
-        return () => {
-            if (autoTransitionTimer.current) {
-                clearTimeout(autoTransitionTimer.current);
-            }
-        };
-    }, []);
+    // Компонент готов к использованию
 
     const getColorStyle = (color: string) => {
         const colorMap: { [key: string]: string } = {
@@ -371,7 +339,7 @@ export default function FormPage() {
                 {/* Сводка выбранной конфигурации */}
                 {matchingPhone && (
                     <div className="mt-8 p-4 bg-yellow-400 border-2 border-yellow-500 rounded-lg">
-                        <p className="text-lg font-bold text-gray-900 text-center">
+                        <p className="text-lg font-bold text-gray-900 text-center mb-4">
                             iPhone {matchingPhone.model}
                             {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''}, 
                             {matchingPhone.storage}, 
@@ -379,11 +347,14 @@ export default function FormPage() {
                             {matchingPhone.country.split(' ')[0]}
                         </p>
                         
-                        {/* Индикатор автоматического перехода */}
-                        <div className="mt-4 text-center">
-                            <p className="text-sm text-gray-700">
-                                Автоматический переход через 2 секунды...
-                            </p>
+                        {/* Кнопка "Далее" */}
+                        <div className="text-center">
+                            <button
+                                onClick={goToNextPage}
+                                className="px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                            >
+                                Далее →
+                            </button>
                         </div>
                     </div>
                 )}
