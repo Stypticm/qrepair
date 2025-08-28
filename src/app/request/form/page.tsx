@@ -119,6 +119,12 @@ export default function FormPage() {
         
         setSelectedOptions(newOptions);
         
+        // Сохраняем в sessionStorage для быстрого восстановления
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('phoneSelection', JSON.stringify(newOptions));
+            console.log('💾 Сохранено в sessionStorage:', newOptions);
+        }
+        
         // Сохраняем прогресс в БД (асинхронно, без await)
         fetch('/api/request/saveProgress', {
             method: 'POST',
@@ -143,35 +149,32 @@ export default function FormPage() {
         });
         
         // Улучшенная интеграция с Telegram WebApp
-        try {
-            if (window.Telegram?.WebApp) {
-                const webApp = window.Telegram.WebApp;
-                
-                // Отправляем данные в Telegram для возможного восстановления
-                webApp.sendData(JSON.stringify({
-                    type: 'phoneSelection',
-                    data: newOptions,
-                    timestamp: Date.now(),
-                    step: 'phone_selection'
-                }));
-                console.log('📤 Данные отправлены в Telegram WebApp');
-                
-                // Показываем уведомление пользователю
-                webApp.HapticFeedback.impactOccurred('light');
-                
-                // Если все опции выбраны, показываем MainButton
-                if (Object.values(newOptions).every(option => option !== '')) {
-                    webApp.MainButton.setText('Продолжить');
-                    webApp.MainButton.show();
-                    webApp.MainButton.onClick(() => {
-                        goToNextPage();
-                    });
-                } else {
-                    webApp.MainButton.hide();
-                }
-            }
-        } catch (e) {
-            console.log('❌ Не удалось отправить данные в Telegram:', e);
+        // Отправляем данные в Telegram для возможного восстановления
+        callTelegramMethod('web_app_data_send', {
+            type: 'phoneSelection',
+            data: newOptions,
+            timestamp: Date.now(),
+            step: 'phone_selection'
+        });
+        
+        // Показываем тактильную обратную связь
+        callTelegramMethod('web_app_trigger_haptic_feedback', {
+            type: 'impact',
+            impact_style: 'light'
+        });
+        
+        // Если все опции выбраны, показываем MainButton
+        if (Object.values(newOptions).every(option => option !== '')) {
+            callTelegramMethod('web_app_setup_main_button', {
+                is_visible: true,
+                text: 'Продолжить',
+                color: '#00FF00',
+                text_color: '#FFFFFF'
+            });
+        } else {
+            callTelegramMethod('web_app_setup_main_button', {
+                is_visible: false
+            });
         }
     };
 
@@ -201,6 +204,8 @@ export default function FormPage() {
 
     // Загружаем прогресс из БД при загрузке страницы
     useEffect(() => {
+        console.log('🔄 Страница загружена, проверяем сохраненное состояние...');
+        
         const loadProgressFromDB = async () => {
             try {
                 console.log('🔄 Загружаем прогресс из БД...');
@@ -229,29 +234,105 @@ export default function FormPage() {
             }
         };
 
-        // Загружаем прогресс только если нет данных в sessionStorage
-        if (typeof window !== 'undefined' && !sessionStorage.getItem('phoneSelection')) {
-            loadProgressFromDB();
+        // Сначала пытаемся восстановить из sessionStorage
+        if (typeof window !== 'undefined') {
+            const savedInSession = sessionStorage.getItem('phoneSelection');
+            console.log('📱 Проверяем sessionStorage:', savedInSession);
+            
+            if (savedInSession) {
+                try {
+                    const parsed = JSON.parse(savedInSession);
+                    console.log('✅ Восстановлено из sessionStorage:', parsed);
+                    setSelectedOptions(parsed);
+                    return; // Не загружаем из БД, если есть в sessionStorage
+                } catch (e) {
+                    console.log('❌ Ошибка при парсинге sessionStorage:', e);
+                    sessionStorage.removeItem('phoneSelection'); // Очищаем поврежденные данные
+                }
+            }
         }
+
+        // Если нет данных в sessionStorage, загружаем из БД
+        console.log('📝 Данных в sessionStorage нет, загружаем из БД...');
+        loadProgressFromDB();
     }, []);
+
+    // Универсальная функция для вызова методов Telegram WebApp
+    const callTelegramMethod = (methodName: string, data: any) => {
+        try {
+            if (typeof window !== 'undefined') {
+                // Для Desktop и Mobile
+                if ((window as any).TelegramWebviewProxy?.postEvent) {
+                    (window as any).TelegramWebviewProxy.postEvent(methodName, JSON.stringify(data));
+                    console.log(`📤 Метод ${methodName} вызван через TelegramWebviewProxy`);
+                    return;
+                }
+                
+                // Для Web версии
+                if (window.parent && window.parent !== window) {
+                    const message = {
+                        eventType: methodName,
+                        eventData: data
+                    };
+                    window.parent.postMessage(JSON.stringify(message), 'https://web.telegram.org');
+                    console.log(`📤 Метод ${methodName} вызван через postMessage`);
+                    return;
+                }
+                
+                // Для обычного браузера (fallback)
+                console.log(`🌐 Метод ${methodName} недоступен в браузере`);
+            }
+        } catch (e) {
+            console.log(`❌ Ошибка при вызове метода ${methodName}:`, e);
+        }
+    };
 
     // Инициализация Telegram WebApp при загрузке
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-            const webApp = window.Telegram.WebApp;
-            
+        if (typeof window !== 'undefined') {
             // Уведомляем Telegram о готовности приложения
-            webApp.ready();
+            callTelegramMethod('iframe_ready', { reload_supported: true });
             
             // Расширяем приложение на весь экран
-            webApp.expand();
+            callTelegramMethod('web_app_expand', {});
             
-            // Устанавливаем цвета заголовка
-            webApp.headerColor = '#FF6B35';
-            webApp.backgroundColor = '#FFFFFF';
+            // Настраиваем MainButton
+            callTelegramMethod('web_app_setup_main_button', {
+                is_visible: false,
+                text: 'Продолжить',
+                color: '#00FF00',
+                text_color: '#FFFFFF'
+            });
             
             console.log('🚀 Telegram WebApp инициализирован');
         }
+    }, []);
+
+    // Обработчик событий Telegram WebApp
+    useEffect(() => {
+        const handleTelegramEvent = (event: MessageEvent) => {
+            try {
+                if (event.origin === 'https://web.telegram.org' || event.origin === 'https://t.me') {
+                    const data = JSON.parse(event.data);
+                    console.log('📥 Получено событие от Telegram:', data);
+                    
+                    // Обрабатываем нажатие на MainButton
+                    if (data.eventType === 'main_button_pressed') {
+                        console.log('🔘 MainButton нажат');
+                        goToNextPage();
+                    }
+                }
+            } catch (e) {
+                console.log('❌ Ошибка при обработке события Telegram:', e);
+            }
+        };
+
+        // Добавляем слушатель событий
+        window.addEventListener('message', handleTelegramEvent);
+        
+        return () => {
+            window.removeEventListener('message', handleTelegramEvent);
+        };
     }, []);
 
     // Компонент готов к использованию
