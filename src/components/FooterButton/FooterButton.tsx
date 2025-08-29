@@ -19,8 +19,8 @@ const FooterButton = ({
   const path = usePathname();
   const router = useRouter();
 
-  // Не показываем кнопку на странице формы, так как там уже есть желтая кнопка
-  if (path === '/request/form') {
+  // Не показываем кнопку на страницах, где уже есть автоматический переход
+  if (path === '/request/form' || path === '/request/display_scratches' || path === '/request/display_cracks') {
     return null;
   }
 

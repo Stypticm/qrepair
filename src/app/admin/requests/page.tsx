@@ -23,34 +23,42 @@ const RequestsPage = () => {
 
     return (
         <Page back={true}>
-            <div className="flex flex-col h-full w-full">
-                <div className="flex-1 p-6 w-full">
+            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll">
                     <div className="max-w-7xl mx-auto w-full">
-                        <h2 className="text-3xl font-bold text-white mb-8 text-center">Заявки</h2>
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-semibold text-gray-900 mb-2">📋 Заявки</h2>
+                            <p className="text-gray-600">Управление заявками на выкуп устройств</p>
+                        </div>
+                        
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
                             {applications.length === 0 ? (
-                                <Card className="w-full bg-gray-800 border-gray-700">
+                                <Card className="w-full bg-white border border-gray-200 rounded-2xl shadow-sm">
                                     <CardContent className="p-6 text-center">
-                                        <p className="text-white font-bold text-lg">Нет заявок</p>
+                                        <p className="text-gray-900 font-semibold text-lg">Нет заявок</p>
+                                        <p className="text-gray-600 mt-2">Заявки появятся здесь</p>
                                     </CardContent>
                                 </Card>
                             ) : (
                                 applications.map((bid: SkupkaRequest) => (
                                     <Card
                                         key={bid.id}
-                                        className="w-full bg-gray-800 border-gray-700 cursor-pointer hover:bg-gray-700 transition-colors shadow-lg"
+                                        className="w-full bg-white border border-gray-200 rounded-2xl cursor-pointer hover:shadow-md transition-all duration-200 shadow-sm"
                                         onClick={() => router.push(`/admin/requests/${bid.id}`)}
                                     >
-                                        <CardHeader>
-                                            <CardTitle className="text-white">Заявка {bid.id}</CardTitle>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-gray-900">Заявка {bid.id}</CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            <CardDescription className="text-gray-300 space-y-2">
-                                                <p>Модель: {bid.modelname || '—'}</p>
-                                                <p>
-                                                    Статус:{' '}
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-600">Модель:</p>
+                                                    <p className="text-gray-900 font-medium">{bid.modelname || '—'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-600">Статус:</p>
                                                     <Badge
-                                                        className={`px-2 py-1 rounded text-white ${bid.status === 'draft'
+                                                        className={`px-3 py-1 rounded-full text-white text-sm font-medium ${bid.status === 'draft'
                                                             ? 'bg-gray-500'
                                                             : bid.status === 'accepted'
                                                                 ? 'bg-green-500'
@@ -75,12 +83,14 @@ const RequestsPage = () => {
                                                                             ? 'Оплачено'
                                                                             : 'Выполнена'}
                                                     </Badge>
-                                                </p>
-                                                <p>
-                                                    Мастер:{' '}
-                                                    {bid.courierTimeSlot ? `Назначено ${bid.courierTimeSlot}` : 'Не назначен'}
-                                                </p>
-                                            </CardDescription>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-600">Мастер:</p>
+                                                    <p className="text-gray-900">
+                                                        {bid.courierTimeSlot ? `Назначено ${bid.courierTimeSlot}` : 'Не назначен'}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 ))

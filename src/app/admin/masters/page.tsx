@@ -136,10 +136,11 @@ export default function MastersPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <section className='flex flex-col gap-4'>
-                <h1 className="text-3xl font-semibold text-gray-900 text-center">Управление мастерами</h1>
+                <h1 className="text-3xl font-semibold text-gray-900 text-center mb-2">👨‍🔧 Управление мастерами</h1>
+                <p className="text-gray-600 text-center">Добавление и управление мастерами системы</p>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-xl">
+                    <Button className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl">
                       + Добавить мастера
                     </Button>
                   </DialogTrigger>

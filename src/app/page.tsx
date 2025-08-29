@@ -82,7 +82,7 @@ export default function Home() {
               <br />Мы оценим его по фото, приедем и заберём. Деньги — сразу на карту или наличными.
             </p>
             <Image
-              src={getPictureUrl('courier.png') || '/courier.png'}
+              src={getPictureUrl('logo.png') || '/logo.png'}
               alt="Курьер с телефоном"
               width={400}
               height={200}

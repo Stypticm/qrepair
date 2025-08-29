@@ -81,8 +81,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </div>
 
-      {/* Кнопка внизу - только для страниц формы, кроме /request/form */}
-      {path !== '/request/submit' && path !== '/request/choose' && path !== '/request/form' && (
+      {/* Кнопка внизу - только для страниц формы, кроме тех, где есть автоматический переход */}
+      {path !== '/request/submit' && path !== '/request/choose' && path !== '/request/form' && path !== '/request/display_scratches' && path !== '/request/display_cracks' && (
         <div className="p-4 relative z-50">
 
           <FooterButton
