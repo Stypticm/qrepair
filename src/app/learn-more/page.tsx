@@ -65,10 +65,10 @@ const LearnMore = () => {
                             <div className="space-y-3">
                                 {questions.map((question, index) => (
                                     <div className="p-3 bg-white rounded-xl border border-gray-100" key={index}>
-                                        <h3 className="font-medium text-gray-900 text-sm mb-1">
+                                        <h3 className="font-medium text-gray-900 text-base mb-2">
                                             {question.question}
                                         </h3>
-                                        <p className="text-xs text-gray-600 leading-relaxed">
+                                        <p className="text-sm text-gray-600 leading-relaxed">
                                             {question.answer}
                                         </p>
                                     </div>
