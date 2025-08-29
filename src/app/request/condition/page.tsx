@@ -184,6 +184,11 @@ export default function ConditionPage() {
 
     // Обработчик выбора условия
     const handleConditionSelect = (type: 'front' | 'back' | 'side', conditionId: string) => {
+        // Вибрация при выборе
+        if ('vibrate' in navigator) {
+            navigator.vibrate(50);
+        }
+        
         // Получаем текстовое описание состояния
         const conditionText = getConditionText(conditionId);
         
