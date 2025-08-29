@@ -122,7 +122,7 @@ export default function ConditionPage() {
         } catch (error) {
             console.error('Ошибка загрузки состояний из БД:', error);
         }
-    }, [telegramId]);
+    }, [telegramId, setDeviceConditions]);
 
     // Проверяем, все ли условия выбраны
     const isAllConditionsSelected = useCallback(() => {
