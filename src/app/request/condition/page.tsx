@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -104,6 +104,47 @@ export default function ConditionPage() {
     // Состояние для отслеживания изменений
     const [hasChanges, setHasChanges] = useState(false);
 
+    // Загрузка сохраненных состояний из БД
+    const loadSavedConditions = useCallback(async () => {
+        try {
+            const response = await fetch('/api/request/getConditions', {
+                headers: {
+                    'x-telegram-id': telegramId || 'test-user'
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.deviceConditions) {
+                    console.log('Загружены состояния из БД:', data.deviceConditions);
+                    setDeviceConditions(data.deviceConditions);
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки состояний из БД:', error);
+        }
+    }, [telegramId]);
+
+    // Проверяем, все ли условия выбраны
+    const isAllConditionsSelected = useCallback(() => {
+        return deviceConditions.front && deviceConditions.back && deviceConditions.side;
+    }, [deviceConditions]);
+
+    // Загружаем сохраненные состояния при загрузке страницы
+    useEffect(() => {
+        // Загружаем состояния из БД (как в request/form)
+        loadSavedConditions();
+    }, [loadSavedConditions]);
+
+    // Автоматический переход после выбора всех условий
+    useEffect(() => {
+        // Проверяем, все ли условия выбраны И есть ли изменения
+        if (isAllConditionsSelected() && hasChanges) {
+            setTimeout(() => {
+                router.push('/request/submit');
+            }, 1000);
+        }
+    }, [deviceConditions, hasChanges, router, isAllConditionsSelected]);
+
     // Создаем заявку при загрузке страницы (как в request/form)
     useEffect(() => {
         const createRequest = async () => {
@@ -128,59 +169,9 @@ export default function ConditionPage() {
         createRequest();
     }, [telegramId, username]);
 
-    // Убираем локальное состояние, используем контекст
-    // const [selectedConditions, setSelectedConditions] = useState({
-    //     front: '',
-    //     back: '',
-    //     side: ''
-    // });
-
-    // Загружаем сохраненные состояния при загрузке страницы
-    useEffect(() => {
-        // Загружаем состояния из БД (как в request/form)
-        loadSavedConditions();
-    }, []);
-
-    // Загрузка сохраненных состояний из БД
-    const loadSavedConditions = async () => {
-        try {
-            const response = await fetch('/api/request/getConditions', {
-                headers: {
-                    'x-telegram-id': telegramId || 'test-user'
-                }
-            });
-            if (response.ok) {
-                const data = await response.json();
-                if (data.deviceConditions) {
-                    console.log('Загружены состояния из БД:', data.deviceConditions);
-                    setDeviceConditions(data.deviceConditions);
-                }
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки состояний из БД:', error);
-        }
-    };
-
-    // Автоматический переход после выбора всех условий
-    useEffect(() => {
-        // Проверяем, все ли условия выбраны И есть ли изменения
-        if (isAllConditionsSelected() && hasChanges) {
-            setTimeout(() => {
-                router.push('/request/submit');
-            }, 1000);
-        }
-    }, [deviceConditions, hasChanges, router]);
-
-    // Убираем загрузку из БД
-    // const loadSavedConditions = async () => { ... };
 
     // Убираем сохранение в БД
     // const saveConditionsToDatabase = async () => { ... };
-
-    // Проверяем, все ли условия выбраны
-    const isAllConditionsSelected = () => {
-        return deviceConditions.front && deviceConditions.back && deviceConditions.side;
-    };
 
     // Обработчик выбора условия
     const handleConditionSelect = (type: 'front' | 'back' | 'side', conditionId: string) => {

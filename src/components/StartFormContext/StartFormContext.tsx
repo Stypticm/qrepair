@@ -34,6 +34,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
 
     // Функция для сброса всех состояний
     const resetAllStates = () => {
+        console.log('Сбрасываю все состояния формы...');
         setModel('Apple iPhone 11');
         setComment('');
         setImei(null);
@@ -46,6 +47,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             back: null,
             side: null
         });
+        console.log('Все состояния сброшены');
     };
 
     useEffect(() => {

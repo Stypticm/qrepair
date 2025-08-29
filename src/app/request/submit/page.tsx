@@ -47,9 +47,17 @@ const SubmitPage = () => {
             });
 
             if (res.ok) {
-                // Сразу переходим на главную страницу без диалога
+                const result = await res.json();
+                console.log('Заявка отправлена успешно:', result);
+                
+                // Сначала сбрасываем все состояния
+                resetAllStates();
+                console.log('Состояния сброшены');
+                
+                // Потом переходим на главную страницу
                 router.push('/');
-                resetAllStates(); // Reset states after successful submission
+            } else {
+                console.error('Ошибка при отправке заявки:', res.status);
             }
         } catch (error) {
             console.error('Ошибка при отправке заявки:', error);
