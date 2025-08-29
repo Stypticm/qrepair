@@ -131,6 +131,11 @@ export default function ConditionPage() {
 
     // Загружаем сохраненные состояния при загрузке страницы
     useEffect(() => {
+        console.log('Загрузка request/condition, текущие состояния:', {
+            modelname,
+            deviceConditions
+        });
+        
         // Если это новая заявка (modelname по умолчанию), сбрасываем состояния
         if (modelname === 'Apple iPhone 11') {
             console.log('Новая заявка - сбрасываем состояния');

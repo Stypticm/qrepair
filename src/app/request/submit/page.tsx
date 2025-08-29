@@ -17,7 +17,7 @@ const deviceCatalog = {
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, answers, deviceConditions, resetAllStates } = useStartForm();
+    const { telegramId, modelname, answers, deviceConditions, resetAllStates, setDeviceConditions } = useStartForm();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
@@ -60,13 +60,21 @@ const SubmitPage = () => {
                 resetAllStates();
                 console.log('Состояния сброшены в submit');
                 
+                // Дополнительно принудительно сбрасываем deviceConditions
+                setDeviceConditions({
+                    front: null,
+                    back: null,
+                    side: null
+                });
+                console.log('deviceConditions принудительно сброшены');
+                
                 // Проверяем что состояния действительно сброшены
                 setTimeout(() => {
-                    console.log('Проверка сброса состояний:', {
+                    console.log('Проверка сброса состояний ПОСЛЕ:', {
                         modelname: modelname,
                         deviceConditions: deviceConditions
                     });
-                }, 100);
+                }, 200);
                 
                 // Потом переходим на главную страницу
                 router.push('/');
