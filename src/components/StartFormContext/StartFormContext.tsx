@@ -20,6 +20,17 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(false);
     const [price, setPrice] = useState<number | null>(null);
     const [onNext, setOnNext] = useState<(() => Promise<void>) | undefined>(undefined);
+    
+    // Состояния устройства
+    const [deviceConditions, setDeviceConditions] = useState<{
+        front: string | null;
+        back: string | null;
+        side: string | null;
+    }>({
+        front: null,
+        back: null,
+        side: null
+    });
 
     useEffect(() => {
         if (initDataState?.user) {
@@ -42,6 +53,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 price,
                 showQuestionsSuccess,
                 onNext,
+                deviceConditions,
                 setOnNext,
                 setTelegramId,
                 setComment,
@@ -51,7 +63,8 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setUserPhotoUrl,
                 setAnswers,
                 setShowQuestionsSuccess,
-                setPrice
+                setPrice,
+                setDeviceConditions
             }}
         >
             {children}

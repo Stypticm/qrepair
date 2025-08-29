@@ -18,28 +18,47 @@ export async function GET(req: Request) {
       select: {
         id: true,
         telegramId: true,
+        username: true,
         modelname: true,
         photoUrls: true,
+        videoUrl: true,
         status: true,
         comment: true,
         imei: true,
+        contractUrl: true,
         answers: true,
         price: true,
+        damagePercent: true,
+        questionsAnswered: true,
         priceConfirmed: true,
+        inspection: true,
+        inspectionCompleted: true,
+        inspectionToken: true,
+        imeiInfo: true,
+        phoneData: true,
+        currentStep: true,
         courierTelegramId: true,
         courierScheduledAt: true,
         courierTimeSlot: true,
         courierUserConfirmed: true,
         courierReminderSent: true,
+        courierTimeSlotSent: true,
         finalPrice: true,
-        inspectionCompleted: true,
+        condition: true,
+        cracks: true,
+        deviceConditions: true,
+        submittedAt: true,
         createdAt: true,
         updatedAt: true,
       },
+      orderBy: {
+        createdAt: 'desc'
+      }
     })
 
     return NextResponse.json(devices)
   } catch (error) {
-    return NextResponse.json({ error }, { status: 500 })
+    console.error('Error fetching devices:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

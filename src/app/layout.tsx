@@ -1,5 +1,4 @@
 import type { PropsWithChildren } from 'react';
-import { Root } from '@/components/Root/Root';
 import { I18nProvider } from '@/core/i18n/provider';
 import { Comic_Neue } from 'next/font/google';
 import { StartFormProvider } from '@/components/StartFormContext/StartFormContext';
@@ -31,13 +30,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>
       <body>
-        <Root>
-          <I18nProvider>
-            <StartFormProvider>
-              <ClientLayoutContent>{children}</ClientLayoutContent>
-            </StartFormProvider>
-          </I18nProvider>
-        </Root>
+        <I18nProvider>
+          <StartFormProvider>
+            <ClientLayoutContent>{children}</ClientLayoutContent>
+          </StartFormProvider>
+        </I18nProvider>
       </body>
     </html>
   )

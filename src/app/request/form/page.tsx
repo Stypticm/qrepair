@@ -450,8 +450,8 @@ export default function FormPage() {
     const handleContinueToNext = () => {
         if (matchingPhone) {
             // Модель уже сохранена в контексте через useEffect
-            // Просто переходим на следующую страницу
-            router.push('/request/display_scratches');
+            // Переходим на страницу выбора состояния
+            router.push('/request/condition');
         }
     };
 

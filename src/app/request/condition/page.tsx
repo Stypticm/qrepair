@@ -1,159 +1,337 @@
 'use client'
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react'
-import FooterButton from '@/components/FooterButton/FooterButton';
 import { Page } from '@/components/Page';
-import { cn } from '@/lib/utils';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { getPictureUrl } from '@/core/lib/assets';
 
-const screenScratchesLevels = [
-    { value: '0', label: 'Отсутствует', penalty: 0, color: 'bg-green-100 text-green-800' },
-    { value: '1', label: 'Лёгкий', penalty: 5, color: 'bg-yellow-100 text-yellow-800' },
-    { value: '2', label: 'Средний', penalty: 15, color: 'bg-orange-100 text-orange-800' },
-    { value: '3', label: 'Тяжёлый', penalty: 30, color: 'bg-red-100 text-red-800' }
+interface ConditionOption {
+    id: string;
+    label: string;
+    penalty: string;
+    image: string;
+}
+
+const frontConditions: ConditionOption[] = [
+    {
+        id: 'display_front_new',
+        label: 'Новый',
+        penalty: '0%',
+        image: '/display_front_new.png'
+    },
+    {
+        id: 'display_front',
+        label: 'Очень\nхорошее',
+        penalty: '-5%',
+        image: '/display_front.png'
+    },
+    {
+        id: 'display_front_have_scratches',
+        label: 'Заметные\nцарапины',
+        penalty: '-15%',
+        image: '/display_front_have_scratches.png'
+    },
+    {
+        id: 'display_front_scratches',
+        label: 'Трещины',
+        penalty: '-25%',
+        image: '/display_front_scratches.png'
+    }
 ];
 
-const ConditionPage = () => {
-    const { telegramId, setAnswers } = useStartForm();
-    const [selectedLevel, setSelectedLevel] = useState<string>('');
-    const [loading, setLoading] = useState(true);
+const backConditions: ConditionOption[] = [
+    {
+        id: 'display_back_new',
+        label: 'Новый',
+        penalty: '0%',
+        image: '/display_back_new.png'
+    },
+    {
+        id: 'display_back',
+        label: 'Очень\nхорошее',
+        penalty: '-5%',
+        image: '/display_back.png'
+    },
+    {
+        id: 'display_back_have_scratches',
+        label: 'Заметные\nцарапины',
+        penalty: '-15%',
+        image: '/display_back_have_scratches.png'
+    },
+    {
+        id: 'display_back_scratches',
+        label: 'Трещины',
+        penalty: '-25%',
+        image: '/display_back_scratches.png'
+    }
+];
 
+const sideConditions: ConditionOption[] = [
+    {
+        id: 'display_side_new',
+        label: 'Новый',
+        penalty: '0%',
+        image: '/display_side_new.png'
+    },
+    {
+        id: 'display_side',
+        label: 'Очень\nхорошее',
+        penalty: '-5%',
+        image: '/display_side.png'
+    },
+    {
+        id: 'display_side_have_scratches',
+        label: 'Заметные\nцарапины',
+        penalty: '-15%',
+        image: '/display_side_have_scratches.png'
+    },
+    {
+        id: 'display_side_scratches',
+        label: 'Трещины',
+        penalty: '-25%',
+        image: '/display_side_scratches.png'
+    }
+];
+
+export default function ConditionPage() {
+    const { modelname, telegramId, deviceConditions, setDeviceConditions, username } = useStartForm();
+    const router = useRouter();
+    
+    // Состояние для отслеживания изменений
+    const [hasChanges, setHasChanges] = useState(false);
+
+    // Создаем заявку при загрузке страницы (как в request/form)
     useEffect(() => {
-        const getData = async () => {
-            try {
-                const res = await fetch(`/api/request/condition?telegramId=${telegramId}`);
-                if (!res.ok) return;
-                const data = await res.json();
-                if (data?.condition) {
-                    setSelectedLevel(data.condition);
+        const createRequest = async () => {
+            if (telegramId) {
+                try {
+                    await fetch('/api/request/choose', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            telegramId,
+                            username: username || 'Unknown',
+                        }),
+                    });
+                } catch (error) {
+                    console.error('Error creating request:', error);
                 }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
             }
         };
-        if (telegramId) getData();
-    }, [telegramId]);
 
-    const handleSelect = (value: string) => {
-        setSelectedLevel(value);
-        // Сохраняем состояние
-        if (telegramId) {
-            fetch('/api/request/condition', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ telegramId, condition: value }),
+        createRequest();
+    }, [telegramId, username]);
+
+    // Убираем локальное состояние, используем контекст
+    // const [selectedConditions, setSelectedConditions] = useState({
+    //     front: '',
+    //     back: '',
+    //     side: ''
+    // });
+
+    // Загружаем сохраненные состояния при загрузке страницы
+    useEffect(() => {
+        // Загружаем состояния из БД (как в request/form)
+        loadSavedConditions();
+    }, []);
+
+    // Загрузка сохраненных состояний из БД
+    const loadSavedConditions = async () => {
+        try {
+            const response = await fetch('/api/request/getConditions', {
+                headers: {
+                    'x-telegram-id': telegramId || 'test-user'
+                }
             });
+            if (response.ok) {
+                const data = await response.json();
+                if (data.deviceConditions) {
+                    console.log('Загружены состояния из БД:', data.deviceConditions);
+                    setDeviceConditions(data.deviceConditions);
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки состояний из БД:', error);
         }
     };
 
-    const handleNext = async () => {
-        if (!telegramId || !selectedLevel) return;
+    // Автоматический переход после выбора всех условий
+    useEffect(() => {
+        // Проверяем, все ли условия выбраны И есть ли изменения
+        if (isAllConditionsSelected() && hasChanges) {
+            setTimeout(() => {
+                router.push('/request/submit');
+            }, 1000);
+        }
+    }, [deviceConditions, hasChanges, router]);
+
+    // Убираем загрузку из БД
+    // const loadSavedConditions = async () => { ... };
+
+    // Убираем сохранение в БД
+    // const saveConditionsToDatabase = async () => { ... };
+
+    // Проверяем, все ли условия выбраны
+    const isAllConditionsSelected = () => {
+        return deviceConditions.front && deviceConditions.back && deviceConditions.side;
+    };
+
+    // Обработчик выбора условия
+    const handleConditionSelect = (type: 'front' | 'back' | 'side', conditionId: string) => {
+        // Получаем текстовое описание состояния
+        const conditionText = getConditionText(conditionId);
         
-        // Обновляем ответы в контексте
-        const currentAnswers = new Array(14).fill('0');
-        currentAnswers[0] = selectedLevel; // Индекс 0 для царапин экрана
-        setAnswers(currentAnswers);
+        // Проверяем, изменилось ли состояние
+        if (deviceConditions[type] !== conditionText) {
+            setHasChanges(true);
+            
+            // Сохраняем состояния в БД при изменении
+            saveConditionsToDatabase({
+                ...deviceConditions,
+                [type]: conditionText
+            });
+        }
+        
+        setDeviceConditions({
+            ...deviceConditions,
+            [type]: conditionText
+        });
+    };
+
+    // Сохранение состояний в БД
+    const saveConditionsToDatabase = async (newConditions: any) => {
+        try {
+            const response = await fetch('/api/request/saveConditions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-telegram-id': telegramId || 'test-user'
+                },
+                body: JSON.stringify({
+                    deviceConditions: newConditions
+                }),
+            });
+
+            if (response.ok) {
+                console.log('Состояния сохранены в БД');
+            } else {
+                console.error('Ошибка сохранения состояний в БД');
+            }
+        } catch (error) {
+            console.error('Ошибка при сохранении состояний в БД:', error);
+        }
+    };
+
+    // Функция для получения текстового описания состояния
+    const getConditionText = (conditionId: string): string => {
+        if (conditionId.includes('_new')) {
+            return 'Новый';
+        } else if (conditionId.includes('_have_scratches')) {
+            return 'Значительные царапины';
+        } else if (conditionId.includes('_scratches')) {
+            return 'Трещины';
+        } else if (conditionId.includes('display_front') || conditionId.includes('display_back') || conditionId.includes('display_side')) {
+            return 'Очень хорошее';
+        } else {
+            return conditionId; // fallback
+        }
+    };
+
+    // Рендерим секцию выбора условий
+    const renderConditionSection = (type: 'front' | 'back' | 'side', conditions: ConditionOption[]) => {
+        // Разные размеры изображений для разных секций
+        const getImageStyle = () => {
+            if (type === 'side') {
+                // Боковые грани - такая же ширина как у передней и задней части, но узкие по высоте
+                return 'w-full h-6 rounded-lg';
+            } else {
+                // Передняя и задняя панель - прямоугольные как телефон, большая высота для полной видимости без обрезки
+                return 'w-full h-36 rounded-lg';
+            }
+        };
+
+        return (
+            <div className="space-y-1">
+                {/* Заголовок секции */}
+                <h3 className="text-base font-semibold text-gray-900 text-center">
+                    {type === 'front' ? 'Передняя часть' : type === 'back' ? 'Задняя панель' : 'Боковые грани'}
+                </h3>
+
+                {/* Сетка вариантов */}
+                <div className="grid grid-cols-4 gap-2">
+                    {conditions.map((condition) => (
+                        <Card
+                            key={condition.id}
+                            className={`cursor-pointer transition-all duration-200 hover:shadow-md relative ${
+                                deviceConditions[type] === getConditionText(condition.id)
+                                    ? 'ring-2 ring-blue-500 bg-blue-50'
+                                    : 'hover:bg-gray-50'
+                            }`}
+                            onClick={() => handleConditionSelect(type, condition.id)}
+                        >
+                            {deviceConditions[type] === getConditionText(condition.id) && (
+                                <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center shadow-sm z-10">
+                                    <span className="text-white text-xs font-bold">✓</span>
+                                </div>
+                            )}
+                            <CardContent className="p-0.5 pb-0">
+                                {/* Изображение - разные размеры для разных секций */}
+                                <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
+                                    <Image
+                                        src={condition.image}
+                                        alt={condition.label}
+                                        fill
+                                        className="object-cover"
+                                        sizes="(max-width: 768px) 25vw, 20vw"
+                                    />
+                                </div>
+
+                                {/* Название условия */}
+                                <h4 className="text-xs font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
+                                    {condition.label}
+                                </h4>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
     };
 
     return (
         <Page back={true}>
-            <section className="w-full flex flex-col gap-4 p-3 bg-[#F5F5F5]">
-                <h2 className="w-full text-3xl text-center font-extrabold uppercase text-black flex justify-center items-center">
-                    📱 Оценка состояния устройства
-                </h2>
+            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="flex-1 p-4">
+                    <div className="w-full max-w-2xl mx-auto h-full flex flex-col">
+                        
+                        {/* Секция передней части экрана */}
+                        <div className="flex-1 flex flex-col justify-center space-y-4">
+                            {renderConditionSection('front', frontConditions)}
+                        </div>
 
-                {loading ? (
-                    <div className="text-center text-lg font-semibold">Загрузка...</div>
-                ) : (
-                    <div className="flex flex-col gap-2">
-                        <Card className="border-2 border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-300 bg-gray-50">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-start gap-4">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <span className="text-3xl">📱</span>
-                                        {/* Картинка царапин на экране */}
-                                        <div className="w-24 h-24 relative rounded-lg overflow-hidden border-2 border-gray-300 shadow-md">
-                                            <Image
-                                                src={getPictureUrl('screen-scratches.png') || '/defects/screen-scratches.png'}
-                                                alt="Царапины на экране - пример"
-                                                fill
-                                                className="object-cover"
-                                                onError={(e) => {
-                                                    const target = e.target as HTMLImageElement;
-                                                    target.style.display = 'none';
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-xs font-bold bg-white px-2 py-1 rounded border">
-                                                Экран
-                                            </span>
-                                        </div>
-                                        <CardTitle className="text-xl text-black">Царапины на экране</CardTitle>
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            Видимые следы на стекле дисплея
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            
-                            <CardContent className="space-y-4">
-                                {/* Выбор уровня дефекта */}
-                                <div>
-                                    <Label className="text-sm font-semibold text-gray-700 mb-3 block">
-                                        Выберите уровень повреждения:
-                                    </Label>
-                                    <RadioGroup
-                                        value={selectedLevel}
-                                        onValueChange={handleSelect}
-                                        className="grid grid-cols-2 gap-3"
-                                    >
-                                        {screenScratchesLevels.map((level) => (
-                                            <div key={level.value} className="flex items-center space-x-2">
-                                                <RadioGroupItem value={level.value} id={`scratches-${level.value}`} />
-                                                <Label 
-                                                    htmlFor={`scratches-${level.value}`}
-                                                    className={cn(
-                                                        "flex-1 p-3 rounded-lg border cursor-pointer text-center text-sm font-medium transition-all duration-200 hover:scale-105",
-                                                        selectedLevel === level.value
-                                                            ? "border-2 border-blue-500 bg-blue-50 shadow-md"
-                                                            : "border-gray-200 hover:border-gray-300 hover:bg-gray-100"
-                                                    )}
-                                                >
-                                                    <div className={cn("text-xs px-3 py-1 rounded-full mb-2 font-bold", level.color)}>
-                                                        {level.label}
-                                                    </div>
-                                                    <div className="text-xl font-bold text-gray-800">
-                                                        {level.penalty > 0 ? `-${level.penalty}%` : '0%'}
-                                                    </div>
-                                                </Label>
-                                            </div>
-                                        ))}
-                                    </RadioGroup>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {/* Разделитель */}
+                        <div className="border-t border-gray-200 my-3"></div>
+
+                        {/* Секция задней панели */}
+                        <div className="flex-1 flex flex-col justify-center space-y-4">
+                            {renderConditionSection('back', backConditions)}
+                        </div>
+
+                        {/* Разделитель */}
+                        <div className="border-t border-gray-200 my-3"></div>
+
+                        {/* Секция боковых граней */}
+                        <div className="flex-1 flex flex-col justify-center space-y-4">
+                            {renderConditionSection('side', sideConditions)}
+                        </div>
                     </div>
-                )}
-                
-                {/* Кнопка подтверждения */}
-                <FooterButton 
-                    nextPath="/request/display_cracks" 
-                    isNextDisabled={!selectedLevel} 
-                    onNext={handleNext} 
-                />
-            </section>
+                </div>
+            </div>
         </Page>
     );
-};
-
-export default ConditionPage;
+}

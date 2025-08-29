@@ -34,26 +34,55 @@ export type FormState = {
 
   showQuestionsSuccess: boolean
   setShowQuestionsSuccess: (v: boolean) => void
+
+  // Состояния устройства
+  deviceConditions: {
+    front: string | null
+    back: string | null
+    side: string | null
+  }
+  setDeviceConditions: (conditions: {
+    front: string | null
+    back: string | null
+    side: string | null
+  }) => void
 }
 
 export interface SkupkaRequest {
   id: string
-  telegramId: string | null
+  telegramId: string
+  username: string
   modelname?: string
   photoUrls?: string[]
+  videoUrl?: string
   status?: string
   comment?: string
   imei?: string
+  contractUrl?: string
   answers?: number[]
   price?: number
+  damagePercent?: number
+  questionsAnswered?: boolean
   priceConfirmed?: boolean
+  inspection?: any
+  inspectionCompleted?: boolean
+  inspectionToken?: string
+  imeiInfo?: any
+  phoneData?: any
+  currentStep?: string
   courierTelegramId?: string
   courierScheduledAt?: string
   courierTimeSlot?: string
   courierUserConfirmed?: boolean
   courierReminderSent?: boolean
+  courierTimeSlotSent?: boolean
   finalPrice?: number
-  inspectionCompleted?: boolean
+  condition?: string
+  cracks?: string
+  deviceConditions?: any
+  submittedAt?: string
+  createdAt: string
+  updatedAt: string
 }
 
 // Новые интерфейсы для проверки устройств

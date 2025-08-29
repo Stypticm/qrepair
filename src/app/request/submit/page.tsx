@@ -17,9 +17,17 @@ const deviceCatalog = {
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, answers } = useStartForm();
+    const { telegramId, modelname, answers, deviceConditions } = useStartForm();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+
+    // Убираем загрузку состояний из БД, используем контекст
+    // useEffect(() => {
+    //     loadDeviceConditions();
+    // }, []);
+
+    // Убираем загрузку состояний
+    // const loadDeviceConditions = async () => { ... };
 
     const handleSubmit = async () => {
         if (submitting) return;
@@ -65,7 +73,7 @@ const SubmitPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-full bg-gray-50 animate-fadeInUp">
+            <div className="w-full h-full bg-gray-50 animate-fadeInUp my-auto">
                 <div className="flex flex-col items-center justify-center w-full h-full px-6">
                     <div className="w-full max-w-md space-y-6">
                         {/* Summary заявки */}
@@ -77,30 +85,35 @@ const SubmitPage = () => {
                             <div className="space-y-4">
                                 <div className="flex justify-between items-start">
                                     <span className="text-gray-600 font-medium">Модель:</span>
-                                    <span className="font-semibold text-gray-900 text-right break-words max-w-[60%]">{modelname}</span>
+                                    <span className="font-semibold text-gray-900 text-right break-words">{modelname}</span>
                                 </div>
                                 
                                 <div className="border-t border-gray-200 pt-4">
                                     <h4 className="font-semibold mb-3 text-gray-900">Состояние устройства:</h4>
                                     <div className="space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-600 font-medium">Царапины на экране:</span>
-                                            <span className="font-semibold text-gray-900">
-                                                {answers && answers[0] !== undefined ? 
-                                                    ['Отсутствует', 'Лёгкий', 'Средний', 'Тяжёлый'][answers[0]] : 
-                                                    'Не выбрано'
-                                                }
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-600 font-medium">Трещины на экране:</span>
-                                            <span className="font-semibold text-gray-900">
-                                                {answers && answers[1] !== undefined ? 
-                                                    ['Отсутствует', 'Лёгкий', 'Средний', 'Тяжёлый'][answers[1]] : 
-                                                    'Не выбрано'
-                                                }
-                                            </span>
-                                        </div>
+                                        {/* Новые состояния устройства из контекста */}
+                                        {deviceConditions && (
+                                            <>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600 font-medium">Состояние передней панели:</span>
+                                                    <span className="font-semibold text-gray-900 text-right break-words">
+                                                        {deviceConditions.front || 'Не выбрано'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600 font-medium">Состояние задней панели:</span>
+                                                    <span className="font-semibold text-gray-900 text-right break-words">
+                                                        {deviceConditions.back || 'Не выбрано'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600 font-medium">Состояние боковой панели:</span>
+                                                    <span className="font-semibold text-gray-900 text-right break-words">
+                                                        {deviceConditions.side || 'Не выбрано'}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                                 

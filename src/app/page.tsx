@@ -72,56 +72,38 @@ export default function Home() {
   return (
     <AdaptiveContainer>
       <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50 pt-20">
-        <div className="w-full max-w-md mx-auto text-center space-y-6">
-          <div className="space-y-4">
-            <h1 className="text-3xl font-semibold text-gray-900 text-center px-2 tracking-tight">
-              💰 Выкуп телефона
-            </h1>
-            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-              🚀 Продай свой смартфон за 3 минуты.
-              <br />Мы оценим его по фото, приедем и заберём. Деньги — сразу на карту или наличными.
-            </p>
+        <div className="w-full max-w-md mx-auto text-center space-y-8">
+          <div className="space-y-6">
             <Image
               src={getPictureUrl('logo.png') || '/logo.png'}
-              alt="Курьер с телефоном"
-              width={400}
-              height={200}
-              className="w-full h-auto object-contain mb-6 rounded-2xl shadow-lg"
+              alt="Логотип"
+              width={300}
+              height={150}
+              className="w-full h-auto object-contain mx-auto rounded-2xl shadow-lg"
             />
-            <div className="flex flex-col gap-3 w-full">
+            
+            <div className="flex flex-col gap-4 w-full">
               <Button
                 variant="outline"
-                className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg rounded-xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full h-16 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
                 onClick={() => router.push('/request/form')}
               >
-                ✅ Оценить смартфон
+                Оценить смартфон
               </Button>
               <Button
                 variant="outline"
-                className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                className="w-full h-14 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
                 onClick={() => router.push('/my-devices')}
               >
-                📋 Мои устройства
+                Мои устройства
               </Button>
               <Button
                 variant="outline"
-                className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                className="w-full h-14 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
                 onClick={() => router.push('/learn-more')}
               >
-                📦 Как это работает?
+                Как это работает
               </Button>
-              <Button
-                variant="outline"
-                className="w-full h-12 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-                onClick={() => router.push('/questions')}
-              >
-                ❓ Частые вопросы
-              </Button>
-
-            </div>
-            <div className="mt-8 text-base text-gray-500 w-full font-medium space-y-2">
-              <p>🔐 Безопасно: договор и выезд с курьером</p>
-              <p>💰 Гарантия честной цены</p>
             </div>
           </div>
 

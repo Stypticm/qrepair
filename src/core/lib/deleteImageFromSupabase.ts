@@ -1,13 +1,19 @@
 import { supabase } from './supabase';
 
 export const deleteImageFromSupabase = async (imageUrl: string) => {
-  const fileName = imageUrl.split('/').pop();
+  try {
+    const { data, error } = await supabase.storage
+      .from('master-photos')
+      .remove([imageUrl]);
 
-  const { error } = await supabase.storage.from('items').remove([fileName!]);
+    if (error) {
+      console.error('Error deleting image:', error);
+      throw error;
+    }
 
-  if (error) {
-    return { success: false, error: error.message };
+    return data;
+  } catch (error) {
+    console.error('Error deleting image:', error);
+    throw error;
   }
-
-  return { success: true, error: null };
 };

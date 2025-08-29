@@ -1,7 +1,6 @@
 'use client';
 
 import { List } from '@telegram-apps/telegram-ui';
-import Header from '../Header/Header';
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (

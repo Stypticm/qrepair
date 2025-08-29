@@ -39,6 +39,7 @@ model Skupka {
   finalPrice           Float?       // Окончательная цена после проверки
   condition            String?      // Состояние царапин экрана
   cracks               String?      // Состояние трещин экрана
+  deviceConditions     Json?        // Детальное состояние устройства (front, back, side)
   submittedAt          DateTime?    // Время отправки заявки
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
