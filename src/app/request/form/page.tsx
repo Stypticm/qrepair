@@ -479,14 +479,14 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора варианта */}
-                <div className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <div className={`p-2 border border-gray-200 rounded-xl shadow-sm ${!selectedOptions.model ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
                     <h3 className="text-center font-semibold text-gray-900 mb-1 text-sm">Вариант</h3>
                     <div className="grid grid-cols-3 gap-1">
                         {getAvailableVariants().map((variant: string) => (
                             <Button
                                 key={variant}
                                 onClick={() => handleOptionSelect('variant', variant)}
-                                disabled={!getAvailableVariants().includes(variant)}
+                                disabled={!selectedOptions.model || !getAvailableVariants().includes(variant)}
                                 className={`w-full h-8 rounded-lg border transition-all duration-200 text-xs font-medium flex items-center justify-center truncate ${selectedOptions.variant === variant
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
@@ -499,14 +499,14 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора объема памяти */}
-                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <div className={`p-3 border border-gray-200 rounded-xl shadow-sm ${!selectedOptions.model ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
                     <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Объем памяти</h3>
                     <div className="flex flex-row justify-between gap-1">
                         {getAvailableStorages().map((storage: string) => (
                             <Button
                                 key={storage}
                                 onClick={() => handleOptionSelect('storage', storage)}
-                                disabled={!getAvailableStorages().includes(storage)}
+                                disabled={!selectedOptions.model || !getAvailableStorages().includes(storage)}
                                 className={`flex-1 h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
@@ -519,14 +519,14 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора цвета */}
-                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <div className={`p-3 border border-gray-200 rounded-xl shadow-sm ${!selectedOptions.model ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
                     <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Цвет</h3>
                     <div className="flex flex-row justify-around gap-2">
                         {getAvailableColors().map((color: string) => (
                             <Button
                                 key={color}
                                 onClick={() => handleOptionSelect('color', color)}
-                                disabled={false}
+                                disabled={!selectedOptions.model}
                                 className={`h-10 w-10 rounded-full border-2 transition-all duration-200 relative group flex items-center justify-between p-0 ${selectedOptions.color === color
                                     ? 'border-blue-500 ring-2 ring-blue-300 shadow-lg'
                                     : 'border-gray-200 hover:border-gray-300'
@@ -547,14 +547,14 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора типа SIM */}
-                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <div className={`p-3 border border-gray-200 rounded-xl shadow-sm ${!selectedOptions.model ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
                     <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Тип SIM</h3>
                     <div className="grid grid-cols-2 gap-1">
                         {getAvailableSimTypes().map((simType: string) => (
                             <Button
                                 key={simType}
                                 onClick={() => handleOptionSelect('simType', simType)}
-                                disabled={!getAvailableSimTypes().includes(simType)}
+                                disabled={!selectedOptions.model || !getAvailableSimTypes().includes(simType)}
                                 className={`w-full h-8 rounded-lg border transition-all duration-200 text-xs font-medium flex items-center justify-center ${selectedOptions.simType === simType
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
@@ -567,14 +567,14 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора страны производителя */}
-                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                <div className={`p-3 border border-gray-200 rounded-xl shadow-sm ${!selectedOptions.model ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
                     <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Страна производитель</h3>
                     <div className="grid grid-cols-2 gap-1">
                         {getAvailableCountries().map((country: string) => (
                             <Button
                                 key={country}
                                 onClick={() => handleOptionSelect('country', country)}
-                                disabled={!getAvailableCountries().includes(country)}
+                                disabled={!selectedOptions.model || !getAvailableCountries().includes(country)}
                                 className={`w-full h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center ${selectedOptions.country === country
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'

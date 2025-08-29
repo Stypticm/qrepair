@@ -60,7 +60,7 @@ export default function DisplayCracksPage() {
 
     return (
         <Page>
-            <div className="flex flex-col h-full bg-gray-50">
+            <div className="flex flex-col h-full bg-gray-50 animate-slideInRight">
                 <div className="flex-1 p-6">
                     <div className="grid grid-cols-2 gap-4">
                         {screenCracks.levels.map((level) => {
