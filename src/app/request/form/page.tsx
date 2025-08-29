@@ -16,7 +16,7 @@ export default function FormPage() {
     // Инициализируем состояние
     const [selectedOptions, setSelectedOptions] = useState({
         model: '',
-        variant: '',
+        variant: null, // Изменяем на null чтобы не было предвыбора
         storage: '',
         color: '',
         country: '',
@@ -31,11 +31,11 @@ export default function FormPage() {
         if (!selectedOptions.model) {
             // Если модель не выбрана, показываем все варианты
             const allVariants = iphones.map((phone: IPhone) => phone.variant).filter((v: string) => v !== '');
-            return ['', ...new Set(allVariants)].sort();
+            return [...new Set(allVariants)].sort();
         }
         const filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
         const variants = [...new Set(filteredPhones.map((phone: IPhone) => phone.variant))];
-        return ['', ...variants.filter((v: string) => v !== '')].sort();
+        return variants.filter((v: string) => v !== '').sort();
     };
 
     const getAvailableStorages = (): string[] => {
@@ -143,7 +143,7 @@ export default function FormPage() {
 
         // Сбрасываем зависимые параметры
         if (type === 'model') {
-            newOptions.variant = '';
+            newOptions.variant = null;
             newOptions.storage = '';
             newOptions.color = '';
             newOptions.country = '';
@@ -269,6 +269,10 @@ export default function FormPage() {
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
+                    // Обрабатываем случай, когда variant был пустой строкой
+                    if (parsed.variant === '') {
+                        parsed.variant = null;
+                    }
                     setSelectedOptions(parsed);
                     return; // Не загружаем из CloudStorage, если есть в sessionStorage
                 } catch (e) {
@@ -285,6 +289,10 @@ export default function FormPage() {
                     try {
                         const parsed = JSON.parse(value);
                         if (parsed.data) {
+                            // Обрабатываем случай, когда variant был пустой строкой
+                            if (parsed.data.variant === '') {
+                                parsed.data.variant = null;
+                            }
                             setSelectedOptions(parsed.data);
 
                             // Сохраняем в sessionStorage для быстрого доступа
@@ -452,14 +460,14 @@ export default function FormPage() {
             <div className="w-full h-full flex flex-col gap-2 p-2 bg-gray-50">
 
                 {/* Секция выбора модели */}
-                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
-                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Модель</h3>
+                <div className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-sm">Модель</h3>
                     <div className="grid grid-cols-4 gap-1">
                         {[...new Set(iphones.map((phone: IPhone) => phone.model))].sort((a: string, b: string) => parseInt(a) - parseInt(b)).map((model: string) => (
                             <Button
                                 key={model}
                                 onClick={() => handleOptionSelect('model', model)}
-                                className={`w-full h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.model === model
+                                className={`w-full h-8 rounded-lg border transition-all duration-200 text-xs font-medium flex items-center justify-center truncate ${selectedOptions.model === model
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                     }`}
@@ -471,20 +479,20 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора варианта */}
-                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
-                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Вариант</h3>
+                <div className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-sm">Вариант</h3>
                     <div className="grid grid-cols-3 gap-1">
                         {getAvailableVariants().map((variant: string) => (
                             <Button
                                 key={variant}
                                 onClick={() => handleOptionSelect('variant', variant)}
                                 disabled={!getAvailableVariants().includes(variant)}
-                                className={`w-full h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.variant === variant
+                                className={`w-full h-8 rounded-lg border transition-all duration-200 text-xs font-medium flex items-center justify-center truncate ${selectedOptions.variant === variant
                                     ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
                                     : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                     }`}
                             >
-                                {variant || ''}
+                                {variant}
                             </Button>
                         ))}
                     </div>

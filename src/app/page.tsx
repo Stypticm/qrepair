@@ -71,7 +71,7 @@ export default function Home() {
 
   return (
     <AdaptiveContainer>
-      <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
+      <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50 pt-20">
         <div className="w-full max-w-md mx-auto text-center space-y-6">
           <div className="space-y-4">
             <h1 className="text-3xl font-semibold text-gray-900 text-center px-2 tracking-tight">
