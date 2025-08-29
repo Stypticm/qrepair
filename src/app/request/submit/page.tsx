@@ -65,7 +65,7 @@ const SubmitPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-full bg-gray-50">
+            <div className="w-full h-full bg-gray-50 animate-fadeInUp">
                 <div className="flex flex-col items-center justify-center w-full h-full px-6">
                     <div className="w-full max-w-md space-y-6">
                         {/* Summary заявки */}
