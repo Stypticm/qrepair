@@ -131,9 +131,21 @@ export default function ConditionPage() {
 
     // Загружаем сохраненные состояния при загрузке страницы
     useEffect(() => {
-        // Загружаем состояния из БД (как в request/form)
-        loadSavedConditions();
-    }, [loadSavedConditions]);
+        // Если это новая заявка (modelname по умолчанию), сбрасываем состояния
+        if (modelname === 'Apple iPhone 11') {
+            console.log('Новая заявка - сбрасываем состояния');
+            setDeviceConditions({
+                front: null,
+                back: null,
+                side: null
+            });
+            setHasChanges(false);
+        } else {
+            // Если это продолжение заявки - загружаем состояния из БД
+            console.log('Продолжение заявки - загружаем состояния из БД');
+            loadSavedConditions();
+        }
+    }, [modelname, loadSavedConditions]);
 
     // Автоматический переход после выбора всех условий
     useEffect(() => {

@@ -10,8 +10,13 @@ const { iphones } = appleModels;
 import { Button } from '@/components/ui/button';
 
 export default function FormPage() {
-    const { modelname, setModel, telegramId, username } = useStartForm();
+    const { modelname, setModel, telegramId, username, resetAllStates } = useStartForm();
     const router = useRouter();
+
+    // Сбрасываем все состояния при загрузке страницы (новая заявка)
+    useEffect(() => {
+        resetAllStates();
+    }, [resetAllStates]);
 
     // Инициализируем состояние
     const [selectedOptions, setSelectedOptions] = useState({

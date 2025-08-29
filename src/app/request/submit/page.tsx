@@ -52,7 +52,15 @@ const SubmitPage = () => {
                 
                 // Сначала сбрасываем все состояния
                 resetAllStates();
-                console.log('Состояния сброшены');
+                console.log('Состояния сброшены в submit');
+                
+                // Проверяем что состояния действительно сброшены
+                setTimeout(() => {
+                    console.log('Проверка сброса состояний:', {
+                        modelname: modelname,
+                        deviceConditions: deviceConditions
+                    });
+                }, 100);
                 
                 // Потом переходим на главную страницу
                 router.push('/');
