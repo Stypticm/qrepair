@@ -50,6 +50,12 @@ const SubmitPage = () => {
                 const result = await res.json();
                 console.log('Заявка отправлена успешно:', result);
                 
+                // Очищаем sessionStorage перед сбросом состояний
+                if (typeof window !== 'undefined') {
+                    sessionStorage.removeItem('phoneSelection');
+                    console.log('sessionStorage очищен при отправке заявки');
+                }
+                
                 // Сначала сбрасываем все состояния
                 resetAllStates();
                 console.log('Состояния сброшены в submit');

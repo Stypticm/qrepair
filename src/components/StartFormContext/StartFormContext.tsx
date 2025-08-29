@@ -47,6 +47,13 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             back: null,
             side: null
         });
+        
+        // Очищаем sessionStorage при сбросе состояний
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('phoneSelection');
+            console.log('sessionStorage очищен');
+        }
+        
         console.log('Все состояния сброшены');
     };
 

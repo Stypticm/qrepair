@@ -10,13 +10,24 @@ const { iphones } = appleModels;
 import { Button } from '@/components/ui/button';
 
 export default function FormPage() {
-    const { modelname, setModel, telegramId, username, resetAllStates } = useStartForm();
+    const { modelname, setModel, telegramId, username } = useStartForm();
     const router = useRouter();
 
-    // Сбрасываем все состояния при загрузке страницы (новая заявка)
+    // Сбрасываем все состояния при загрузке страницы (только если это новая заявка)
     useEffect(() => {
-        resetAllStates();
-    }, [resetAllStates]);
+        // Проверяем, есть ли сохраненные данные в sessionStorage
+        const savedData = sessionStorage.getItem('phoneSelection');
+        if (!savedData) {
+            // Только если нет сохраненных данных - сбрасываем состояния
+            console.log('Новая заявка - сбрасываем состояния');
+            // Сбрасываем только основные состояния, не вызывая resetAllStates
+            setModel('Apple iPhone 11');
+            // Очищаем sessionStorage для новой заявки
+            sessionStorage.removeItem('phoneSelection');
+        } else {
+            console.log('Продолжение заявки - оставляем состояния');
+        }
+    }, []); // Убираем resetAllStates из зависимостей
 
     // Инициализируем состояние
     const [selectedOptions, setSelectedOptions] = useState({
@@ -141,10 +152,14 @@ export default function FormPage() {
     };
 
     const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
+        console.log('Выбор опции:', { type, value, currentOptions: selectedOptions });
+        
         const newOptions = {
             ...selectedOptions,
             [type]: selectedOptions[type] === value ? '' : value
         };
+
+        console.log('Новые опции:', newOptions);
 
         // Сбрасываем зависимые параметры
         if (type === 'model') {
@@ -171,6 +186,7 @@ export default function FormPage() {
             // Не сбрасываем country при выборе simType
         }
 
+        console.log('Опции после сброса зависимых:', newOptions);
         setSelectedOptions(newOptions);
 
         // Сохраняем в sessionStorage для быстрого восстановления
@@ -207,6 +223,13 @@ export default function FormPage() {
     // Находим подходящий iPhone
     const findMatchingPhone = (): IPhone | null => {
         if (!selectedOptions.model || !selectedOptions.storage || !selectedOptions.color || !selectedOptions.country || !selectedOptions.simType) {
+            console.log('Не все опции выбраны:', {
+                model: selectedOptions.model,
+                storage: selectedOptions.storage,
+                color: selectedOptions.color,
+                country: selectedOptions.country,
+                simType: selectedOptions.simType
+            });
             return null;
         }
 
@@ -219,6 +242,12 @@ export default function FormPage() {
             phone.country === selectedOptions.country &&
             phone.simType === selectedOptions.simType
         );
+
+        console.log('Поиск телефона:', {
+            selectedOptions,
+            foundPhone,
+            totalPhones: iphones.length
+        });
 
         return foundPhone || null;
     };
