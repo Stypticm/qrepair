@@ -32,6 +32,22 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         side: null
     });
 
+    // Функция для сброса всех состояний
+    const resetAllStates = () => {
+        setModel('Apple iPhone 11');
+        setComment('');
+        setImei(null);
+        setAnswers([]);
+        setShowQuestionsSuccess(false);
+        setPrice(null);
+        setOnNext(undefined);
+        setDeviceConditions({
+            front: null,
+            back: null,
+            side: null
+        });
+    };
+
     useEffect(() => {
         if (initDataState?.user) {
             setUsername(initDataState.user.first_name ?? null);
@@ -64,7 +80,8 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setAnswers,
                 setShowQuestionsSuccess,
                 setPrice,
-                setDeviceConditions
+                setDeviceConditions,
+                resetAllStates
             }}
         >
             {children}

@@ -16,7 +16,7 @@ import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 
 export default function Home() {
-  const { telegramId, setModel } = useStartForm();
+  const { telegramId, setModel, resetAllStates } = useStartForm();
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 

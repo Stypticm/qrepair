@@ -17,7 +17,7 @@ const deviceCatalog = {
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, answers, deviceConditions } = useStartForm();
+    const { telegramId, modelname, answers, deviceConditions, resetAllStates } = useStartForm();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
@@ -49,6 +49,7 @@ const SubmitPage = () => {
             if (res.ok) {
                 // Сразу переходим на главную страницу без диалога
                 router.push('/');
+                resetAllStates(); // Reset states after successful submission
             }
         } catch (error) {
             console.error('Ошибка при отправке заявки:', error);

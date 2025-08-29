@@ -46,6 +46,9 @@ export type FormState = {
     back: string | null
     side: string | null
   }) => void
+
+  // Сброс всех состояний
+  resetAllStates: () => void
 }
 
 export interface SkupkaRequest {
