@@ -54,22 +54,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Заголовок страницы */}
           {path === '/request/form' && (
-            <h2 className="text-xl font-bold text-gray-800 mt-4">
+            <h2 className="text-2xl font-extrabold text-gray-800 mt-4">
               Выбери<br />свой iPhone
             </h2>
           )}
           {path === '/request/display_scratches' && (
-            <h2 className="text-xl font-bold text-gray-800 mt-4">
+            <h2 className="text-2xl font-extrabold text-gray-800 mt-4">
               📱 Царапины<br /> на экране
             </h2>
           )}
           {path === '/request/display_cracks' && (
-            <h2 className="text-xl font-bold text-gray-800 mt-4">
+            <h2 className="text-2xl font-extrabold text-gray-800 mt-4">
               💥 Трещины<br /> на экране
             </h2>
           )}
           {path === '/request/submit' && (
-            <h2 className="text-xl font-bold text-gray-800 mt-4">
+            <h2 className="text-2xl font-extrabold text-gray-800 mt-4">
               📱 Отправка<br /> заявки
             </h2>
           )}

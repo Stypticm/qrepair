@@ -71,7 +71,7 @@ export default function Home() {
 
   return (
     <AdaptiveContainer>
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f9ecb8]">
+      <div className="h-full w-full flex flex-col items-center justify-center p-4 bg-[#f9ecb8]">
         <div className="w-full max-w-md mx-auto text-center space-y-4">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold text-black mb-4">

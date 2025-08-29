@@ -58,14 +58,14 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       if (isDesktop) {
         // Desktop - центрируем и ограничиваем размер
         return {
-          container: "min-h-screen w-full flex flex-col bg-[#f9ecb8] items-center justify-center",
-          main: "flex-1 w-full max-w-md mx-auto p-6 shadow-lg bg-[#f9ecb8] rounded-lg my-8",
+          container: "min-h-screen min-w-screen flex flex-col bg-[#f9ecb8] items-center justify-center",
+          main: "flex-1 w-full max-w-md shadow-lg bg-[#f9ecb8] rounded-lg",
           wrapper: "w-full max-w-md mx-auto"
         };
       } else if (isMobile) {
         // Mobile браузер - фиксированный размер как раньше
         return {
-          container: "h-screen flex flex-col bg-[#f9ecb8] items-center justify-center",
+          container: "min-h-screen min-w-screen flex flex-col bg-[#f9ecb8] items-center justify-center",
           main: "flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-[#f9ecb8] rounded-lg",
           wrapper: "w-full h-full max-w-md mx-auto"
         };
@@ -120,9 +120,9 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       )}
       
       <div className={styles.wrapper}>
-        <main className={styles.main}>
+        
           {children}
-        </main>
+        
       </div>
     </div>
   );

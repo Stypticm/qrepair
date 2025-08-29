@@ -290,8 +290,6 @@ export default function FormPage() {
         setShowSummaryDialog(false);
     }, []);
 
-    // MainButton больше не используется, так как есть желтая кнопка
-
 
     // Универсальная функция для вызова методов Telegram WebApp
     const callTelegramMethod = (methodName: string, data?: any) => {
@@ -404,16 +402,16 @@ export default function FormPage() {
 
     return (
         <Page back={true}>
-            <div className="w-full max-w-4xl mx-auto px-2">
+            <div className="w-full h-full flex flex-col gap-2 p-2">
                 {/* Секция выбора модели */}
-                <div className="mb-1 p-1 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-semibold text-gray-800 mb-1 text-sm">Модель</h3>
-                    <div className="grid grid-cols-4 gap-1">
+                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Модель</h3>
+                    <div className="grid grid-cols-4 gap-2">
                         {[...new Set(iphones.map(phone => phone.model))].sort((a, b) => parseInt(a) - parseInt(b)).map((model) => (
                             <Button
                                 key={model}
                                 onClick={() => handleOptionSelect('model', model)}
-                                className={`w-full h-10 rounded-lg border-2 transition-all duration-200 text-xs font-medium flex items-center justify-center truncate ${selectedOptions.model === model
+                                className={`w-full h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.model === model
                                     ? 'border-green-500 bg-green-50 text-green-700'
                                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                                     }`}
@@ -425,15 +423,15 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора варианта */}
-                <div className="mb-1 p-1 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-semibold text-gray-800 mb-1 text-sm">Вариант</h3>
-                    <div className="grid grid-cols-3 gap-1">
+                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Вариант</h3>
+                    <div className="grid grid-cols-3 gap-2">
                         {getAvailableVariants().map((variant) => (
                             <Button
                                 key={variant}
                                 onClick={() => handleOptionSelect('variant', variant)}
                                 disabled={!getAvailableVariants().includes(variant)}
-                                className={`w-full h-10 rounded-lg border-2 transition-all duration-200 text-xs font-medium flex items-center justify-center truncate ${selectedOptions.variant === variant
+                                className={`w-full h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.variant === variant
                                     ? 'border-green-500 bg-green-50 text-green-700'
                                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                                     }`}
@@ -445,15 +443,15 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора объема памяти */}
-                <div className="mb-1 p-1 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-semibold text-gray-800 mb-1 text-sm">Объем памяти</h3>
-                    <div className="flex flex-row justify-between gap-1">
+                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Объем памяти</h3>
+                    <div className="flex flex-row justify-between gap-2">
                         {getAvailableStorages().map((storage) => (
                             <Button
                                 key={storage}
                                 onClick={() => handleOptionSelect('storage', storage)}
                                 disabled={!getAvailableStorages().includes(storage)}
-                                className={`flex-1 h-10 rounded-lg border-2 transition-all duration-200 text-xs font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
+                                className={`flex-1 h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
                                     ? 'border-green-500 bg-green-50 text-green-700'
                                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                                     }`}
@@ -465,15 +463,15 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора цвета */}
-                <div className="mb-1 p-1 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-semibold text-gray-800 mb-1 text-sm">Цвет</h3>
-                    <div className="flex flex-row justify-between gap-1">
+                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Цвет</h3>
+                    <div className="flex flex-row justify-between gap-2">
                         {getAvailableColors().map((color) => (
                             <Button
                                 key={color}
                                 onClick={() => handleOptionSelect('color', color)}
                                 disabled={!getAvailableColors().includes(color)}
-                                className={`flex-1 h-10 rounded-lg border-2 transition-all duration-200 relative group flex items-center justify-center ${selectedOptions.color === color
+                                className={`flex-1 h-12 rounded-lg border-2 transition-all duration-200 relative group flex items-center justify-center ${selectedOptions.color === color
                                     ? 'border-green-500 ring-2 ring-green-300'
                                     : 'border-gray-300 hover:border-gray-400'
                                     }`}
@@ -493,22 +491,22 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора страны производителя */}
-                <div className="mb-1 p-1 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-semibold text-gray-800 mb-1 text-sm">Страна производитель</h3>
-                    <div className="grid grid-cols-2 gap-1">
+                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
+                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Страна производитель</h3>
+                    <div className="grid grid-cols-2 gap-2">
                         {getAvailableCountries().map((country) => (
                             <Button
                                 key={country}
                                 onClick={() => handleOptionSelect('country', country)}
                                 disabled={!getAvailableCountries().includes(country)}
-                                className={`w-full h-10 rounded-lg border-2 transition-all duration-200 text-xs font-medium flex items-center justify-center ${selectedOptions.country === country
+                                className={`w-full h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center ${selectedOptions.country === country
                                     ? 'border-green-500 bg-green-50 text-green-700'
                                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                                     }`}
                             >
                                 <div className="flex flex-col items-center">
-                                    <span className="text-xs leading-none">{country.split(' ')[1]}</span>
-                                    <span className="text-xs leading-none">{country.split(' ')[0]}</span>
+                                    <span className="text-sm leading-none">{country.split(' ')[1]}</span>
+                                    <span className="text-sm leading-none">{country.split(' ')[0]}</span>
                                 </div>
                             </Button>
                         ))}
@@ -520,17 +518,17 @@ export default function FormPage() {
                 {/* Диалоговое окно с итоговой информацией */}
                 <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
                     <DialogContent
-                        className="bg-yellow-400/95 border-yellow-500 cursor-pointer max-w-[90vw] mx-auto"
+                        className="bg-yellow-400/95 border-yellow-500 cursor-pointer w-[95vw] max-w-md mx-auto"
                         onClick={handleContinueToNext}
                         showCloseButton={false}
                     >
-                        <DialogTitle className="text-center text-xl font-bold text-gray-900 mb-4">
+                        <DialogTitle className="text-center text-2xl font-bold text-gray-900 mb-4">
                             📱 Ваша конфигурация
                         </DialogTitle>
                         {matchingPhone && (
                             <>
                                 <div className="text-center">
-                                    <p className="text-lg font-semibold text-gray-900 bg-white p-2 rounded-lg border border-gray-200 break-words">
+                                    <p className="text-xl font-semibold text-gray-900 bg-white p-3 rounded-lg border border-gray-200 break-words">
                                         iPhone {matchingPhone.model}
                                         {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''},
                                         {matchingPhone.storage},
@@ -538,7 +536,7 @@ export default function FormPage() {
                                         {matchingPhone.country.split(' ')[0]}
                                     </p>
                                 </div>
-                                <p className="text-center text-sm text-gray-700 mt-4">
+                                <p className="text-center text-base text-gray-700 mt-4">
                                     👆 Нажмите на окно для перехода к следующему шагу
                                 </p>
                             </>

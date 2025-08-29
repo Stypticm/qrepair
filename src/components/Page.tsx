@@ -3,7 +3,7 @@
 import { backButton } from '@telegram-apps/sdk-react';
 import { PropsWithChildren, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSafeArea } from '@/hooks/useSafeArea'; // Предполагается, что хук доступен
+import { useSafeArea } from '@/hooks/useSafeArea';
 
 export function Page({ children, back = true }: PropsWithChildren<{
   /**
@@ -13,7 +13,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
   back?: boolean;
 }>) {
   const router = useRouter();
-  const { safeAreaInsets, cssVars } = useSafeArea(); // Добавляем безопасные зоны
+  const { safeAreaInsets, cssVars } = useSafeArea();
 
   useEffect(() => {
     if (back) {
@@ -38,8 +38,16 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   return (
     <section
-      className="w-full flex flex-col items-center justify-start overflow-y-hidden"
-      style={cssVars as React.CSSProperties}
+      className="w-full h-full flex flex-col items-stretch justify-start"
+      style={{
+        ...cssVars as React.CSSProperties,
+        paddingTop: `${safeAreaInsets.top}px`,
+        paddingBottom: `${safeAreaInsets.bottom}px`,
+        paddingLeft: `${safeAreaInsets.left}px`,
+        paddingRight: `${safeAreaInsets.right}px`,
+        minHeight: '100vh',
+        boxSizing: 'border-box'
+      }}
     >
       {children}
     </section>

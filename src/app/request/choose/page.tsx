@@ -34,7 +34,7 @@ const ChoosePage = () => {
 
   return (
     <Page back={true}>
-      <section className="flex flex-col gap-2 p-3">
+      <section className="w-full h-full flex flex-col gap-2 p-2">
         <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
           Выберите<br />способ<br />заполнения
         </h1>
