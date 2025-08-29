@@ -28,12 +28,14 @@ const questions = [
 const QuestionsPage = () => {
     return (
         <Page back={true}>
-            <div className="min-h-full w-full my-auto p-4">
-                <h2 className="text-3xl font-extrabold uppercase text-black tracking-tight mb-2 text-center">❓Частые вопросы</h2>
-                <section className='flex flex-col gap-2 w-full'>
+            <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+                <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
+                    ❓Частые<br />вопросы
+                </h1>
+                <section className='flex flex-col gap-1 w-full'>
                     {
                         questions.map((question, index) => (
-                            <div className="flex flex-row items-start justify-center gap-4" key={index}>
+                            <div className="flex flex-row items-start justify-center gap-2" key={index}>
                                 <Image
                                     src={getPictureUrl('questionImage.png') || '/questionImage.png'}
                                     alt="Знак вопроса"

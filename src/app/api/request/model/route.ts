@@ -29,6 +29,8 @@ export async function PATCH(req: Request) {
       data: { modelname: modelname.trim() },
     })
 
+
+
     return NextResponse.json({ success: true, updated })
   } catch (error) {
     console.error(error)

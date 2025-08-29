@@ -18,10 +18,12 @@ export default function StatusPage() {
 
     return (
         <Page back={true}>
-            <div className="flex flex-col items-center justify-start w-full h-full p-4">
-                <h2 className="text-3xl font-extrabold uppercase text-gray-900 tracking-tight mb-2 text-center">📋 Статус заявки</h2>
+            <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+                <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
+                    📋 Статус<br />заявки
+                </h1>
                 {status && (
-                    <div className="grid grid-cols-2 gap-4 items-center">
+                    <div className="grid grid-cols-2 gap-2 items-center p-2">
                         {statuses.map((item, index) => (
                             <div
                                 key={item.key}

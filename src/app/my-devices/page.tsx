@@ -23,6 +23,7 @@ const MyDevices = () => {
           setLoading(true);
           const res = await fetch(`/api/my-devices?telegramId=${telegramId}`)
           const data = await res.json()
+
           setMyDevices(data)
         } catch (e) {
           console.error(e)
@@ -80,11 +81,11 @@ const MyDevices = () => {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-[#f9ecb8]">
+      <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
         <div className="w-full max-w-md text-center space-y-4">
-          <h2 className="text-2xl font-extrabold uppercase text-black tracking-tight mb-6 text-center">
-            📋 МОИ УСТРОЙСТВА
-          </h2>
+          <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
+            📋 МОИ<br />УСТРОЙСТВА
+          </h1>
 
           {loading ? (
             <div className="flex justify-center items-center h-64">
@@ -96,13 +97,19 @@ const MyDevices = () => {
               <div className="text-gray-500">Создайте заявку на выкуп, чтобы начать</div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 w-full max-w-4xl p-4">
+            <div className="p-2 flex flex-col gap-2">
               {myDevices.map((device: SkupkaRequest) => (
                 <Card key={device.id} className="bg-slate-300 border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-lg font-bold text-gray-800">
-                        📱 {device.modelname || 'Неизвестная модель'}
+                        📱 {device.modelname ? 
+                          (device.modelname.length > 40 ? 
+                            device.modelname.substring(0, 40) + '...' : 
+                            device.modelname
+                          ) : 
+                          'Неизвестная модель'
+                        }
                       </CardTitle>
                       <Badge className={`${getStatusColor(device.status)} text-white px-3 py-1`}>
                         {getStatusText(device.status)}
@@ -117,7 +124,7 @@ const MyDevices = () => {
                       </div>
                       <div>
                         <span className="font-semibold text-gray-600">Модель:</span>
-                        <div className="text-gray-800">{device.modelname || '—'}</div>
+                        <div className="text-gray-800 break-words">{device.modelname ? device.modelname : '—'}</div>
                       </div>
                     </div>
 

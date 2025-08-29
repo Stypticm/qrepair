@@ -47,6 +47,14 @@ export async function POST(request: Request) {
             0
           )
         : 0
+      // Извлекаем базовую модель из полного названия (например, "Apple iPhone 11 Pro Max 128GB Золотой Китай" -> "Apple iPhone 11")
+      const baseModelMatch = modelname.match(
+        /Apple iPhone (\d+)/
+      )
+      const baseModel = baseModelMatch
+        ? `Apple iPhone ${baseModelMatch[1]}`
+        : 'Apple iPhone 11'
+
       const deviceCatalog = {
         'Apple iPhone 11': 48000,
         'Apple iPhone 12': 56000,
@@ -56,7 +64,7 @@ export async function POST(request: Request) {
       }
       const basePrice =
         deviceCatalog[
-          modelname as keyof typeof deviceCatalog
+          baseModel as keyof typeof deviceCatalog
         ] || 48000
       const finalPrice = Math.max(
         basePrice - (basePrice * totalPenalty) / 100,

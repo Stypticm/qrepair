@@ -55,7 +55,12 @@ const SubmitPage = () => {
     };
 
     const totalPenalty = getTotalPenalty();
-    const basePrice = modelname ? deviceCatalog[modelname as keyof typeof deviceCatalog]?.basePrice || 48000 : 48000;
+    
+    // Извлекаем базовую модель из полного названия (например, "Apple iPhone 11 Pro Max 128GB Золотой Китай" -> "Apple iPhone 11")
+    const baseModelMatch = modelname ? modelname.match(/Apple iPhone (\d+)/) : null;
+    const baseModel = baseModelMatch ? `Apple iPhone ${baseModelMatch[1]}` : 'Apple iPhone 11';
+    
+    const basePrice = deviceCatalog[baseModel as keyof typeof deviceCatalog]?.basePrice || 48000;
     const finalPrice = Math.max(basePrice - (basePrice * totalPenalty / 100), 0);
 
     return (
@@ -70,9 +75,9 @@ const SubmitPage = () => {
                             </h3>
                             
                             <div className="space-y-3">
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between items-start">
                                     <span className="!text-gray-600">Модель:</span>
-                                    <span className="font-semibold !text-gray-800">{modelname}</span>
+                                    <span className="font-semibold !text-gray-800 text-right break-words max-w-[60%]">{modelname}</span>
                                 </div>
                                 
                                 <div className="border-t pt-3">

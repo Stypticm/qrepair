@@ -169,43 +169,14 @@ export default function FormPage() {
 
     useEffect(() => {
         if (matchingPhone) {
-            const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${matchingPhone.variant}` : ''}`;
+            const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${matchingPhone.variant}` : ''} ${matchingPhone.storage} ${getColorLabel(matchingPhone.color)} ${matchingPhone.country.split(' ')[0]}`;
+
             setModel(fullName);
         }
     }, [matchingPhone, setModel]);
 
-    // Загружаем прогресс из БД при загрузке страницы
+    // Загружаем прогресс из sessionStorage или CloudStorage при загрузке страницы
     useEffect(() => {
-        const loadProgressFromDB = async () => {
-            try {
-                const response = await fetch('/api/request/getProgress', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ modelname }),
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    if (data.success && data.data) {
-                        const { model, variant, storage, color, country } = data.data;
-
-                        setSelectedOptions({
-                            model: model || '',
-                            variant: variant || '',
-                            storage: storage || '',
-                            color: color || '',
-                            country: country || ''
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Ошибка при загрузке прогресса:', error);
-            }
-        };
-
         // Сначала пытаемся восстановить из sessionStorage
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('phoneSelection');
@@ -214,7 +185,7 @@ export default function FormPage() {
                 try {
                     const parsed = JSON.parse(savedInSession);
                     setSelectedOptions(parsed);
-                    return; // Не загружаем из БД, если есть в sessionStorage
+                    return; // Не загружаем из CloudStorage, если есть в sessionStorage
                 } catch (e) {
                     sessionStorage.removeItem('phoneSelection'); // Очищаем поврежденные данные
                 }
@@ -235,21 +206,14 @@ export default function FormPage() {
                             if (typeof window !== 'undefined') {
                                 sessionStorage.setItem('phoneSelection', JSON.stringify(parsed.data));
                             }
-
-                            return; // Не загружаем из БД, если есть в CloudStorage
                         }
                     } catch (e) {
-                        // Игнорируем ошибки парсинга
+                        console.error('❌ Ошибка при парсинге данных из CloudStorage:', e);
                     }
                 }
-
-                // Если CloudStorage пуст, загружаем из БД
-                if (modelname) {
-                    loadProgressFromDB();
-                }
-            }
+            },
         });
-    }, [modelname]);
+    }, []);
 
     // Инициализация Telegram WebApp при загрузке
     useEffect(() => {
@@ -392,10 +356,8 @@ export default function FormPage() {
 
     const handleContinueToNext = () => {
         if (matchingPhone) {
-            // Сохраняем выбранную конфигурацию в контекст
-            setModel(matchingPhone.model);
-
-            // Переходим на следующую страницу
+            // Модель уже сохранена в контексте через useEffect
+            // Просто переходим на следующую страницу
             router.push('/request/display_scratches');
         }
     };
@@ -538,6 +500,9 @@ export default function FormPage() {
                                 </div>
                                 <p className="text-center text-base text-gray-700 mt-4">
                                     👆 Нажмите на окно для перехода к следующему шагу
+                                </p>
+                                <p className="text-center text-base text-gray-700 mt-2">
+                                    ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
                                 </p>
                             </>
                         )}
