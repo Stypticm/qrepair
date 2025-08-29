@@ -290,7 +290,7 @@ export default function ConditionPage() {
             setHasChanges(false);
             setLoadedFromDB(true); // Устанавливаем флаг загрузки для новых пользователей
         }
-    }, [telegramId]);
+    }, [telegramId, setDeviceConditions]);
 
     // Восстанавливаем состояния из sessionStorage при возврате на страницу (продолжение заявки)
     useEffect(() => {
@@ -313,7 +313,7 @@ export default function ConditionPage() {
         
         // Устанавливаем флаг загрузки для новой заявки
         setLoadedFromDB(true);
-    }, []); // Запускается только один раз при загрузке страницы
+    }, [setDeviceConditions]); // Запускается только один раз при загрузке страницы
 
 
     // Обработчики диалогового окна

@@ -5,8 +5,7 @@ import { useEffect, useState } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 
-import appleModels, { IPhone } from '@/core/appleModels';
-const { iphones } = appleModels;
+import { iphones, IPhone } from '@/core/appleModels';
 import { Button } from '@/components/ui/button';
 
 export default function DeviceConditionPage() {
