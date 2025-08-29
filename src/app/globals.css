@@ -561,3 +561,61 @@
 .animate-fadeInUp {
   animation: fadeInUp 0.8s ease-out forwards;
 }
+
+/* Кастомная прокрутка для админки */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Дополнительные стили для прокрутки */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+/* Принудительная прокрутка для админки */
+.admin-masters-scroll {
+  height: 100% !important;
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+/* Дополнительные стили для принудительной прокрутки */
+.admin-masters-scroll::-webkit-scrollbar {
+  width: 8px !important;
+  display: block !important;
+}
+
+.admin-masters-scroll::-webkit-scrollbar-track {
+  background: #f3f4f6 !important;
+  border-radius: 4px !important;
+}
+
+.admin-masters-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db !important;
+  border-radius: 4px !important;
+}
+
+.admin-masters-scroll::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af !important;
+}

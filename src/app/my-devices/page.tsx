@@ -81,10 +81,10 @@ const MyDevices = () => {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 20px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
-        <div className="w-full max-w-md text-center space-y-4">
-          <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
-            📋 МОИ<br />УСТРОЙСТВА
+      <div className="min-h-screen min-w-screen bg-gradient-to-b from-white to-gray-50 flex flex-col" style={{ padding: 'env(--safe-area-top, 20px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+        <div className="w-full max-w-md text-center space-y-6">
+          <h1 className="text-3xl font-semibold text-gray-900 text-center leading-tight px-2 tracking-tight">
+            📋 Мои устройства
           </h1>
 
           {loading ? (
@@ -97,12 +97,12 @@ const MyDevices = () => {
               <div className="text-gray-500">Создайте заявку на выкуп, чтобы начать</div>
             </div>
           ) : (
-            <div className="p-2 flex flex-col gap-2">
+            <div className="p-4 flex flex-col gap-4">
               {myDevices.map((device: SkupkaRequest) => (
-                <Card key={device.id} className="bg-slate-300 border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
+                <Card key={device.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg font-bold text-gray-800">
+                      <CardTitle className="text-lg font-semibold text-gray-900">
                         📱 {device.modelname ? 
                           (device.modelname.length > 40 ? 
                             device.modelname.substring(0, 40) + '...' : 
@@ -132,7 +132,7 @@ const MyDevices = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="!border-gray-500 text-gray-700 hover:bg-gray-50"
+                        className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 rounded-lg"
                         onClick={() => router.push(`/my-devices/status?status=${device.status}`)}>
                         📊 Проверить статус
                       </Button>
@@ -140,7 +140,7 @@ const MyDevices = () => {
                       {device.status === 'on_the_way' && device.courierUserConfirmed && !device.inspectionCompleted && (
                         <Button
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm"
                           onClick={() => router.push(`/my-devices/inspection?id=${device.id}`)}>
                           🔍 Проверить устройство
                         </Button>
@@ -149,7 +149,7 @@ const MyDevices = () => {
                       {device.status === 'accepted' && (
                         <Button
                           size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white">
+                          className="bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm">
                           💰 Подтвердить цену
                         </Button>
                       )}

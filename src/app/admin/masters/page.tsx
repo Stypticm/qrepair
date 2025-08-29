@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import { Page } from '@/components/Page'
 
 interface Master {
@@ -20,6 +21,7 @@ interface Master {
 }
 
 export default function MastersPage() {
+  const router = useRouter()
   const [masters, setMasters] = useState<Master[]>([])
   const [loading, setLoading] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -128,62 +130,63 @@ export default function MastersPage() {
 
   return (
     <Page back={true}>
-      <div className="flex flex-col h-full">
-        <div className="flex-1 p-6">
+
+      <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 80px)', overflowY: 'scroll' }}>
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <section className='flex flex-col gap-4'>
-                <h1 className="text-3xl font-bold text-white text-center">Управление мастерами</h1>
+                <h1 className="text-3xl font-semibold text-gray-900 text-center">Управление мастерами</h1>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg">
+                    <Button className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-xl">
                       + Добавить мастера
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md bg-gray-800 border-gray-700">
+                  <DialogContent className="sm:max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl">
                     <DialogHeader>
-                      <DialogTitle className="text-white">Добавить нового мастера</DialogTitle>
+                      <DialogTitle className="text-gray-900">Добавить нового мастера</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="telegramId" className="text-gray-300">Telegram ID *</Label>
+                        <Label htmlFor="telegramId" className="text-gray-700">Telegram ID *</Label>
                         <Input
                           id="telegramId"
                           value={newMaster.telegramId}
                           onChange={(e) => setNewMaster({ ...newMaster, telegramId: e.target.value })}
                           placeholder="123456789"
-                          className="text-white bg-gray-700 border-gray-600 placeholder-gray-400"
+                          className="text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-lg"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="username" className="text-gray-300">Username *</Label>
+                        <Label htmlFor="username" className="text-gray-700">Username *</Label>
                         <Input
                           id="username"
                           value={newMaster.username}
                           onChange={(e) => setNewMaster({ ...newMaster, username: e.target.value })}
                           placeholder="username (без @)"
-                          className="text-white bg-gray-700 border-gray-600 placeholder-gray-400"
+                          className="text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-lg"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="name" className="text-gray-300">Имя</Label>
+                        <Label htmlFor="name" className="text-gray-700">Имя</Label>
                         <Input
                           id="name"
                           value={newMaster.name}
                           onChange={(e) => setNewMaster({ ...newMaster, name: e.target.value })}
                           placeholder="Полное имя мастера"
-                          className="text-white bg-gray-700 border-gray-600 placeholder-gray-400"
+                          className="text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-lg"
                         />
                       </div>
                       <div className="flex justify-end space-x-2">
                         <Button
                           variant="outline"
                           onClick={() => setIsAddDialogOpen(false)}
-                          className="text-gray-300 border-gray-600 hover:bg-gray-700"
+                          className="text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg"
                         >
                           Отмена
                         </Button>
-                        <Button onClick={addMaster} className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Button onClick={addMaster} className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
                           Добавить
                         </Button>
                       </div>
@@ -195,18 +198,18 @@ export default function MastersPage() {
 
             {loading ? (
               <div className="text-center py-8">
-                <div className="text-white">Загрузка мастеров...</div>
+                <div className="text-gray-600">Загрузка мастеров...</div>
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {masters.map((master) => (
-                  <Card key={master.id} className="bg-gray-800 border-gray-700 shadow-lg">
+                  <Card key={master.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
                     <CardHeader>
                       <div className="flex justify-between items-start">
-                        <CardTitle className="text-white text-lg">{master.name || master.username}</CardTitle>
+                        <CardTitle className="text-gray-900 text-lg">{master.name || master.username}</CardTitle>
                         <Badge
                           variant={master.isActive ? "default" : "secondary"}
-                          className={master.isActive ? "bg-green-600 text-white" : "bg-gray-600 text-gray-300"}
+                          className={master.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
                         >
                           {master.isActive ? 'Активен' : 'Неактивен'}
                         </Badge>
@@ -214,16 +217,16 @@ export default function MastersPage() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div>
-                        <Label className="text-sm font-medium text-gray-400">Username:</Label>
-                        <div className="text-white font-mono">@{master.username}</div>
+                        <Label className="text-sm font-medium text-gray-600">Username:</Label>
+                        <div className="text-gray-900 font-mono">@{master.username}</div>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-400">Telegram ID:</Label>
-                        <div className="text-white font-mono">{master.telegramId}</div>
+                        <Label className="text-sm font-medium text-gray-600">Telegram ID:</Label>
+                        <div className="text-gray-900 font-mono">{master.telegramId}</div>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-400">Добавлен:</Label>
-                        <div className="text-white">
+                        <Label className="text-sm font-medium text-gray-600">Добавлен:</Label>
+                        <div className="text-gray-900">
                           {new Date(master.createdAt).toLocaleDateString('ru-RU')}
                         </div>
                       </div>
@@ -232,7 +235,7 @@ export default function MastersPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => toggleMasterStatus(master.id, master.isActive)}
-                          className="text-gray-700 !font-bold border-gray-600 hover:bg-gray-700"
+                          className="text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg"
                         >
                           {master.isActive ? 'Деактивировать' : 'Активировать'}
                         </Button>
@@ -240,7 +243,7 @@ export default function MastersPage() {
                           size="sm"
                           variant="destructive"
                           onClick={() => deleteMaster(master.id)}
-                          className="bg-red-600 hover:bg-red-700 text-white"
+                          className="bg-red-500 hover:bg-red-600 text-white rounded-lg"
                         >
                           Удалить
                         </Button>
@@ -253,8 +256,8 @@ export default function MastersPage() {
 
             {!loading && masters.length === 0 && (
               <div className="text-center py-8">
-                <div className="text-white text-lg">Мастера не найдены</div>
-                <div className="text-gray-400 mt-2">Добавьте первого мастера, чтобы начать работу</div>
+                <div className="text-gray-900 text-lg">Мастера не найдены</div>
+                <div className="text-gray-600 mt-2">Добавьте первого мастера, чтобы начать работу</div>
               </div>
             )}
           </div>

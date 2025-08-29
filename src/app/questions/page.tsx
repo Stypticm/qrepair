@@ -28,33 +28,35 @@ const questions = [
 const QuestionsPage = () => {
     return (
         <Page back={true}>
-            <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 20px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
-                <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
-                    ❓Частые<br />вопросы
-                </h1>
-                <section className='flex flex-col gap-1 w-full'>
-                    {
-                        questions.map((question, index) => (
-                            <div className="flex flex-row items-start justify-center gap-1" key={index}>
-                                <Image
-                                    src={getPictureUrl('questionImage.png') || '/questionImage.png'}
-                                    alt="Знак вопроса"
-                                    width={150}
-                                    height={150}
-                                    className="object-cover rounded-lg"
-                                />
-                                <section className='flex flex-col gap-1'>
-                                    <span className="text-xl font-bold text-black">
-                                        {question.question}
-                                    </span>
-                                    <p className="text-sm text-slate-700 w-full font-semibold">
-                                        {question.answer}
-                                    </p>
-                                </section>
-                            </div>
-                        ))
-                    }
-                </section>
+            <div className="min-h-screen min-w-screen bg-gradient-to-b from-white to-gray-50 flex flex-col" style={{ padding: 'env(--safe-area-top, 20px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+                <div className="w-full max-w-md mx-auto text-center space-y-4 px-6 pt-20">
+                    <h1 className="text-3xl font-semibold text-gray-900 text-center leading-tight tracking-tight">
+                        ❓ Частые вопросы
+                    </h1>
+                    <section className='flex flex-col gap-3 w-full'>
+                        {
+                            questions.map((question, index) => (
+                                <div className="flex flex-row items-start gap-3 p-3 bg-white rounded-xl border border-gray-200 shadow-sm" key={index}>
+                                    <Image
+                                        src={getPictureUrl('questionImage.png') || '/questionImage.png'}
+                                        alt="Знак вопроса"
+                                        width={80}
+                                        height={80}
+                                        className="object-cover rounded-lg flex-shrink-0"
+                                    />
+                                    <section className='flex flex-col gap-1 flex-1'>
+                                        <span className="text-base font-semibold text-gray-900 text-left">
+                                            {question.question}
+                                        </span>
+                                        <p className="text-xs text-gray-600 w-full font-medium text-left leading-relaxed">
+                                            {question.answer}
+                                        </p>
+                                    </section>
+                                </div>
+                            ))
+                        }
+                    </section>
+                </div>
             </div>
         </Page>
     );
