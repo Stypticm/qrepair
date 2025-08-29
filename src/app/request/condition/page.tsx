@@ -7,6 +7,7 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 
 interface ConditionOption {
     id: string;
@@ -20,25 +21,25 @@ const frontConditions: ConditionOption[] = [
         id: 'display_front_new',
         label: 'Новый',
         penalty: '0%',
-        image: '/display_front_new.png'
+        image: 'display_front_new'
     },
     {
         id: 'display_front',
         label: 'Очень\nхорошее',
         penalty: '-5%',
-        image: '/display_front.png'
+        image: 'display_front'
     },
     {
         id: 'display_front_have_scratches',
         label: 'Заметные\nцарапины',
         penalty: '-15%',
-        image: '/display_front_have_scratches.png'
+        image: 'display_front_have_scratches'
     },
     {
         id: 'display_front_scratches',
         label: 'Трещины',
         penalty: '-25%',
-        image: '/display_front_scratches.png'
+        image: 'display_front_scratches'
     }
 ];
 
@@ -47,25 +48,25 @@ const backConditions: ConditionOption[] = [
         id: 'display_back_new',
         label: 'Новый',
         penalty: '0%',
-        image: '/display_back_new.png'
+        image: 'display_back_new'
     },
     {
         id: 'display_back',
         label: 'Очень\nхорошее',
         penalty: '-5%',
-        image: '/display_back.png'
+        image: 'display_back'
     },
     {
         id: 'display_back_have_scratches',
         label: 'Заметные\nцарапины',
         penalty: '-15%',
-        image: '/display_back_have_scratches.png'
+        image: 'display_back_have_scratches'
     },
     {
         id: 'display_back_scratches',
         label: 'Трещины',
         penalty: '-25%',
-        image: '/display_back_scratches.png'
+        image: 'display_back_scratches'
     }
 ];
 
@@ -74,25 +75,25 @@ const sideConditions: ConditionOption[] = [
         id: 'display_side_new',
         label: 'Новый',
         penalty: '0%',
-        image: '/display_side_new.png'
+        image: 'display_side_new'
     },
     {
         id: 'display_side',
         label: 'Очень\nхорошее',
         penalty: '-5%',
-        image: '/display_side.png'
+        image: 'display_side'
     },
     {
         id: 'display_side_have_scratches',
         label: 'Заметные\nцарапины',
         penalty: '-15%',
-        image: '/display_side_have_scratches.png'
+        image: 'display_side_have_scratches'
     },
     {
         id: 'display_side_scratches',
         label: 'Трещины',
         penalty: '-25%',
-        image: '/display_side_scratches.png'
+        image: 'display_side_scratches'
     }
 ];
 
@@ -283,7 +284,7 @@ export default function ConditionPage() {
                                 {/* Изображение - разные размеры для разных секций */}
                                 <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
                                     <Image
-                                        src={condition.image}
+                                        src={getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}
                                         alt={condition.label}
                                         fill
                                         className="object-cover"
