@@ -4,7 +4,7 @@ import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
 
 export async function POST(request: Request) {
   try {
-    const { telegramId, modelname, answers } =
+    const { telegramId, modelname, answers, price } =
       await request.json()
 
     if (!telegramId || !modelname) {
@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       data: {
         modelname,
         answers: answers || [],
+        price: price || null,
         status: 'submitted',
         submittedAt: new Date(),
         updatedAt: new Date(),
@@ -40,42 +41,68 @@ export async function POST(request: Request) {
 
     // Отправляем уведомление в Telegram
     try {
-      const totalPenalty = answers
-        ? answers.reduce(
-            (total: number, answer: number) =>
-              total + (answer || 0),
-            0
-          )
-        : 0
-      // Извлекаем базовую модель из полного названия (например, "Apple iPhone 11 Pro Max 128GB Золотой Китай 2 SIM" -> "Apple iPhone 11")
-      const baseModelMatch = modelname.match(
-        /Apple iPhone (\d+)/
-      )
-      const baseModel = baseModelMatch
-        ? `Apple iPhone ${baseModelMatch[1]}`
-        : 'Apple iPhone 11'
+      // Получаем deviceConditions из БД для расчета процентов
+      const deviceConditions =
+        existingRequest.deviceConditions as any
+      let totalPenalty = 0
 
-      const deviceCatalog = {
-        'Apple iPhone 11': 48000,
-        'Apple iPhone 12': 56000,
-        'Apple iPhone 13': 64000,
-        'Apple iPhone 14': 72000,
-        'Apple iPhone 15': 80000,
+      if (deviceConditions) {
+                      if (deviceConditions.front) {
+                if (deviceConditions.front === 'Новый')
+                  totalPenalty += 0
+                else if (
+                  deviceConditions.front === 'Очень хорошее'
+                )
+                  totalPenalty += -3
+                else if (
+                  deviceConditions.front ===
+                  'Заметные царапины'
+                )
+                  totalPenalty += -8
+                else if (deviceConditions.front === 'Трещины')
+                  totalPenalty += -15
+              }
+
+              if (deviceConditions.back) {
+                if (deviceConditions.back === 'Новый')
+                  totalPenalty += 0
+                else if (
+                  deviceConditions.back === 'Очень хорошее'
+                )
+                  totalPenalty += -3
+                else if (
+                  deviceConditions.back ===
+                  'Заметные царапины'
+                )
+                  totalPenalty += -8
+                else if (deviceConditions.back === 'Трещины')
+                  totalPenalty += -15
+              }
+
+              if (deviceConditions.side) {
+                if (deviceConditions.side === 'Новый')
+                  totalPenalty += 0
+                else if (
+                  deviceConditions.side === 'Очень хорошее'
+                )
+                  totalPenalty += -3
+                else if (
+                  deviceConditions.side ===
+                  'Заметные царапины'
+                )
+                  totalPenalty += -8
+                else if (deviceConditions.side === 'Трещины')
+                  totalPenalty += -15
+              }
       }
-      const basePrice =
-        deviceCatalog[
-          baseModel as keyof typeof deviceCatalog
-        ] || 48000
-      const finalPrice = Math.max(
-        basePrice - (basePrice * totalPenalty) / 100,
-        0
-      )
+
+      // Используем переданную цену вместо расчета
+      const finalPrice = price || 48000
 
       const message = `✅ *Заявка принята!*
 
 📱 *Модель:* ${modelname}
-💰 *Базовая цена:* ${basePrice.toLocaleString()} ₽
-📊 *Оценка состояния:* -${totalPenalty}%
+📊 *Оценка состояния:* ${totalPenalty}%
 💵 *Итоговая цена:* ${finalPrice.toLocaleString()} ₽
 
 Мы свяжемся с вами в ближайшее время для уточнения деталей.`

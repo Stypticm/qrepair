@@ -1,33 +1,19 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
 
-// Цены для разных моделей iPhone
-const deviceCatalog = {
-    'Apple iPhone 11': { name: 'Apple iPhone 11', basePrice: 48000 },
-    'Apple iPhone 12': { name: 'Apple iPhone 12', basePrice: 56000 },
-    'Apple iPhone 13': { name: 'Apple iPhone 13', basePrice: 64000 },
-    'Apple iPhone 14': { name: 'Apple iPhone 14', basePrice: 72000 },
-    'Apple iPhone 15': { name: 'Apple iPhone 15', basePrice: 80000 },
-} as const;
+
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, answers, deviceConditions, resetAllStates, setDeviceConditions } = useStartForm();
+    const { telegramId, modelname, answers, deviceConditions, price, resetAllStates, setDeviceConditions } = useStartForm();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    // Убираем загрузку состояний из БД, используем контекст
-    // useEffect(() => {
-    //     loadDeviceConditions();
-    // }, []);
-
-    // Убираем загрузку состояний
-    // const loadDeviceConditions = async () => { ... };
 
     const handleSubmit = async () => {
         if (submitting) return;
@@ -43,6 +29,7 @@ const SubmitPage = () => {
                     telegramId,
                     modelname,
                     answers,
+                    price: finalPrice,
                 }),
             });
 
@@ -53,30 +40,15 @@ const SubmitPage = () => {
                 // Очищаем sessionStorage перед сбросом состояний
                 if (typeof window !== 'undefined') {
                     sessionStorage.removeItem('phoneSelection');
+                    sessionStorage.removeItem('deviceConditions');
                     console.log('sessionStorage очищен при отправке заявки');
                 }
                 
-                // Сначала сбрасываем все состояния
+                // Сбрасываем все состояния ТОЛЬКО после успешной отправки
                 resetAllStates();
-                console.log('Состояния сброшены в submit');
+                console.log('Состояния сброшены в submit после отправки');
                 
-                // Дополнительно принудительно сбрасываем deviceConditions
-                setDeviceConditions({
-                    front: null,
-                    back: null,
-                    side: null
-                });
-                console.log('deviceConditions принудительно сброшены');
-                
-                // Проверяем что состояния действительно сброшены
-                setTimeout(() => {
-                    console.log('Проверка сброса состояний ПОСЛЕ:', {
-                        modelname: modelname,
-                        deviceConditions: deviceConditions
-                    });
-                }, 200);
-                
-                // Потом переходим на главную страницу
+                // Переходим на главную страницу
                 router.push('/');
             } else {
                 console.error('Ошибка при отправке заявки:', res.status);
@@ -88,19 +60,51 @@ const SubmitPage = () => {
         }
     };
 
-    const getTotalPenalty = () => {
-        if (!answers || answers.length === 0) return 0;
-        return answers.reduce((total, answer) => total + (answer || 0), 0);
+    // Используем цену из контекста или фиксированную цену по умолчанию
+    const finalPrice = price || 48000;
+
+    // Функция для получения процента скидки по состоянию
+    const getConditionPenalty = (conditionText: string): string => {
+        if (conditionText === 'Новый') {
+            return '0%';
+        } else if (conditionText === 'Очень хорошее') {
+            return '-3%';
+        } else if (conditionText === 'Заметные царапины') {
+            return '-8%';
+        } else if (conditionText === 'Трещины') {
+            return '-15%';
+        } else {
+            return '0%';
+        }
     };
 
-    const totalPenalty = getTotalPenalty();
-    
-    // Извлекаем базовую модель из полного названия (например, "Apple iPhone 11 Pro Max 128GB Золотой Китай 2 SIM" -> "Apple iPhone 11")
-    const baseModelMatch = modelname ? modelname.match(/Apple iPhone (\d+)/) : null;
-    const baseModel = baseModelMatch ? `Apple iPhone ${baseModelMatch[1]}` : 'Apple iPhone 11';
-    
-    const basePrice = deviceCatalog[baseModel as keyof typeof deviceCatalog]?.basePrice || 48000;
-    const finalPrice = Math.max(basePrice - (basePrice * totalPenalty / 100), 0);
+    // Функция для расчета общего процента вычета
+    const calculateTotalPenalty = (): number => {
+        let totalPenalty = 0;
+        
+        if (deviceConditions.front) {
+            if (deviceConditions.front === 'Новый') totalPenalty += 0;
+            else if (deviceConditions.front === 'Очень хорошее') totalPenalty += -3;
+            else if (deviceConditions.front === 'Заметные царапины') totalPenalty += -8;
+            else if (deviceConditions.front === 'Трещины') totalPenalty += -15;
+        }
+        
+        if (deviceConditions.back) {
+            if (deviceConditions.back === 'Новый') totalPenalty += 0;
+            else if (deviceConditions.back === 'Очень хорошее') totalPenalty += -3;
+            else if (deviceConditions.back === 'Заметные царапины') totalPenalty += -8;
+            else if (deviceConditions.back === 'Трещины') totalPenalty += -15;
+        }
+        
+        if (deviceConditions.side) {
+            if (deviceConditions.side === 'Новый') totalPenalty += 0;
+            else if (deviceConditions.side === 'Очень хорошее') totalPenalty += -3;
+            else if (deviceConditions.side === 'Заметные царапины') totalPenalty += -8;
+            else if (deviceConditions.side === 'Трещины') totalPenalty += -15;
+        }
+        
+        return totalPenalty;
+    };
 
     return (
         <Page back={true}>
@@ -110,7 +114,7 @@ const SubmitPage = () => {
                         {/* Summary заявки */}
                         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
                             <h3 className="text-xl font-semibold mb-6 text-center text-gray-900">
-                                📋 Заявка
+                                Заявка
                             </h3>
                             
                             <div className="space-y-4">
@@ -151,14 +155,46 @@ const SubmitPage = () => {
                                 <div className="border-t border-gray-200 pt-4">
                                     <h4 className="font-semibold mb-3 text-gray-900">Оценка стоимости:</h4>
                                     <div className="space-y-3">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-600 font-medium">Базовая цена:</span>
-                                            <span className="font-bold text-gray-900">{basePrice.toLocaleString()} ₽</span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-600 font-medium">Оценка состояния:</span>
-                                            <span className="font-bold text-red-600">-{totalPenalty}%</span>
-                                        </div>
+                                        {/* Проценты по состояниям */}
+                                        {deviceConditions && (
+                                            <>
+                                                {deviceConditions.front && (
+                                                    <div className="flex justify-between items-center text-sm">
+                                                        <span className="text-gray-600">Передняя панель:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {getConditionPenalty(deviceConditions.front)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {deviceConditions.back && (
+                                                    <div className="flex justify-between items-center text-sm">
+                                                        <span className="text-gray-600">Задняя панель:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {getConditionPenalty(deviceConditions.back)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {deviceConditions.side && (
+                                                    <div className="flex justify-between items-center text-sm">
+                                                        <span className="text-gray-600">Боковые грани:</span>
+                                                        <span className="font-medium text-gray-900">
+                                                            {getConditionPenalty(deviceConditions.side)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
+                                        
+                                        {/* Общий процент вычета */}
+                                        {deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side) && (
+                                            <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+                                                <span className="font-semibold text-gray-900">Общий вычет:</span>
+                                                <span className="font-bold text-red-600">
+                                                    {calculateTotalPenalty() === 0 ? '0%' : `${calculateTotalPenalty()}%`}
+                                                </span>
+                                            </div>
+                                        )}
+                                        
                                         <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
                                             <span className="font-semibold text-gray-900">Итоговая цена:</span>
                                             <span className="font-bold text-xl text-green-600">{finalPrice.toLocaleString()} ₽</span>

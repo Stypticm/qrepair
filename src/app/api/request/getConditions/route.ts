@@ -3,60 +3,76 @@ import prisma from '@/core/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
+    // 🔥 ВАЖНО: Этот лог должен быть виден в серверной консоли!
+    console.log('🔥🔥🔥 API getConditions ВЫЗВАН! 🔥🔥🔥')
+
     // Получаем telegramId из заголовков
     const telegramId =
       request.headers.get('x-telegram-id') || 'test-user'
     console.log('API GET: telegramId:', telegramId)
 
-    // Находим активную заявку пользователя
-    let activeRequest = await prisma.skupka.findFirst({
-      where: {
-        telegramId: telegramId,
-        status: 'draft',
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+    // Ищем активную заявку для данного telegramId
+    const activeRequest = await prisma.skupka.findFirst({
+      where: { telegramId },
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         deviceConditions: true,
+        modelname: true,
+        phoneData: true,
+        price: true,
+        status: true,
       },
     })
-    console.log(
-      'API GET: Найдена заявка:',
-      activeRequest?.id || 'не найдена'
-    )
-    console.log(
-      'API GET: Состояния в заявке:',
-      activeRequest?.deviceConditions
-    )
 
-    // Если заявки нет, возвращаем пустые состояния
-    if (!activeRequest) {
-      console.log(
-        'API GET: Заявка не найдена, возвращаю null'
+    if (activeRequest) {
+      const response = NextResponse.json({
+        success: true,
+        deviceConditions:
+          activeRequest.deviceConditions || null,
+        modelname: activeRequest.modelname,
+        phoneData: activeRequest.phoneData,
+        price: activeRequest.price,
+        status: activeRequest.status,
+      })
+
+      // Отключаем кэширование
+      response.headers.set(
+        'Cache-Control',
+        'no-cache, no-store, must-revalidate'
       )
-      return NextResponse.json({
+      response.headers.set('Pragma', 'no-cache')
+      response.headers.set('Expires', '0')
+
+      console.log(
+        '🔥🔥🔥 API getConditions ЗАВЕРШЕН! 🔥🔥🔥'
+      )
+      return response
+    } else {
+      const response = NextResponse.json({
         success: true,
         deviceConditions: null,
       })
-    }
 
-    console.log(
-      'API GET: Возвращаю состояния:',
-      activeRequest.deviceConditions
-    )
-    return NextResponse.json({
-      success: true,
-      deviceConditions: activeRequest.deviceConditions,
-    })
+      response.headers.set(
+        'Cache-Control',
+        'no-cache, no-store, must-revalidate'
+      )
+      response.headers.set('Pragma', 'no-cache')
+      response.headers.set('Expires', '0')
+
+      console.log(
+        '🔥🔥🔥 API getConditions ЗАВЕРШЕН! 🔥🔥🔥'
+      )
+      return response
+    }
   } catch (error) {
     console.error(
-      'API GET: Ошибка получения состояний:',
+      '🔥🔥🔥 Ошибка в API getConditions:',
       error
     )
     return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     )
   }

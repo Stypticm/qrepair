@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   const body = await req.json()
-  let { telegramId, username } = body
+  let { telegramId, username, price } = body
 
   if (!username) username = 'local_dev'
   if (!telegramId || !username) {
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       telegramId,
       username,
       status: 'draft',
+      price: price || null,
     },
   })
 

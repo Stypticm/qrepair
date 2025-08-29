@@ -5,14 +5,14 @@ import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
 
 interface ConditionOption {
     id: string;
     label: string;
-    penalty: string;
+    penalty: number;
     image: string;
 }
 
@@ -20,25 +20,25 @@ const frontConditions: ConditionOption[] = [
     {
         id: 'display_front_new',
         label: 'Новый',
-        penalty: '0%',
+        penalty: 0,
         image: 'display_front_new'
     },
     {
         id: 'display_front',
         label: 'Очень\nхорошее',
-        penalty: '-5%',
+        penalty: -3,
         image: 'display_front'
     },
     {
         id: 'display_front_have_scratches',
         label: 'Заметные\nцарапины',
-        penalty: '-15%',
+        penalty: -8,
         image: 'display_front_have_scratches'
     },
     {
         id: 'display_front_scratches',
         label: 'Трещины',
-        penalty: '-25%',
+        penalty: -15,
         image: 'display_front_scratches'
     }
 ];
@@ -47,25 +47,25 @@ const backConditions: ConditionOption[] = [
     {
         id: 'display_back_new',
         label: 'Новый',
-        penalty: '0%',
+        penalty: 0,
         image: 'display_back_new'
     },
     {
         id: 'display_back',
         label: 'Очень\nхорошее',
-        penalty: '-5%',
+        penalty: -3,
         image: 'display_back'
     },
     {
         id: 'display_back_have_scratches',
         label: 'Заметные\nцарапины',
-        penalty: '-15%',
+        penalty: -8,
         image: 'display_back_have_scratches'
     },
     {
         id: 'display_back_scratches',
         label: 'Трещины',
-        penalty: '-25%',
+        penalty: -15,
         image: 'display_back_scratches'
     }
 ];
@@ -74,100 +74,168 @@ const sideConditions: ConditionOption[] = [
     {
         id: 'display_side_new',
         label: 'Новый',
-        penalty: '0%',
+        penalty: 0,
         image: 'display_side_new'
     },
     {
         id: 'display_side',
         label: 'Очень\nхорошее',
-        penalty: '-5%',
+        penalty: -3,
         image: 'display_side'
     },
     {
         id: 'display_side_have_scratches',
         label: 'Заметные\nцарапины',
-        penalty: '-15%',
+        penalty: -8,
         image: 'display_side_have_scratches'
     },
     {
         id: 'display_side_scratches',
         label: 'Трещины',
-        penalty: '-25%',
+        penalty: -15,
         image: 'display_side_scratches'
     }
 ];
 
 export default function ConditionPage() {
-    const { modelname, telegramId, deviceConditions, setDeviceConditions, username } = useStartForm();
+    const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice } = useStartForm();
     const router = useRouter();
     
     // Состояние для отслеживания изменений
     const [hasChanges, setHasChanges] = useState(false);
+    
+    // Флаг для отслеживания загрузки состояний из БД
+    const [loadedFromDB, setLoadedFromDB] = useState(false);
 
-    // Загрузка сохраненных состояний из БД
+    // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {
+        // Сначала пытаемся восстановить из sessionStorage
+        if (typeof window !== 'undefined') {
+            const savedInSession = sessionStorage.getItem('deviceConditions');
+            
+            if (savedInSession) {
+                try {
+                    const parsed = JSON.parse(savedInSession);
+                    console.log('Восстановлены состояния из sessionStorage:', parsed);
+                    setDeviceConditions(parsed);
+                    return; // Не загружаем из БД, если есть в sessionStorage
+                } catch (e) {
+                    console.error('Ошибка при парсинге sessionStorage:', e);
+                    sessionStorage.removeItem('deviceConditions'); // Очищаем поврежденные данные
+                }
+            }
+        }
+
+        // Если нет данных в sessionStorage, загружаем из БД
         try {
-            const response = await fetch('/api/request/getConditions', {
+            const timestamp = Date.now();
+            const url = `/api/request/getConditions?t=${timestamp}`;
+            
+            const response = await fetch(url, {
                 headers: {
                     'x-telegram-id': telegramId || 'test-user'
                 }
             });
             if (response.ok) {
                 const data = await response.json();
-                if (data.deviceConditions) {
-                    console.log('Загружены состояния из БД:', data.deviceConditions);
-                    setDeviceConditions(data.deviceConditions);
+                console.log('Загружены данные из БД:', data);
+                
+                // Проверяем статус заявки - если submitted, то НЕ загружаем старые состояния
+                if (data.status === 'submitted') {
+                    console.log('Заявка уже отправлена, сбрасываем состояния');
+                    setDeviceConditions({
+                        front: null,
+                        back: null,
+                        side: null
+                    });
+                    setHasChanges(false);
+                    return;
                 }
+                
+                // Обновляем состояния устройства только для черновиков
+                if (data.deviceConditions && data.status !== 'submitted') {
+                    // Проверяем, что это действительно новая заявка, а не старая
+                    const hasOldData = data.deviceConditions.front || data.deviceConditions.back || data.deviceConditions.side;
+                    if (hasOldData) {
+                        console.log('Найдены сохраненные состояния, загружаем их:', data.deviceConditions);
+                        setDeviceConditions(data.deviceConditions);
+                        setHasChanges(true); // Устанавливаем флаг изменений для загруженных из БД состояний
+                        setLoadedFromDB(true); // Устанавливаем флаг загрузки из БД
+                    } else {
+                        console.log('Нет сохраненных состояний, оставляем пустыми');
+                        // НЕ сбрасываем состояния - они уже пустые по умолчанию
+                        setLoadedFromDB(true); // Устанавливаем флаг загрузки из БД
+                    }
+                }
+                
+                // Дополнительная проверка: если в БД есть старые названия "Значительные царапины", заменяем их на "Заметные царапины"
+                if (data.deviceConditions) {
+                    const updatedConditions = { ...data.deviceConditions };
+                    let hasChanges = false;
+                    
+                    if (updatedConditions.front === 'Значительные царапины') {
+                        updatedConditions.front = 'Заметные царапины';
+                        hasChanges = true;
+                    }
+                    if (updatedConditions.back === 'Значительные царапины') {
+                        updatedConditions.back = 'Заметные царапины';
+                        hasChanges = true;
+                    }
+                    if (updatedConditions.side === 'Значительные царапины') {
+                        updatedConditions.side = 'Заметные царапины';
+                        hasChanges = true;
+                    }
+                    
+                    if (hasChanges) {
+                        console.log('Обновляем старые названия состояний:', updatedConditions);
+                        setDeviceConditions(updatedConditions);
+                    }
+                }
+                
+                // Обновляем модель если есть
+                if (data.modelname) {
+                    setModel(data.modelname);
+                    console.log('Установлена модель:', data.modelname);
+                }
+                
+                // Обновляем цену если есть
+                if (data.price) {
+                    setPrice(data.price);
+                    console.log('Установлена цена:', data.price);
+                }
+            } else {
+                console.log('Нет сохраненных данных в БД');
             }
         } catch (error) {
             console.error('Ошибка загрузки состояний из БД:', error);
         }
-    }, [telegramId, setDeviceConditions]);
+    }, [telegramId, setDeviceConditions, setModel, setPrice]);
 
     // Проверяем, все ли условия выбраны
     const isAllConditionsSelected = useCallback(() => {
         return deviceConditions.front && deviceConditions.back && deviceConditions.side;
     }, [deviceConditions]);
 
-    // Загружаем сохраненные состояния при загрузке страницы
-    useEffect(() => {
-        console.log('Загрузка request/condition, текущие состояния:', {
-            modelname,
-            deviceConditions
-        });
-        
-        // Если это новая заявка (modelname по умолчанию), сбрасываем состояния
-        if (modelname === 'Apple iPhone 11') {
-            console.log('Новая заявка - сбрасываем состояния');
-            setDeviceConditions({
-                front: null,
-                back: null,
-                side: null
-            });
-            setHasChanges(false);
-        } else {
-            // Если это продолжение заявки - загружаем состояния из БД
-            console.log('Продолжение заявки - загружаем состояния из БД');
-            loadSavedConditions();
-        }
-    }, [modelname, loadSavedConditions]);
+    // Состояние для диалогового окна
+    const [showDialog, setShowDialog] = useState(false);
 
-    // Автоматический переход после выбора всех условий
+    // Показываем диалог когда все условия выбраны (включая загруженные из БД)
     useEffect(() => {
-        // Проверяем, все ли условия выбраны И есть ли изменения
-        if (isAllConditionsSelected() && hasChanges) {
+        if (isAllConditionsSelected()) {
+            // Небольшая задержка для лучшего UX
             setTimeout(() => {
-                router.push('/request/submit');
-            }, 1000);
+                setShowDialog(true);
+            }, 300);
         }
-    }, [deviceConditions, hasChanges, router, isAllConditionsSelected]);
+    }, [deviceConditions, isAllConditionsSelected]);
 
-    // Создаем заявку при загрузке страницы (как в request/form)
+    // Создаем заявку при загрузке страницы (если её еще нет)
     useEffect(() => {
         const createRequest = async () => {
             if (telegramId) {
                 try {
-                    await fetch('/api/request/choose', {
+                    // Создаем заявку только если её нет
+                    const response = await fetch('/api/request/choose', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -177,6 +245,28 @@ export default function ConditionPage() {
                             username: username || 'Unknown',
                         }),
                     });
+                    
+                    if (response.ok) {
+                        console.log('Заявка создана или найдена');
+                        
+                        // НЕ сбрасываем состояния здесь - это делается только для действительно новых заявок
+                        // Состояния будут загружены в loadSavedConditions() если они есть
+                        
+                        // Очищаем sessionStorage только для новых заявок
+                        if (typeof window !== 'undefined') {
+                            const savedInSession = sessionStorage.getItem('deviceConditions');
+                            if (!savedInSession) {
+                                sessionStorage.removeItem('deviceConditions');
+                                console.log('sessionStorage очищен для новой заявки');
+                            }
+                        }
+                        
+                        // НЕ загружаем состояния из БД для новых заявок - это делается только для продолжения существующих
+                        // Состояния уже установлены в первом useEffect на основе sessionStorage
+                        
+                        // Устанавливаем флаг загрузки для новой заявки
+                        setLoadedFromDB(true);
+                    }
                 } catch (error) {
                     console.error('Error creating request:', error);
                 }
@@ -184,8 +274,59 @@ export default function ConditionPage() {
         };
 
         createRequest();
-    }, [telegramId, username]);
+    }, [telegramId, username, loadSavedConditions]);
 
+    // Загружаем сохраненные состояния только после создания заявки
+    useEffect(() => {
+        if (telegramId) {
+            // Не загружаем состояния сразу - ждем создания заявки
+        } else {
+            // Сбрасываем состояния только если нет telegramId (для новых пользователей)
+            setDeviceConditions({
+                front: null,
+                back: null,
+                side: null
+            });
+            setHasChanges(false);
+            setLoadedFromDB(true); // Устанавливаем флаг загрузки для новых пользователей
+        }
+    }, [telegramId]);
+
+    // Восстанавливаем состояния из sessionStorage при возврате на страницу (продолжение заявки)
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedInSession = sessionStorage.getItem('deviceConditions');
+            
+            if (savedInSession) {
+                try {
+                    const parsed = JSON.parse(savedInSession);
+                    console.log('Продолжение заявки - восстановлены состояния из sessionStorage:', parsed);
+                    setDeviceConditions(parsed);
+                    setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
+                    setLoadedFromDB(true); // Устанавливаем флаг загрузки
+                } catch (e) {
+                    console.error('Ошибка при парсинге sessionStorage при возврате:', e);
+                    sessionStorage.removeItem('deviceConditions');
+                }
+            }
+        }
+        
+        // Устанавливаем флаг загрузки для новой заявки
+        setLoadedFromDB(true);
+    }, []); // Запускается только один раз при загрузке страницы
+
+
+    // Обработчики диалогового окна
+    const handleContinue = () => {
+        setShowDialog(false);
+        router.push('/request/submit');
+    };
+
+    const handleEdit = () => {
+        setShowDialog(false);
+        // При редактировании сбрасываем флаг изменений
+        setHasChanges(false);
+    };
 
     // Убираем сохранение в БД
     // const saveConditionsToDatabase = async () => { ... };
@@ -202,39 +343,53 @@ export default function ConditionPage() {
         
         // Проверяем, изменилось ли состояние
         if (deviceConditions[type] !== conditionText) {
-            setHasChanges(true);
-            
-            // Сохраняем состояния в БД при изменении
-            saveConditionsToDatabase({
+            const newConditions = {
                 ...deviceConditions,
                 [type]: conditionText
-            });
+            };
+            
+            // Сначала обновляем контекст
+            setDeviceConditions(newConditions);
+            
+            // Сохраняем в sessionStorage для быстрого восстановления
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem('deviceConditions', JSON.stringify(newConditions));
+                console.log('Состояния сохранены в sessionStorage:', newConditions);
+            }
+            
+            // Затем сохраняем состояния в БД
+            saveConditionsToDatabase(newConditions);
         }
-        
-        setDeviceConditions({
-            ...deviceConditions,
-            [type]: conditionText
-        });
     };
 
     // Сохранение состояний в БД
     const saveConditionsToDatabase = async (newConditions: any) => {
         try {
+            // Получаем базовую цену из контекста или устанавливаем по умолчанию
+            const basePrice = 48000; // Базовая цена по умолчанию
+            
+            // Рассчитываем финальную цену с учетом состояний
+            const finalPrice = calculateFinalPrice(basePrice);
+            
+            // Устанавливаем цену в контекст
+            setPrice(finalPrice);
+            
+            const requestBody = {
+                deviceConditions: newConditions,
+                price: finalPrice
+            };
+            
             const response = await fetch('/api/request/saveConditions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-telegram-id': telegramId || 'test-user'
                 },
-                body: JSON.stringify({
-                    deviceConditions: newConditions
-                }),
+                body: JSON.stringify(requestBody),
             });
 
-            if (response.ok) {
-                console.log('Состояния сохранены в БД');
-            } else {
-                console.error('Ошибка сохранения состояний в БД');
+            if (!response.ok) {
+                console.error('Ошибка сохранения состояний в БД:', response.status);
             }
         } catch (error) {
             console.error('Ошибка при сохранении состояний в БД:', error);
@@ -246,7 +401,7 @@ export default function ConditionPage() {
         if (conditionId.includes('_new')) {
             return 'Новый';
         } else if (conditionId.includes('_have_scratches')) {
-            return 'Значительные царапины';
+            return 'Заметные царапины';
         } else if (conditionId.includes('_scratches')) {
             return 'Трещины';
         } else if (conditionId.includes('display_front') || conditionId.includes('display_back') || conditionId.includes('display_side')) {
@@ -254,6 +409,86 @@ export default function ConditionPage() {
         } else {
             return conditionId; // fallback
         }
+    };
+
+    // Функция для получения процента скидки по ID состояния
+    const getConditionPenalty = (conditionId: string): number => {
+        if (conditionId.includes('_new')) {
+            return 0;
+        } else if (conditionId.includes('_have_scratches')) {
+            return -8;
+        } else if (conditionId.includes('_scratches')) {
+            return -15;
+        } else if (conditionId.includes('display_front') || conditionId.includes('display_back') || conditionId.includes('display_side')) {
+            return -3;
+        } else {
+            return 0; // fallback
+        }
+    };
+
+    // Функция для расчета финальной цены с учетом состояний
+    const calculateFinalPrice = (basePrice: number): number => {
+        let totalPenalty = 0;
+        
+        // Суммируем проценты по всем выбранным состояниям
+        if (deviceConditions.front) {
+            const frontCondition = frontConditions.find(c => getConditionText(c.id) === deviceConditions.front);
+            if (frontCondition) totalPenalty += frontCondition.penalty;
+        }
+        if (deviceConditions.back) {
+            const backCondition = backConditions.find(c => getConditionText(c.id) === deviceConditions.back);
+            if (backCondition) totalPenalty += backCondition.penalty;
+        }
+        if (deviceConditions.side) {
+            const sideCondition = sideConditions.find(c => getConditionText(c.id) === deviceConditions.side);
+            if (sideCondition) totalPenalty += sideCondition.penalty;
+        }
+        
+        // Ограничиваем максимальный вычет 50%
+        if (totalPenalty < -50) totalPenalty = -50;
+        
+        // Рассчитываем финальную цену
+        const finalPrice = basePrice * (1 + totalPenalty / 100);
+        
+        // Ограничиваем минимальную цену 50% от базовой
+        const minPrice = basePrice * 0.5;
+        return Math.max(finalPrice, minPrice);
+    };
+
+    // Функция для расчета общего процента вычета (для диалога)
+    const calculateTotalPenalty = (): number => {
+        let totalPenalty = 0;
+        
+        if (deviceConditions.front) {
+            if (deviceConditions.front === 'Новый') totalPenalty += 0;
+            else if (deviceConditions.front === 'Очень хорошее') totalPenalty += -3;
+            else if (deviceConditions.front === 'Заметные царапины') totalPenalty += -8;
+            else if (deviceConditions.front === 'Трещины') totalPenalty += -15;
+        }
+        
+        if (deviceConditions.back) {
+            if (deviceConditions.back === 'Новый') totalPenalty += 0;
+            else if (deviceConditions.back === 'Очень хорошее') totalPenalty += -3;
+            else if (deviceConditions.back === 'Заметные царапины') totalPenalty += -8;
+            else if (deviceConditions.back === 'Трещины') totalPenalty += -15;
+        }
+        
+        if (deviceConditions.side) {
+            if (deviceConditions.side === 'Новый') totalPenalty += 0;
+            else if (deviceConditions.side === 'Очень хорошее') totalPenalty += -3;
+            else if (deviceConditions.side === 'Заметные царапины') totalPenalty += -8;
+            else if (deviceConditions.side === 'Трещины') totalPenalty += -15;
+        }
+        
+        return totalPenalty;
+    };
+
+    // Проверяем, можно ли выбрать секцию
+    const canSelectSection = (type: 'front' | 'back' | 'side'): boolean => {
+        if (type === 'front') return true; // Передняя часть всегда доступна
+        if (type === 'back') return !!deviceConditions.front; // Задняя только после выбора передней
+        if (type === 'side') return !!deviceConditions.front && !!deviceConditions.back; // Боковые только после выбора обеих панелей
+        return false;
     };
 
     // Рендерим секцию выбора условий
@@ -267,13 +502,18 @@ export default function ConditionPage() {
                 // Передняя и задняя панель - прямоугольные как телефон, большая высота для полной видимости без обрезки
                 return 'w-full h-36 rounded-lg';
             }
-        };
+    };
 
-        return (
+    return (
             <div className="space-y-1">
                 {/* Заголовок секции */}
-                <h3 className="text-base font-semibold text-gray-900 text-center">
+                <h3 className="text-base font-semibold text-center">
                     {type === 'front' ? 'Передняя часть' : type === 'back' ? 'Задняя панель' : 'Боковые грани'}
+                    {!canSelectSection(type) && (
+                        <span className="block text-sm text-gray-500 font-normal mt-1">
+                            {type === 'back' ? 'Сначала выберите переднюю часть' : 'Сначала выберите переднюю и заднюю части'}
+                        </span>
+                    )}
                 </h3>
 
                 {/* Сетка вариантов */}
@@ -281,12 +521,16 @@ export default function ConditionPage() {
                     {conditions.map((condition) => (
                         <Card
                             key={condition.id}
-                            className={`cursor-pointer transition-all duration-200 hover:shadow-md relative ${
+                            className={`transition-all duration-200 relative ${
                                 deviceConditions[type] === getConditionText(condition.id)
                                     ? 'ring-2 ring-blue-500 bg-blue-50'
-                                    : 'hover:bg-gray-50'
+                                    : ''
+                            } ${
+                                canSelectSection(type) 
+                                    ? 'cursor-pointer hover:shadow-md' 
+                                    : 'cursor-not-allowed opacity-50'
                             }`}
-                            onClick={() => handleConditionSelect(type, condition.id)}
+                            onClick={() => canSelectSection(type) && handleConditionSelect(type, condition.id)}
                         >
                             {deviceConditions[type] === getConditionText(condition.id) && (
                                 <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center shadow-sm z-10">
@@ -296,19 +540,21 @@ export default function ConditionPage() {
                             <CardContent className="p-0.5 pb-0">
                                 {/* Изображение - разные размеры для разных секций */}
                                 <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
-                                    <Image
+                                            <Image
                                         src={getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}
                                         alt={condition.label}
-                                        fill
-                                        className="object-cover"
+                                                fill
+                                                className="object-cover"
                                         sizes="(max-width: 768px) 25vw, 20vw"
-                                    />
-                                </div>
+                                            />
+                                        </div>
 
-                                {/* Название условия */}
-                                <h4 className="text-xs font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
-                                    {condition.label}
-                                </h4>
+                                                                 {/* Название условия */}
+                                 <h4 className="text-xs font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
+                                     {condition.label}
+                                 </h4>
+                                 
+
                             </CardContent>
                         </Card>
                     ))}
@@ -317,7 +563,7 @@ export default function ConditionPage() {
         );
     };
 
-    return (
+        return (
         <Page back={true}>
             <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
                 <div className="flex-1 p-4">
@@ -332,7 +578,7 @@ export default function ConditionPage() {
                         <div className="border-t border-gray-200 my-3"></div>
 
                         {/* Секция задней панели */}
-                        <div className="flex-1 flex flex-col justify-center space-y-4">
+                        <div className={`flex-1 flex flex-col justify-center space-y-4 ${!canSelectSection('back') ? 'opacity-50' : ''}`}>
                             {renderConditionSection('back', backConditions)}
                         </div>
 
@@ -340,12 +586,58 @@ export default function ConditionPage() {
                         <div className="border-t border-gray-200 my-3"></div>
 
                         {/* Секция боковых граней */}
-                        <div className="flex-1 flex flex-col justify-center space-y-4">
+                        <div className={`flex-1 flex flex-col justify-center space-y-4 ${!canSelectSection('side') ? 'opacity-50' : ''}`}>
                             {renderConditionSection('side', sideConditions)}
-                        </div>
+                                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+             {/* Диалоговое окно с итоговой информацией */}
+             <Dialog open={showDialog} onOpenChange={handleEdit}>
+                 <DialogContent
+                     className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                     onClick={handleContinue}
+                     showCloseButton={false}
+                 >
+                     <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+                         📱 Наша оценка
+                     </DialogTitle>
+                     
+                     <div className="text-center">
+                         {/* Показываем выбранные условия */}
+                         <div className="space-y-2 mb-4">
+                             {deviceConditions.front && (
+                                 <div className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-lg">
+                                     <span className="text-gray-600">Передняя панель:</span>
+                                     <span className="font-medium text-gray-900">{deviceConditions.front}</span>
+                                 </div>
+                             )}
+                             {deviceConditions.back && (
+                                 <div className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-lg">
+                                     <span className="text-gray-600">Задняя панель:</span>
+                                     <span className="font-medium text-gray-900">{deviceConditions.back}</span>
+                                                    </div>
+                             )}
+                             {deviceConditions.side && (
+                                 <div className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-lg">
+                                     <span className="text-gray-600">Боковые грани:</span>
+                                     <span className="font-medium text-gray-900">{deviceConditions.side}</span>
                     </div>
-                </div>
-            </div>
+                )}
+                         </div>
+                         
+                         
+                         
+                         <p className="text-center text-sm text-gray-600 mt-3">
+                             👆 Нажмите на окно для перехода к следующему шагу
+                         </p>
+                         <p className="text-center text-sm text-gray-600 mt-1">
+                             ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
+                         </p>
+                     </div>
+                 </DialogContent>
+             </Dialog>
         </Page>
     );
-}
+ }
