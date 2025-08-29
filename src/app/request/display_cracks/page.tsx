@@ -32,6 +32,14 @@ export default function DisplayCracksPage() {
         }
     }, [answers]);
 
+    // Проверяем, был ли уже сделан выбор при загрузке страницы
+    useEffect(() => {
+        if (isClient && localAnswer !== null) {
+            // Если выбор уже сделан, не перекидываем автоматически
+            // Пользователь может изменить выбор
+        }
+    }, [isClient, localAnswer]);
+
     const handleSelect = (value: number) => {
         setLocalAnswer(value);
         
@@ -39,12 +47,11 @@ export default function DisplayCracksPage() {
         const newAnswers = [...(answers || [])];
         newAnswers[1] = value; // Индекс 1 для трещин
         setAnswers(newAnswers);
-    };
-
-    const handleNext = () => {
-        if (localAnswer !== null) {
+        
+        // Автоматический переход через 1 секунду
+        setTimeout(() => {
             router.push('/request/submit');
-        }
+        }, 1000);
     };
 
     if (!isClient) {
@@ -53,8 +60,8 @@ export default function DisplayCracksPage() {
 
     return (
         <Page>
-            <div className="flex flex-col h-full">
-                <div className="flex-1 p-4">
+            <div className="flex flex-col h-full bg-gray-50">
+                <div className="flex-1 p-6">
                     <div className="grid grid-cols-2 gap-4">
                         {screenCracks.levels.map((level) => {
                             const isSelected = localAnswer === level.value;
@@ -63,49 +70,33 @@ export default function DisplayCracksPage() {
                                     key={level.value}
                                     onClick={() => handleSelect(level.value)}
                                     className={`
-                                        relative p-6 rounded-lg border-2 cursor-pointer transition-all duration-200
+                                        relative p-6 rounded-2xl border cursor-pointer transition-all duration-200
                                         ${isSelected 
-                                            ? 'border-green-500 bg-green-50 shadow-lg ring-2 ring-green-200' 
-                                            : 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-md'
+                                            ? 'border-blue-500 bg-blue-50 shadow-lg ring-2 ring-blue-200' 
+                                            : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
                                         }
                                     `}
                                 >
                                     <div className="text-center">
-                                        <div className="text-2xl mb-2">{screenCracks.icon}</div>
-                                        <div className="text-lg font-semibold text-gray-800 mb-1">
+                                        <div className="text-3xl mb-3">{screenCracks.icon}</div>
+                                        <div className="text-lg font-semibold text-gray-900 mb-2">
                                             {level.label}
                                         </div>
-                                        <div className="text-sm text-gray-600">
+                                        <div className="text-sm text-gray-600 font-medium">
                                             {level.penalty}
                                         </div>
                                     </div>
                                     
                                     {/* Маленькая галочка в углу выбранного элемента */}
                                     {isSelected && (
-                                        <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-                                            <span className="text-white text-xs font-bold">✓</span>
+                                        <div className="absolute top-3 right-3 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                                            <span className="text-white text-sm font-bold">✓</span>
                                         </div>
                                     )}
                                 </div>
                             );
                         })}
                     </div>
-                </div>
-                
-                <div className="p-4">
-                    <button
-                        onClick={handleNext}
-                        disabled={localAnswer === null}
-                        className={`
-                            w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200
-                            ${localAnswer !== null
-                                ? 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 shadow-lg'
-                                : 'bg-gray-300 cursor-not-allowed'
-                            }
-                        `}
-                    >
-                        Далее
-                    </button>
                 </div>
             </div>
         </Page>

@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { iphones, IPhone } from '@/core/appleModels';
+import appleModels, { IPhone } from '@/core/appleModels';
+const { iphones } = appleModels;
 import { Button } from '@/components/ui/button';
 
 export default function FormPage() {
-    const { modelname, setModel } = useStartForm();
+    const { modelname, setModel, telegramId, username } = useStartForm();
     const router = useRouter();
 
     // Инициализируем состояние
@@ -18,70 +19,120 @@ export default function FormPage() {
         variant: '',
         storage: '',
         color: '',
-        country: ''
+        country: '',
+        simType: ''
     });
 
     // Состояние для диалогового окна
     const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
     // Функции для умной фильтрации
-    const getAvailableVariants = () => {
+    const getAvailableVariants = (): string[] => {
         if (!selectedOptions.model) {
             // Если модель не выбрана, показываем все варианты
-            return ['', ...new Set(iphones.map(phone => phone.variant).filter(v => v !== ''))].sort();
+            const allVariants = iphones.map((phone: IPhone) => phone.variant).filter((v: string) => v !== '');
+            return ['', ...new Set(allVariants)].sort();
         }
-        const filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
-        const variants = [...new Set(filteredPhones.map(phone => phone.variant))];
-        return ['', ...variants.filter(v => v !== '')].sort();
+        const filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
+        const variants = [...new Set(filteredPhones.map((phone: IPhone) => phone.variant))];
+        return ['', ...variants.filter((v: string) => v !== '')].sort();
     };
 
-    const getAvailableStorages = () => {
+    const getAvailableStorages = (): string[] => {
         if (!selectedOptions.model) {
             // Если модель не выбрана, показываем все объемы памяти
-            return [...new Set(iphones.map(phone => phone.storage))].sort((a, b) => {
+            return [...new Set(iphones.map((phone: IPhone) => phone.storage))].sort((a: string, b: string) => {
                 const aNum = parseInt(a.replace('GB', '').replace('TB', '000'));
                 const bNum = parseInt(b.replace('GB', '').replace('TB', '000'));
                 return aNum - bNum;
             });
         }
-        let filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
+        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
         if (selectedOptions.variant) {
-            filteredPhones = filteredPhones.filter(phone => phone.variant === selectedOptions.variant);
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
         }
-        return [...new Set(filteredPhones.map(phone => phone.storage))];
+        return [...new Set(filteredPhones.map((phone: IPhone) => phone.storage))];
     };
 
-    const getAvailableColors = () => {
+    const getAvailableColors = (): string[] => {
         if (!selectedOptions.model) {
             // Если модель не выбрана, показываем все цвета
-            return [...new Set(iphones.map(phone => phone.color))].sort();
+            return [...new Set(iphones.map((phone: IPhone) => phone.color))].sort();
         }
-        let filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
+        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
         if (selectedOptions.variant) {
-            filteredPhones = filteredPhones.filter(phone => phone.variant === selectedOptions.variant);
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
         }
         if (selectedOptions.storage) {
-            filteredPhones = filteredPhones.filter(phone => phone.storage === selectedOptions.storage);
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.storage === selectedOptions.storage);
         }
-        return [...new Set(filteredPhones.map(phone => phone.color))];
+        
+        // Если после фильтрации нет телефонов, показываем все цвета для выбранной модели
+        if (filteredPhones.length === 0) {
+            filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
+        }
+        
+        return [...new Set(filteredPhones.map((phone: IPhone) => phone.color))];
     };
 
-    const getAvailableCountries = () => {
+    const getAvailableCountries = (): string[] => {
+        // Фиксированный список из 4 стран
+        const validCountries = [
+            'Китай 🇨🇳',
+            'США 🇺🇸', 
+            'Европа 🇪🇺',
+            'ОАЭ 🇦🇪'
+        ];
+        
         if (!selectedOptions.model) {
-            // Если модель не выбрана, показываем все страны
-            return [...new Set(iphones.map(phone => phone.country))].sort();
+            // Если модель не выбрана, показываем все 4 страны
+            return validCountries;
         }
-        let filteredPhones = iphones.filter(phone => phone.model === selectedOptions.model);
+        
+        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
         if (selectedOptions.variant) {
-            filteredPhones = filteredPhones.filter(phone => phone.variant === selectedOptions.variant);
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
         }
         if (selectedOptions.storage) {
-            filteredPhones = filteredPhones.filter(phone => phone.storage === selectedOptions.storage);
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.storage === selectedOptions.storage);
         }
         if (selectedOptions.color) {
-            filteredPhones = filteredPhones.filter(phone => phone.color === selectedOptions.color);
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.color === selectedOptions.color);
         }
-        return [...new Set(filteredPhones.map(phone => phone.country))];
+        
+        // Если после фильтрации нет телефонов, показываем все страны для выбранной модели
+        if (filteredPhones.length === 0) {
+            filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
+        }
+        
+        // Фильтруем только валидные страны
+        const availableCountries = [...new Set(filteredPhones.map((phone: IPhone) => phone.country))];
+        return availableCountries.filter(country => validCountries.includes(country));
+    };
+
+    const getAvailableSimTypes = (): string[] => {
+        if (!selectedOptions.model) {
+            // Если модель не выбрана, показываем все типы SIM
+            return [...new Set(iphones.map((phone: IPhone) => phone.simType))].sort();
+        }
+        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
+        if (selectedOptions.variant) {
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
+        }
+        if (selectedOptions.storage) {
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.storage === selectedOptions.storage);
+        }
+        if (selectedOptions.color) {
+            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.color === selectedOptions.color);
+        }
+        // Убираем зависимость от country - теперь simType можно выбрать независимо
+        
+        // Если после фильтрации нет телефонов, показываем все SIM типы для выбранной модели
+        if (filteredPhones.length === 0) {
+            filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
+        }
+        
+        return [...new Set(filteredPhones.map((phone: IPhone) => phone.simType))];
     };
 
     const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
@@ -96,15 +147,23 @@ export default function FormPage() {
             newOptions.storage = '';
             newOptions.color = '';
             newOptions.country = '';
+            newOptions.simType = '';
         } else if (type === 'variant') {
             newOptions.storage = '';
             newOptions.color = '';
             newOptions.country = '';
+            newOptions.simType = '';
         } else if (type === 'storage') {
             newOptions.color = '';
             newOptions.country = '';
+            newOptions.simType = '';
         } else if (type === 'color') {
             newOptions.country = '';
+            newOptions.simType = '';
+        } else if (type === 'country') {
+            // Не сбрасываем simType при выборе страны
+        } else if (type === 'simType') {
+            // Не сбрасываем country при выборе simType
         }
 
         setSelectedOptions(newOptions);
@@ -142,17 +201,18 @@ export default function FormPage() {
 
     // Находим подходящий iPhone
     const findMatchingPhone = (): IPhone | null => {
-        if (!selectedOptions.model || !selectedOptions.storage || !selectedOptions.color || !selectedOptions.country) {
+        if (!selectedOptions.model || !selectedOptions.storage || !selectedOptions.color || !selectedOptions.country || !selectedOptions.simType) {
             return null;
         }
 
         // Ищем телефон с учетом того, что variant может быть пустым
-        const foundPhone = iphones.find(phone =>
+        const foundPhone = iphones.find((phone: IPhone) =>
             phone.model === selectedOptions.model &&
             (selectedOptions.variant ? phone.variant === selectedOptions.variant : phone.variant === '') &&
             phone.storage === selectedOptions.storage &&
             phone.color === selectedOptions.color &&
-            phone.country === selectedOptions.country
+            phone.country === selectedOptions.country &&
+            phone.simType === selectedOptions.simType
         );
 
         return foundPhone || null;
@@ -165,15 +225,40 @@ export default function FormPage() {
         selectedOptions.storage !== '' &&
         selectedOptions.color !== '' &&
         selectedOptions.country !== '' &&
+        selectedOptions.simType !== '' &&
         matchingPhone;
 
     useEffect(() => {
         if (matchingPhone) {
-            const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${matchingPhone.variant}` : ''} ${matchingPhone.storage} ${getColorLabel(matchingPhone.color)} ${matchingPhone.country.split(' ')[0]}`;
+            const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${matchingPhone.variant}` : ''} ${matchingPhone.storage} ${getColorLabel(matchingPhone.color)} ${matchingPhone.country.split(' ')[0]} ${matchingPhone.simType}`;
 
             setModel(fullName);
         }
     }, [matchingPhone, setModel]);
+
+    // Создаем заявку при загрузке страницы
+    useEffect(() => {
+        const createRequest = async () => {
+            if (telegramId) {
+                try {
+                    await fetch('/api/request/choose', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            telegramId,
+                            username: username || 'Unknown',
+                        }),
+                    });
+                } catch (error) {
+                    console.error('Error creating request:', error);
+                }
+            }
+        };
+
+        createRequest();
+    }, [telegramId, username]);
 
     // Загружаем прогресс из sessionStorage или CloudStorage при загрузке страницы
     useEffect(() => {
@@ -364,18 +449,19 @@ export default function FormPage() {
 
     return (
         <Page back={true}>
-            <div className="w-full h-full flex flex-col gap-2 p-2">
+            <div className="w-full h-full flex flex-col gap-2 p-2 bg-gray-50">
+
                 {/* Секция выбора модели */}
-                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Модель</h3>
-                    <div className="grid grid-cols-4 gap-2">
-                        {[...new Set(iphones.map(phone => phone.model))].sort((a, b) => parseInt(a) - parseInt(b)).map((model) => (
+                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Модель</h3>
+                    <div className="grid grid-cols-4 gap-1">
+                        {[...new Set(iphones.map((phone: IPhone) => phone.model))].sort((a: string, b: string) => parseInt(a) - parseInt(b)).map((model: string) => (
                             <Button
                                 key={model}
                                 onClick={() => handleOptionSelect('model', model)}
-                                className={`w-full h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.model === model
-                                    ? 'border-green-500 bg-green-50 text-green-700'
-                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                className={`w-full h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.model === model
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                     }`}
                             >
                                 {model}
@@ -385,17 +471,17 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора варианта */}
-                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Вариант</h3>
-                    <div className="grid grid-cols-3 gap-2">
-                        {getAvailableVariants().map((variant) => (
+                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Вариант</h3>
+                    <div className="grid grid-cols-3 gap-1">
+                        {getAvailableVariants().map((variant: string) => (
                             <Button
                                 key={variant}
                                 onClick={() => handleOptionSelect('variant', variant)}
                                 disabled={!getAvailableVariants().includes(variant)}
-                                className={`w-full h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.variant === variant
-                                    ? 'border-green-500 bg-green-50 text-green-700'
-                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                className={`w-full h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.variant === variant
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                     }`}
                             >
                                 {variant || ''}
@@ -405,17 +491,17 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора объема памяти */}
-                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Объем памяти</h3>
-                    <div className="flex flex-row justify-between gap-2">
-                        {getAvailableStorages().map((storage) => (
+                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Объем памяти</h3>
+                    <div className="flex flex-row justify-between gap-1">
+                        {getAvailableStorages().map((storage: string) => (
                             <Button
                                 key={storage}
                                 onClick={() => handleOptionSelect('storage', storage)}
                                 disabled={!getAvailableStorages().includes(storage)}
-                                className={`flex-1 h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
-                                    ? 'border-green-500 bg-green-50 text-green-700'
-                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                className={`flex-1 h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                     }`}
                             >
                                 {storage}
@@ -425,17 +511,17 @@ export default function FormPage() {
                 </div>
 
                 {/* Секция выбора цвета */}
-                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Цвет</h3>
-                    <div className="flex flex-row justify-between gap-2">
-                        {getAvailableColors().map((color) => (
+                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Цвет</h3>
+                    <div className="flex flex-row justify-around gap-2">
+                        {getAvailableColors().map((color: string) => (
                             <Button
                                 key={color}
                                 onClick={() => handleOptionSelect('color', color)}
-                                disabled={!getAvailableColors().includes(color)}
-                                className={`flex-1 h-12 rounded-lg border-2 transition-all duration-200 relative group flex items-center justify-center ${selectedOptions.color === color
-                                    ? 'border-green-500 ring-2 ring-green-300'
-                                    : 'border-gray-300 hover:border-gray-400'
+                                disabled={false}
+                                className={`h-10 w-10 rounded-full border-2 transition-all duration-200 relative group flex items-center justify-between p-0 ${selectedOptions.color === color
+                                    ? 'border-blue-500 ring-2 ring-blue-300 shadow-lg'
+                                    : 'border-gray-200 hover:border-gray-300'
                                     }`}
                                 style={{
                                     backgroundColor: getColorStyle(color),
@@ -452,56 +538,75 @@ export default function FormPage() {
                     </div>
                 </div>
 
-                {/* Секция выбора страны производителя */}
-                <div className="p-2 border-2 border-gray-300 rounded-lg bg-white">
-                    <h3 className="text-center font-bold text-gray-800 mb-3 text-xl">Страна производитель</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                        {getAvailableCountries().map((country) => (
+                {/* Секция выбора типа SIM */}
+                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Тип SIM</h3>
+                    <div className="grid grid-cols-2 gap-1">
+                        {getAvailableSimTypes().map((simType: string) => (
                             <Button
-                                key={country}
-                                onClick={() => handleOptionSelect('country', country)}
-                                disabled={!getAvailableCountries().includes(country)}
-                                className={`w-full h-12 rounded-lg border-2 transition-all duration-200 text-sm font-medium flex items-center justify-center ${selectedOptions.country === country
-                                    ? 'border-green-500 bg-green-50 text-green-700'
-                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                key={simType}
+                                onClick={() => handleOptionSelect('simType', simType)}
+                                disabled={!getAvailableSimTypes().includes(simType)}
+                                className={`w-full h-8 rounded-lg border transition-all duration-200 text-xs font-medium flex items-center justify-center ${selectedOptions.simType === simType
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                     }`}
                             >
-                                <div className="flex flex-col items-center">
-                                    <span className="text-sm leading-none">{country.split(' ')[1]}</span>
-                                    <span className="text-sm leading-none">{country.split(' ')[0]}</span>
-                                </div>
+                                {simType}
                             </Button>
                         ))}
                     </div>
                 </div>
 
+                {/* Секция выбора страны производителя */}
+                <div className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-base">Страна производитель</h3>
+                    <div className="grid grid-cols-2 gap-1">
+                        {getAvailableCountries().map((country: string) => (
+                            <Button
+                                key={country}
+                                onClick={() => handleOptionSelect('country', country)}
+                                disabled={!getAvailableCountries().includes(country)}
+                                className={`w-full h-10 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center ${selectedOptions.country === country
+                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                    }`}
+                            >
+                                <div className="flex items-center justify-center">
+                                    <span className="text-lg">{country.split(' ')[1]}</span>
+                                </div>
+                            </Button>
+                        ))}
+                    </div>
 
+                </div>
 
                 {/* Диалоговое окно с итоговой информацией */}
                 <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
                     <DialogContent
-                        className="bg-yellow-400/95 border-yellow-500 cursor-pointer w-[95vw] max-w-md mx-auto"
+                        className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
                         onClick={handleContinueToNext}
                         showCloseButton={false}
                     >
-                        <DialogTitle className="text-center text-2xl font-bold text-gray-900 mb-4">
+                        <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
                             📱 Ваша конфигурация
                         </DialogTitle>
                         {matchingPhone && (
                             <>
                                 <div className="text-center">
-                                    <p className="text-xl font-semibold text-gray-900 bg-white p-3 rounded-lg border border-gray-200 break-words">
+                                    <p className="text-lg font-semibold text-gray-900 bg-blue-50 p-3 rounded-lg border border-blue-200 break-words">
                                         iPhone {matchingPhone.model}
                                         {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''},
                                         {matchingPhone.storage},
                                         {getColorLabel(matchingPhone.color)},
-                                        {matchingPhone.country.split(' ')[0]}
+                                        {matchingPhone.country.split(' ')[0]},
+                                        {matchingPhone.simType}
                                     </p>
                                 </div>
-                                <p className="text-center text-base text-gray-700 mt-4">
+                                <p className="text-center text-sm text-gray-600 mt-3">
                                     👆 Нажмите на окно для перехода к следующему шагу
                                 </p>
-                                <p className="text-center text-base text-gray-700 mt-2">
+                                <p className="text-center text-sm text-gray-600 mt-1">
                                     ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
                                 </p>
                             </>

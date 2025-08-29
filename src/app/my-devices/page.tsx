@@ -81,7 +81,7 @@ const MyDevices = () => {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+      <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 20px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
         <div className="w-full max-w-md text-center space-y-4">
           <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
             📋 МОИ<br />УСТРОЙСТВА

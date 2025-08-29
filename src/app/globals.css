@@ -33,7 +33,7 @@
     --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.705 0.015 286.067);
-    --background: #f9ecb8; /* Основной цвет фона */
+    --background: #ffffff; /* Основной цвет фона - белый */
     --foreground: oklch(0.141 0.005 285.823);
     
     /* Safe Area переменные */
@@ -41,7 +41,7 @@
     --safe-area-right: 0px;
     --safe-area-bottom: 0px;
     --safe-area-left: 0px;
-    --main-bg-color: #f9ecb8;
+    --main-bg-color: #ffffff;
   }
 
   /* iOS Safari поддержка */
@@ -57,7 +57,7 @@
   /* Тёмная тема, синхронизированная с Telegram */
   @media (prefers-color-scheme: dark) {
     :root {
-      --background: oklch(0.141 0.005 285.823);
+      --background: #000000; /* Темный фон для темной темы */
       --foreground: oklch(0.985 0 0);
       --card: oklch(0.21 0.006 285.885);
       --card-foreground: oklch(0.985 0 0);
@@ -255,7 +255,7 @@
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--background);
+    background-color: #ffffff; /* Белый фон для body */
     color: var(--foreground);
     overflow-x: hidden;
   }
@@ -283,7 +283,7 @@
       justify-content: center;
       min-height: 100vh;
       height: auto;
-      background: var(--background);
+      background: #ffffff; /* Белый фон для PC */
       position: static; /* Возвращаем нормальное позиционирование на PC */
       overflow: auto;
     }
@@ -298,7 +298,7 @@
       border-radius: 12px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      background: var(--background);
+      background: #ffffff; /* Белый фон для контейнера */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -314,7 +314,7 @@
       justify-content: center;
       min-height: 100vh;
       height: auto;
-      background: var(--background);
+      background: #ffffff; /* Белый фон для мобильных */
       position: static;
       overflow: auto;
     }
@@ -329,7 +329,7 @@
       border-radius: 12px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      background: var(--background);
+      background: #ffffff; /* Белый фон для контейнера */
       display: flex;
       flex-direction: column;
       align-items: center;

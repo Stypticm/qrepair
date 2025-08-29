@@ -47,17 +47,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const buttonConfig = getButtonConfig();
 
   return (
-    <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+    <div className="min-h-screen min-w-screen flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
       {/* Заголовок - только для страниц формы */}
       {path !== '/request/choose' && (
         <div className="text-center py-6">
 
           {/* Заголовок страницы */}
-          {path === '/request/form' && (
+          {/* {path === '/request/form' && (
             <h2 className="text-2xl font-extrabold text-gray-800 mt-4">
               Выбери<br />свой iPhone
             </h2>
-          )}
+          )} */}
           {path === '/request/display_scratches' && (
             <h2 className="text-2xl font-extrabold text-gray-800 mt-4">
               📱 Царапины<br /> на экране

@@ -47,7 +47,7 @@ export async function POST(request: Request) {
             0
           )
         : 0
-      // Извлекаем базовую модель из полного названия (например, "Apple iPhone 11 Pro Max 128GB Золотой Китай" -> "Apple iPhone 11")
+      // Извлекаем базовую модель из полного названия (например, "Apple iPhone 11 Pro Max 128GB Золотой Китай 2 SIM" -> "Apple iPhone 11")
       const baseModelMatch = modelname.match(
         /Apple iPhone (\d+)/
       )

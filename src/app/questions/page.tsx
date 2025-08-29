@@ -28,14 +28,14 @@ const questions = [
 const QuestionsPage = () => {
     return (
         <Page back={true}>
-            <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+            <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 20px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
                 <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
                     ❓Частые<br />вопросы
                 </h1>
                 <section className='flex flex-col gap-1 w-full'>
                     {
                         questions.map((question, index) => (
-                            <div className="flex flex-row items-start justify-center gap-2" key={index}>
+                            <div className="flex flex-row items-start justify-center gap-1" key={index}>
                                 <Image
                                     src={getPictureUrl('questionImage.png') || '/questionImage.png'}
                                     alt="Знак вопроса"
@@ -43,11 +43,11 @@ const QuestionsPage = () => {
                                     height={150}
                                     className="object-cover rounded-lg"
                                 />
-                                <section className='flex flex-col gap-2'>
-                                    <span className="text-2xl font-bold text-black">
+                                <section className='flex flex-col gap-1'>
+                                    <span className="text-xl font-bold text-black">
                                         {question.question}
                                     </span>
-                                    <p className="text-lg text-slate-700 w-full font-semibold">
+                                    <p className="text-sm text-slate-700 w-full font-semibold">
                                         {question.answer}
                                     </p>
                                 </section>

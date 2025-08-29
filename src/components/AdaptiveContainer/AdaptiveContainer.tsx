@@ -39,7 +39,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Не рендерим ничего до монтирования
   if (!isMounted) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f9ecb8]">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
         <div className="w-full max-w-md mx-auto text-center">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded mb-4"></div>
@@ -58,15 +58,15 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       if (isDesktop) {
         // Desktop - центрируем и ограничиваем размер
         return {
-          container: "min-h-screen min-w-screen flex flex-col bg-[#f9ecb8] items-center justify-center",
-          main: "flex-1 w-full max-w-md shadow-lg bg-[#f9ecb8] rounded-lg",
+          container: "min-h-screen min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
+          main: "flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl",
           wrapper: "w-full max-w-md mx-auto"
         };
       } else if (isMobile) {
         // Mobile браузер - фиксированный размер как раньше
         return {
-          container: "min-h-screen min-w-screen flex flex-col bg-[#f9ecb8] items-center justify-center",
-          main: "flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-[#f9ecb8] rounded-lg",
+          container: "min-h-screen min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
+          main: "flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-white rounded-2xl",
           wrapper: "w-full h-full max-w-md mx-auto"
         };
       }
@@ -74,7 +74,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     
     // Telegram режим - используем полный экран
     return {
-      container: "min-h-screen w-full flex flex-col bg-[#f9ecb8]",
+      container: "min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50",
       main: "flex-1 w-full p-4",
       wrapper: "w-full"
     };
@@ -85,7 +85,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Показываем загрузку только для Telegram
   if (isTelegram && !isReady) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#f9ecb8]">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Инициализация Telegram WebApp...</p>
