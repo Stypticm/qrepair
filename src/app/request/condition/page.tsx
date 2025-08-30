@@ -523,7 +523,7 @@ export default function ConditionPage() {
                             key={condition.id}
                             className={`transition-all duration-200 relative ${
                                 deviceConditions[type] === getConditionText(condition.id)
-                                    ? 'ring-2 ring-blue-500 bg-blue-50'
+                                    ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
                                     : ''
                             } ${
                                 canSelectSection(type) 
@@ -533,7 +533,7 @@ export default function ConditionPage() {
                             onClick={() => canSelectSection(type) && handleConditionSelect(type, condition.id)}
                         >
                             {deviceConditions[type] === getConditionText(condition.id) && (
-                                <div className="absolute top-1 right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center shadow-sm z-10">
+                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
                                     <span className="text-white text-xs font-bold">✓</span>
                                 </div>
                             )}

@@ -18,6 +18,8 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { ExpandButton } from '@/components/ExpandButton';
+import { tailwindColors } from '@/core/colors';
+import { ChatContext } from '@/components/ChatContext';
 
 export default function Home() {
   const { telegramId, setModel, resetAllStates } = useStartForm();
@@ -85,7 +87,7 @@ export default function Home() {
             <div className="flex flex-col gap-4 w-full">
               <Button
                 variant="outline"
-                className="w-full h-16 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                className="w-full h-16 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
                 onClick={() => router.push('/request/form')}
               >
                 Оценить смартфон
@@ -114,7 +116,7 @@ export default function Home() {
             {isAdmin && (
               <Button
                 variant="outline"
-                className="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium text-sm rounded-xl border-0 shadow-lg transition-all duration-200"
+                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-medium text-sm rounded-xl border-0 shadow-lg transition-all duration-200"
               >
                 <Link href="/admin">Админ</Link>
               </Button>

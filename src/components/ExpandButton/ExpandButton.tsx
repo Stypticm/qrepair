@@ -18,7 +18,7 @@ export function ExpandButton({ className = '', children = 'Развернуть'
   return (
     <Button
       onClick={forceExpand}
-      className={`bg-blue-500 hover:bg-blue-600 text-white ${className}`}
+      className={`bg-[#2dc2c6] hover:bg-[#25a8ac] text-white ${className}`}
       size="sm"
     >
       {children}

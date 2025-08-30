@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Page } from '@/components/Page';
+import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 
 const RequestsPage = () => {
     const [applications, setApplications] = useState<SkupkaRequest[]>([]);
@@ -22,10 +22,21 @@ const RequestsPage = () => {
     }, []);
 
     return (
-        <Page back={true}>
-            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll">
+        <AdaptiveContainer>
+            <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
+                <div className="flex-1 w-full p-6">
                     <div className="max-w-7xl mx-auto w-full">
+                        {/* Кнопка "Назад" */}
+                        <div className="mb-6">
+                            <Button
+                                variant="outline"
+                                onClick={() => router.back()}
+                                className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-sm rounded-xl transition-all duration-200"
+                            >
+                                ← Назад
+                            </Button>
+                        </div>
+
                         <div className="text-center mb-8">
                             <h2 className="text-3xl font-semibold text-gray-900 mb-2">📋 Заявки</h2>
                             <p className="text-gray-600">Управление заявками на выкуп устройств</p>
@@ -65,7 +76,7 @@ const RequestsPage = () => {
                                                                 : bid.status === 'in_progress'
                                                                     ? 'bg-yellow-500'
                                                                     : bid.status === 'on_the_way'
-                                                                        ? 'bg-blue-500'
+                                                                        ? 'bg-[#2dc2c6]'
                                                                         : bid.status === 'paid'
                                                                             ? 'bg-emerald-500'
                                                                             : 'bg-gray-600'
@@ -99,7 +110,7 @@ const RequestsPage = () => {
                     </div>
                 </div>
             </div>
-        </Page>
+        </AdaptiveContainer>
     );
 };
 

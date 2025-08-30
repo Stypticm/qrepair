@@ -602,7 +602,7 @@ export default function FormPage() {
                                 onClick={() => handleOptionSelect('color', color)}
                                 disabled={!selectedOptions.storage}
                                 className={`h-10 w-10 rounded-full border-2 transition-all duration-200 relative group flex items-center justify-between p-0 ${selectedOptions.color === color
-                                    ? 'border-blue-500 ring-2 ring-blue-300 shadow-lg'
+                                    ? 'border-[#2dc2c6] ring-2 ring-[#2dc2c6]/30 shadow-lg'
                                     : 'border-gray-200 hover:border-gray-300'
                                     }`}
                                 style={{

@@ -37,12 +37,12 @@ const FooterButton = ({
       case '/request/display_scratches':
         return {
           text: 'Далее',
-          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
+          className: 'bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
         };
       case '/request/display_cracks':
         return {
           text: 'Далее',
-          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
+          className: 'bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
         };
       case '/request/photos':
         return {
@@ -52,7 +52,7 @@ const FooterButton = ({
       default:
         return {
           text: 'Далее',
-          className: 'bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
+          className: 'bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-bold text-xl py-4 rounded-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
         };
     }
   };

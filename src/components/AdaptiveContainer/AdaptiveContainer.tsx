@@ -87,7 +87,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
           <p className="text-gray-600">Инициализация Telegram WebApp...</p>
           <p className="text-sm text-gray-500 mt-2">
             {isMobile ? 'Мобильное устройство' : 'Десктоп'}
@@ -104,7 +104,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     <div className={`${styles.container} ${className}`}>
       {/* Отладочная информация */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="fixed top-0 left-0 bg-green-500 text-white text-xs p-2 z-50 rounded-br">
+        <div className="fixed top-0 left-0 bg-[#2dc2c6] text-white text-xs p-2 z-50 rounded-br">
           <div>Mode: {isTelegram ? 'Telegram' : 'Browser'}</div>
           <div>Device: {isMobile ? 'Mobile' : isDesktop ? 'Desktop' : 'Unknown'}</div>
           <div>Ready: {isReady ? 'Yes' : 'No'}</div>

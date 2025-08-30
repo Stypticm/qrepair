@@ -80,13 +80,37 @@ export function useSafeArea() {
             }
           }, 300)
 
+          // Дополнительная попытка расширения для контекста чата
+          // Telegram может применять разные правила для разных контекстов
+          setTimeout(() => {
+            console.log(
+              'Final expand attempt for chat context...'
+            )
+            webApp.expand()
+
+            // Принудительно устанавливаем viewport
+            if (
+              webApp.viewportHeight &&
+              webApp.viewportStableHeight
+            ) {
+              console.log(
+                'Viewport height:',
+                webApp.viewportHeight
+              )
+              console.log(
+                'Stable height:',
+                webApp.viewportStableHeight
+              )
+            }
+          }, 500)
+
           // Включаем подтверждение закрытия
           if (webApp.enableClosingConfirmation) {
             webApp.enableClosingConfirmation()
           }
 
           // Устанавливаем цвета для лучшего UX
-          webApp.headerColor = '#f9ecb8'
+          webApp.headerColor = '#2dc2c6'
           webApp.backgroundColor = '#ffffff'
 
           // Получаем тему
@@ -159,6 +183,14 @@ export function useSafeArea() {
               setTimeout(() => webApp.expand(), 100)
             }
           }
+
+          // Логируем детали viewport для отладки
+          console.log('Viewport details:', {
+            height: event.height,
+            width: event.width,
+            is_expanded: event.is_expanded,
+            is_state_stable: event.is_state_stable,
+          })
         })
       }
       // Альтернативный способ через onEvent

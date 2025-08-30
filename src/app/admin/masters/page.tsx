@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { Page } from '@/components/Page'
+import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer'
 
 interface Master {
   id: string
@@ -129,18 +129,28 @@ export default function MastersPage() {
   }
 
   return (
-    <Page back={true}>
-
-      <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 80px)', overflowY: 'scroll' }}>
+    <AdaptiveContainer>
+      <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
+        <div className="flex-1 w-full p-6">
           <div className="max-w-7xl mx-auto">
+            {/* Кнопка "Назад" */}
+            <div className="mb-6">
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+                className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-sm rounded-xl transition-all duration-200"
+              >
+                ← Назад
+              </Button>
+            </div>
+
             <div className="flex justify-between items-center mb-8">
               <section className='flex flex-col gap-4'>
                 <h1 className="text-3xl font-semibold text-gray-900 text-center mb-2">👨‍🔧 Управление мастерами</h1>
                 <p className="text-gray-600 text-center">Добавление и управление мастерами системы</p>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl">
+                    <Button className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl">
                       + Добавить мастера
                     </Button>
                   </DialogTrigger>
@@ -187,7 +197,7 @@ export default function MastersPage() {
                         >
                           Отмена
                         </Button>
-                        <Button onClick={addMaster} className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                        <Button onClick={addMaster} className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-lg">
                           Добавить
                         </Button>
                       </div>
@@ -264,6 +274,6 @@ export default function MastersPage() {
           </div>
         </div>
       </div>
-    </Page>
+    </AdaptiveContainer>
   )
 }
