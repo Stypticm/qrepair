@@ -23,26 +23,15 @@ const RequestsPage = () => {
 
     return (
         <AdaptiveContainer>
-            <div className="min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
-                <div className="flex-1 w-full p-6">
+            <div className="min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
+                <div className="flex-1 w-full p-6 overflow-y-auto">
                     <div className="max-w-7xl mx-auto w-full">
-                        {/* Кнопка "Назад" */}
-                        <div className="mb-6">
-                            <Button
-                                variant="outline"
-                                onClick={() => router.back()}
-                                className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 shadow-sm rounded-xl transition-all duration-200"
-                            >
-                                ← Назад
-                            </Button>
-                        </div>
-
                         <div className="text-center mb-8">
                             <h2 className="text-3xl font-semibold text-gray-900 mb-2">📋 Заявки</h2>
                             <p className="text-gray-600">Управление заявками на выкуп устройств</p>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full pb-6">
                             {applications.length === 0 ? (
                                 <Card className="w-full bg-white border border-gray-200 rounded-2xl shadow-sm">
                                     <CardContent className="p-6 text-center">

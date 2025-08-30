@@ -117,6 +117,342 @@
     width: 100vw !important;
   }
 
+  /* Убираем рамки с изображений поломок */
+  .damage-image {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .damage-image img {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Специально для iOS Safari */
+  @supports (-webkit-touch-callout: none) {
+    .damage-image {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    
+    .damage-image img {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Принудительно убираем рамки для всех элементов */
+    .damage-image * {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  /* Дополнительные стили для всех браузеров */
+  .damage-image * {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Специально для изображений */
+  .damage-image img,
+  .damage-image Image {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-user-drag: none !important;
+    -khtml-user-drag: none !important;
+    -moz-user-drag: none !important;
+    -o-user-drag: none !important;
+    user-drag: none !important;
+  }
+
+  /* Специально для Next.js Image компонента */
+  .damage-image [data-nimg] {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Принудительно убираем все возможные рамки */
+  .damage-image div[style*="border"],
+  .damage-image div[style*="outline"],
+  .damage-image div[style*="box-shadow"] {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Специально для Card компонентов */
+  .damage-image .card,
+  .damage-image [class*="card"],
+  .damage-image [class*="Card"] {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Убираем рамки с кнопок и интерактивных элементов */
+  .damage-image button,
+  .damage-image [role="button"],
+  .damage-image [class*="button"] {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Принудительно убираем рамки со всех элементов */
+  .damage-image *,
+  .damage-image *::before,
+  .damage-image *::after {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Специально для iOS Safari - убираем все возможные рамки */
+  @supports (-webkit-touch-callout: none) {
+    .damage-image *,
+    .damage-image *::before,
+    .damage-image *::after {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  /* Дополнительные стили для всех браузеров - убираем рамки */
+  .damage-image {
+    --tw-border-opacity: 0 !important;
+    --tw-ring-opacity: 0 !important;
+    --tw-shadow: 0 0 #0000 !important;
+  }
+
+  /* Убираем рамки с Tailwind CSS классов */
+  .damage-image .border,
+  .damage-image .border-0,
+  .damage-image .border-2,
+  .damage-image .border-4,
+  .damage-image .ring,
+  .damage-image .ring-2,
+  .damage-image .shadow,
+  .damage-image .shadow-md,
+  .damage-image .shadow-lg {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-border-opacity: 0 !important;
+    --tw-ring-opacity: 0 !important;
+    --tw-shadow: 0 0 #0000 !important;
+  }
+
+  /* Специально для iOS Safari - убираем все возможные рамки */
+  @supports (-webkit-touch-callout: none) {
+    .damage-image .border,
+    .damage-image .border-0,
+    .damage-image .border-2,
+    .damage-image .border-4,
+    .damage-image .ring,
+    .damage-image .ring-2,
+    .damage-image .shadow,
+    .damage-image .shadow-md,
+    .damage-image .shadow-lg {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      --tw-border-opacity: 0 !important;
+      --tw-ring-opacity: 0 !important;
+      --tw-shadow: 0 0 #0000 !important;
+    }
+  }
+
+  /* Финальные стили для принудительного удаления рамок */
+  .damage-image {
+    all: unset !important;
+  }
+
+  .damage-image * {
+    all: unset !important;
+  }
+
+  /* Восстанавливаем только необходимые стили */
+  .damage-image {
+    display: block !important;
+    position: relative !important;
+  }
+
+  .damage-image * {
+    display: revert !important;
+    position: revert !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Дополнительные стили для всех версий iOS */
+  @supports (-webkit-touch-callout: none) {
+    .damage-image {
+      -webkit-user-select: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+
+    .damage-image * {
+      -webkit-user-select: none !important;
+      -webkit-touch-callout: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+  }
+
+  /* Финальные стили для принудительного удаления рамок */
+  .damage-image {
+    all: unset !important;
+  }
+
+  .damage-image * {
+    all: unset !important;
+  }
+
+  /* Восстанавливаем только необходимые стили */
+  .damage-image {
+    display: block !important;
+    position: relative !important;
+  }
+
+  .damage-image * {
+    display: revert !important;
+    position: revert !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Специально для старых версий iOS (12-15) */
+  @supports (-webkit-touch-callout: none) and (-webkit-transform: translateZ(0)) {
+    .damage-image {
+      -webkit-transform: translateZ(0) !important;
+      -webkit-backface-visibility: hidden !important;
+      -webkit-perspective: 1000 !important;
+    }
+
+    .damage-image * {
+      -webkit-transform: translateZ(0) !important;
+      -webkit-backface-visibility: hidden !important;
+      -webkit-perspective: 1000 !important;
+    }
+  }
+
+  /* Специально для iOS Safari - убираем все возможные рамки */
+  @supports (-webkit-touch-callout: none) {
+    .damage-image {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .damage-image * {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  /* Для iOS 12-15 (старые версии) */
+  @supports (-webkit-touch-callout: none) and (not (min-ios-version: 16)) {
+    .damage-image {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .damage-image * {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Принудительно убираем рамки для старых iOS */
+    .damage-image img,
+    .damage-image [data-nimg],
+    .damage-image div {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  /* Для iOS 16+ (новые версии) */
+  @supports (-webkit-touch-callout: none) and (min-ios-version: 16) {
+    .damage-image {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .damage-image * {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  /* Финальные стили для принудительного удаления рамок */
+  .damage-image {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-border-opacity: 0 !important;
+    --tw-ring-opacity: 0 !important;
+    --tw-shadow: 0 0 #0000 !important;
+  }
+
+  .damage-image * {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-border-opacity: 0 !important;
+    --tw-ring-opacity: 0 !important;
+    --tw-shadow: 0 0 #0000 !important;
+  }
+
 
 
 
