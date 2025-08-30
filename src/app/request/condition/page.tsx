@@ -7,7 +7,7 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
-import { getPictureUrl } from '@/core/lib/assets';
+import { getImageUrl } from '@/core/lib/assets';
 
 interface ConditionOption {
     id: string;
@@ -502,7 +502,9 @@ export default function ConditionPage() {
                 // Передняя и задняя панель - прямоугольные как телефон, большая высота для полной видимости без обрезки
                 return 'w-full h-36 rounded-lg';
             }
-    };
+        };
+        
+
 
     return (
             <div className="space-y-1">
@@ -542,7 +544,7 @@ export default function ConditionPage() {
                                 {/* Изображение - разные размеры для разных секций */}
                                 <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
                                     <Image
-                                        src={`/${condition.image}.png`}
+                                        src={getImageUrl(`${condition.image}.png`)}
                                         alt={condition.label}
                                         width={80}
                                         height={type === 'side' ? 24 : 144}

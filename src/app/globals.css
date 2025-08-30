@@ -143,6 +143,8 @@
     -webkit-appearance: none !important;
     -webkit-border-radius: 0 !important;
   }
+  
+
 
   /* Специально для iOS Safari - убираем рамки с изображений */
   @supports (-webkit-touch-callout: none) {
