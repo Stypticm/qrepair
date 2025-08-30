@@ -115,7 +115,15 @@ export default function Home() {
 
             {isAdmin && (
               <Link href="/admin">
-                <div className="w-8 h-8 bg-red-500 rounded-full shadow-lg hover:bg-red-600 transition-all duration-200 cursor-pointer mx-auto" />
+                <div className="w-12 h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer mx-auto overflow-hidden bg-white border border-gray-200 hover:border-gray-300">
+                  <Image
+                    src={getPictureUrl('admin_btn.png') || '/admin_btn.png'}
+                    alt="Админ панель"
+                    width={48}
+                    height={48}
+                    className="w-full h-full object-cover rounded-2xl"
+                  />
+                </div>
               </Link>
             )}
           </div>
