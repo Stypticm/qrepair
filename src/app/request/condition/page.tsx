@@ -548,7 +548,7 @@ export default function ConditionPage() {
                                         alt={condition.label}
                                         width={80}
                                         height={type === 'side' ? 24 : 144}
-                                        className="w-full h-full object-cover"
+                                        className="damage-image w-full h-full object-cover"
                                         onError={(e) => {
                                             console.error(`Ошибка загрузки изображения: ${condition.image}.png`);
                                         }}
