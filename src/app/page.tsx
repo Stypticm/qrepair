@@ -86,7 +86,7 @@ export default function Home() {
         <div className="w-full max-w-md mx-auto text-center space-y-8">
           <div className="space-y-6">
             <Image
-              src={getPictureUrl('logo.png') || '/logo.png'}
+              src={getPictureUrl('logo2.png') || '/logo2.png'}
               alt="Логотип"
               width={300}
               height={150}
