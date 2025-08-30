@@ -71,11 +71,10 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
     <div 
       className={`w-full ${
         isMenuButton 
-          ? 'telegram-menu-button telegram-expanded min-h-screen min-h-dvh' 
+          ? 'telegram-menu-button telegram-expanded min-h-dvh' 
           : 'telegram-fullscreen'
       }`}
       style={{
-        minHeight: isMenuButton ? '100vh' : 'auto',
         minHeight: isMenuButton ? '100dvh' : 'auto',
         width: '100vw',
         maxWidth: '100vw',

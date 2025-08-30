@@ -98,7 +98,6 @@
 
   /* Принудительный full screen для Telegram Mini App */
   .telegram-fullscreen {
-    min-height: 100vh !important;
     min-height: 100dvh !important;
     width: 100vw !important;
     max-width: 100vw !important;
@@ -107,7 +106,6 @@
 
   /* Специальные стили для Menu Button */
   .telegram-menu-button {
-    min-height: 100vh !important;
     min-height: 100dvh !important;
     width: 100vw !important;
     max-width: 100vw !important;
@@ -115,7 +113,6 @@
 
   /* Принудительное расширение viewport */
   .telegram-expanded {
-    height: 100vh !important;
     height: 100dvh !important;
     width: 100vw !important;
   }

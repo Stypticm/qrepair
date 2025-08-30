@@ -49,7 +49,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Не рендерим ничего до монтирования
   if (!isMounted) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
+      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
         <div className="w-full max-w-md mx-auto text-center">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded mb-4"></div>
@@ -66,19 +66,19 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     if (!isTelegram) {
       // Браузер режим (PC или мобильный)
       if (isDesktop) {
-        // Desktop - центрируем и ограничиваем размер
-        return {
-          container: "min-h-screen min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
-          main: "flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl",
-          wrapper: "w-full max-w-md mx-auto"
-        };
-      } else if (isMobile) {
-        // Mobile браузер - фиксированный размер как раньше
-        return {
-          container: "min-h-screen min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
-          main: "flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-white rounded-2xl",
-          wrapper: "w-full h-full max-w-md mx-auto"
-        };
+              // Desktop - центрируем и ограничиваем размер
+      return {
+        container: "min-h-dvh min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
+        main: "flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl",
+        wrapper: "w-full max-w-md mx-auto"
+      };
+    } else if (isMobile) {
+      // Mobile браузер - фиксированный размер как раньше
+      return {
+        container: "min-h-dvh min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
+        main: "flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-white rounded-2xl",
+        wrapper: "w-full h-full max-w-md mx-auto"
+      };
       }
     }
     
@@ -86,14 +86,14 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     if (isMenuButton) {
       // Menu Button режим - принудительный full screen
       return {
-        container: "min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen telegram-menu-button telegram-expanded",
+        container: "min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen telegram-menu-button telegram-expanded",
         main: "flex-1 w-full p-4",
         wrapper: "w-full"
       };
     } else {
       // Обычный Telegram режим
       return {
-        container: "min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen",
+        container: "min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen",
         main: "flex-1 w-full p-4",
         wrapper: "w-full"
       };
@@ -105,7 +105,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Показываем загрузку только для Telegram
   if (isTelegram && !isReady) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
+      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
           <p className="text-gray-600">Инициализация Telegram WebApp...</p>
