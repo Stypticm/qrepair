@@ -272,10 +272,9 @@ export const initializeBot = async () => {
       },
     ])
 
-    // Menu Button "Открыть" настраивается через @BotFather
-    // /setmenubutton -> Text: "🚀 Открыть", URL: https://qrepair-git-dev-stypticms-projects.vercel.app/
+    // Menu Button НЕ настраиваем - никакого меню не будет
     console.log(
-      '✅ Menu Button "Открыть" настраивается через @BotFather'
+      '✅ Menu Button убран - никакого меню в левом нижнем углу'
     )
 
     // Deep linking ссылки для прямого открытия:
@@ -286,7 +285,7 @@ export const initializeBot = async () => {
     )
 
     console.log(
-      '✅ Бот QoS успешно инициализирован с deep linking и Menu Button "Открыть"'
+      '✅ Бот QoS успешно инициализирован с deep linking, без Menu Button'
     )
 
     // Запускаем бота

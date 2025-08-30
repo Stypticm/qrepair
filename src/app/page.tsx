@@ -83,7 +83,7 @@ export default function Home() {
               height={150}
               className="w-full h-auto object-contain mx-auto rounded-2xl shadow-lg"
             />
-            
+
             <div className="flex flex-col gap-4 w-full">
               <Button
                 variant="outline"
@@ -112,10 +112,10 @@ export default function Home() {
           <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2'>
             {/* Кнопка для принудительного расширения */}
             <ExpandButton className="w-full" />
-            
+
             {isAdmin && (
               <Link href="/admin">
-                <div className="w-4 h-4 bg-red-500 rounded-full shadow-lg hover:bg-red-600 transition-all duration-200 cursor-pointer mx-auto" />
+                <div className="w-8 h-8 bg-red-500 rounded-full shadow-lg hover:bg-red-600 transition-all duration-200 cursor-pointer mx-auto" />
               </Link>
             )}
           </div>
