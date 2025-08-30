@@ -114,12 +114,9 @@ export default function Home() {
             <ExpandButton className="w-full" />
             
             {isAdmin && (
-              <Button
-                variant="outline"
-                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-medium text-sm rounded-xl border-0 shadow-lg transition-all duration-200"
-              >
-                <Link href="/admin">Админ</Link>
-              </Button>
+              <Link href="/admin">
+                <div className="w-4 h-4 bg-red-500 rounded-full shadow-lg hover:bg-red-600 transition-all duration-200 cursor-pointer mx-auto" />
+              </Link>
             )}
           </div>
         </div>

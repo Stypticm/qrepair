@@ -2,6 +2,48 @@ import { Bot } from 'grammy'
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
+// Deep linking - обработка start параметров
+bot.command('start', async (ctx) => {
+  const startParam = ctx.message?.text?.split(' ')[1] || ''
+
+  if (startParam === 'app' || startParam === 'webapp') {
+    // Прямое открытие приложения через deep link
+    await ctx.reply('🚀 Открываю QoS прямо сейчас!', {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: '🚀 Открыть QoS',
+              web_app: {
+                url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+              },
+            },
+          ],
+        ],
+      },
+    })
+  } else {
+    // Обычное приветствие с кнопкой открытия
+    await ctx.reply(
+      '🎉 Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '🚀 Открыть QoS',
+                web_app: {
+                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                },
+              },
+            ],
+          ],
+        },
+      }
+    )
+  }
+})
+
 // Команда /app - быстрый доступ к приложению
 bot.command('app', async (ctx) => {
   await ctx.reply('🚀 Открываю QoS прямо сейчас!', {
@@ -30,7 +72,7 @@ bot.command('help', async (ctx) => {
       '3. Оцените состояние\n' +
       '4. Получите цену\n' +
       '5. Отправьте заявку\n\n' +
-      '🚀 **Открыть приложение:** нажмите кнопку "Открыть" в меню',
+      '🚀 **Открыть приложение:** нажмите кнопку ниже',
     {
       parse_mode: 'Markdown',
       reply_markup: {
@@ -57,7 +99,7 @@ bot.command('settings', async (ctx) => {
       '• Изменить язык\n' +
       '• Настройки уведомлений\n' +
       '• Личный кабинет\n\n' +
-      '🚀 **Открыть приложение для настройки:** нажмите кнопку "Открыть" в меню',
+      '🚀 **Открыть приложение для настройки:** нажмите кнопку ниже',
     {
       parse_mode: 'Markdown',
       reply_markup: {
@@ -101,17 +143,18 @@ bot.on('callback_query', async (ctx) => {
   }
 })
 
-// Обработка текстовых сообщений
+// Обработка ВСЕХ текстовых сообщений - показываем кнопку открытия
 bot.on('message:text', async (ctx) => {
   const text = ctx.message.text.toLowerCase()
 
+  // Приветствие
   if (
     text.includes('привет') ||
     text.includes('hello') ||
     text.includes('hi')
   ) {
     await ctx.reply(
-      '👋 Привет! Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку "Открыть" в меню для начала работы',
+      '👋 Привет! Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
       {
         reply_markup: {
           inline_keyboard: [
@@ -127,7 +170,9 @@ bot.on('message:text', async (ctx) => {
         },
       }
     )
-  } else if (
+  }
+  // Информация о ценах
+  else if (
     text.includes('цена') ||
     text.includes('стоимость') ||
     text.includes('price')
@@ -139,7 +184,7 @@ bot.on('message:text', async (ctx) => {
         '• Модель телефона\n' +
         '• Состояние устройства\n' +
         '• Комплектация\n\n' +
-        '🚀 **Получить точную оценку:** нажмите кнопку "Открыть" в меню',
+        '🚀 **Получить точную оценку:** нажмите кнопку ниже',
       {
         parse_mode: 'Markdown',
         reply_markup: {
@@ -156,7 +201,9 @@ bot.on('message:text', async (ctx) => {
         },
       }
     )
-  } else if (
+  }
+  // Помощь
+  else if (
     text.includes('помощь') ||
     text.includes('help')
   ) {
@@ -164,10 +211,31 @@ bot.on('message:text', async (ctx) => {
       '🔍 **Помощь по QoS**\n\n' +
         '📱 **Основные команды:**\n' +
         '• /help - Показать помощь\n' +
-        '• /settings - Настройки\n\n' +
-        '🚀 **Открыть приложение:** нажмите кнопку "Открыть" в меню',
+        '• /settings - Настройки\n' +
+        '• /app - Быстро открыть приложение\n\n' +
+        '🚀 **Открыть приложение:** нажмите кнопку ниже',
       {
         parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: '🚀 Открыть QoS',
+                web_app: {
+                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                },
+              },
+            ],
+          ],
+        },
+      }
+    )
+  }
+  // Любое другое сообщение - показываем кнопку открытия
+  else {
+    await ctx.reply(
+      '🎯 **QoS - Quality of Service**\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
+      {
         reply_markup: {
           inline_keyboard: [
             [
@@ -188,8 +256,13 @@ bot.on('message:text', async (ctx) => {
 // Инициализация бота при запуске
 export const initializeBot = async () => {
   try {
-    // Устанавливаем команды бота (убрали /start)
+    // Устанавливаем команды бота
     await bot.api.setMyCommands([
+      {
+        command: 'start',
+        description:
+          '🚀 Открыть приложение (с deep linking)',
+      },
       {
         command: 'app',
         description: '📱 Быстро открыть приложение',
@@ -210,8 +283,15 @@ export const initializeBot = async () => {
       '✅ Menu Button "Открыть" настраивается через @BotFather'
     )
 
+    // Deep linking ссылки для прямого открытия:
+    // https://t.me/your_bot_username?start=app
+    // https://t.me/your_bot_username?start=webapp
     console.log(
-      '✅ Бот QoS успешно инициализирован с Menu Button "Открыть"'
+      '✅ Deep linking настроен: ?start=app или ?start=webapp'
+    )
+
+    console.log(
+      '✅ Бот QoS успешно инициализирован с deep linking и Menu Button "Открыть"'
     )
 
     // Запускаем бота
