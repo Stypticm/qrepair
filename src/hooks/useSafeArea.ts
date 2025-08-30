@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface SafeAreaInsets {
   top: number
@@ -26,6 +26,25 @@ export function useSafeArea() {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
+  // Функция для принудительного расширения
+  const forceExpand = useCallback(() => {
+    if (window.Telegram?.WebApp) {
+      const webApp = window.Telegram.WebApp
+      console.log('Force expanding WebApp...')
+      webApp.expand()
+
+      // Проверяем результат через небольшую паузу
+      setTimeout(() => {
+        if (!webApp.isExpanded) {
+          console.log(
+            'First expand failed, trying again...'
+          )
+          webApp.expand()
+        }
+      }, 200)
+    }
+  }, [])
+
   useEffect(() => {
     setIsMounted(true)
   }, [])
@@ -38,18 +57,37 @@ export function useSafeArea() {
       setIsTelegram(true)
 
       // Инициализация и расширение как в BotFather
-      const setup = () => {
+      const setup = async () => {
         try {
-          // Основные настройки
+          // Сначала уведомляем Telegram о готовности
           webApp.ready()
 
-          // Расширяем на весь экран как в BotFather
+          // Ждем небольшую паузу для полной инициализации
+          await new Promise((resolve) =>
+            setTimeout(resolve, 100)
+          )
+
+          // Принудительно разворачиваем на весь экран
+          // Это ключевой момент - вызываем expand() после ready()
           webApp.expand()
+
+          // Дополнительно принудительно разворачиваем через небольшую паузу
+          // для случаев, когда первый вызов не сработал
+          setTimeout(() => {
+            if (!webApp.isExpanded) {
+              console.log('Force expanding again...')
+              webApp.expand()
+            }
+          }, 300)
 
           // Включаем подтверждение закрытия
           if (webApp.enableClosingConfirmation) {
             webApp.enableClosingConfirmation()
           }
+
+          // Устанавливаем цвета для лучшего UX
+          webApp.headerColor = '#f9ecb8'
+          webApp.backgroundColor = '#ffffff'
 
           // Получаем тему
           if (webApp.colorScheme) {
@@ -103,12 +141,35 @@ export function useSafeArea() {
       // Настройка при загрузке
       setup()
 
-      // Обработчики изменений
+      // Обработчики изменений viewport
       if (webApp.onViewportChanged) {
-        webApp.onViewportChanged(updateSafeArea)
+        webApp.onViewportChanged((event) => {
+          console.log('Viewport changed:', event)
+          updateSafeArea()
+
+          // Проверяем, развернуто ли приложение
+          if (event.is_expanded !== undefined) {
+            setIsExpanded(event.is_expanded)
+
+            // Если не развернуто, пытаемся развернуть снова
+            if (!event.is_expanded) {
+              console.log(
+                'Viewport not expanded, trying to expand again...'
+              )
+              setTimeout(() => webApp.expand(), 100)
+            }
+          }
+        })
       }
+      // Альтернативный способ через onEvent
       if (webApp.onEvent) {
-        webApp.onEvent('viewport_changed', updateSafeArea)
+        webApp.onEvent('viewport_changed', (event: any) => {
+          console.log(
+            'Viewport changed via onEvent:',
+            event
+          )
+          updateSafeArea()
+        })
       }
 
       // Обработчик изменения темы
@@ -117,6 +178,13 @@ export function useSafeArea() {
           if (webApp.colorScheme) {
             setTheme(webApp.colorScheme)
           }
+        })
+      }
+
+      // Обработчик закрытия приложения
+      if (webApp.onCloseRequested) {
+        webApp.onCloseRequested(() => {
+          console.log('App close requested')
         })
       }
 
@@ -131,6 +199,8 @@ export function useSafeArea() {
           )
         if (webApp.offEvent)
           webApp.offEvent('theme_changed', () => {})
+        if (webApp.offCloseRequested)
+          webApp.offCloseRequested(() => {})
       }
     } else {
       // Не в Telegram - показываем приложение сразу
@@ -155,6 +225,7 @@ export function useSafeArea() {
       isTelegram: false,
       theme: 'light',
       isExpanded: false,
+      forceExpand: () => {},
       cssVars: {
         '--safe-area-top': '0px',
         '--safe-area-right': '0px',
@@ -170,6 +241,7 @@ export function useSafeArea() {
     isTelegram,
     theme,
     isExpanded,
+    forceExpand,
     // CSS переменные для использования в стилях
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,

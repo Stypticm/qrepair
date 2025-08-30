@@ -9,7 +9,7 @@ interface AdaptiveContainerProps {
 }
 
 export function AdaptiveContainer({ children, className = '' }: AdaptiveContainerProps) {
-  const { isTelegram, isReady, safeAreaInsets } = useSafeArea();
+  const { isTelegram, isReady, safeAreaInsets, isExpanded } = useSafeArea();
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -92,6 +92,9 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
           <p className="text-sm text-gray-500 mt-2">
             {isMobile ? 'Мобильное устройство' : 'Десктоп'}
           </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Расширение: {isExpanded ? 'Да' : 'Нет'}
+          </p>
         </div>
       </div>
     );
@@ -105,6 +108,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
           <div>Mode: {isTelegram ? 'Telegram' : 'Browser'}</div>
           <div>Device: {isMobile ? 'Mobile' : isDesktop ? 'Desktop' : 'Unknown'}</div>
           <div>Ready: {isReady ? 'Yes' : 'No'}</div>
+          <div>Expanded: {isExpanded ? 'Yes' : 'No'}</div>
         </div>
       )}
       
@@ -120,9 +124,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       )}
       
       <div className={styles.wrapper}>
-        
-          {children}
-        
+        {children}
       </div>
     </div>
   );

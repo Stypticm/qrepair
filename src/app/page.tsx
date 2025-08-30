@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 
 import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
+import { ExpandButton } from '@/components/ExpandButton';
 
 export default function Home() {
   const { telegramId, setModel, resetAllStates } = useStartForm();
@@ -24,20 +25,8 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Telegram WebApp expand() теперь обрабатывается в хуке useSafeArea
-    if (window.Telegram?.WebApp) {
-      // Принудительно разворачиваем на весь экран
-      window.Telegram.WebApp.expand();
-      
-      // Устанавливаем настройки для full screen
-      window.Telegram.WebApp.headerColor = '#f9ecb8'; // Цвет заголовка
-      window.Telegram.WebApp.backgroundColor = '#ffffff'; // Цвет фона
-      
-      // Показываем кнопку "Закрыть" для лучшего UX
-      window.Telegram.WebApp.enableClosingConfirmation();
-    } else {
-      console.warn('Telegram WebApp not initialized');
-    }
+    // Telegram WebApp expand() теперь полностью обрабатывается в хуке useSafeArea
+    // Убираем дублирующий код инициализации
 
     if (!telegramId) return
 
@@ -118,7 +107,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2'>
+          <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2'>
+            {/* Кнопка для принудительного расширения */}
+            <ExpandButton className="w-full" />
+            
             {isAdmin && (
               <Button
                 variant="outline"
