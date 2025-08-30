@@ -2,16 +2,13 @@ import { Bot } from 'grammy'
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
-// Команда /start
+// Команда /start - большая кнопка START
 bot.command('start', async (ctx) => {
-  // Используем startParameter вместо startPayload
-  const startParam = ctx.message?.text?.split(' ')[1] || ''
-
-  if (startParam === 'app') {
-    // Прямой переход в приложение
-    await ctx.reply('🚀 Открываю QoS...', {
+  await ctx.reply(
+    '🎉 Добро пожаловать в QoS!\n\nМы предлагаем выкуп ваших смартфонов по выгодным ценам.\n\n🚀 Нажмите кнопку ниже для начала работы',
+    {
       reply_markup: {
-        inline_keyboard: [
+        keyboard: [
           [
             {
               text: '🚀 Открыть QoS',
@@ -21,28 +18,11 @@ bot.command('start', async (ctx) => {
             },
           ],
         ],
+        resize_keyboard: true,
+        one_time_keyboard: false,
       },
-    })
-  } else {
-    // Обычное приветствие с кнопкой для прямого открытия
-    await ctx.reply(
-      '🎉 Добро пожаловать в QoS!\n\nМы предлагаем выкуп ваших смартфонов по выгодным ценам.\n\n🚀 Нажмите кнопку ниже для начала работы',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: '🚀 Открыть приложение',
-                web_app: {
-                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
-                },
-              },
-            ],
-          ],
-        },
-      }
-    )
-  }
+    }
+  )
 })
 
 // Команда /app - быстрый доступ к приложению
@@ -158,7 +138,7 @@ bot.on('message:text', async (ctx) => {
       '👋 Привет! Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку ниже для начала работы:',
       {
         reply_markup: {
-          inline_keyboard: [
+          keyboard: [
             [
               {
                 text: '🚀 Открыть QoS',
@@ -168,6 +148,8 @@ bot.on('message:text', async (ctx) => {
               },
             ],
           ],
+          resize_keyboard: true,
+          one_time_keyboard: false,
         },
       }
     )
@@ -253,19 +235,18 @@ export const initializeBot = async () => {
       },
     ])
 
-    // НЕ устанавливаем Menu Button - приложение будет открываться только через inline кнопки
-    // Это позволит избежать проблем с menu button и обеспечит прямое открытие приложения
-
+    // Используем большие кнопки START вместо Menu Button
     console.log(
-      '✅ Бот QoS успешно инициализирован (без Menu Button)'
+      '✅ Бот QoS успешно инициализирован с большими кнопками START'
     )
+
+    // Запускаем бота
+    bot.start()
+    console.log('🚀 Бот QoS запущен и готов к работе')
   } catch (error) {
     console.error('❌ Ошибка инициализации бота:', error)
   }
 }
 
-// Запуск бота
-if (process.env.NODE_ENV === 'production') {
-  bot.start()
-  console.log('🚀 Бот QoS запущен в production режиме')
-}
+// Бот запускается только через API endpoint /api/bot/init
+// для предотвращения ошибок на клиенте

@@ -14,8 +14,7 @@ import {
   emitEvent,
 } from '@telegram-apps/sdk-react'
 
-// Импортируем инициализацию бота
-import { initializeBot } from '@/lib/bot'
+// Инициализация бота происходит только на сервере
 
 /**
  * Initializes the application and configures its dependencies.
@@ -177,18 +176,5 @@ export async function init(options: {
     }
   }
 
-  // Инициализируем бота в production режиме
-  if (process.env.NODE_ENV === 'production') {
-    try {
-      await initializeBot()
-      console.log(
-        '✅ Бот QRepair инициализирован в init.ts'
-      )
-    } catch (error) {
-      console.error(
-        '❌ Ошибка инициализации бота в init.ts:',
-        error
-      )
-    }
-  }
+  // Инициализация бота происходит только на сервере, не на клиенте
 }
