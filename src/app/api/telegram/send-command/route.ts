@@ -14,34 +14,6 @@ export async function POST(req: Request) {
       )
     }
 
-    if (command === '/start') {
-      await sendTelegramMessage(
-        telegramId,
-        'Добро пожаловать в QtweRepair! 📱\nВыберите действие:',
-        {
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: '🚀 Открыть приложение',
-                  web_app: config.getWebAppConfig(),
-                },
-              ],
-            ],
-          },
-        }
-      )
-    } else if (command) {
-      await sendTelegramMessage(telegramId, command, {
-        parse_mode: 'Markdown',
-      })
-    } else if (message) {
-      await sendTelegramMessage(telegramId, message, {
-        parse_mode: 'Markdown',
-      })
-    }
-
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error sending command:', error)
