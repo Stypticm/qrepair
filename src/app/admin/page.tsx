@@ -2,11 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Link } from '@/components/Link/Link';
-import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
+import { Page } from '@/components/Page';
 
 const AdminPage = () => {
   return (
-    <AdaptiveContainer>
+    <Page back={true}>
       <div className="min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
         <div className="flex-1 w-full p-6 overflow-y-auto">
           <div className="w-full max-w-2xl mx-auto">
@@ -35,7 +35,7 @@ const AdminPage = () => {
           </div>
         </div>
       </div>
-    </AdaptiveContainer>
+    </Page>
   )
 }
 

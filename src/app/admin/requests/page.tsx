@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
+import { Page } from '@/components/Page';
 
 const RequestsPage = () => {
     const [applications, setApplications] = useState<SkupkaRequest[]>([]);
@@ -22,7 +22,7 @@ const RequestsPage = () => {
     }, []);
 
     return (
-        <AdaptiveContainer>
+        <Page back={true}>
             <div className="min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
                 <div className="flex-1 w-full p-6 overflow-y-auto">
                     <div className="max-w-7xl mx-auto w-full">
@@ -99,7 +99,7 @@ const RequestsPage = () => {
                     </div>
                 </div>
             </div>
-        </AdaptiveContainer>
+        </Page>
     );
 };
 

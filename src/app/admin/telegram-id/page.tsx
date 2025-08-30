@@ -1,11 +1,11 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer'
+import { Page } from '@/components/Page'
 
 export default function TelegramIdPage() {
   return (
-    <AdaptiveContainer>
+    <Page back={true}>
       <div className="min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
         <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
           <div className="w-full max-w-md">
@@ -45,6 +45,6 @@ export default function TelegramIdPage() {
           </div>
         </div>
       </div>
-    </AdaptiveContainer>
+    </Page>
   )
 }

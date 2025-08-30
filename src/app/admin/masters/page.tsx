@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
-import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer'
+import { Page } from '@/components/Page'
 
 interface Master {
   id: string
@@ -129,7 +129,7 @@ export default function MastersPage() {
   }
 
   return (
-    <AdaptiveContainer>
+    <Page back={true}>
       <div className="min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
         <div className="flex-1 w-full p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
@@ -189,80 +189,78 @@ export default function MastersPage() {
                         <Button onClick={addMaster} className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-lg">
                           Добавить
                         </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </section>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="text-gray-600">Загрузка мастеров...</div>
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {masters.map((master) => (
-                  <Card key={master.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-gray-900 text-lg">{master.name || master.username}</CardTitle>
-                        <Badge
-                          variant={master.isActive ? "default" : "secondary"}
-                          className={master.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
-                        >
-                          {master.isActive ? 'Активен' : 'Неактивен'}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <Label className="text-sm font-medium text-gray-600">Username:</Label>
-                        <div className="text-gray-900 font-mono">@{master.username}</div>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-gray-600">Telegram ID:</Label>
-                        <div className="text-gray-900 font-mono">{master.telegramId}</div>
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium text-gray-600">Добавлен:</Label>
-                        <div className="text-gray-900">
-                          {new Date(master.createdAt).toLocaleDateString('ru-RU')}
                         </div>
                       </div>
-                      <div className="flex space-x-2 pt-2 justify-between">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleMasterStatus(master.id, master.isActive)}
-                          className="text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg"
-                        >
-                          {master.isActive ? 'Деактивировать' : 'Активировать'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => deleteMaster(master.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white rounded-lg"
-                        >
-                          Удалить
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                    </DialogContent>
+                  </Dialog>
+                </section>
               </div>
-            )}
 
-            {!loading && masters.length === 0 && (
-              <div className="text-center py-8">
-                <div className="text-gray-900 text-lg">Мастера не найдены</div>
-                <div className="text-gray-600 mt-2">Добавьте первого мастера, чтобы начать работу</div>
-              </div>
-            )}
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-600">Загрузка мастеров...</div>
+                </div>
+              ) : (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {masters.map((master) => (
+                    <Card key={master.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-gray-900 text-lg">{master.name || master.username}</CardTitle>
+                          <Badge
+                            variant={master.isActive ? "default" : "secondary"}
+                            className={master.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
+                          >
+                            {master.isActive ? 'Активен' : 'Неактивен'}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Username:</Label>
+                          <div className="text-gray-900 font-mono">@{master.username}</div>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Telegram ID:</Label>
+                          <div className="text-gray-900 font-mono">{master.telegramId}</div>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Добавлен:</Label>
+                          <div className="text-gray-900">
+                            {new Date(master.createdAt).toLocaleDateString('ru-RU')}
+                          </div>
+                        </div>
+                        <div className="flex space-x-2 pt-2 justify-between">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => toggleMasterStatus(master.id, master.isActive)}
+                            className="text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg"
+                          >
+                            {master.isActive ? 'Деактивировать' : 'Активировать'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => deleteMaster(master.id)}>
+                            Удалить
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {!loading && masters.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-gray-900 text-lg">Мастера не найдены</div>
+                  <div className="text-gray-600 mt-2">Добавьте первого мастера, чтобы начать работу</div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </AdaptiveContainer>
+      </Page>
   )
 }
