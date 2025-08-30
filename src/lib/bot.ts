@@ -2,29 +2,6 @@ import { Bot } from 'grammy'
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
-// Команда /start - большая кнопка START
-bot.command('start', async (ctx) => {
-  await ctx.reply(
-    '🎉 Добро пожаловать в QoS!\n\nМы предлагаем выкуп ваших смартфонов по выгодным ценам.\n\n🚀 Нажмите кнопку ниже для начала работы',
-    {
-      reply_markup: {
-        keyboard: [
-          [
-            {
-              text: '🚀 Открыть QoS',
-              web_app: {
-                url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
-              },
-            },
-          ],
-        ],
-        resize_keyboard: true,
-        one_time_keyboard: false,
-      },
-    }
-  )
-})
-
 // Команда /app - быстрый доступ к приложению
 bot.command('app', async (ctx) => {
   await ctx.reply('🚀 Открываю QoS прямо сейчас!', {
@@ -53,8 +30,7 @@ bot.command('help', async (ctx) => {
       '3. Оцените состояние\n' +
       '4. Получите цену\n' +
       '5. Отправьте заявку\n\n' +
-      '🚀 **Начать:** /start\n' +
-      '⚙️ **Настройки:** /settings',
+      '🚀 **Открыть приложение:** нажмите кнопку "Открыть" в меню',
     {
       parse_mode: 'Markdown',
       reply_markup: {
@@ -81,7 +57,7 @@ bot.command('settings', async (ctx) => {
       '• Изменить язык\n' +
       '• Настройки уведомлений\n' +
       '• Личный кабинет\n\n' +
-      '🚀 **Открыть приложение для настройки**',
+      '🚀 **Открыть приложение для настройки:** нажмите кнопку "Открыть" в меню',
     {
       parse_mode: 'Markdown',
       reply_markup: {
@@ -135,10 +111,10 @@ bot.on('message:text', async (ctx) => {
     text.includes('hi')
   ) {
     await ctx.reply(
-      '👋 Привет! Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку ниже для начала работы:',
+      '👋 Привет! Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку "Открыть" в меню для начала работы',
       {
         reply_markup: {
-          keyboard: [
+          inline_keyboard: [
             [
               {
                 text: '🚀 Открыть QoS',
@@ -148,8 +124,6 @@ bot.on('message:text', async (ctx) => {
               },
             ],
           ],
-          resize_keyboard: true,
-          one_time_keyboard: false,
         },
       }
     )
@@ -165,7 +139,7 @@ bot.on('message:text', async (ctx) => {
         '• Модель телефона\n' +
         '• Состояние устройства\n' +
         '• Комплектация\n\n' +
-        '🚀 **Получить точную оценку:**',
+        '🚀 **Получить точную оценку:** нажмите кнопку "Открыть" в меню',
       {
         parse_mode: 'Markdown',
         reply_markup: {
@@ -189,10 +163,9 @@ bot.on('message:text', async (ctx) => {
     await ctx.reply(
       '🔍 **Помощь по QoS**\n\n' +
         '📱 **Основные команды:**\n' +
-        '• /start - Начать работу\n' +
         '• /help - Показать помощь\n' +
         '• /settings - Настройки\n\n' +
-        '🚀 **Открыть приложение:**',
+        '🚀 **Открыть приложение:** нажмите кнопку "Открыть" в меню',
       {
         parse_mode: 'Markdown',
         reply_markup: {
@@ -215,12 +188,8 @@ bot.on('message:text', async (ctx) => {
 // Инициализация бота при запуске
 export const initializeBot = async () => {
   try {
-    // Устанавливаем команды бота
+    // Устанавливаем команды бота (убрали /start)
     await bot.api.setMyCommands([
-      {
-        command: 'start',
-        description: '🚀 Начать работу с QoS',
-      },
       {
         command: 'app',
         description: '📱 Быстро открыть приложение',
@@ -235,9 +204,14 @@ export const initializeBot = async () => {
       },
     ])
 
-    // Используем большие кнопки START вместо Menu Button
+    // Menu Button "Открыть" настраивается через @BotFather
+    // /setmenubutton -> Text: "🚀 Открыть", URL: https://qrepair-git-dev-stypticms-projects.vercel.app/
     console.log(
-      '✅ Бот QoS успешно инициализирован с большими кнопками START'
+      '✅ Menu Button "Открыть" настраивается через @BotFather'
+    )
+
+    console.log(
+      '✅ Бот QoS успешно инициализирован с Menu Button "Открыть"'
     )
 
     // Запускаем бота
