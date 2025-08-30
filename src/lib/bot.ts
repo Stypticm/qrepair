@@ -256,13 +256,8 @@ bot.on('message:text', async (ctx) => {
 // Инициализация бота при запуске
 export const initializeBot = async () => {
   try {
-    // Устанавливаем команды бота
+    // Устанавливаем команды бота (команда /start убрана из списка)
     await bot.api.setMyCommands([
-      {
-        command: 'start',
-        description:
-          '🚀 Открыть приложение (с deep linking)',
-      },
       {
         command: 'app',
         description: '📱 Быстро открыть приложение',

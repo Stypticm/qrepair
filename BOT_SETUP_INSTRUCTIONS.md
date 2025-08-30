@@ -19,11 +19,12 @@
 
 Добавьте команды:
 ```
-start - Открыть приложение (с deep linking)
 app - Быстро открыть приложение
 help - Помощь
 settings - Настройки
 ```
+
+**Примечание:** Команда `/start` убрана из списка команд, но работает для deep linking
 
 ### 3. **Настройте Menu Button**
 ```
@@ -106,9 +107,8 @@ GET /api/cron/bot-init
 ### **Настройка через BotFather (рекомендуется):**
 
 ```typescript
-// Устанавливаем команды
+// Устанавливаем команды (команда /start убрана из списка)
 await bot.api.setMyCommands([
-  { command: "start", description: "🚀 Открыть приложение (с deep linking)" },
   { command: "app", description: "📱 Быстро открыть приложение" },
   { command: "help", description: "🔍 Помощь по использованию" },
   { command: "settings", description: "⚙️ Настройки приложения" }
