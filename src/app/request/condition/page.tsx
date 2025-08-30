@@ -521,7 +521,7 @@ export default function ConditionPage() {
                     {conditions.map((condition) => (
                         <Card
                             key={condition.id}
-                            className={`transition-all duration-200 relative damage-image ${
+                            className={`transition-all duration-200 relative ${
                                 deviceConditions[type] === getConditionText(condition.id)
                                     ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
                                     : ''
@@ -531,30 +531,26 @@ export default function ConditionPage() {
                                     : 'cursor-not-allowed opacity-50'
                             }`}
                             onClick={() => canSelectSection(type) && handleConditionSelect(type, condition.id)}
-                            style={{
-                                border: 'none',
-                                outline: 'none'
-                            }}
+
                         >
                             {deviceConditions[type] === getConditionText(condition.id) && (
                                 <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
                                     <span className="text-white text-xs font-bold">✓</span>
                                 </div>
                             )}
-                            <CardContent className="p-0.5 pb-0 damage-image">
+                            <CardContent className="p-1 pb-1">
                                 {/* Изображение - разные размеры для разных секций */}
-                                <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100 damage-image`}>
+                                <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
                                     <Image
-                                        src={getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}
+                                        src={`/${condition.image}.png`}
                                         alt={condition.label}
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 25vw, 20vw"
-                                        style={{
-                                            border: 'none',
-                                            outline: 'none',
-                                            boxShadow: 'none'
+                                        width={80}
+                                        height={type === 'side' ? 24 : 144}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            console.error(`Ошибка загрузки изображения: ${condition.image}.png`);
                                         }}
+                                        priority
                                     />
                                 </div>
 

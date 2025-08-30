@@ -117,57 +117,16 @@
     width: 100vw !important;
   }
 
-  /* Убираем рамки с изображений поломок */
+  /* Убираем рамки с изображений поломок - более точечно */
   .damage-image {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
   }
 
-  .damage-image img {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  /* Специально для iOS Safari */
-  @supports (-webkit-touch-callout: none) {
-    .damage-image {
-      -webkit-appearance: none !important;
-      -webkit-border-radius: 0 !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-    
-    .damage-image img {
-      -webkit-appearance: none !important;
-      -webkit-border-radius: 0 !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    /* Принудительно убираем рамки для всех элементов */
-    .damage-image * {
-      -webkit-appearance: none !important;
-      -webkit-border-radius: 0 !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-  }
-
-  /* Дополнительные стили для всех браузеров */
-  .damage-image * {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  /* Специально для изображений */
+  /* Специально для изображений - убираем только рамки, сохраняем отображение */
   .damage-image img,
-  .damage-image Image {
+  .damage-image [data-nimg] {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
@@ -176,126 +135,133 @@
     -moz-user-drag: none !important;
     -o-user-drag: none !important;
     user-drag: none !important;
+    /* Сохраняем отображение изображения */
+    display: block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    /* Принудительно убираем рамки для iOS */
+    -webkit-appearance: none !important;
+    -webkit-border-radius: 0 !important;
   }
 
-  /* Специально для Next.js Image компонента */
-  .damage-image [data-nimg] {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
+  /* Специально для iOS Safari - убираем рамки с изображений */
+  @supports (-webkit-touch-callout: none) {
+    .damage-image img,
+    .damage-image [data-nimg] {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      /* Сохраняем отображение */
+      display: block !important;
+      max-width: 100% !important;
+      height: auto !important;
+    }
+    
+    /* Специально для Next.js Image компонента */
+    .damage-image span[style*="border"],
+    .damage-image div[style*="border"] {
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+    }
   }
 
-  /* Принудительно убираем все возможные рамки */
-  .damage-image div[style*="border"],
-  .damage-image div[style*="outline"],
-  .damage-image div[style*="box-shadow"] {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  /* Специально для Card компонентов */
+  /* Убираем рамки с Card компонентов, но сохраняем их функциональность */
   .damage-image .card,
   .damage-image [class*="card"],
   .damage-image [class*="Card"] {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
+    /* Сохраняем базовые стили */
+    display: block !important;
+    position: relative !important;
+  }
+  
+  /* ВАЖНО: НЕ убираем ring и другие стили выделения! */
+  .damage-image .ring,
+  .damage-image .ring-2,
+  .damage-image .ring-[#2dc2c6] {
+    /* Сохраняем кольца выделения */
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+  }
+  
+  /* Принудительно сохраняем ring эффекты */
+  .damage-image .ring-2 {
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color) !important;
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color) !important;
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000) !important;
+  }
+  
+  .damage-image .ring-[#2dc2c6] {
+    --tw-ring-color: #2dc2c6 !important;
+  }
+  
+  /* Сохраняем фоновые цвета выделения */
+  .damage-image .bg-\[#2dc2c6\]\/10 {
+    background-color: rgb(45 194 198 / 0.1) !important;
   }
 
-  /* Убираем рамки с кнопок и интерактивных элементов */
+  /* Убираем рамки с кнопок, но сохраняем их функциональность */
   .damage-image button,
   .damage-image [role="button"],
   .damage-image [class*="button"] {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
+    /* Сохраняем базовые стили */
+    display: inline-block !important;
+    cursor: pointer !important;
+  }
+  
+  /* Сохраняем hover эффекты */
+  .damage-image .hover\:shadow-md:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
   }
 
-  /* Принудительно убираем рамки со всех элементов */
-  .damage-image *,
-  .damage-image *::before,
-  .damage-image *::after {
+  /* Убираем рамки с div элементов, но сохраняем их отображение */
+  .damage-image div {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
-  }
-
-  /* Специально для iOS Safari - убираем все возможные рамки */
-  @supports (-webkit-touch-callout: none) {
-    .damage-image *,
-    .damage-image *::before,
-    .damage-image *::after {
-      -webkit-appearance: none !important;
-      -webkit-border-radius: 0 !important;
-      -webkit-box-shadow: none !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-  }
-
-  /* Дополнительные стили для всех браузеров - убираем рамки */
-  .damage-image {
-    --tw-border-opacity: 0 !important;
-    --tw-ring-opacity: 0 !important;
-    --tw-shadow: 0 0 #0000 !important;
-  }
-
-  /* Убираем рамки с Tailwind CSS классов */
-  .damage-image .border,
-  .damage-image .border-0,
-  .damage-image .border-2,
-  .damage-image .border-4,
-  .damage-image .ring,
-  .damage-image .ring-2,
-  .damage-image .shadow,
-  .damage-image .shadow-md,
-  .damage-image .shadow-lg {
-    border: none !important;
-    outline: none !important;
-    box-shadow: none !important;
-    --tw-border-opacity: 0 !important;
-    --tw-ring-opacity: 0 !important;
-    --tw-shadow: 0 0 #0000 !important;
-  }
-
-  /* Специально для iOS Safari - убираем все возможные рамки */
-  @supports (-webkit-touch-callout: none) {
-    .damage-image .border,
-    .damage-image .border-0,
-    .damage-image .border-2,
-    .damage-image .border-4,
-    .damage-image .ring,
-    .damage-image .ring-2,
-    .damage-image .shadow,
-    .damage-image .shadow-md,
-    .damage-image .shadow-lg {
-      -webkit-appearance: none !important;
-      -webkit-border-radius: 0 !important;
-      -webkit-box-shadow: none !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-      --tw-border-opacity: 0 !important;
-      --tw-ring-opacity: 0 !important;
-      --tw-shadow: 0 0 #0000 !important;
-    }
-  }
-
-  /* Финальные стили для принудительного удаления рамок */
-  .damage-image {
-    all: unset !important;
-  }
-
-  .damage-image * {
-    all: unset !important;
-  }
-
-  /* Восстанавливаем только необходимые стили */
-  .damage-image {
+    /* Сохраняем базовые стили */
     display: block !important;
-    position: relative !important;
+  }
+  
+  /* Специально для Next.js Image компонента - убираем рамки */
+  .damage-image span,
+  .damage-image div[data-nimg] {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important;
+    -webkit-border-radius: 0 !important;
+  }
+
+  /* Специально для iOS Safari - убираем рамки, но сохраняем отображение */
+  @supports (-webkit-touch-callout: none) {
+    .damage-image * {
+      -webkit-appearance: none !important;
+      -webkit-border-radius: 0 !important;
+      -webkit-box-shadow: none !important;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    
+    /* Восстанавливаем отображение для изображений */
+    .damage-image img,
+    .damage-image [data-nimg] {
+      display: block !important;
+      max-width: 100% !important;
+      height: auto !important;
+    }
   }
 
   .damage-image * {
