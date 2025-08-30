@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function ErrorPage({
   error,
@@ -33,12 +34,12 @@ export default function ErrorPage({
         
         {/* Кнопки */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={reset}
-            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
+          <Button
+            onClick={() => reset()}
+            className="px-6 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
           >
             Попробовать снова
-          </button>
+          </Button>
           
           <button
             onClick={() => window.history.back()}

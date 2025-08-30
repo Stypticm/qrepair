@@ -321,7 +321,7 @@ const RequestById = () => {
                                                     <Button 
                                                         onClick={handlePhotoUpload}
                                                         disabled={!photoFiles.front && !photoFiles.side && !photoFiles.back}
-                                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                                        className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white text-sm"
                                                     >
                                                         📤 Загрузить выбранные фото
                                                     </Button>
@@ -452,7 +452,7 @@ const RequestById = () => {
                                     <CardAction className="self-center pt-2 w-full">
                                         <div className="flex flex-wrap justify-center gap-2 w-full">
                                             {application?.status === 'accepted' && (
-                                                <Button className="min-w-[200px] bg-blue-600 hover:bg-blue-700 text-white" onClick={handleAcceptRequest}>
+                                                <Button className="min-w-[200px] bg-[#2dc2c6] hover:bg-[#25a8ac] text-white" onClick={handleAcceptRequest}>
                                                     Принять заявку
                                                 </Button>
                                             )}

@@ -65,24 +65,43 @@ const MyDevices = () => {
   // Функция для получения цвета статуса
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'bg-gray-600';
-
+    
     switch (status) {
       case 'draft':
         return 'bg-gray-500';
       case 'submitted':
-        return 'bg-blue-500';
+        return 'bg-[#2dc2c6]';
+      case 'accepted':
+        return 'bg-green-500';
       case 'in_progress':
         return 'bg-yellow-500';
       case 'on_the_way':
-        return 'bg-blue-600';
-      case 'accepted':
-        return 'bg-green-500';
+        return 'bg-[#2dc2c6]';
       case 'paid':
         return 'bg-emerald-500';
-      case 'completed':
-        return 'bg-purple-500';
       default:
         return 'bg-gray-600';
+    }
+  };
+
+  const getStatusHoverColor = (status: string | undefined) => {
+    if (!status) return 'hover:bg-gray-700';
+    
+    switch (status) {
+      case 'draft':
+        return 'hover:bg-gray-600';
+      case 'submitted':
+        return 'hover:bg-[#25a8ac]';
+      case 'accepted':
+        return 'hover:bg-green-600';
+      case 'in_progress':
+        return 'hover:bg-yellow-600';
+      case 'on_the_way':
+        return 'hover:bg-[#25a8ac]';
+      case 'paid':
+        return 'hover:bg-emerald-600';
+      default:
+        return 'hover:bg-gray-700';
     }
   };
 
@@ -241,7 +260,7 @@ const MyDevices = () => {
                         {device.status === 'on_the_way' && device.courierUserConfirmed && !device.inspectionCompleted && (
                           <Button
                             size="sm"
-                            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-sm"
+                            className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-lg shadow-sm"
                             onClick={() => router.push(`/my-devices/inspection?id=${device.id}`)}>
                             Проверить устройство
                           </Button>

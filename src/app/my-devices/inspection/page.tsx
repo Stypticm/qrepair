@@ -229,7 +229,7 @@ export default function DeviceInspectionPage() {
             <Button
               onClick={generateOTP}
               disabled={loading || !skupkaId || !masterUsername}
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac]"
             >
               {loading ? 'Отправка...' : 'Получить OTP код'}
             </Button>
@@ -389,7 +389,7 @@ export default function DeviceInspectionPage() {
                   <Button
                     onClick={() => setCurrentTestIndex(currentTestIndex + 1)}
                     disabled={!testResults.find(r => r.testId === currentTest.id)}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-[#2dc2c6] hover:bg-[#25a8ac]"
                   >
                     Следующий
                   </Button>

@@ -62,9 +62,9 @@ export function useSafeArea() {
           // Сначала уведомляем Telegram о готовности
           webApp.ready()
 
-          // Ждем небольшую паузу для полной инициализации
+          // Ждем полной инициализации
           await new Promise((resolve) =>
-            setTimeout(resolve, 100)
+            setTimeout(resolve, 200)
           )
 
           // Принудительно разворачиваем на весь экран
@@ -78,31 +78,20 @@ export function useSafeArea() {
               console.log('Force expanding again...')
               webApp.expand()
             }
-          }, 300)
+          }, 500)
 
           // Дополнительная попытка расширения для контекста чата
           // Telegram может применять разные правила для разных контекстов
           setTimeout(() => {
-            console.log(
-              'Final expand attempt for chat context...'
-            )
+            console.log('Final expand attempt for chat context...')
             webApp.expand()
-
+            
             // Принудительно устанавливаем viewport
-            if (
-              webApp.viewportHeight &&
-              webApp.viewportStableHeight
-            ) {
-              console.log(
-                'Viewport height:',
-                webApp.viewportHeight
-              )
-              console.log(
-                'Stable height:',
-                webApp.viewportStableHeight
-              )
+            if (webApp.viewportHeight && webApp.viewportStableHeight) {
+              console.log('Viewport height:', webApp.viewportHeight)
+              console.log('Stable height:', webApp.viewportStableHeight)
             }
-          }, 500)
+          }, 800)
 
           // Включаем подтверждение закрытия
           if (webApp.enableClosingConfirmation) {

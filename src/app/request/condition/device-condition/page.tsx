@@ -389,7 +389,7 @@ export default function DeviceConditionPage() {
                         {isAllOptionsSelected() && (
                             <Button
                                 onClick={handleContinueToNext}
-                                className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg rounded-2xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                                className="w-full h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl shadow-lg transition-all duration-200 hover:shadow-xl"
                             >
                                 Продолжить
                             </Button>

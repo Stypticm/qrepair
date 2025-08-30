@@ -28,18 +28,6 @@ export async function POST(req: Request) {
                   web_app: config.getWebAppConfig(),
                 },
               ],
-              [
-                {
-                  text: 'Проверить статус',
-                  callback_data: 'check_status',
-                },
-              ],
-              [
-                {
-                  text: 'Связаться с поддержкой',
-                  callback_data: 'contact_support',
-                },
-              ],
             ],
           },
         }

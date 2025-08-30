@@ -209,7 +209,7 @@ const SubmitPage = () => {
                             <Button
                                 onClick={handleSubmit}
                                 disabled={loading || submitting || !modelname}
-                                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                             >
                                 {submitting ? 'Отправляем...' : 'Отправить заявку'}
                             </Button>

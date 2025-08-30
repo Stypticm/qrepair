@@ -105,11 +105,11 @@ const RepairManPage = () => {
                                 <h1 className='text-3xl font-semibold text-gray-900 mb-2'>👨‍🔧 Список мастеров</h1>
                                 <p className="text-gray-600">Управление мастерами системы</p>
                             </div>
-                            <Button 
-                                className="bg-blue-500 hover:bg-blue-600 text-white shadow-lg rounded-xl transition-all duration-200"
+                            <Button
                                 onClick={() => window.location.href = '/admin/masters'}
+                                className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white shadow-lg rounded-xl transition-all duration-200"
                             >
-                                + Добавить мастера
+                                Добавить мастера
                             </Button>
                         </div>
                     
