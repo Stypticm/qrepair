@@ -13,6 +13,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isMenuButton, setIsMenuButton] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,6 +35,15 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     };
 
     checkDevice();
+
+    // Проверяем, открыто ли приложение через Menu Button
+    if (window.Telegram?.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      if (webApp.initDataUnsafe?.start_param) {
+        setIsMenuButton(true);
+        console.log('App opened via Menu Button');
+      }
+    }
   }, [isMounted]);
 
   // Не рендерим ничего до монтирования
@@ -73,11 +83,21 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     }
     
     // Telegram режим - используем полный экран
-    return {
-      container: "min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50",
-      main: "flex-1 w-full p-4",
-      wrapper: "w-full"
-    };
+    if (isMenuButton) {
+      // Menu Button режим - принудительный full screen
+      return {
+        container: "min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen telegram-menu-button telegram-expanded",
+        main: "flex-1 w-full p-4",
+        wrapper: "w-full"
+      };
+    } else {
+      // Обычный Telegram режим
+      return {
+        container: "min-h-screen w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen",
+        main: "flex-1 w-full p-4",
+        wrapper: "w-full"
+      };
+    }
   };
 
   const styles = getContainerStyles();
@@ -94,6 +114,9 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
           </p>
           <p className="text-xs text-gray-400 mt-1">
             Расширение: {isExpanded ? 'Да' : 'Нет'}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Menu Button: {isMenuButton ? 'Да' : 'Нет'}
           </p>
         </div>
       </div>
