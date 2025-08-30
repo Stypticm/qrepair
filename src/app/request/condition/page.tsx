@@ -7,7 +7,7 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
-import { getImageUrl } from '@/core/lib/assets';
+
 
 interface ConditionOption {
     id: string;
@@ -544,14 +544,10 @@ export default function ConditionPage() {
                                 {/* Изображение - разные размеры для разных секций */}
                                 <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
                                     <Image
-                                        src={getImageUrl(`${condition.image}.png`)}
+                                        src={`/${condition.image}.png`}
                                         alt={condition.label}
-                                        width={80}
-                                        height={type === 'side' ? 24 : 144}
-                                        className="damage-image w-full h-full object-cover"
-                                        onError={(e) => {
-                                            console.error(`Ошибка загрузки изображения: ${condition.image}.png`);
-                                        }}
+                                        fill
+                                        className="w-full h-full object-cover"
                                         priority
                                     />
                                 </div>

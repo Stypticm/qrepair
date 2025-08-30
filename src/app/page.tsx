@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
-import { getImageUrl } from '@/core/lib/assets';
+
 import { useRouter } from 'next/navigation';
 
 import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
@@ -77,7 +77,7 @@ export default function Home() {
         <div className="w-full max-w-md mx-auto text-center space-y-8">
           <div className="space-y-6">
             <Image
-              src={getImageUrl('logo2.png')}
+              src="/logo2.png"
               alt="Логотип"
               width={300}
               height={150}
@@ -117,7 +117,7 @@ export default function Home() {
               <Link href="/admin">
                 <div className="w-12 h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer mx-auto overflow-hidden bg-white border border-gray-200 hover:border-gray-300">
                   <Image
-                    src={getImageUrl('admin_btn.png')}
+                    src="/admin_btn.png"
                     alt="Админ панель"
                     width={48}
                     height={48}
