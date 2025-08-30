@@ -14,9 +14,17 @@ import { Button } from '@/components/ui/button';
 export default function FormPage() {
     const { modelname, setModel, telegramId, username } = useStartForm();
     const router = useRouter();
+    
+    // Проверяем, доступен ли Telegram WebApp API
+    const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
 
     // Сбрасываем все состояния при загрузке страницы (только если это новая заявка)
     useEffect(() => {
+        // Логируем для отладки
+        console.log('FormPage: Telegram WebApp доступен:', isTelegramWebApp);
+        console.log('FormPage: telegramId:', telegramId);
+        console.log('FormPage: window.Telegram:', typeof window !== 'undefined' ? (window as any).Telegram : 'undefined');
+        
         // Проверяем, есть ли сохраненные данные в sessionStorage
         const savedData = sessionStorage.getItem('phoneSelection');
         if (!savedData) {
@@ -29,7 +37,7 @@ export default function FormPage() {
         } else {
             console.log('Продолжение заявки - оставляем состояния');
         }
-    }, []); // Убираем resetAllStates из зависимостей
+    }, [isTelegramWebApp, telegramId]); // Добавляем зависимости для логирования
 
     // Инициализируем состояние
     const [selectedOptions, setSelectedOptions] = useState({
@@ -209,28 +217,33 @@ export default function FormPage() {
             sessionStorage.setItem('phoneSelection', JSON.stringify(newOptions));
         }
 
-        // Сохраняем в CloudStorage для сохранения между страницами
-        callTelegramMethod('web_app_cloud_storage_set', {
-            key: 'phoneSelection',
-            value: JSON.stringify({ data: newOptions }),
-            callback: () => {
-                // Данные сохранены в CloudStorage
-            }
-        });
+        // Проверяем, доступен ли Telegram WebApp API
+        const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+        
+        if (isTelegramWebApp) {
+            // Сохраняем в CloudStorage для сохранения между страницами
+            callTelegramMethod('web_app_cloud_storage_set', {
+                key: 'phoneSelection',
+                value: JSON.stringify({ data: newOptions }),
+                callback: () => {
+                    // Данные сохранены в CloudStorage
+                }
+            });
 
-        // Отправляем данные в Telegram для возможного восстановления
-        callTelegramMethod('web_app_data_send', {
-            type: 'phoneSelection',
-            data: newOptions,
-            timestamp: Date.now(),
-            step: 'phone_selection'
-        });
+            // Отправляем данные в Telegram для возможного восстановления
+            callTelegramMethod('web_app_data_send', {
+                type: 'phoneSelection',
+                data: newOptions,
+                timestamp: Date.now(),
+                step: 'phone_selection'
+            });
 
-        // Показываем тактильную обратную связь
-        callTelegramMethod('web_app_trigger_haptic_feedback', {
-            type: 'impact',
-            impact_style: 'light'
-        });
+            // Показываем тактильную обратную связь
+            callTelegramMethod('web_app_trigger_haptic_feedback', {
+                type: 'impact',
+                impact_style: 'light'
+            });
+        }
 
         // MainButton больше не используется, так как есть желтая кнопка
     };
@@ -475,11 +488,12 @@ export default function FormPage() {
                     return;
                 }
 
-                // Для обычного браузера (fallback)
-                // Метод недоступен в браузере
+                // Для обычного браузера (fallback) - просто логируем
+                console.log(`Telegram WebApp API недоступен в браузере: ${methodName}`, data);
             }
         } catch (e) {
-            // Ошибка при вызове метода
+            // Ошибка при вызове метода - логируем для отладки
+            console.log(`Ошибка при вызове Telegram метода ${methodName}:`, e);
         }
     };
 
