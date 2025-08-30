@@ -58,18 +58,37 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value:
-              'public, max-age=3600, stale-while-revalidate=86400',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           },
         ],
       },
-      // Добавляем заголовки для лучшего отображения на PC
+      // Добавляем заголовки для лучшего отображения на PC и отключения кэширования
       {
         source: '/(.*)',
         headers: [
           {
             key: 'X-Frame-Options',
             value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
           },
         ],
       },

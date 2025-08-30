@@ -1,5 +1,8 @@
 'use client';
 
+// Принудительно делаем страницу динамической для обхода кэширования
+export const dynamic = 'force-dynamic';
+
 import Image from 'next/image';
 
 import { Link } from '@/components/Link/Link';
@@ -22,11 +25,19 @@ export default function Home() {
 
   useEffect(() => {
     // Telegram WebApp expand() теперь обрабатывается в хуке useSafeArea
-    // if (window.Telegram?.WebApp) {
-    //   window.Telegram.WebApp.expand();
-    // } else {
-    //   console.warn('Telegram WebApp not initialized');
-    // }
+    if (window.Telegram?.WebApp) {
+      // Принудительно разворачиваем на весь экран
+      window.Telegram.WebApp.expand();
+      
+      // Устанавливаем настройки для full screen
+      window.Telegram.WebApp.headerColor = '#f9ecb8'; // Цвет заголовка
+      window.Telegram.WebApp.backgroundColor = '#ffffff'; // Цвет фона
+      
+      // Показываем кнопку "Закрыть" для лучшего UX
+      window.Telegram.WebApp.enableClosingConfirmation();
+    } else {
+      console.warn('Telegram WebApp not initialized');
+    }
 
     if (!telegramId) return
 

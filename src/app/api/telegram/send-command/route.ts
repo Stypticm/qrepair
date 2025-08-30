@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
+import { config } from '@/core/lib/config'
 
 export async function POST(req: Request) {
   try {
@@ -24,9 +25,7 @@ export async function POST(req: Request) {
               [
                 {
                   text: '🚀 Открыть приложение',
-                  web_app: {
-                    url: 'https://qrepair-git-dev-stypticms-projects.vercel.app',
-                  },
+                  web_app: config.getWebAppConfig(),
                 },
               ],
               [

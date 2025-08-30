@@ -1,5 +1,8 @@
 'use client'
 
+// Принудительно делаем страницу динамической для обхода кэширования
+export const dynamic = 'force-dynamic';
+
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react'
 import { Page } from '@/components/Page';

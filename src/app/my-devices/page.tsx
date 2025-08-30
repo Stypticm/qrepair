@@ -1,5 +1,8 @@
 'use client'
 
+// Принудительно делаем страницу динамической для обхода кэширования
+export const dynamic = 'force-dynamic';
+
 import { Page } from '@/components/Page'
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Button } from '@/components/ui/button';
