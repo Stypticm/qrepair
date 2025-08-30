@@ -23,10 +23,10 @@ const RequestsPage = () => {
 
     return (
         <Page back={true}>
-            <div className="min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
-                <div className="flex-1 w-full p-6 overflow-y-auto">
+            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
                     <div className="max-w-7xl mx-auto w-full">
-                        <div className="text-center mb-8">
+                        <div className="text-center mb-8 mt-12">
                             <h2 className="text-3xl font-semibold text-gray-900 mb-2">📋 Заявки</h2>
                             <p className="text-gray-600">Управление заявками на выкуп устройств</p>
                         </div>

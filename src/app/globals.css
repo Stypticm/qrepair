@@ -930,18 +930,18 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #2dc2c6;
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #25a8ac;
 }
 
 /* Дополнительные стили для прокрутки */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f3f4f6;
+  scrollbar-color: #2dc2c6 #f3f4f6;
   overflow-y: auto !important;
   overflow-x: hidden;
 }
@@ -954,7 +954,7 @@
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db #f3f4f6;
+  scrollbar-color: #2dc2c6 #f3f4f6;
 }
 
 /* Дополнительные стили для принудительной прокрутки */
@@ -969,10 +969,10 @@
 }
 
 .admin-masters-scroll::-webkit-scrollbar-thumb {
-  background: #d1d5db !important;
+  background: #2dc2c6 !important;
   border-radius: 4px !important;
 }
 
 .admin-masters-scroll::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af !important;
+  background: #25a8ac !important;
 }

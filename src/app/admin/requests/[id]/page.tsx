@@ -33,7 +33,7 @@ const RequestById = () => {
     const [otpCode, setOtpCode] = useState<string>('');
     const [isGeneratingOtp, setIsGeneratingOtp] = useState(false);
 
-    
+
     const copyToClipboard = async (text: string) => {
         try {
             await navigator.clipboard.writeText(text);
@@ -172,7 +172,7 @@ const RequestById = () => {
 
         try {
             const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n💡 **Нажмите на ID выше, чтобы скопировать**\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **QRepair** из App Store/Google Play\n2️⃣ Откройте приложение\n3️⃣ Введите ID заявки: \`${application.id}\`\n4️⃣ Введите имя мастера: \`${(application as any).courierTelegramId}\`\n5️⃣ **Дождитесь OTP код** от мастера\n6️⃣ Введите OTP код в приложение\n7️⃣ **Мастер проведет тест** устройства\n8️⃣ Вы наблюдаете и подтверждаете результаты\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** OTP код отправляется только вам\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
-            
+
             const response = await fetch('/api/telegram/send-message', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -196,40 +196,40 @@ const RequestById = () => {
     const handlePhotoUpload = async () => {
         const files = [photoFiles.front, photoFiles.side, photoFiles.back].filter(Boolean);
         if (files.length === 0) return;
-        
+
         try {
             // Загружаем все фото по очереди
             for (const file of files) {
                 if (!file) continue;
-                
+
                 const formData = new FormData();
                 formData.append('photo', file);
                 formData.append('requestId', id as string);
-                
+
                 const response = await fetch('/api/admin/upload-master-photo', {
                     method: 'POST',
                     body: formData,
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Ошибка загрузки фото');
                 }
             }
-            
+
             // Обновляем заявку и фото
             const updatedApp = await fetchApplication(id as string);
             setApplication(updatedApp);
             if (updatedApp?.photoUrls && Array.isArray(updatedApp.photoUrls)) {
                 setMasterPhotos(updatedApp.photoUrls);
             }
-            
+
             // Сбрасываем все файлы
             setPhotoFiles({ front: null, side: null, back: null });
-            
+
             // Очищаем все input файлы
             const fileInputs = document.querySelectorAll('input[type="file"]') as NodeListOf<HTMLInputElement>;
             fileInputs.forEach(input => input.value = '');
-            
+
         } catch (err) {
             console.error('Error uploading photos:', err);
             setError('Ошибка загрузки фото');
@@ -238,117 +238,120 @@ const RequestById = () => {
 
     return (
         <Page back={true}>
-            <div className="min-h-screen bg-gray-900 w-full">
-                <div className="w-full">
-                    <div className="p-6">
-                        <div className="max-w-4xl mx-auto">
-                            <Card className="w-full bg-gray-800 border-gray-700 shadow-lg">
-                                <CardHeader>
-                                    <CardTitle className="text-white">Заявка {id}</CardTitle>
-                                </CardHeader>
-                                <CardContent className="flex flex-col gap-4">
-                                    <CardDescription className="text-gray-300">
-                                        <p className="text-white">Модель телефона: {application?.modelname}</p>
-                                        <p className="text-white">Предварительная цена: {application?.price ?? '—'} ₽</p>
-                                        <div className="flex flex-col items-center gap-2 mt-2">
-                                            {(() => {
-                                                const isEditable = application?.status === 'accepted';
-                                                return (
-                                                    <input
-                                                        className={`rounded px-2 py-1 text-white bg-gray-700 border-gray-600 ${!isEditable ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                        type="number"
-                                                        placeholder="Итоговая цена"
-                                                        value={priceInput}
-                                                        onChange={(e) => { setPriceDirty(true); setPriceInput(e.target.value); }}
-                                                        disabled={!isEditable}
-                                                    />
-                                                );
-                                            })()}
-                                        </div>
-                                        {application?.status !== 'accepted' && (
-                                            <p className="text-gray-400 text-sm mt-1">Цена уже отправлена клиенту и недоступна для изменения.</p>
-                                        )}
-                                        
-                                        {/* Форма для загрузки фото мастером - доступна только когда мастер назначен */}
-                                        {(application as any)?.courierTelegramId && (
-                                            <div className="mt-4 p-3 border border-gray-600 rounded-md bg-gray-700">
-                                            <h4 className="text-white font-semibold mb-2">📸 Добавить фото устройства</h4>
-                                            <p className="text-gray-300 text-sm mb-3">Загрузите основные ракурсы для точной оценки</p>
+            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
+                    <div className="max-w-4xl mx-auto">
+                        <div className="text-center mb-8 mt-12">
+                            <h1 className="text-3xl font-semibold text-gray-900 mb-2">📋 Заявка {id}</h1>
+                            <p className="text-gray-600">Детальная информация о заявке</p>
+                        </div>
+                        <Card className="w-full bg-white border border-gray-200 rounded-2xl shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="text-gray-900 text-2xl font-semibold">Заявка {id}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="flex flex-col gap-4">
+                                <CardDescription className="text-gray-600">
+                                    <p className="text-gray-900 font-medium">Модель телефона: {application?.modelname}</p>
+                                    <p className="text-gray-900 font-medium">Предварительная цена: {application?.price ?? '—'} ₽</p>
+                                    <div className="flex flex-col items-center gap-2 mt-2">
+                                        {(() => {
+                                            const isEditable = application?.status === 'accepted';
+                                            return (
+                                                                                             <input
+                                                 className={`rounded-lg px-3 py-2 text-gray-900 bg-white border border-gray-300 focus:border-[#2dc2c6] focus:ring-2 focus:ring-[#2dc2c6]/20 transition-all duration-200 ${!isEditable ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
+                                                 type="number"
+                                                 placeholder="Итоговая цена"
+                                                 value={priceInput}
+                                                 onChange={(e) => { setPriceDirty(true); setPriceInput(e.target.value); }}
+                                                 disabled={!isEditable}
+                                             />
+                                            );
+                                        })()}
+                                    </div>
+                                                                             {application?.status !== 'accepted' && (
+                                             <p className="text-gray-500 text-sm mt-1">Цена уже отправлена клиенту и недоступна для изменения.</p>
+                                         )}
+
+                                                                             {/* Форма для загрузки фото мастером - доступна только когда мастер назначен */}
+                                         {(application as any)?.courierTelegramId && (
+                                             <div className="mt-4 p-4 border border-gray-200 rounded-2xl bg-gray-50">
+                                             <h4 className="text-gray-900 font-semibold mb-2 text-lg">📸 Добавить фото устройства</h4>
+                                             <p className="text-gray-600 text-sm mb-3">Загрузите основные ракурсы для точной оценки</p>
                                             <div className="flex flex-col gap-4">
                                                 {/* Лицевая часть */}
-                                                <div className="flex flex-col gap-2">
-                                                    <label className="text-white text-sm font-medium">📱 Лицевая часть устройства</label>
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, front: e.target.files?.[0] || null }))}
-                                                        className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                    />
-                                                    <p className="text-gray-400 text-xs">
-                                                        {photoFiles.front ? photoFiles.front.name : 'Файл не выбран'}
-                                                    </p>
-                                                </div>
+                                                                                                 <div className="flex flex-col gap-2">
+                                                     <label className="text-gray-700 text-sm font-medium">📱 Лицевая часть устройства</label>
+                                                     <input
+                                                         type="file"
+                                                         accept="image/*"
+                                                         onChange={(e) => setPhotoFiles(prev => ({ ...prev, front: e.target.files?.[0] || null }))}
+                                                         className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
+                                                     />
+                                                     <p className="text-gray-500 text-xs">
+                                                         {photoFiles.front ? photoFiles.front.name : 'Файл не выбран'}
+                                                     </p>
+                                                 </div>
 
-                                                {/* Боковая часть */}
-                                                <div className="flex flex-col gap-2">
-                                                    <label className="text-white text-sm font-medium">📐 Боковая часть устройства</label>
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, side: e.target.files?.[0] || null }))}
-                                                        className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                    />
-                                                    <p className="text-gray-400 text-xs">
-                                                        {photoFiles.side ? photoFiles.side.name : 'Файл не выбран'}
-                                                    </p>
-                                                </div>
+                                                                                                 {/* Боковая часть */}
+                                                 <div className="flex flex-col gap-2">
+                                                     <label className="text-gray-700 text-sm font-medium">📐 Боковая часть устройства</label>
+                                                     <input
+                                                         type="file"
+                                                         accept="image/*"
+                                                         onChange={(e) => setPhotoFiles(prev => ({ ...prev, side: e.target.files?.[0] || null }))}
+                                                         className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
+                                                     />
+                                                     <p className="text-gray-500 text-xs">
+                                                         {photoFiles.side ? photoFiles.side.name : 'Файл не выбран'}
+                                                     </p>
+                                                 </div>
 
-                                                {/* Задняя часть */}
-                                                <div className="flex flex-col gap-2">
-                                                    <label className="text-white text-sm font-medium">📷 Задняя часть устройства</label>
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, back: e.target.files?.[0] || null }))}
-                                                        className="text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                                                    />
-                                                    <p className="text-gray-400 text-xs">
-                                                        {photoFiles.back ? photoFiles.back.name : 'Файл не выбран'}
-                                                    </p>
-                                                </div>
+                                                                                                 {/* Задняя часть */}
+                                                 <div className="flex flex-col gap-2">
+                                                     <label className="text-gray-700 text-sm font-medium">📷 Задняя часть устройства</label>
+                                                     <input
+                                                         type="file"
+                                                         accept="image/*"
+                                                         onChange={(e) => setPhotoFiles(prev => ({ ...prev, back: e.target.files?.[0] || null }))}
+                                                         className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
+                                                     />
+                                                     <p className="text-gray-500 text-xs">
+                                                         {photoFiles.back ? photoFiles.back.name : 'Файл не выбран'}
+                                                     </p>
+                                                 </div>
 
-                                                <div className="border-t border-gray-600 pt-3">
-                                                    <Button 
-                                                        onClick={handlePhotoUpload}
-                                                        disabled={!photoFiles.front && !photoFiles.side && !photoFiles.back}
-                                                        className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white text-sm"
-                                                    >
-                                                        📤 Загрузить выбранные фото
-                                                    </Button>
-                                                    <p className="text-gray-400 text-xs text-center mt-2">
-                                                        Можно загрузить от 1 до 3 фото одновременно
-                                                    </p>
+                                                                                                 <div className="border-t border-gray-200 pt-4">
+                                                                                                         <Button 
+                                                         onClick={handlePhotoUpload}
+                                                         disabled={!photoFiles.front && !photoFiles.side && !photoFiles.back}
+                                                         className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white text-sm shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 font-semibold"
+                                                     >
+                                                         📤 Загрузить выбранные фото
+                                                     </Button>
+                                                     <p className="text-gray-500 text-xs text-center mt-2">
+                                                         Можно загрузить от 1 до 3 фото одновременно
+                                                     </p>
                                                 </div>
                                             </div>
-                                            
-                                            {/* Разделитель */}
-                                            <div className="border-t border-gray-600 my-3"></div>
-                                            
+
+                                                                                         {/* Разделитель */}
+                                             <div className="border-t border-gray-200 my-4"></div>
+
                                             {/* Отображение загруженных фото мастера */}
                                             {masterPhotos.length > 0 && (
-                                                <div className="mt-3">
-                                                    <h5 className="text-white font-semibold mb-2">
-                                                        📱 Загруженные фото: {masterPhotos.length}/3
-                                                    </h5>
-                                                    <div className="text-gray-300 text-sm mb-2">
-                                                        {masterPhotos.length === 1 && "1️⃣ Лицевая часть"}
-                                                        {masterPhotos.length === 2 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть"}
-                                                        {masterPhotos.length === 3 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть • 3️⃣ Задняя часть"}
-                                                    </div>
+                                                                                                 <div className="mt-4">
+                                                     <h5 className="text-gray-900 font-semibold mb-3 text-lg">
+                                                         📱 Загруженные фото: {masterPhotos.length}/3
+                                                     </h5>
+                                                     <div className="text-gray-600 text-sm mb-3">
+                                                         {masterPhotos.length === 1 && "1️⃣ Лицевая часть"}
+                                                         {masterPhotos.length === 2 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть"}
+                                                         {masterPhotos.length === 3 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть • 3️⃣ Задняя часть"}
+                                                     </div>
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {masterPhotos.map((url, idx) => (
                                                             <div key={idx} className="relative">
-л                                                                <Image
+                                                                л                                                                <Image
                                                                     src={url}
                                                                     alt={`Фото мастера ${idx + 1}`}
                                                                     className="w-full h-24 object-cover rounded"
@@ -361,7 +364,7 @@ const RequestById = () => {
                                                                             const response = await fetch(`/api/admin/delete-master-photo?requestId=${id}&photoUrl=${url}`, {
                                                                                 method: 'DELETE'
                                                                             });
-                                                                            
+
                                                                             if (response.ok) {
                                                                                 const data = await response.json();
                                                                                 // Обновляем локальное состояние
@@ -388,199 +391,192 @@ const RequestById = () => {
                                                     </div>
                                                 </div>
                                             )}
-                                            
-                                            {masterPhotos.length === 0 && (
-                                                <div className="text-center py-4">
-                                                    <p className="text-gray-400 text-sm">
-                                                        📸 Загрузите фото устройства для оценки
-                                                    </p>
-                                                    <p className="text-gray-500 text-xs mt-1">
-                                                        Рекомендуется: лицевая, боковая, задняя части
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                        )}
-                                        <p className="text-white flex flex-col gap-1">
-                                            <span>
-                                                Статус:{' '}
-                                                <Badge className="bg-emerald-600 text-white">
-                                                    {application?.status === 'draft'
-                                                        ? 'Черновик'
-                                                        : application?.status === 'accepted'
-                                                            ? 'Принята'
-                                                            : application?.status === 'in_progress'
-                                                                ? 'На проверке'
-                                                                : application?.status === 'on_the_way'
-                                                                    ? 'В пути'
-                                                                    : application?.status === 'paid'
-                                                                        ? 'Оплачено'
-                                                                        : application?.status === 'completed' && 'Выполнена'}
-                                                </Badge>
-                                            </span>
-                                            {(application?.status === 'in_progress' || application?.status === 'on_the_way') && (
-                                                <span>
-                                                    Ответ пользователя:{' '}
-                                                    <Badge className={application?.priceConfirmed ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}>
-                                                        {application?.priceConfirmed ? 'Цена подтверждена' : 'Цена не подтверждена'}
-                                                    </Badge>
-                                                </span>
-                                            )}
-                                        </p>
-                                    </CardDescription>
-                                    {(application as any)?.courierTelegramId && (
-                                        <div className="mt-3 p-3 rounded-md border border-gray-600 bg-gray-700 text-white">
-                                            <p className="font-semibold">Детали выезда мастера</p>
-                                            <p>Мастер: @{(application as any).courierTelegramId}</p>
-                                            {(application as any).courierTimeSlot && <p>Выбранное время: {(application as any).courierTimeSlot}</p>}
-                                            {(application as any).courierScheduledAt && (
-                                                <p>
-                                                    Назначено на:{' '}
-                                                    {(() => {
-                                                        try {
-                                                            const d = new Date((application as any).courierScheduledAt);
-                                                            return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
-                                                        } catch {
-                                                            return String((application as any).courierScheduledAt);
-                                                        }
-                                                    })()}
-                                                </p>
-                                            )}
-                                            <p>Подтверждение клиента: {(application as any).courierUserConfirmed ? 'Да' : 'Нет'}</p>
+
+                                                                                         {masterPhotos.length === 0 && (
+                                                 <div className="text-center py-4">
+                                                     <p className="text-gray-500 text-sm">
+                                                         📸 Загрузите фото устройства для оценки
+                                                     </p>
+                                                     <p className="text-gray-400 text-xs mt-1">
+                                                         Рекомендуется: лицевая, боковая, задняя части
+                                                     </p>
+                                                 </div>
+                                             )}
                                         </div>
                                     )}
-                                    <CardAction className="self-center pt-2 w-full">
-                                        <div className="flex flex-wrap justify-center gap-2 w-full">
-                                            {application?.status === 'accepted' && (
-                                                <Button className="min-w-[200px] bg-[#2dc2c6] hover:bg-[#25a8ac] text-white" onClick={handleAcceptRequest}>
-                                                    Принять заявку
-                                                </Button>
-                                            )}
-                                            {application?.status === 'in_progress' && (
-                                                <Button
-                                                    className="min-w-[200px] bg-green-600 hover:bg-green-700 text-white"
-                                                    onClick={handleReviewRequest}
-                                                    disabled={!application?.price || !(application as any)?.priceConfirmed}
-                                                >
-                                                    Цена подтверждена
-                                                </Button>
-                                            )}
-                                            {application && (
-                                                <Button
-                                                    className="min-w-[200px] text-gray-300 border-gray-600 hover:bg-gray-700"
-                                                    variant="outline"
-                                                    disabled={Boolean((application as any)?.courierTelegramId)}
-                                                    onClick={async () => {
-                                                        if ((application as any)?.courierTelegramId) return;
-                                                        const masterUsername = prompt('Введите Telegram username мастера (без @):');
-                                                        if (!masterUsername) return;
-                                                        const res = await fetch(`/api/courier/schedule/${application.id}`, {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ masterUsername }),
-                                                        });
-                                                        const data = await res.json();
-                                                        if (!res.ok) alert(data?.error || 'Ошибка назначения мастера');
-                                                        else {
-                                                            alert('Мастер назначен. Пользователю отправлен выбор времени.');
-                                                            setApplication((prev) =>
-                                                                prev
-                                                                    ? ({
-                                                                        ...prev,
-                                                                        courierTelegramId: masterUsername,
-                                                                    } as any)
-                                                                    : prev
-                                                            );
-                                                        }
-                                                    }}
-                                                >
-                                                    {Boolean((application as any)?.courierTelegramId)
-                                                        ? `Мастер назначен${(application as any).courierTimeSlot ? ` — ${
-                                                          (application as any).courierTimeSlot
-                                                      }` : ' — время не выбрано'}`
-                                                        : 'Назначить мастера и время '}
-                                                </Button>
-                                            )}
-                                            {(application as any)?.courierUserConfirmed && application?.status === 'on_the_way' && (
-                                                <Button className="min-w-[200px] bg-purple-600 hover:bg-purple-700 text-white" onClick={handleCourierReceived}>
-                                                    Телефон у мастера
-                                                </Button>
-                                            )}
-                                            
-                                            {/* Кнопка отправки ID заявки клиенту */}
-                                            {(application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
-                                                <Button 
-                                                    className="min-w-[200px] bg-orange-600 hover:bg-orange-700 text-white"
-                                                    onClick={handleSendRequestId}
-                                                >
-                                                    📱 Отправить ID заявки
-                                                </Button>
-                                            )}
-                                            
-                                            {/* OTP система для мастера */}
-                                            {(application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
-                                                <div className="min-w-[200px] p-3 bg-green-900 border border-green-600 rounded text-center">
-                                                    <p className="text-green-200 text-sm font-semibold">🔐 OTP система</p>
-                                                    
-                                                    {otpCode ? (
-                                                        <div className="mt-2">
-                                                            <p className="text-green-100 text-xs">Текущий OTP:</p>
-                                                            <p className="text-green-200 text-lg font-bold font-mono">{otpCode}</p>
-                                                            <p className="text-green-100 text-xs mt-1">Действителен 15 мин</p>
-                                                        </div>
-                                                    ) : (
-                                                        <p className="text-green-100 text-xs mt-1">OTP не сгенерирован</p>
-                                                    )}
-                                                    
-                                                    <Button 
-                                                        className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white text-xs py-1"
-                                                        onClick={generateOTP}
-                                                        disabled={isGeneratingOtp}
-                                                    >
-                                                        {isGeneratingOtp ? '⏳ Генерирую...' : '🔢 Сгенерировать OTP'}
-                                                    </Button>
-                                                    
-                                                    {otpCode && (
-                                                        <Button 
-                                                            className="mt-1 w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs py-1"
-                                                            onClick={() => copyToClipboard(otpCode)}
-                                                        >
-                                                            📋 Скопировать OTP
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            )}
-                                            
-                                            {/* Кнопка копирования ID заявки */}
-                                            <Button 
-                                                className="min-w-[200px] bg-gray-600 hover:bg-gray-700 text-white"
-                                                onClick={() => copyToClipboard(application?.id || '')}
-                                            >
-                                                📋 Скопировать ID: {application?.id}
+                                                                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                                         <p className="text-gray-900 font-medium mb-2">Статус заявки:</p>
+                                         <div className="flex flex-wrap gap-2">
+                                             <Badge className="bg-[#2dc2c6] text-white px-3 py-1 rounded-full text-sm font-medium">
+                                                 {application?.status === 'draft'
+                                                     ? 'Черновик'
+                                                     : application?.status === 'accepted'
+                                                         ? 'Принята'
+                                                         : application?.status === 'in_progress'
+                                                             ? 'На проверке'
+                                                             : application?.status === 'on_the_way'
+                                                                 ? 'В пути'
+                                                                 : application?.status === 'paid'
+                                                                     ? 'Оплачено'
+                                                                     : application?.status === 'completed' && 'Выполнена'}
+                                             </Badge>
+                                             {(application?.status === 'in_progress' || application?.status === 'on_the_way') && (
+                                                 <Badge className={`${application?.priceConfirmed ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-full text-sm font-medium`}>
+                                                     {application?.priceConfirmed ? 'Цена подтверждена' : 'Цена не подтверждена'}
+                                                 </Badge>
+                                             )}
+                                         </div>
+                                     </div>
+                                </CardDescription>
+                                                                 {(application as any)?.courierTelegramId && (
+                                     <div className="mt-4 p-4 rounded-2xl border border-gray-200 bg-blue-50">
+                                         <p className="font-semibold text-blue-900 mb-2">👨‍🔧 Детали выезда мастера</p>
+                                         <div className="space-y-2 text-blue-800">
+                                             <p><span className="font-medium">Мастер:</span> @{(application as any).courierTelegramId}</p>
+                                             {(application as any).courierTimeSlot && <p><span className="font-medium">Выбранное время:</span> {(application as any).courierTimeSlot}</p>}
+                                             {(application as any).courierScheduledAt && (
+                                                 <p>
+                                                     <span className="font-medium">Назначено на:</span>{' '}
+                                                     {(() => {
+                                                         try {
+                                                             const d = new Date((application as any).courierScheduledAt);
+                                                             return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+                                                         } catch {
+                                                             return String((application as any).courierScheduledAt);
+                                                         }
+                                                     })()}
+                                                 </p>
+                                             )}
+                                             <p><span className="font-medium">Подтверждение клиента:</span> {(application as any).courierUserConfirmed ? '✅ Да' : '❌ Нет'}</p>
+                                         </div>
+                                     </div>
+                                 )}
+                                <CardAction className="self-center pt-2 w-full">
+                                    <div className="flex flex-wrap justify-center gap-2 w-full">
+                                        {application?.status === 'accepted' && (
+                                            <Button className="min-w-[200px] bg-[#2dc2c6] hover:bg-[#25a8ac] text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold" onClick={handleAcceptRequest}>
+                                                Принять заявку
                                             </Button>
-                                            {application?.status === 'paid' && (
-                                                <Button className="min-w-[200px] bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleMarkPaid}>
-                                                    Оплачено
-                                                </Button>
-                                            )}
-                                            {application?.status === 'completed' && (
-                                                <section className="text-white border-2 rounded-md border-gray-600 bg-gray-700 p-2 min-w-[200px] text-center">
-                                                    Заявка выполнена
-                                                </section>
-                                            )}
-                                        </div>
-                                    </CardAction>
-                                    
+                                        )}
+                                        {application?.status === 'in_progress' && (
+                                            <Button
+                                                className="min-w-[200px] bg-green-600 hover:bg-green-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold"
+                                                onClick={handleReviewRequest}
+                                                disabled={!application?.price || !(application as any)?.priceConfirmed}
+                                            >
+                                                Цена подтверждена
+                                            </Button>
+                                        )}
+                                        {application && (
+                                            <Button
+                                                className="min-w-[200px] text-gray-300 border-gray-600 hover:bg-gray-700"
+                                                variant="outline"
+                                                disabled={Boolean((application as any)?.courierTelegramId)}
+                                                onClick={async () => {
+                                                    if ((application as any)?.courierTelegramId) return;
+                                                    const masterUsername = prompt('Введите Telegram username мастера (без @):');
+                                                    if (!masterUsername) return;
+                                                    const res = await fetch(`/api/courier/schedule/${application.id}`, {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ masterUsername }),
+                                                    });
+                                                    const data = await res.json();
+                                                    if (!res.ok) alert(data?.error || 'Ошибка назначения мастера');
+                                                    else {
+                                                        alert('Мастер назначен. Пользователю отправлен выбор времени.');
+                                                        setApplication((prev) =>
+                                                            prev
+                                                                ? ({
+                                                                    ...prev,
+                                                                    courierTelegramId: masterUsername,
+                                                                } as any)
+                                                                : prev
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                {Boolean((application as any)?.courierTelegramId)
+                                                    ? `Мастер назначен${(application as any).courierTimeSlot ? ` — ${(application as any).courierTimeSlot
+                                                        }` : ' — время не выбрано'}`
+                                                    : 'Назначить мастера и время '}
+                                            </Button>
+                                        )}
+                                        {(application as any)?.courierUserConfirmed && application?.status === 'on_the_way' && (
+                                            <Button className="min-w-[200px] bg-purple-600 hover:bg-purple-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold" onClick={handleCourierReceived}>
+                                                Телефон у мастера
+                                            </Button>
+                                        )}
 
-                                    
-                                    <section className="flex flex-col gap-2 p-4">
-                                        <Button className="bg-gray-600 hover:bg-gray-700 text-white">
-                                            <Link href="/admin/requests">Все заявки</Link>
-                                        </Button>
-                                    </section>
-                                </CardContent>
-                            </Card>
-                        </div>
+                                        {/* Кнопка отправки ID заявки клиенту */}
+                                        {(application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
+                                            <Button
+                                                className="min-w-[200px] bg-orange-600 hover:bg-orange-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold"
+                                                onClick={handleSendRequestId}
+                                            >
+                                                📱 Отправить ID заявки
+                                            </Button>
+                                        )}
+
+                                        {/* OTP система для мастера */}
+                                        {(application as any)?.courierTelegramId && application?.status === 'on_the_way' && (
+                                            <div className="min-w-[200px] p-3 bg-green-900 border border-green-600 rounded text-center">
+                                                <p className="text-green-200 text-sm font-semibold">🔐 OTP система</p>
+
+                                                {otpCode ? (
+                                                    <div className="mt-2">
+                                                        <p className="text-green-100 text-xs">Текущий OTP:</p>
+                                                        <p className="text-green-200 text-lg font-bold font-mono">{otpCode}</p>
+                                                        <p className="text-green-100 text-xs mt-1">Действителен 15 мин</p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-green-100 text-xs mt-1">OTP не сгенерирован</p>
+                                                )}
+
+                                                <Button
+                                                    className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white text-xs py-1"
+                                                    onClick={generateOTP}
+                                                    disabled={isGeneratingOtp}
+                                                >
+                                                    {isGeneratingOtp ? '⏳ Генерирую...' : '🔢 Сгенерировать OTP'}
+                                                </Button>
+
+                                                {otpCode && (
+                                                    <Button
+                                                        className="mt-1 w-full bg-yellow-600 hover:bg-yellow-700 text-white text-xs py-1"
+                                                        onClick={() => copyToClipboard(otpCode)}
+                                                    >
+                                                        📋 Скопировать OTP
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        )}
+
+                                                                                 {/* Кнопка копирования ID заявки */}
+                                         <Button 
+                                             className="min-w-[200px] bg-gray-600 hover:bg-gray-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold"
+                                             onClick={() => copyToClipboard(application?.id || '')}
+                                         >
+                                             ID: {application?.id}
+                                         </Button>
+                                        {application?.status === 'paid' && (
+                                            <Button className="min-w-[200px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold" onClick={handleMarkPaid}>
+                                                Оплачено
+                                            </Button>
+                                        )}
+                                        {application?.status === 'completed' && (
+                                            <section className="text-white border-2 rounded-md border-gray-600 bg-gray-700 p-2 min-w-[200px] text-center">
+                                                Заявка выполнена
+                                            </section>
+                                        )}
+                                    </div>
+                                </CardAction>
+
+
+
+                                
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             </div>

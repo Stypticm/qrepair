@@ -130,19 +130,19 @@ export default function MastersPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50">
-        <div className="flex-1 w-full p-6 overflow-y-auto">
+      <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-8">
               <section className='flex flex-col gap-4'>
-                <h1 className="text-3xl font-semibold text-gray-900 text-center mb-2">👨‍🔧 Управление мастерами</h1>
+                <h1 className="text-3xl font-semibold text-gray-900 text-center mb-2 mt-12">👨‍🔧 Управление мастерами</h1>
                 <p className="text-gray-600 text-center">Добавление и управление мастерами системы</p>
                 <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white shadow-lg rounded-xl transition-all duration-200 hover:shadow-xl">
-                      + Добавить мастера
-                    </Button>
-                  </DialogTrigger>
+                                     <DialogTrigger asChild>
+                     <Button className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold">
+                       + Добавить мастера
+                     </Button>
+                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl">
                     <DialogHeader>
                       <DialogTitle className="text-gray-900">Добавить нового мастера</DialogTitle>
@@ -186,9 +186,9 @@ export default function MastersPage() {
                         >
                           Отмена
                         </Button>
-                        <Button onClick={addMaster} className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-lg">
-                          Добавить
-                        </Button>
+                                                 <Button onClick={addMaster} className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-2xl shadow-lg transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold">
+                           Добавить
+                         </Button>
                         </div>
                       </div>
                     </DialogContent>
