@@ -9,6 +9,7 @@ import { Link } from '@/components/Link/Link';
 import tonSvg from './_assets/ton.svg';
 import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
+import { getPictureUrl } from '@/core/lib/assets';
 
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
@@ -77,7 +78,7 @@ export default function Home() {
         <div className="w-full max-w-md mx-auto text-center space-y-8">
           <div className="space-y-6">
             <Image
-              src="/logo2.png"
+              src={getPictureUrl(`logo2.png`) || '/logo2.png'}
               alt="Логотип"
               width={300}
               height={150}
@@ -117,7 +118,7 @@ export default function Home() {
               <Link href="/admin">
                 <div className="w-12 h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer mx-auto overflow-hidden bg-white border border-gray-200 hover:border-gray-300">
                   <Image
-                    src="/admin_btn.png"
+                    src={getPictureUrl('admin_btn.png') || '/admin_btn.png'}
                     alt="Админ панель"
                     width={48}
                     height={48}
