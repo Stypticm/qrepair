@@ -8,7 +8,9 @@
     "build": "next build",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "update-version": "node scripts/update-version.js",
+    "deploy": "npm run update-version && git add . && git commit -m \"Update version for deployment\" && git push origin dev"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
