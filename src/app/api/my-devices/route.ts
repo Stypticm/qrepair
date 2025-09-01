@@ -26,7 +26,6 @@ export async function GET(req: Request) {
         comment: true,
         imei: true,
         contractUrl: true,
-        answers: true,
         price: true,
         damagePercent: true,
         questionsAnswered: true,
@@ -52,13 +51,16 @@ export async function GET(req: Request) {
         updatedAt: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     })
 
     return NextResponse.json(devices)
   } catch (error) {
     console.error('Error fetching devices:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

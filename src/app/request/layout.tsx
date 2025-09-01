@@ -6,7 +6,7 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const { modelname, answers } = useStartForm();
+  const { modelname } = useStartForm();
 
   // Определяем настройки кнопки в зависимости от страницы
   const getButtonConfig = () => {

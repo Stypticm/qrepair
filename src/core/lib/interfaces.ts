@@ -21,10 +21,6 @@ export type FormState = {
   imei: string | null
   setImei: (value: string | null) => void
 
-  // answers
-  answers: number[]
-  setAnswers: (answers: number[]) => void
-
   // price
   price: number | null
   setPrice: (value: number | null) => void
@@ -76,7 +72,6 @@ export interface SkupkaRequest {
   comment?: string
   imei?: string
   contractUrl?: string
-  answers?: number[]
   price?: number
   damagePercent?: number
   questionsAnswered?: boolean

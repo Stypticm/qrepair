@@ -10,7 +10,7 @@ import { Page } from '@/components/Page';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, answers, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions } = useStartForm();
+    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions } = useStartForm();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
@@ -86,7 +86,6 @@ const SubmitPage = () => {
                 body: JSON.stringify({
                     telegramId,
                     modelname,
-                    answers,
                     price: finalPrice,
                 }),
             });

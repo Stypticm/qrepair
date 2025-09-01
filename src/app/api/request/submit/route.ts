@@ -5,7 +5,7 @@ import { getAdditionalConditionPenalty } from '@/core/lib/additionalCondition'
 
 export async function POST(request: Request) {
   try {
-    const { telegramId, modelname, answers, price } =
+    const { telegramId, modelname, price } =
       await request.json()
 
     if (!telegramId || !modelname) {
@@ -32,7 +32,6 @@ export async function POST(request: Request) {
       where: { id: existingRequest.id },
       data: {
         modelname,
-        answers: answers || [],
         price: price || null,
         status: 'submitted',
         submittedAt: new Date(),
