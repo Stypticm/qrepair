@@ -291,56 +291,70 @@ const SubmitPage = () => {
                                     <h4 className="font-semibold mb-3 text-gray-900">Состояние устройства:</h4>
                                     <div className="space-y-3">
                                         {/* Основные состояния устройства */}
-                                        {deviceConditions && deviceConditions.front && deviceConditions.back && deviceConditions.side && (
+                                        {deviceConditions && (
                                             <>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Передняя панель:</span>
-                                                    <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {deviceConditions.front ? getConditionWithPenalty(deviceConditions.front) : 'Не выбрано'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Задняя панель:</span>
-                                                    <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {deviceConditions.back ? getConditionWithPenalty(deviceConditions.back) : 'Не выбрано'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Боковая панель:</span>
-                                                    <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {deviceConditions.side ? getConditionWithPenalty(deviceConditions.side) : 'Не выбрано'}
-                                                    </span>
-                                                </div>
+                                                {deviceConditions.front && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium">Передняя панель:</span>
+                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                            {getConditionWithPenalty(deviceConditions.front)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {deviceConditions.back && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium">Задняя панель:</span>
+                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                            {getConditionWithPenalty(deviceConditions.back)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {deviceConditions.side && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium">Боковая панель:</span>
+                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                            {getConditionWithPenalty(deviceConditions.side)}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </>
                                         )}
 
                                         {/* Дополнительные состояния устройства */}
-                                        {additionalConditions && additionalConditions.faceId && additionalConditions.touchId && additionalConditions.backCamera && additionalConditions.battery && (
+                                        {additionalConditions && (
                                             <>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Face ID:</span>
-                                                    <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {additionalConditions.faceId ? getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId') : 'Не выбрано'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Touch ID:</span>
-                                                    <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {additionalConditions.touchId ? getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId') : 'Не выбрано'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Задняя камера:</span>
-                                                    <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {additionalConditions.backCamera ? getAdditionalConditionWithPenalty(additionalConditions.backCamera, 'backCamera') : 'Не выбрано'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Батарея:</span>
-                                                    <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {additionalConditions.battery ? getAdditionalConditionWithPenalty(additionalConditions.battery, 'battery') : 'Не выбрано'}
-                                                    </span>
-                                                </div>
+                                                {additionalConditions.faceId && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium">Face ID:</span>
+                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                            {getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId')}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {additionalConditions.touchId && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium">Touch ID:</span>
+                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                            {getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId')}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {additionalConditions.backCamera && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium">Задняя камера:</span>
+                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                            {getAdditionalConditionWithPenalty(additionalConditions.backCamera, 'backCamera')}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {additionalConditions.battery && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium">Батарея:</span>
+                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                            {getAdditionalConditionWithPenalty(additionalConditions.battery, 'battery')}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </>
                                         )}
                                     </div>

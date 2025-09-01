@@ -337,9 +337,9 @@ export default function AdditionalConditionPage() {
 
     // Проверяем, можно ли выбрать секцию
     const canSelectSection = (type: 'faceId' | 'touchId' | 'backCamera' | 'battery'): boolean => {
-        if (type === 'faceId' || type === 'touchId') return true; // Face ID и Touch ID всегда доступны
-        if (type === 'backCamera') return !!additionalConditions.faceId && !!additionalConditions.touchId; // Задняя камера только после выбора Face ID и Touch ID
-        if (type === 'battery') return !!additionalConditions.faceId && !!additionalConditions.touchId && !!additionalConditions.backCamera; // Батарея только после выбора всех предыдущих
+        if (type === 'backCamera') return true; // Задняя камера всегда доступна
+        if (type === 'battery') return !!additionalConditions.backCamera; // Батарея только после выбора задней камеры
+        if (type === 'faceId' || type === 'touchId') return !!additionalConditions.battery; // Face ID и Touch ID только после выбора батареи
         return false;
     };
 
@@ -362,7 +362,7 @@ export default function AdditionalConditionPage() {
                     {title}
                     {!canSelectSection(type) && (
                         <span className="block text-sm text-gray-500 font-normal mt-1">
-                            {type === 'backCamera' ? 'Сначала выберите Face ID и Touch ID' : 'Сначала выберите все предыдущие условия'}
+                            {type === 'battery' ? 'Сначала выберите заднюю камеру' : 'Сначала выберите все предыдущие условия'}
                         </span>
                     )}
                 </h3>
@@ -418,9 +418,20 @@ export default function AdditionalConditionPage() {
                     <div className="w-full max-w-md mx-auto space-y-6">
 
 
+                        {/* Задняя камера */}
+                        {renderConditionSection('Задняя камера', backCameraConditions, 'backCamera', 'grid-cols-4')}
+
+                        {/* Батарея */}
+                        {renderConditionSection('Батарея', batteryConditions, 'battery', 'grid-cols-4')}
+
                         {/* Face ID и Touch ID в одной строке */}
                         <div className="space-y-3">
                             <h3 className="text-lg font-semibold text-gray-800 text-center">Face ID / Touch ID</h3>
+                            {!canSelectSection('faceId') && (
+                                <span className="block text-sm text-gray-500 font-normal text-center">
+                                    Сначала выберите батарею
+                                </span>
+                            )}
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <div className="grid grid-cols-2 gap-2">
@@ -432,8 +443,11 @@ export default function AdditionalConditionPage() {
                                                     className={`transition-all duration-200 relative ${isSelected
                                                             ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
                                                             : ''
-                                                        } cursor-pointer hover:shadow-md`}
-                                                    onClick={() => handleConditionSelect('faceId', condition.id)}
+                                                        } ${canSelectSection('faceId')
+                                                            ? 'cursor-pointer hover:shadow-md'
+                                                            : 'cursor-not-allowed opacity-50'
+                                                        }`}
+                                                    onClick={() => canSelectSection('faceId') && handleConditionSelect('faceId', condition.id)}
                                                 >
                                                     {isSelected && (
                                                         <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
@@ -471,8 +485,11 @@ export default function AdditionalConditionPage() {
                                                     className={`transition-all duration-200 relative ${isSelected
                                                             ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
                                                             : ''
-                                                        } cursor-pointer hover:shadow-md`}
-                                                    onClick={() => handleConditionSelect('touchId', condition.id)}
+                                                        } ${canSelectSection('touchId')
+                                                            ? 'cursor-pointer hover:shadow-md'
+                                                            : 'cursor-not-allowed opacity-50'
+                                                        }`}
+                                                    onClick={() => canSelectSection('touchId') && handleConditionSelect('touchId', condition.id)}
                                                 >
                                                     {isSelected && (
                                                         <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
@@ -501,12 +518,6 @@ export default function AdditionalConditionPage() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Задняя камера */}
-                        {renderConditionSection('Задняя камера', backCameraConditions, 'backCamera', 'grid-cols-4')}
-
-                        {/* Батарея */}
-                        {renderConditionSection('Батарея', batteryConditions, 'battery', 'grid-cols-4')}
                     </div>
                 </div>
             </div>
