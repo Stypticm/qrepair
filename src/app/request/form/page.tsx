@@ -634,13 +634,28 @@ return (
                     {/* Секция выбора объема памяти */}
                     <div className={`p-2 rounded-xl shadow-sm ${!selectedOptions.variant ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
                         <h3 className="text-center font-semibold text-gray-900 mb-1 text-sm">Объем памяти</h3>
-                        <div className="flex flex-row justify-between gap-1 max-w-md mx-auto">
-                            {getAvailableStorages().map((storage: string) => (
+                        <div className="grid grid-cols-3 gap-1 max-w-xs mx-auto">
+                            {getAvailableStorages().slice(0, 3).map((storage: string) => (
                                 <Button
                                     key={storage}
                                     onClick={() => handleOptionSelect('storage', storage)}
                                     disabled={!selectedOptions.variant}
-                                    className={`flex-1 h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
+                                    className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
+                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                        }`}
+                                >
+                                    {storage}
+                                </Button>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-2 gap-1 max-w-xs mx-auto mt-1">
+                            {getAvailableStorages().slice(3).map((storage: string) => (
+                                <Button
+                                    key={storage}
+                                    onClick={() => handleOptionSelect('storage', storage)}
+                                    disabled={!selectedOptions.variant}
+                                    className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate ${selectedOptions.storage === storage
                                         ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
                                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                         }`}

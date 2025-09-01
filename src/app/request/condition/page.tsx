@@ -16,10 +16,10 @@ import { ProgressBar } from '@/components/ui/progress-bar';
 export default function ConditionPage() {
     const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice } = useStartForm();
     const router = useRouter();
-    
+
     // Состояние для отслеживания изменений
     const [hasChanges, setHasChanges] = useState(false);
-    
+
     // Флаг для отслеживания загрузки состояний из БД
     const [loadedFromDB, setLoadedFromDB] = useState(false);
 
@@ -28,7 +28,7 @@ export default function ConditionPage() {
         // Сначала пытаемся восстановить из sessionStorage
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('deviceConditions');
-            
+
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
@@ -46,7 +46,7 @@ export default function ConditionPage() {
         try {
             const timestamp = Date.now();
             const url = `/api/request/getConditions?t=${timestamp}`;
-            
+
             const response = await fetch(url, {
                 headers: {
                     'x-telegram-id': telegramId || 'test-user'
@@ -55,7 +55,7 @@ export default function ConditionPage() {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Загружены данные из БД:', data);
-                
+
                 // Проверяем статус заявки - если submitted, то НЕ загружаем старые состояния
                 if (data.status === 'submitted') {
                     console.log('Заявка уже отправлена, сбрасываем состояния');
@@ -67,7 +67,7 @@ export default function ConditionPage() {
                     setHasChanges(false);
                     return;
                 }
-                
+
                 // Обновляем состояния устройства только для черновиков
                 if (data.deviceConditions && data.status !== 'submitted') {
                     // Проверяем, что это действительно новая заявка, а не старая
@@ -83,12 +83,12 @@ export default function ConditionPage() {
                         setLoadedFromDB(true); // Устанавливаем флаг загрузки из БД
                     }
                 }
-                
+
                 // Дополнительная проверка: если в БД есть старые названия "Значительные царапины", заменяем их на "Заметные царапины"
                 if (data.deviceConditions) {
                     const updatedConditions = { ...data.deviceConditions };
                     let hasChanges = false;
-                    
+
                     if (updatedConditions.front === 'Значительные царапины') {
                         updatedConditions.front = 'Заметные царапины';
                         hasChanges = true;
@@ -101,19 +101,19 @@ export default function ConditionPage() {
                         updatedConditions.side = 'Заметные царапины';
                         hasChanges = true;
                     }
-                    
+
                     if (hasChanges) {
                         console.log('Обновляем старые названия состояний:', updatedConditions);
                         setDeviceConditions(updatedConditions);
                     }
                 }
-                
+
                 // Обновляем модель если есть
                 if (data.modelname) {
                     setModel(data.modelname);
                     console.log('Установлена модель:', data.modelname);
                 }
-                
+
                 // Обновляем цену если есть
                 if (data.price) {
                     setPrice(data.price);
@@ -158,13 +158,13 @@ export default function ConditionPage() {
                             username: username || 'Unknown',
                         }),
                     });
-                    
+
                     if (response.ok) {
                         console.log('Заявка создана или найдена');
-                        
+
                         // НЕ сбрасываем состояния здесь - это делается только для действительно новых заявок
                         // Состояния будут загружены в loadSavedConditions() если они есть
-                        
+
                         // Очищаем sessionStorage только для новых заявок
                         if (typeof window !== 'undefined') {
                             const savedInSession = sessionStorage.getItem('deviceConditions');
@@ -173,10 +173,10 @@ export default function ConditionPage() {
                                 console.log('sessionStorage очищен для новой заявки');
                             }
                         }
-                        
+
                         // НЕ загружаем состояния из БД для новых заявок - это делается только для продолжения существующих
                         // Состояния уже установлены в первом useEffect на основе sessionStorage
-                        
+
                         // Устанавливаем флаг загрузки для новой заявки
                         setLoadedFromDB(true);
                     }
@@ -209,7 +209,7 @@ export default function ConditionPage() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('deviceConditions');
-            
+
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
@@ -223,7 +223,7 @@ export default function ConditionPage() {
                 }
             }
         }
-        
+
         // Устанавливаем флаг загрузки для новой заявки
         setLoadedFromDB(true);
     }, [setDeviceConditions]); // Запускается только один раз при загрузке страницы
@@ -250,29 +250,29 @@ export default function ConditionPage() {
         if ('vibrate' in navigator) {
             navigator.vibrate(50);
         }
-        
+
         // Получаем текстовое описание состояния
         const conditionText = getConditionText(conditionId);
-        
+
         // Проверяем, изменилось ли состояние
         if (deviceConditions[type] !== conditionText) {
             const newConditions = {
                 ...deviceConditions,
                 [type]: conditionText
             };
-            
+
             // Сначала обновляем контекст
             setDeviceConditions(newConditions);
-            
+
             // Устанавливаем флаг изменений
             setHasChanges(true);
-            
+
             // Сохраняем в sessionStorage для быстрого восстановления
             if (typeof window !== 'undefined') {
                 sessionStorage.setItem('deviceConditions', JSON.stringify(newConditions));
                 console.log('Состояния сохранены в sessionStorage:', newConditions);
             }
-            
+
             // Затем сохраняем состояния в БД
             saveConditionsToDatabase(newConditions);
         }
@@ -283,18 +283,18 @@ export default function ConditionPage() {
         try {
             // Получаем базовую цену из контекста или устанавливаем по умолчанию
             const basePrice = 48000; // Базовая цена по умолчанию
-            
+
             // Рассчитываем финальную цену с учетом состояний
             const finalPrice = calculateFinalPrice(basePrice);
-            
+
             // Устанавливаем цену в контекст
             setPrice(finalPrice);
-            
+
             const requestBody = {
                 deviceConditions: newConditions,
                 price: finalPrice
             };
-            
+
             const response = await fetch('/api/request/saveConditions', {
                 method: 'POST',
                 headers: {
@@ -352,7 +352,7 @@ export default function ConditionPage() {
     // Функция для расчета финальной цены с учетом состояний
     const calculateFinalPrice = (basePrice: number): number => {
         let totalPenalty = 0;
-        
+
         // Суммируем проценты по всем выбранным состояниям
         if (deviceConditions.front) {
             const frontCondition = frontConditions.find(c => getConditionText(c.id) === deviceConditions.front);
@@ -366,13 +366,13 @@ export default function ConditionPage() {
             const sideCondition = sideConditions.find(c => getConditionText(c.id) === deviceConditions.side);
             if (sideCondition) totalPenalty += sideCondition.penalty;
         }
-        
+
         // Ограничиваем максимальный вычет 50%
         if (totalPenalty < -50) totalPenalty = -50;
-        
+
         // Рассчитываем финальную цену
         const finalPrice = basePrice * (1 + totalPenalty / 100);
-        
+
         // Ограничиваем минимальную цену 50% от базовой
         const minPrice = basePrice * 0.5;
         return Math.max(finalPrice, minPrice);
@@ -381,28 +381,28 @@ export default function ConditionPage() {
     // Функция для расчета общего процента вычета (для диалога)
     const calculateTotalPenalty = (): number => {
         let totalPenalty = 0;
-        
+
         if (deviceConditions.front) {
             if (deviceConditions.front === 'Новый') totalPenalty += 0;
             else if (deviceConditions.front === 'Очень хорошее') totalPenalty += -3;
             else if (deviceConditions.front === 'Заметные царапины') totalPenalty += -8;
             else if (deviceConditions.front === 'Трещины') totalPenalty += -15;
         }
-        
+
         if (deviceConditions.back) {
             if (deviceConditions.back === 'Новый') totalPenalty += 0;
             else if (deviceConditions.back === 'Очень хорошее') totalPenalty += -3;
             else if (deviceConditions.back === 'Заметные царапины') totalPenalty += -8;
             else if (deviceConditions.back === 'Трещины') totalPenalty += -15;
         }
-        
+
         if (deviceConditions.side) {
             if (deviceConditions.side === 'Новый') totalPenalty += 0;
             else if (deviceConditions.side === 'Очень хорошее') totalPenalty += -3;
             else if (deviceConditions.side === 'Заметные царапины') totalPenalty += -8;
             else if (deviceConditions.side === 'Трещины') totalPenalty += -15;
         }
-        
+
         return totalPenalty;
     };
 
@@ -423,13 +423,13 @@ export default function ConditionPage() {
                 return 'w-full h-6 rounded-lg';
             } else {
                 // Передняя и задняя панель - прямоугольные как телефон, большая высота для полной видимости без обрезки
-                return 'w-full h-36 rounded-lg';
+                return 'w-17 h-31 rounded-lg';
             }
         };
-        
 
 
-    return (
+
+        return (
             <div className="space-y-1">
                 {/* Заголовок секции */}
                 <h3 className="text-base font-semibold text-center">
@@ -451,64 +451,62 @@ export default function ConditionPage() {
                             transition={{ duration: 0.1 }}
                         >
                             <Card
-                                className={`transition-all duration-200 relative border-0 shadow-none ${
-                                    deviceConditions[type] === getConditionText(condition.id)
+                                className={`transition-all duration-200 relative border-0 shadow-none ${deviceConditions[type] === getConditionText(condition.id)
                                         ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
                                         : ''
-                                } ${
-                                    canSelectSection(type) 
-                                        ? 'cursor-pointer hover:shadow-md' 
+                                    } ${canSelectSection(type)
+                                        ? 'cursor-pointer hover:shadow-md'
                                         : 'cursor-not-allowed opacity-50'
-                                }`}
+                                    }`}
                                 onClick={() => canSelectSection(type) && handleConditionSelect(type, condition.id)}
                             >
-                            {deviceConditions[type] === getConditionText(condition.id) && (
-                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                    <span className="text-white text-xs font-bold">✓</span>
-                                </div>
-                            )}
-                            <CardContent className="p-1 pb-1">
-                                {/* Изображение - разные размеры для разных секций */}
-                                <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
-                                    <Image
-                                        src={getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}
-                                        alt={condition.label}
-                                        fill
-                                        className="w-full h-full object-cover"
-                                        priority
-                                    />
-                                </div>
+                                {deviceConditions[type] === getConditionText(condition.id) && (
+                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                        <span className="text-white text-xs font-bold">✓</span>
+                                    </div>
+                                )}
+                                <CardContent className="p-1 pb-1 flex flex-col items-center justify-center">
+                                    {/* Изображение - разные размеры для разных секций */}
+                                    <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
+                                        <Image
+                                            src={getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}
+                                            alt={condition.label}
+                                            fill
+                                            className="w-full h-full object-cover"
+                                            priority
+                                        />
+                                    </div>
 
-                                                                 {/* Название условия */}
-                                 <h4 className="text-xs font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
-                                     {condition.label}
-                                 </h4>
-                                 
+                                    {/* Название условия */}
+                                    <h4 className="text-xs font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
+                                        {condition.label}
+                                    </h4>
 
-                            </CardContent>
-                        </Card>
-                    </motion.div>
+
+                                </CardContent>
+                            </Card>
+                        </motion.div>
                     ))}
                 </div>
             </div>
         );
     };
 
-                return (
-            <Page back={true}>
-                <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                    {/* Прогресс-бар */}
-                    <div className="pt-2">
-                        <ProgressBar 
-                            currentStep={getCurrentStep()} 
-                            totalSteps={4} 
-                            steps={steps} 
-                        />
-                    </div>
+    return (
+        <Page back={true}>
+            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                {/* Прогресс-бар */}
+                <div className="pt-2 pb-1">
+                    <ProgressBar
+                        currentStep={getCurrentStep()}
+                        totalSteps={4}
+                        steps={steps}
+                    />
+                </div>
 
-                    <div className="flex-1 p-3 pt-6">
-                        <div className="w-full max-w-2xl mx-auto flex flex-col gap-1">
-                        
+                <div className="flex-1">
+                    <div className="w-full max-w-2xl mx-auto flex flex-col gap-1">
+
                         {/* Секция передней части экрана */}
                         <div className="flex-1 flex flex-col justify-center space-y-1">
                             {renderConditionSection('front', frontConditions)}
@@ -522,72 +520,72 @@ export default function ConditionPage() {
                             {renderConditionSection('back', backConditions)}
                         </div>
 
-                                                {/* Разделитель */}
+                        {/* Разделитель */}
                         <div className="my-1"></div>
 
                         {/* Секция боковых граней */}
                         <div className={`flex-1 flex flex-col justify-center space-y-1 ${!canSelectSection('side') ? 'opacity-50' : ''}`}>
                             {renderConditionSection('side', sideConditions)}
                         </div>
-                                        </div>
-                                    </div>
-                                </div>
+                    </div>
+                </div>
+            </div>
 
-             {/* Диалоговое окно с итоговой информацией */}
-             <Dialog open={showDialog} onOpenChange={handleEdit}>
-                 <DialogContent
-                     className="bg-white cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
-                     onClick={handleContinue}
-                     showCloseButton={false}
-                 >
-                     <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
-                         
-                     </DialogTitle>
-                     
-                     <div className="text-center">
-                         {/* Рамка для выбранных условий */}
-                         <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
-                             <div className="space-y-3">
-                                 {deviceConditions.front && (
-                                     <div className="flex justify-between items-center">
-                                         <span className="text-gray-600 font-medium">Передняя панель:</span>
-                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                             {deviceConditions.front}
-                                         </span>
-                                     </div>
-                                 )}
-                                 {deviceConditions.back && (
-                                     <div className="flex justify-between items-center">
-                                         <span className="text-gray-600 font-medium">Задняя панель:</span>
-                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                             {deviceConditions.back}
-                                         </span>
-                                     </div>
-                                 )}
-                                 {deviceConditions.side && (
-                                     <div className="flex justify-between items-center">
-                                         <span className="text-gray-600 font-medium">Боковые грани:</span>
-                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                             {deviceConditions.side}
-                                         </span>
-                                     </div>
-                                 )}
-                             </div>
-                         </div>
-                         
-                         {/* Показываем выбранные условия */}
-                         
-                         
-                         
-                         <p className="text-center text-sm text-gray-600 mt-3">
-                             👆 Нажмите на окно для перехода к следующему шагу
-                         </p>
-                         <p className="text-center text-sm text-gray-600 mt-1">
-                             ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
-                         </p>
-                     </div>
-                 </DialogContent>
-             </Dialog>
+            {/* Диалоговое окно с итоговой информацией */}
+            <Dialog open={showDialog} onOpenChange={handleEdit}>
+                <DialogContent
+                    className="bg-white cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    onClick={handleContinue}
+                    showCloseButton={false}
+                >
+                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+
+                    </DialogTitle>
+
+                    <div className="text-center">
+                        {/* Рамка для выбранных условий */}
+                        <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
+                            <div className="space-y-3">
+                                {deviceConditions.front && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 font-medium">Передняя панель:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                            {deviceConditions.front}
+                                        </span>
+                                    </div>
+                                )}
+                                {deviceConditions.back && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 font-medium">Задняя панель:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                            {deviceConditions.back}
+                                        </span>
+                                    </div>
+                                )}
+                                {deviceConditions.side && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 font-medium">Боковые грани:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                            {deviceConditions.side}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Показываем выбранные условия */}
+
+
+
+                        <p className="text-center text-sm text-gray-600 mt-3">
+                            👆 Нажмите на окно для перехода к следующему шагу
+                        </p>
+                        <p className="text-center text-sm text-gray-600 mt-1">
+                            ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Page>
     );
- }
+}

@@ -19,7 +19,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import { SelectionFeedback, useSelectionFeedback } from '@/components/ui/selection-feedback';
+
 
 export default function AdditionalConditionPage() {
     const {
@@ -42,8 +42,7 @@ export default function AdditionalConditionPage() {
     // Флаг для отслеживания загрузки состояний из БД
     const [loadedFromDB, setLoadedFromDB] = useState(false);
 
-    // Обратная связь при выборе
-    const { feedback, showFeedback, hideFeedback } = useSelectionFeedback();
+
     // Флаг для отключения подсказок при загрузке данных
     const [showHints, setShowHints] = useState(true);
 
@@ -318,9 +317,6 @@ export default function AdditionalConditionPage() {
         // Проверяем, можно ли выбрать этот тип
         if (!canSelectSection(type)) {
             console.log(`[handleConditionSelect] Нельзя выбрать ${type} сейчас`);
-            if (showHints) {
-                showFeedback('Сначала выберите предыдущие условия', 'warning');
-            }
             return;
         }
 
@@ -348,16 +344,7 @@ export default function AdditionalConditionPage() {
             // Сразу устанавливаем флаг изменений для мгновенного показа диалога
             setHasChanges(true);
 
-            // Показываем обратную связь
-            const feedbackMessages = {
-                backCamera: 'Задняя камера выбрана! Теперь выберите батарею',
-                battery: 'Батарея выбрана! Теперь выберите Face ID',
-                faceId: 'Face ID выбран! Теперь выберите Touch ID',
-                touchId: 'Touch ID выбран! Все условия заполнены'
-            };
-            if (showHints) {
-                showFeedback(feedbackMessages[type], 'success');
-            }
+
 
             // Сохраняем в sessionStorage для быстрого восстановления
             if (typeof window !== 'undefined') {
@@ -645,13 +632,7 @@ export default function AdditionalConditionPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* Обратная связь при выборе */}
-            <SelectionFeedback
-                isVisible={feedback.isVisible}
-                message={feedback.message}
-                type={feedback.type}
-                onClose={hideFeedback}
-            />
+
         </Page>
     );
 }
