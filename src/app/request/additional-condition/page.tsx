@@ -46,8 +46,14 @@ export default function AdditionalConditionPage() {
     // Флаг для отключения подсказок при загрузке данных
     const [showHints, setShowHints] = useState(true);
 
+    // Состояние для режима редактирования
+    const [isEditing, setIsEditing] = useState(false);
+    
+    // Состояние для определения, все ли выбрано
+    const [isAllSelected, setIsAllSelected] = useState(false);
+
     // Шаги для прогресс-бара
-    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
+    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
 
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
@@ -60,6 +66,8 @@ export default function AdditionalConditionPage() {
     // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {
         console.log('Загружаю сохраненные дополнительные состояния...');
+
+
 
         // Сначала пытаемся восстановить из sessionStorage
         if (typeof window !== 'undefined') {
@@ -79,6 +87,16 @@ export default function AdditionalConditionPage() {
 
                     if (hasValidData) {
                         setAdditionalConditions(parsed);
+                        
+                        // Проверяем, есть ли уже выбранные элементы (режим редактирования)
+                        const hasSelectedItems = parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery;
+                        if (hasSelectedItems) {
+                            setIsEditing(true);
+                            // Проверяем, все ли выбрано
+                            const allSelected = checkIfAllSelected(parsed);
+                            setIsAllSelected(!!allSelected);
+                        }
+                        
                         setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
                         setShowHints(false); // Отключаем подсказки при загрузке данных
                         console.log('[loadSavedConditions] Дополнительные состояния загружены из sessionStorage и установлены:', parsed);
@@ -232,11 +250,22 @@ export default function AdditionalConditionPage() {
             additionalConditions.battery;
     }, [additionalConditions]);
 
+    // Функция для проверки, все ли выбрано
+    const checkIfAllSelected = (conditions: typeof additionalConditions) => {
+        return conditions.faceId &&
+            conditions.touchId &&
+            conditions.backCamera &&
+            conditions.battery;
+    };
+
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {
         if (areAllConditionsSelected() && hasChanges) {
             console.log('[useEffect] Показываем диалог - все условия выбраны и есть изменения');
             setShowDialog(true);
+            
+            // Устанавливаем флаг "все выбрано"
+            setIsAllSelected(true);
         }
     }, [additionalConditions, areAllConditionsSelected, hasChanges]);
 
@@ -261,7 +290,7 @@ export default function AdditionalConditionPage() {
             });
         }, 0);
         // Быстрый переход без задержки
-        router.push('/request/submit');
+        router.push('/request/device-info');
     };
 
     const handleEdit = () => {
@@ -340,6 +369,12 @@ export default function AdditionalConditionPage() {
 
             // Сначала обновляем контекст
             setAdditionalConditions(newConditions);
+
+            // Сбрасываем режим редактирования при новом выборе
+            setIsEditing(false);
+            
+            // Сбрасываем флаг "все выбрано" при изменении
+            setIsAllSelected(false);
 
             // Сразу устанавливаем флаг изменений для мгновенного показа диалога
             setHasChanges(true);
@@ -438,32 +473,43 @@ export default function AdditionalConditionPage() {
                 <div className="pt-2 pb-1">
                     <ProgressBar
                         currentStep={getCurrentStep()}
-                        totalSteps={4}
+                        totalSteps={5}
                         steps={steps}
                     />
                 </div>
 
-                <div className="flex-1 p-3 pt-6">
-                    <div className="w-full max-w-md mx-auto space-y-1">
+                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
 
 
                         {/* Задняя камера */}
-                        {renderConditionSection('Задняя камера', backCameraConditions, 'backCamera', 'grid-cols-4')}
+                        {true && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
+                            >
+                                {renderConditionSection('Задняя камера', backCameraConditions, 'backCamera', 'grid-cols-4')}
+                            </motion.div>
+                        )}
 
                         {/* Батарея */}
-                        <div className="space-y-1">
-                            <h3 className="text-lg font-semibold text-gray-800 text-center">
-                                Батарея
-                            </h3>
-                            
-                            {/* Сообщение о зависимости */}
-                            {!canSelectSection('battery') && (
-                                <div className="text-center text-sm text-gray-600 bg-gray-100 rounded-lg p-2">
-                                    Сначала выберите заднюю камеру
-                                </div>
-                            )}
-                            
-                            <div className={`grid grid-cols-4 gap-1 ${!canSelectSection('battery') ? 'opacity-50' : ''}`}>
+                        {additionalConditions.backCamera && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="p-2 rounded-xl shadow-sm bg-white"
+                            >
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-semibold text-gray-800 text-center">
+                                        Батарея
+                                    </h3>
+                                    
+                                    <div className={`grid grid-cols-4 gap-1 ${!canSelectSection('battery') ? 'opacity-50' : ''}`}>
                                 {batteryConditions.map((condition) => {
                                     const isSelected = additionalConditions.battery === condition.label;
                                     const percentage = parseInt(condition.label.replace('%', ''));
@@ -505,28 +551,25 @@ export default function AdditionalConditionPage() {
                                         </motion.div>
                                     );
                                 })}
-                            </div>
-                        </div>
-
-                        {/* Face ID и Touch ID в одной строке */}
-                        <div className="space-y-2">
-                            <h3 className="text-lg font-semibold text-gray-800 text-center">Face ID / Touch ID</h3>
-                            
-                            {/* Сообщение о зависимости */}
-                            {!canSelectSection('faceId') && (
-                                <div className="text-center text-sm text-gray-600 bg-gray-100 rounded-lg p-2">
-                                    Сначала выберите заднюю камеру и батарею
-                                </div>
-                            )}
-
-                            <div className={`grid grid-cols-2 gap-2 ${!canSelectSection('faceId') ? 'opacity-50' : ''}`}>
-                                {/* Face ID */}
-                                <div className="space-y-1">
-                                    <div className="text-center">
-                                        <span className="text-2xl">👁️</span>
-                                        <h4 className="text-sm font-medium text-gray-700">Face ID</h4>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Face ID / Touch ID на одной строке */}
+                        {additionalConditions.battery && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
+                            >
+                                <div className="space-y-2">
+                                    <h3 className="text-lg font-semibold text-gray-800 text-center">Face ID / Touch ID</h3>
+
+                                    <div className={`grid grid-cols-4 gap-2 ${!canSelectSection('faceId') ? 'opacity-50' : ''}`}>
+                                        {/* Face ID */}
                                         {faceIdConditions.map((condition) => {
                                             const isSelected = additionalConditions.faceId === condition.label;
                                             return (
@@ -547,17 +590,9 @@ export default function AdditionalConditionPage() {
                                                 </motion.div>
                                             );
                                         })}
-                                    </div>
-                                </div>
 
-                                {/* Touch ID */}
-                                <div className="space-y-1">
-                                    <div className="text-center">
-                                        <span className="text-2xl">👆</span>
-                                        <h4 className="text-sm font-medium text-gray-700">Touch ID</h4>
-                                    </div>
-                                    <div className={`grid grid-cols-2 gap-2 ${!canSelectSection('touchId') ? 'opacity-50' : ''}`}>
-                                        {touchIdConditions.map((condition) => {
+                                        {/* Touch ID - показываем только после выбора Face ID */}
+                                        {additionalConditions.faceId && touchIdConditions.map((condition) => {
                                             const isSelected = additionalConditions.touchId === condition.label;
                                             return (
                                                 <motion.div key={condition.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
@@ -579,8 +614,10 @@ export default function AdditionalConditionPage() {
                                         })}
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            </motion.div>
+                        )}
+
+
                     </div>
                 </div>
             </div>
@@ -632,6 +669,7 @@ export default function AdditionalConditionPage() {
                                         </span>
                                     </div>
                                 )}
+
                             </div>
                         </div>
 

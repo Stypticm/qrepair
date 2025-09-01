@@ -21,6 +21,10 @@ export type FormState = {
   imei: string | null
   setImei: (value: string | null) => void
 
+  // serial number
+  serialNumber: string | null
+  setSerialNumber: (value: string | null) => void
+
   // price
   price: number | null
   setPrice: (value: number | null) => void

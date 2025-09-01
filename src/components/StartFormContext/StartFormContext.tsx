@@ -16,6 +16,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [modelname, setModel] = useState<string>('Apple iPhone 11');
     const [comment, setComment] = useState<string>('');
     const [imei, setImei] = useState<string | null>(null);
+    const [serialNumber, setSerialNumber] = useState<string | null>(null);
     const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(false);
     const [price, setPrice] = useState<number | null>(null);
     const [onNext, setOnNext] = useState<(() => Promise<void>) | undefined>(undefined);
@@ -50,6 +51,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         setModel('Apple iPhone 11');
         setComment('');
         setImei(null);
+        setSerialNumber(null);
         setShowQuestionsSuccess(false);
         setPrice(null);
         setOnNext(undefined);
@@ -68,6 +70,10 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         // Очищаем sessionStorage при сбросе состояний
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem('phoneSelection');
+            sessionStorage.removeItem('imei');
+            sessionStorage.removeItem('serialNumber');
+            sessionStorage.removeItem('deviceConditions');
+            sessionStorage.removeItem('additionalConditions');
             console.log('sessionStorage очищен');
         }
         
@@ -91,6 +97,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 userPhotoUrl,
                 comment,
                 imei,
+                serialNumber,
                 price,
                 showQuestionsSuccess,
                 onNext,
@@ -98,6 +105,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 additionalConditions,
                 setOnNext,
                 setTelegramId,
+                setSerialNumber,
                 setComment,
                 setModel,
                 setImei,

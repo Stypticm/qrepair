@@ -6,15 +6,59 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
 
-
-
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions } = useStartForm();
-    const [loading, setLoading] = useState(false);
+    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions } = useStartForm();
     const [submitting, setSubmitting] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+
+    // Загружаем данные из sessionStorage при монтировании
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // Загружаем выбор телефона
+            const savedPhoneSelection = sessionStorage.getItem('phoneSelection');
+            if (savedPhoneSelection) {
+                try {
+                    const parsed = JSON.parse(savedPhoneSelection);
+                    if (parsed.model) {
+                        // Обновляем модель в контексте
+                        setModel(parsed.model);
+                    }
+                } catch (e) {
+                    console.error('[SubmitPage] Ошибка парсинга phoneSelection:', e);
+                }
+            }
+            
+            // Загружаем состояния устройства
+            const savedDeviceConditions = sessionStorage.getItem('deviceConditions');
+            if (savedDeviceConditions) {
+                try {
+                    const parsed = JSON.parse(savedDeviceConditions);
+                    if (parsed && (parsed.front || parsed.back || parsed.side)) {
+                        // Обновляем состояния устройства в контексте
+                        setDeviceConditions(parsed);
+                    }
+                } catch (e) {
+                    console.error('[SubmitPage] Ошибка парсинга deviceConditions:', e);
+                }
+            }
+            
+            // Загружаем дополнительные состояния
+            const savedAdditionalConditions = sessionStorage.getItem('additionalConditions');
+            if (savedAdditionalConditions) {
+                try {
+                    const parsed = JSON.parse(savedAdditionalConditions);
+                    if (parsed && (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery)) {
+                        // Обновляем дополнительные состояния в контексте
+                        setAdditionalConditions(parsed);
+                    }
+                } catch (e) {
+                    console.error('[SubmitPage] Ошибка парсинга additionalConditions:', e);
+                }
+            }
+        }
+    }, [setModel, setDeviceConditions, setAdditionalConditions]);
 
     // Принудительно закрываем любые открытые диалоговые окна при загрузке страницы
     useEffect(() => {
@@ -72,7 +116,6 @@ const SubmitPage = () => {
         }
     }, [modelname, telegramId, deviceConditions, additionalConditions, submitted]);
 
-
     const handleSubmit = async () => {
         if (submitting) return;
         setSubmitting(true);
@@ -128,19 +171,58 @@ const SubmitPage = () => {
     // Используем цену из контекста или фиксированную цену по умолчанию
     const finalPrice = price || 48000;
 
-    // Функция для получения процента скидки по состоянию
-    const getConditionPenalty = (conditionText: string): string => {
-        if (conditionText === 'Новый') {
-            return '0%';
-        } else if (conditionText === 'Очень хорошее') {
-            return '-3%';
-        } else if (conditionText === 'Заметные царапины') {
-            return '-8%';
-        } else if (conditionText === 'Трещины') {
-            return '-15%';
-        } else {
-            return '0%';
+    // Функция для получения названия цвета
+    const getColorLabel = (color: string) => {
+        const colorMap: { [key: string]: string } = {
+            'G': 'Золотой',
+            'R': 'Красный',
+            'Bl': 'Синий',
+            'Wh': 'Белый',
+            'C': 'Черный'
+        };
+        return colorMap[color] || color;
+    };
+
+    // Функция для формирования полной модели из данных sessionStorage
+    const getFullModelName = (): string => {
+        if (typeof window !== 'undefined') {
+            const savedPhoneSelection = sessionStorage.getItem('phoneSelection');
+            if (savedPhoneSelection) {
+                try {
+                    const parsed = JSON.parse(savedPhoneSelection);
+                    let fullModel = `iPhone ${parsed.model}`;
+                    
+                    if (parsed.variant) {
+                        fullModel += ` ${parsed.variant}`;
+                    }
+                    
+                    if (parsed.storage) {
+                        fullModel += ` ${parsed.storage}`;
+                    }
+                    
+                    if (parsed.color) {
+                        // Получаем цвет из функции getColorLabel
+                        const colorLabel = getColorLabel(parsed.color);
+                        fullModel += ` ${colorLabel}`;
+                    }
+                    
+                    if (parsed.simType) {
+                        fullModel += ` ${parsed.simType}`;
+                    }
+                    
+                    if (parsed.country) {
+                        fullModel += ` ${parsed.country.split(' ')[0]}`;
+                    }
+                    
+                    return fullModel;
+                } catch (e) {
+                    console.error('[SubmitPage] Ошибка парсинга phoneSelection для полной модели:', e);
+                }
+            }
         }
+        
+        // Возвращаем базовую модель если не удалось получить полную
+        return modelname || 'Модель не найдена';
     };
 
     // Функция для отображения состояния с процентом
@@ -227,28 +309,6 @@ const SubmitPage = () => {
         return totalPenalty;
     };
 
-    // Функция для получения процента скидки по дополнительным условиям
-    const getAdditionalConditionPenalty = (conditionText: string, type: string): string => {
-        if (type === 'faceId') {
-            return conditionText === 'Не работает' ? '-10%' : '0%';
-        } else if (type === 'touchId') {
-            return conditionText === 'Не работает' ? '-8%' : '0%';
-        } else if (type === 'backCamera') {
-            if (conditionText === 'Новый') return '0%';
-            else if (conditionText === 'Очень хорошее') return '-3%';
-            else if (conditionText === 'Заметные царапины') return '-8%';
-            else if (conditionText === 'Трещины') return '-15%';
-            return '0%';
-        } else if (type === 'battery') {
-            if (conditionText === '95%') return '0%';
-            else if (conditionText === '90%') return '-2%';
-            else if (conditionText === '85%') return '-5%';
-            else if (conditionText === '75%') return '-10%';
-            return '0%';
-        }
-        return '0%';
-    };
-
     return (
         <Page back={true}>
             <div className="w-full h-full bg-gray-50 animate-fadeInUp my-auto pt-6">
@@ -275,6 +335,8 @@ const SubmitPage = () => {
                         </div>
                     ) : (
                         <div className="w-full max-w-md space-y-6">
+
+                        
                         {/* Summary заявки */}
                         <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg">
                             <h3 className="text-xl font-semibold mb-5 text-center text-gray-900">
@@ -282,37 +344,36 @@ const SubmitPage = () => {
                             </h3>
                             
                             <div className="space-y-4">
-                                <div className="flex justify-between items-start">
-                                    <span className="text-gray-600 font-medium">Модель:</span>
-                                    <span className="font-semibold text-gray-900 text-right break-words">{modelname}</span>
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                    <span className="font-semibold text-gray-900 break-words text-lg">{getFullModelName()}</span>
                                 </div>
                                 
-                                <div className="border-t border-gray-200 pt-4">
-                                    <h4 className="font-semibold mb-3 text-gray-900">Состояние устройства:</h4>
+                                                                 <div className="border-t border-gray-200 pt-4">
+                                     <h4 className="font-semibold mb-3 text-gray-900 text-center">Состояние устройства:</h4>
                                     <div className="space-y-3">
                                         {/* Основные состояния устройства */}
                                         {deviceConditions && (
                                             <>
                                                 {deviceConditions.front && (
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium">Передняя панель:</span>
-                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                        <span className="text-gray-600 font-medium flex-shrink-0">Передняя панель:</span>
+                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
                                                             {getConditionWithPenalty(deviceConditions.front)}
                                                         </span>
                                                     </div>
                                                 )}
                                                 {deviceConditions.back && (
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium">Задняя панель:</span>
-                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                        <span className="text-gray-600 font-medium flex-shrink-0">Задняя панель:</span>
+                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
                                                             {getConditionWithPenalty(deviceConditions.back)}
                                                         </span>
                                                     </div>
                                                 )}
                                                 {deviceConditions.side && (
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium">Боковая панель:</span>
-                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                        <span className="text-gray-600 font-medium flex-shrink-0">Боковая панель:</span>
+                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
                                                             {getConditionWithPenalty(deviceConditions.side)}
                                                         </span>
                                                     </div>
@@ -323,35 +384,35 @@ const SubmitPage = () => {
                                         {/* Дополнительные состояния устройства */}
                                         {additionalConditions && (
                                             <>
-                                                {additionalConditions.faceId && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium">Face ID:</span>
-                                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                                            {getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId')}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {additionalConditions.touchId && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium">Touch ID:</span>
-                                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                                            {getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId')}
-                                                        </span>
-                                                    </div>
-                                                )}
                                                 {additionalConditions.backCamera && (
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium">Задняя камера:</span>
-                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                        <span className="text-gray-600 font-medium flex-shrink-0">Задняя камера:</span>
+                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
                                                             {getAdditionalConditionWithPenalty(additionalConditions.backCamera, 'backCamera')}
                                                         </span>
                                                     </div>
                                                 )}
                                                 {additionalConditions.battery && (
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium">Батарея:</span>
-                                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                                        <span className="text-gray-600 font-medium flex-shrink-0">Батарея:</span>
+                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
                                                             {getAdditionalConditionWithPenalty(additionalConditions.battery, 'battery')}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {additionalConditions.faceId && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium flex-shrink-0">Face ID:</span>
+                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                            {getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId')}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {additionalConditions.touchId && (
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-gray-600 font-medium flex-shrink-0">Touch ID:</span>
+                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                            {getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId')}
                                                         </span>
                                                     </div>
                                                 )}
@@ -360,23 +421,23 @@ const SubmitPage = () => {
                                     </div>
                                 </div>
                                 
-                                <div className="border-t border-gray-200 pt-4">
-                                    <h4 className="font-semibold mb-3 text-gray-900">Итоговая оценка:</h4>
+                                                                 <div className="border-t border-gray-200 pt-4">
+                                     <h4 className="font-semibold mb-3 text-gray-900 text-center">Итоговая оценка:</h4>
                                     <div className="space-y-3">
                                         {/* Общий процент вычета */}
                                         {((deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) || 
                                           (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery))) && (
                                             <div className="flex justify-between items-center">
-                                                <span className="font-semibold text-gray-900">Общий вычет:</span>
-                                                <span className="font-bold text-red-600">
+                                                <span className="font-semibold text-gray-900 flex-shrink-0">Общий вычет:</span>
+                                                <span className="font-bold text-red-600 ml-2 flex-1 text-right">
                                                     {calculateTotalPenalty() === 0 ? '0%' : `${calculateTotalPenalty()}%`}
                                                 </span>
                                             </div>
                                         )}
                                         
                                         <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
-                                            <span className="font-semibold text-gray-900">Итоговая цена:</span>
-                                            <span className="font-bold text-xl text-green-600">{finalPrice.toLocaleString()} ₽</span>
+                                            <span className="font-semibold text-gray-900 flex-shrink-0">Итоговая цена:</span>
+                                            <span className="font-bold text-xl text-green-600 ml-2 flex-1 text-right">{finalPrice.toLocaleString()} ₽</span>
                                         </div>
                                     </div>
                                 </div>
@@ -387,7 +448,7 @@ const SubmitPage = () => {
                         <div className="w-full">
                             <Button
                                 onClick={handleSubmit}
-                                disabled={loading || submitting || !modelname}
+                                disabled={submitting || !modelname}
                                 className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                             >
                                 {submitting ? 'Отправляем...' : 'Отправить заявку'}

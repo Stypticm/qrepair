@@ -23,6 +23,12 @@ export default function ConditionPage() {
     // Флаг для отслеживания загрузки состояний из БД
     const [loadedFromDB, setLoadedFromDB] = useState(false);
 
+    // Состояние для режима редактирования
+    const [isEditing, setIsEditing] = useState(false);
+    
+    // Состояние для определения, все ли выбрано
+    const [isAllSelected, setIsAllSelected] = useState(false);
+
     // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {
         // Сначала пытаемся восстановить из sessionStorage
@@ -34,6 +40,16 @@ export default function ConditionPage() {
                     const parsed = JSON.parse(savedInSession);
                     console.log('Восстановлены состояния из sessionStorage:', parsed);
                     setDeviceConditions(parsed);
+                    
+                    // Проверяем, есть ли уже выбранные элементы (режим редактирования)
+                    const hasSelectedItems = parsed.front || parsed.back || parsed.side;
+                    if (hasSelectedItems) {
+                        setIsEditing(true);
+                        // Проверяем, все ли выбрано
+                        const allSelected = checkIfAllSelected(parsed);
+                        setIsAllSelected(!!allSelected);
+                    }
+                    
                     return; // Не загружаем из БД, если есть в sessionStorage
                 } catch (e) {
                     console.error('Ошибка при парсинге sessionStorage:', e);
@@ -75,6 +91,16 @@ export default function ConditionPage() {
                     if (hasOldData) {
                         console.log('Найдены сохраненные состояния, загружаем их:', data.deviceConditions);
                         setDeviceConditions(data.deviceConditions);
+                        
+                        // Проверяем, есть ли уже выбранные элементы (режим редактирования)
+                        const hasSelectedItems = data.deviceConditions.front || data.deviceConditions.back || data.deviceConditions.side;
+                        if (hasSelectedItems) {
+                            setIsEditing(true);
+                            // Проверяем, все ли выбрано
+                            const allSelected = checkIfAllSelected(data.deviceConditions);
+                            setIsAllSelected(!!allSelected);
+                        }
+                        
                         setHasChanges(true); // Устанавливаем флаг изменений для загруженных из БД состояний
                         setLoadedFromDB(true); // Устанавливаем флаг загрузки из БД
                     } else {
@@ -139,6 +165,9 @@ export default function ConditionPage() {
     useEffect(() => {
         if (isAllConditionsSelected() && hasChanges) {
             setShowDialog(true);
+            
+            // Устанавливаем флаг "все выбрано"
+            setIsAllSelected(true);
         }
     }, [deviceConditions, isAllConditionsSelected, hasChanges]);
 
@@ -264,6 +293,12 @@ export default function ConditionPage() {
             // Сначала обновляем контекст
             setDeviceConditions(newConditions);
 
+            // Сбрасываем режим редактирования при новом выборе
+            setIsEditing(false);
+            
+            // Сбрасываем флаг "все выбрано" при изменении
+            setIsAllSelected(false);
+
             // Устанавливаем флаг изменений
             setHasChanges(true);
 
@@ -328,7 +363,7 @@ export default function ConditionPage() {
     };
 
     // Шаги для прогресс-бара
-    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
+    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
 
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
@@ -414,6 +449,11 @@ export default function ConditionPage() {
         return false;
     };
 
+    // Функция для проверки, все ли выбрано
+    const checkIfAllSelected = (conditions: typeof deviceConditions) => {
+        return conditions.front && conditions.back && conditions.side;
+    };
+
     // Рендерим секцию выбора условий
     const renderConditionSection = (type: 'front' | 'back' | 'side', conditions: ConditionOption[]) => {
         // Разные размеры изображений для разных секций
@@ -432,7 +472,7 @@ export default function ConditionPage() {
         return (
             <div className="space-y-1">
                 {/* Заголовок секции */}
-                <h3 className="text-base font-semibold text-center">
+                <h3 className="text-lg font-semibold text-center">
                     {type === 'front' ? 'Передняя часть' : type === 'back' ? 'Задняя панель' : 'Боковые грани'}
                     {!canSelectSection(type) && (
                         <span className="block text-sm text-gray-500 font-normal mt-1">
@@ -499,34 +539,52 @@ export default function ConditionPage() {
                 <div className="pt-2 pb-1">
                     <ProgressBar
                         currentStep={getCurrentStep()}
-                        totalSteps={4}
+                        totalSteps={5}
                         steps={steps}
                     />
                 </div>
 
-                <div className="flex-1">
-                    <div className="w-full max-w-2xl mx-auto flex flex-col gap-1">
+                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
 
                         {/* Секция передней части экрана */}
-                        <div className="flex-1 flex flex-col justify-center space-y-1">
-                            {renderConditionSection('front', frontConditions)}
-                        </div>
-
-                        {/* Разделитель */}
-                        <div className="my-1"></div>
+                        {true && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
+                            >
+                                {renderConditionSection('front', frontConditions)}
+                            </motion.div>
+                        )}
 
                         {/* Секция задней панели */}
-                        <div className={`flex-1 flex flex-col justify-center space-y-1 ${!canSelectSection('back') ? 'opacity-50' : ''}`}>
-                            {renderConditionSection('back', backConditions)}
-                        </div>
-
-                        {/* Разделитель */}
-                        <div className="my-1"></div>
+                        {deviceConditions.front && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="p-2 rounded-xl shadow-sm bg-white"
+                            >
+                                {renderConditionSection('back', backConditions)}
+                            </motion.div>
+                        )}
 
                         {/* Секция боковых граней */}
-                        <div className={`flex-1 flex flex-col justify-center space-y-1 ${!canSelectSection('side') ? 'opacity-50' : ''}`}>
-                            {renderConditionSection('side', sideConditions)}
-                        </div>
+                        {deviceConditions.back && (
+                            <motion.div 
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="p-2 rounded-xl shadow-sm bg-white"
+                            >
+                                {renderConditionSection('side', sideConditions)}
+                            </motion.div>
+                        )}
                     </div>
                 </div>
             </div>
