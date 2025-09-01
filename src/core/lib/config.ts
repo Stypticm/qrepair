@@ -6,7 +6,7 @@ export const config = {
 
   // Версия приложения для обхода кэширования
   appVersion:
-    process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+    process.env.NEXT_PUBLIC_APP_VERSION || '1.0.2',
 
   // Получить автоматическую версию с увеличением на 1
   getAutoVersion: () => {
@@ -20,7 +20,7 @@ export const config = {
   // Получить URL с версией для обхода кэширования
   getWebAppUrlWithVersion: () => {
     const baseUrl = config.webAppUrl
-    const version = config.getAutoVersion()
+    const version = config.appVersion // Используем базовую версию
     const timestamp = Date.now() // Добавляем timestamp для гарантии уникальности
     return `${baseUrl}${
       baseUrl.includes('?') ? '&' : '?'
