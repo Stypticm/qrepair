@@ -50,7 +50,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
                 className="text-gray-600 mb-8 leading-relaxed"
               >
                 Выберите модель iPhone и оцените его состояние. 
-                Это займет всего 1-2 минуты.
+                Это займет у вас меньше минуты.
               </motion.p>
 
               {/* Кнопка */}
