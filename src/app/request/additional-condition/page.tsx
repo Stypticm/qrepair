@@ -238,10 +238,8 @@ export default function AdditionalConditionPage() {
                 }
             });
         }, 50);
-        // Небольшая задержка для плавного закрытия диалога перед переходом
-        setTimeout(() => {
-            router.push('/request/submit');
-        }, 150);
+        // Быстрый переход без задержки
+        router.push('/request/submit');
     };
 
     const handleEdit = () => {
