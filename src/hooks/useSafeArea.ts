@@ -22,23 +22,45 @@ export function useSafeArea() {
   const [theme, setTheme] = useState<'light' | 'dark'>(
     'light'
   )
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
-  // Функция для принудительного расширения
-  const forceExpand = useCallback(() => {
+  // Функция для принудительного полноэкранного режима
+  const forceFullscreen = useCallback(() => {
     if (window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp
-      console.log('Force expanding WebApp...')
-      webApp.expand()
+      console.log('Attempting to request fullscreen...')
 
-      // Проверяем результат через 100ms и повторяем, если не развернуто
+      if (
+        'requestFullscreen' in webApp &&
+        typeof webApp.requestFullscreen === 'function'
+      ) {
+        webApp.requestFullscreen()
+      } else {
+        console.log(
+          'requestFullscreen not available, falling back to expand...'
+        )
+        webApp.expand()
+      }
+
+      // Проверяем через 100ms и повторяем, если не в fullscreen
       setTimeout(() => {
-        if (!webApp.isExpanded) {
+        const isCurrentlyFullscreen =
+          'isFullscreen' in webApp
+            ? webApp.isFullscreen
+            : webApp.isExpanded
+        if (!isCurrentlyFullscreen) {
           console.log(
-            'First expand failed, trying again...'
+            'Fullscreen not achieved, retrying...'
           )
-          webApp.expand()
+          if (
+            'requestFullscreen' in webApp &&
+            typeof webApp.requestFullscreen === 'function'
+          ) {
+            webApp.requestFullscreen()
+          } else {
+            webApp.expand()
+          }
         }
       }, 100)
     }
@@ -65,22 +87,34 @@ export function useSafeArea() {
             !webApp.initDataUnsafe?.start_param
           console.log('Is Menu Button:', isMenuButton)
 
-          // Принудительно разворачиваем на весь экран
-          webApp.expand()
+          // Запрашиваем fullscreen
+          forceFullscreen()
 
-          // Агрессивное расширение для Menu Button
+          // Дополнительные попытки для Menu Button
           if (isMenuButton) {
             console.log(
-              'Menu Button detected, forcing full screen...'
+              'Menu Button detected, ensuring fullscreen...'
             )
-            const expandSequence = [100, 300, 500]
-            expandSequence.forEach((delay) => {
+            const retrySequence = [100, 300, 500]
+            retrySequence.forEach((delay) => {
               setTimeout(() => {
-                if (!webApp.isExpanded) {
+                const isCurrentlyFullscreen =
+                  'isFullscreen' in webApp
+                    ? webApp.isFullscreen
+                    : webApp.isExpanded
+                if (!isCurrentlyFullscreen) {
                   console.log(
-                    `Expand attempt at ${delay}ms...`
+                    `Fullscreen retry at ${delay}ms...`
                   )
-                  webApp.expand()
+                  if (
+                    'requestFullscreen' in webApp &&
+                    typeof webApp.requestFullscreen ===
+                      'function'
+                  ) {
+                    webApp.requestFullscreen()
+                  } else {
+                    webApp.expand()
+                  }
                 }
               }, delay)
             })
@@ -95,9 +129,14 @@ export function useSafeArea() {
             setTheme(webApp.colorScheme)
           }
 
-          // Проверяем статус расширения
-          if (webApp.isExpanded !== undefined) {
-            setIsExpanded(webApp.isExpanded)
+          // Проверяем статус fullscreen
+          if (
+            'isFullscreen' in webApp &&
+            webApp.isFullscreen !== undefined
+          ) {
+            setIsFullscreen(webApp.isFullscreen)
+          } else {
+            setIsFullscreen(webApp.isExpanded)
           }
 
           // Обновление safe area
@@ -141,34 +180,73 @@ export function useSafeArea() {
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged((event) => {
           console.log('Viewport changed:', event)
-          setIsExpanded(event.is_expanded || false)
+          setIsFullscreen(event.is_expanded || false)
 
-          // Если не развернуто, пытаемся снова
           if (!event.is_expanded) {
             console.log(
-              'Viewport not expanded, retrying...'
+              'Viewport not in fullscreen, retrying...'
             )
-            setTimeout(() => webApp.expand(), 100)
-            setTimeout(() => webApp.expand(), 300)
+            forceFullscreen()
           }
         })
       }
 
-      // Обработчик темы
+      // Обработчик событий fullscreen
       if (webApp.onEvent) {
-        webApp.onEvent('theme_changed', () => {
+        const fullscreenChangedHandler = (event: {
+          isFullscreen: boolean
+        }) => {
+          console.log('Fullscreen changed:', event)
+          setIsFullscreen(event.isFullscreen)
+          if (!event.isFullscreen) {
+            console.log('Not in fullscreen, retrying...')
+            forceFullscreen()
+          }
+        }
+
+        const fullscreenFailedHandler = (error: any) => {
+          console.error('Fullscreen request failed:', error)
+          webApp.expand() // Fallback
+        }
+
+        webApp.onEvent(
+          'fullscreenChanged',
+          fullscreenChangedHandler
+        )
+        webApp.onEvent(
+          'fullscreenFailed',
+          fullscreenFailedHandler
+        )
+
+        // Обработчик темы
+        const themeChangedHandler = () => {
           if (webApp.colorScheme) {
             setTheme(webApp.colorScheme)
           }
-        })
-      }
+        }
 
-      // Очистка
-      return () => {
-        if (webApp.offViewportChanged)
-          webApp.offViewportChanged(() => {})
-        if (webApp.offEvent)
-          webApp.offEvent('theme_changed', () => {})
+        webApp.onEvent('theme_changed', themeChangedHandler)
+
+        // Очистка
+        return () => {
+          if (webApp.offViewportChanged) {
+            webApp.offViewportChanged(() => {})
+          }
+          if (webApp.offEvent) {
+            webApp.offEvent(
+              'fullscreenChanged',
+              fullscreenChangedHandler
+            )
+            webApp.offEvent(
+              'fullscreenFailed',
+              fullscreenFailedHandler
+            )
+            webApp.offEvent(
+              'theme_changed',
+              themeChangedHandler
+            )
+          }
+        }
       }
     } else {
       console.log(
@@ -177,7 +255,7 @@ export function useSafeArea() {
       setIsTelegram(false)
       setIsReady(true)
     }
-  }, [isMounted])
+  }, [isMounted, forceFullscreen])
 
   if (!isMounted) {
     return {
@@ -190,8 +268,8 @@ export function useSafeArea() {
       isReady: false,
       isTelegram: false,
       theme: 'light',
-      isExpanded: false,
-      forceExpand,
+      isFullscreen: false,
+      forceFullscreen,
       cssVars: {
         '--safe-area-top': '0px',
         '--safe-area-right': '0px',
@@ -206,8 +284,8 @@ export function useSafeArea() {
     isReady,
     isTelegram,
     theme,
-    isExpanded,
-    forceExpand,
+    isFullscreen,
+    forceFullscreen,
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,
       '--safe-area-right': `${safeAreaInsets.right}px`,

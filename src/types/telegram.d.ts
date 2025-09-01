@@ -144,9 +144,7 @@ interface TelegramWebApp {
     callback?: (confirmed: boolean) => void
   ) => void
   showScanQrPopup: (
-    params: {
-      text?: string
-    },
+    params: { text?: string },
     callback?: (data: string) => void
   ) => void
   closeScanQrPopup: () => void
@@ -246,6 +244,25 @@ interface TelegramWebApp {
     }) => void
   ) => void
   offCustomMethodInvoked: (callback: Function) => void
+  // Added fullscreen-related properties
+  requestFullscreen?: () => void
+  isFullscreen?: boolean
+  onEvent(
+    eventType: 'fullscreenChanged',
+    callback: (event: { isFullscreen: boolean }) => void
+  ): void
+  onEvent(
+    eventType: 'fullscreenFailed',
+    callback: (error: any) => void
+  ): void
+  offEvent(
+    eventType: 'fullscreenChanged',
+    callback: (event: { isFullscreen: boolean }) => void
+  ): void
+  offEvent(
+    eventType: 'fullscreenFailed',
+    callback: (error: any) => void
+  ): void
 }
 
 interface Window {

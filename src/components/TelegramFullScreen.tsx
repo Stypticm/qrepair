@@ -7,53 +7,87 @@ interface TelegramFullScreenProps {
 }
 
 export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMenuButton, setIsMenuButton] = useState(false);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp;
 
-      // Проверяем, открыто ли через Menu Button
+      // Проверяем контекст Menu Button
       const isMenuButtonContext = !webApp.initDataUnsafe?.start_param;
       setIsMenuButton(isMenuButtonContext);
 
-      // Принудительное расширение
-      const expand = () => {
-        console.log(isMenuButtonContext ? 'Menu Button: Forcing full screen...' : 'Forcing full screen...');
-        webApp.expand();
+      // Принудительное fullscreen
+      const requestFull = () => {
+        console.log(isMenuButtonContext ? 'Menu Button: Requesting fullscreen...' : 'Requesting fullscreen...');
+        if ('requestFullscreen' in webApp && typeof webApp.requestFullscreen === 'function') {
+          webApp.requestFullscreen();
+        } else {
+          console.log('requestFullscreen not available, falling back to expand...');
+          webApp.expand();
+        }
 
-        // Повторные попытки, если не развернуто
+        // Повторные попытки
         [100, 300].forEach((delay) => {
           setTimeout(() => {
-            if (!webApp.isExpanded) {
-              console.log(`Expand attempt at ${delay}ms`);
-              webApp.expand();
+            const isCurrentlyFullscreen = 'isFullscreen' in webApp ? webApp.isFullscreen : webApp.isExpanded;
+            if (!isCurrentlyFullscreen) {
+              console.log(`Fullscreen attempt at ${delay}ms`);
+              if ('requestFullscreen' in webApp && typeof webApp.requestFullscreen === 'function') {
+                webApp.requestFullscreen();
+              } else {
+                webApp.expand();
+              }
             }
           }, delay);
         });
       };
 
-      expand();
+      requestFull();
 
-      // Обработчик изменений viewport
+      // Обработчик изменений viewport (для совместимости)
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged((event) => {
           console.log('Viewport changed:', event);
-          setIsExpanded(event.is_expanded || false);
+          setIsFullscreen(event.is_expanded || false);
 
-          // Если не развернуто, пытаемся снова
           if (!event.is_expanded) {
-            console.log('Viewport not expanded, retrying...');
-            webApp.expand();
+            console.log('Viewport not in fullscreen, retrying...');
+            requestFull();
           }
         });
       }
 
-      // Очистка
-      return () => {
-        if (webApp.offViewportChanged) webApp.offViewportChanged(() => { });
-      };
+      // Обработчик событий fullscreen
+      if (webApp.onEvent) {
+        const fullscreenChangedHandler = (event: { isFullscreen: boolean }) => {
+          console.log('Fullscreen changed:', event);
+          setIsFullscreen(event.isFullscreen);
+          if (!event.isFullscreen) {
+            requestFull();
+          }
+        };
+
+        const fullscreenFailedHandler = (error: any) => {
+          console.error('Fullscreen request failed:', error);
+          webApp.expand(); // Fallback
+        };
+
+        webApp.onEvent('fullscreenChanged', fullscreenChangedHandler);
+        webApp.onEvent('fullscreenFailed', fullscreenFailedHandler);
+
+        // Очистка
+        return () => {
+          if (webApp.offEvent) {
+            webApp.offEvent('fullscreenChanged', fullscreenChangedHandler);
+            webApp.offEvent('fullscreenFailed', fullscreenFailedHandler);
+          }
+          if (webApp.offViewportChanged) {
+            webApp.offViewportChanged(() => { });
+          }
+        };
+      }
     }
   }, []);
 

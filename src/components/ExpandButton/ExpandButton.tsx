@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useSafeArea } from '@/hooks/useSafeArea';
+import { cn } from '@/lib/utils';
 
 interface ExpandButtonProps {
   className?: string;
@@ -9,16 +10,20 @@ interface ExpandButtonProps {
 }
 
 export function ExpandButton({ className = '', children = 'Развернуть' }: ExpandButtonProps) {
-  const { isTelegram, forceExpand } = useSafeArea();
+  const { isTelegram, forceFullscreen, isFullscreen } = useSafeArea();
 
-  if (!isTelegram) {
+  // Скрываем кнопку, если не в Telegram или уже в полноэкранном режиме
+  if (!isTelegram || isFullscreen) {
     return null;
   }
 
   return (
     <Button
-      onClick={forceExpand}
-      className={`bg-[#2dc2c6] hover:bg-[#25a8ac] text-white ${className}`}
+      onClick={() => {
+        console.log('Expand button clicked, forcing fullscreen...');
+        forceFullscreen();
+      }}
+      className={cn('bg-[#2dc2c6] hover:bg-[#25a8ac] text-white', className)}
       size="sm"
     >
       {children}

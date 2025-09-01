@@ -9,7 +9,7 @@ interface AdaptiveContainerProps {
 }
 
 export function AdaptiveContainer({ children, className = '' }: AdaptiveContainerProps) {
-  const { isTelegram, isReady, safeAreaInsets, isExpanded } = useSafeArea();
+  const { isTelegram, isReady, safeAreaInsets, isFullscreen, forceFullscreen } = useSafeArea();
   const [isMobile, setIsMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -27,10 +27,10 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       const userAgent = navigator.userAgent;
       const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
       const desktop = !mobile && (userAgent.includes('Windows') || userAgent.includes('Mac') || userAgent.includes('Linux'));
-      
+
       setIsMobile(mobile);
       setIsDesktop(desktop);
-      
+
       console.log('Device detection:', { mobile, desktop, userAgent });
     };
 
@@ -39,12 +39,17 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     // Проверяем, открыто ли приложение через Menu Button
     if (window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp;
-      if (webApp.initDataUnsafe?.start_param) {
-        setIsMenuButton(true);
-        console.log('App opened via Menu Button');
+      const isMenuButtonContext = !webApp.initDataUnsafe?.start_param;
+      setIsMenuButton(isMenuButtonContext);
+      console.log('App opened via Menu Button:', isMenuButtonContext);
+
+      // Принудительно запрашиваем fullscreen для Menu Button
+      if (isMenuButtonContext && !isFullscreen) {
+        console.log('Menu Button detected, forcing fullscreen...');
+        forceFullscreen();
       }
     }
-  }, [isMounted]);
+  }, [isMounted, isFullscreen, forceFullscreen]);
 
   // Не рендерим ничего до монтирования
   if (!isMounted) {
@@ -64,40 +69,30 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Определяем стили в зависимости от контекста
   const getContainerStyles = () => {
     if (!isTelegram) {
-      // Браузер режим (PC или мобильный)
+      // Браузерный режим (ПК или мобильный)
       if (isDesktop) {
-              // Desktop - центрируем и ограничиваем размер
-      return {
-        container: "min-h-dvh min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
-        main: "flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl",
-        wrapper: "w-full max-w-md mx-auto"
-      };
-    } else if (isMobile) {
-      // Mobile браузер - фиксированный размер как раньше
-      return {
-        container: "min-h-dvh min-w-screen flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center",
-        main: "flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-white rounded-2xl",
-        wrapper: "w-full h-full max-w-md mx-auto"
-      };
+        // Desktop - центрируем и ограничиваем размер
+        return {
+          container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
+          main: 'flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl',
+          wrapper: 'w-full max-w-md mx-auto',
+        };
+      } else if (isMobile) {
+        // Mobile браузер - фиксированный размер
+        return {
+          container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
+          main: 'flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-white rounded-2xl',
+          wrapper: 'w-full h-full max-w-md mx-auto',
+        };
       }
     }
-    
+
     // Telegram режим - используем полный экран
-    if (isMenuButton) {
-      // Menu Button режим - принудительный full screen
-      return {
-        container: "min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen telegram-menu-button telegram-expanded",
-        main: "flex-1 w-full p-4",
-        wrapper: "w-full"
-      };
-    } else {
-      // Обычный Telegram режим
-      return {
-        container: "min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen",
-        main: "flex-1 w-full p-4",
-        wrapper: "w-full"
-      };
-    }
+    return {
+      container: `min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen ${isMenuButton ? 'telegram-menu-button telegram-expanded' : ''}`,
+      main: 'flex-1 w-full p-4',
+      wrapper: 'w-full',
+    };
   };
 
   const styles = getContainerStyles();
@@ -110,10 +105,10 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
           <p className="text-gray-600">Инициализация Telegram WebApp...</p>
           <p className="text-sm text-gray-500 mt-2">
-            {isMobile ? 'Мобильное устройство' : 'Десктоп'}
+            {isMobile ? 'Мобильное устройство' : isDesktop ? 'Десктоп' : 'Неизвестно'}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Расширение: {isExpanded ? 'Да' : 'Нет'}
+            Fullscreen: {isFullscreen ? 'Да' : 'Нет'}
           </p>
           <p className="text-xs text-gray-400 mt-1">
             Menu Button: {isMenuButton ? 'Да' : 'Нет'}
@@ -131,24 +126,22 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
           <div>Mode: {isTelegram ? 'Telegram' : 'Browser'}</div>
           <div>Device: {isMobile ? 'Mobile' : isDesktop ? 'Desktop' : 'Unknown'}</div>
           <div>Ready: {isReady ? 'Yes' : 'No'}</div>
-          <div>Expanded: {isExpanded ? 'Yes' : 'No'}</div>
+          <div>Fullscreen: {isFullscreen ? 'Yes' : 'No'}</div>
         </div>
       )}
-      
+
       {/* Дополнительный отступ сверху для Telegram */}
       {isTelegram && (
-        <div 
-          className="w-full bg-transparent" 
-          style={{ 
+        <div
+          className="w-full bg-transparent"
+          style={{
             height: `${Math.max(safeAreaInsets.top, 20)}px`,
-            minHeight: '20px'
+            minHeight: '20px',
           }}
         />
       )}
-      
-      <div className={styles.wrapper}>
-        {children}
-      </div>
+
+      <div className={styles.wrapper}>{children}</div>
     </div>
   );
 }
