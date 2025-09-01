@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -51,9 +51,6 @@ export default function DeviceInfoPage() {
                 // Новая заявка - очищаем старые данные
                 console.log('[loadSavedData] Новая заявка - очищаем старые данные IMEI и S/N');
                 resetAllStates();
-                setHasChanges(false);
-                setIsEditing(false);
-                setIsAllSelected(false);
                 return;
             }
 
@@ -80,7 +77,7 @@ export default function DeviceInfoPage() {
                 setHasChanges(true);
             }
         }
-    }, [setImei, setSerialNumber]);
+    }, [setImei, setSerialNumber, resetAllStates]);
 
     // Загружаем данные при монтировании компонента
     useEffect(() => {
@@ -93,10 +90,10 @@ export default function DeviceInfoPage() {
                serialNumber && serialNumber.length >= 10;
     }, [imei, serialNumber]);
 
-    // Показываем диалог когда все поля заполнены И пользователь делал изменения
+    // Показываем диалог когда все поля заполнены
     useEffect(() => {
         if (areAllFieldsFilled() && hasChanges) {
-            console.log('[useEffect] Показываем диалог - все поля заполнены и есть изменения');
+            console.log('[useEffect] Показываем диалог - все поля заполнены');
             setShowDialog(true);
             
             // Устанавливаем флаг "все заполнено"
@@ -162,10 +159,10 @@ export default function DeviceInfoPage() {
                         {/* IMEI поле */}
                         {true && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
                             >
                                 <div className="space-y-3">
@@ -207,7 +204,9 @@ export default function DeviceInfoPage() {
                                             <strong>Как найти IMEI:</strong><br/>
                                             • На iPhone: Настройки → Основные → Об этом устройстве → IMEI<br/>
                                             • На коробке: 15-значный код на наклейке<br/>
-                                            • На задней панели: Выгравирован мелким шрифтом
+                                            • На задней панели: Выгравирован мелким шрифтом<br/>
+                                            <br/>
+                                            <strong>💡 Если не знаете IMEI, введите: 111111111111111</strong>
                                         </div>
                                         
                                         {/* Кнопка "Не знаю" для IMEI */}
@@ -235,10 +234,10 @@ export default function DeviceInfoPage() {
                         {/* S/N поле */}
                         {imei && imei.length === 15 && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 <div className="space-y-3">
@@ -280,7 +279,9 @@ export default function DeviceInfoPage() {
                                             <strong>Как найти S/N:</strong><br/>
                                             • На iPhone: Настройки → Основные → Об этом устройстве → Серийный номер<br/>
                                             • На коробке: 12-значный код на наклейке<br/>
-                                            • На задней панели: Выгравирован мелким шрифтом
+                                            • На задней панели: Выгравирован мелким шрифтом<br/>
+                                            <br/>
+                                            <strong>💡 Если не знаете S/N, введите: 111111111111</strong>
                                         </div>
                                         
                                         {/* Кнопка "Не знаю" для S/N */}

@@ -29,6 +29,11 @@ export default function ConditionPage() {
     // Состояние для определения, все ли выбрано
     const [isAllSelected, setIsAllSelected] = useState(false);
 
+    // Функция для проверки, все ли выбрано
+    const checkIfAllSelected = useCallback((conditions: typeof deviceConditions) => {
+        return conditions.front && conditions.back && conditions.side;
+    }, [deviceConditions]);
+
     // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {
         // Сначала пытаемся восстановить из sessionStorage
@@ -151,7 +156,7 @@ export default function ConditionPage() {
         } catch (error) {
             console.error('Ошибка загрузки состояний из БД:', error);
         }
-    }, [telegramId, setDeviceConditions, setModel, setPrice]);
+    }, [telegramId, setDeviceConditions, setModel, setPrice, checkIfAllSelected]);
 
     // Проверяем, все ли условия выбраны
     const isAllConditionsSelected = useCallback(() => {
@@ -449,10 +454,7 @@ export default function ConditionPage() {
         return false;
     };
 
-    // Функция для проверки, все ли выбрано
-    const checkIfAllSelected = (conditions: typeof deviceConditions) => {
-        return conditions.front && conditions.back && conditions.side;
-    };
+
 
     // Рендерим секцию выбора условий
     const renderConditionSection = (type: 'front' | 'back' | 'side', conditions: ConditionOption[]) => {
@@ -550,10 +552,10 @@ export default function ConditionPage() {
                         {/* Секция передней части экрана */}
                         {true && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
                             >
                                 {renderConditionSection('front', frontConditions)}
@@ -563,10 +565,10 @@ export default function ConditionPage() {
                         {/* Секция задней панели */}
                         {deviceConditions.front && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 {renderConditionSection('back', backConditions)}
@@ -576,10 +578,10 @@ export default function ConditionPage() {
                         {/* Секция боковых граней */}
                         {deviceConditions.back && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 {renderConditionSection('side', sideConditions)}

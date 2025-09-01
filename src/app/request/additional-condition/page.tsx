@@ -61,6 +61,14 @@ export default function AdditionalConditionPage() {
         return 3;
     };
 
+    // Функция для проверки, все ли выбрано
+    const checkIfAllSelected = (conditions: typeof additionalConditions) => {
+        return conditions.faceId &&
+            conditions.touchId &&
+            conditions.backCamera &&
+            conditions.battery;
+    };
+
 
 
     // Загрузка сохраненных состояний из sessionStorage или БД
@@ -197,7 +205,7 @@ export default function AdditionalConditionPage() {
         } else {
             setLoadedFromDB(true);
         }
-    }, [setAdditionalConditions, telegramId]);
+    }, [setAdditionalConditions, telegramId, checkIfAllSelected]);
 
     // Загружаем состояния при монтировании компонента
     useEffect(() => {
@@ -249,14 +257,6 @@ export default function AdditionalConditionPage() {
             additionalConditions.backCamera &&
             additionalConditions.battery;
     }, [additionalConditions]);
-
-    // Функция для проверки, все ли выбрано
-    const checkIfAllSelected = (conditions: typeof additionalConditions) => {
-        return conditions.faceId &&
-            conditions.touchId &&
-            conditions.backCamera &&
-            conditions.battery;
-    };
 
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {
@@ -485,10 +485,10 @@ export default function AdditionalConditionPage() {
                         {/* Задняя камера */}
                         {true && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
                             >
                                 {renderConditionSection('Задняя камера', backCameraConditions, 'backCamera', 'grid-cols-4')}
@@ -498,10 +498,10 @@ export default function AdditionalConditionPage() {
                         {/* Батарея */}
                         {additionalConditions.backCamera && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 <div className="space-y-1">
@@ -559,10 +559,10 @@ export default function AdditionalConditionPage() {
                         {/* Face ID / Touch ID на одной строке */}
                         {additionalConditions.battery && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
                             >
                                 <div className="space-y-2">

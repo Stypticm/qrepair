@@ -4,7 +4,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { WelcomeModal } from '@/components/ui/welcome-modal';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { Tooltip } from '@/components/ui/tooltip';
-import { motion } from 'framer-motion';
+import { motion, LazyMotion, domAnimation } from 'framer-motion';
 
 export default function FormPage() {
     const { modelname, setModel, telegramId, username } = useStartForm();
@@ -65,8 +65,13 @@ export default function FormPage() {
     // Состояние для определения, все ли выбрано
     const [isAllSelected, setIsAllSelected] = useState(false);
 
+    // Функция для проверки, все ли выбрано
+    const checkIfAllSelected = useCallback((options: typeof selectedOptions) => {
+        return options.model && options.storage && options.color && options.simType && options.country;
+    }, []);
+
     // Функция для обновления текущего выбора
-    const updateCurrentSelection = (options: typeof selectedOptions) => {
+    const updateCurrentSelection = useCallback((options: typeof selectedOptions) => {
         let selection = '';
         
         if (options.model) {
@@ -98,7 +103,7 @@ export default function FormPage() {
         // Проверяем, все ли выбрано
         const allSelected = checkIfAllSelected(options);
         setIsAllSelected(!!allSelected);
-    };
+    }, [checkIfAllSelected]);
 
     // Функция для определения, какую секцию показывать в режиме редактирования
     const getCurrentEditingSection = () => {
@@ -111,10 +116,7 @@ export default function FormPage() {
         return null; // все выбрано
     };
 
-    // Функция для проверки, все ли выбрано
-    const checkIfAllSelected = (options: typeof selectedOptions) => {
-        return options.model && options.storage && options.color && options.simType && options.country;
-    };
+
 
     // Состояние для диалогового окна
     const [showSummaryDialog, setShowSummaryDialog] = useState(false);
@@ -492,7 +494,7 @@ export default function FormPage() {
                 }
             },
         });
-    }, []);
+    }, [updateCurrentSelection, checkIfAllSelected]);
 
     // Инициализация Telegram WebApp при загрузке
     useEffect(() => {
@@ -643,7 +645,8 @@ export default function FormPage() {
     };
 
     return (
-        <Page back={true}>
+        <LazyMotion features={domAnimation}>
+            <Page back={true}>
             <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
                 {/* Прогресс-бар */}
                 <div className="pt-2 pb-1">
@@ -662,10 +665,10 @@ export default function FormPage() {
                         {/* Секция выбора модели */}
                         {true && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Модель</h3>
@@ -687,9 +690,9 @@ export default function FormPage() {
                                     }).map((model: string) => (
                                         <motion.div
                                             key={model}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            transition={{ duration: 0.1 }}
+                                            whileHover={{ scale: 1.01 }}
+                                            whileTap={{ scale: 0.99 }}
+                                            transition={{ duration: 0.15 }}
                                         >
                                                                                     <Button
                                             onClick={() => handleOptionSelect('model', model)}
@@ -715,10 +718,10 @@ export default function FormPage() {
                         {/* Секция выбора варианта */}
                         {selectedOptions.model && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Вариант</h3>
@@ -748,10 +751,10 @@ export default function FormPage() {
                         {/* Секция выбора объема памяти */}
                         {selectedOptions.variant && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Объем памяти</h3>
@@ -801,10 +804,10 @@ export default function FormPage() {
                         {/* Секция выбора цвета */}
                         {selectedOptions.storage && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Цвет</h3>
@@ -842,10 +845,10 @@ export default function FormPage() {
                         {/* Секция выбора типа SIM */}
                         {selectedOptions.color && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Тип SIM</h3>
@@ -875,10 +878,10 @@ export default function FormPage() {
                         {/* Секция выбора страны производителя */}
                         {selectedOptions.simType && (
                             <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
                                 className="p-2 rounded-xl shadow-sm bg-white"
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Страна производитель</h3>
@@ -952,6 +955,7 @@ export default function FormPage() {
                 </div>
             </div>
         </Page>
+        </LazyMotion>
     );
 }
 
