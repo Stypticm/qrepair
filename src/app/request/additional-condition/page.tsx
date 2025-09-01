@@ -519,7 +519,7 @@ export default function AdditionalConditionPage() {
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className={`grid grid-cols-2 gap-2 ${!canSelectSection('faceId') ? 'opacity-50' : ''}`}>
                                 {/* Face ID */}
                                 <div className="space-y-1">
                                     <div className="text-center">
@@ -556,7 +556,7 @@ export default function AdditionalConditionPage() {
                                         <span className="text-2xl">👆</span>
                                         <h4 className="text-sm font-medium text-gray-700">Touch ID</h4>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className={`grid grid-cols-2 gap-2 ${!canSelectSection('touchId') ? 'opacity-50' : ''}`}>
                                         {touchIdConditions.map((condition) => {
                                             const isSelected = additionalConditions.touchId === condition.label;
                                             return (
