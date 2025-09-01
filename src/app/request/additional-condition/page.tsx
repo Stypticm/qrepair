@@ -455,6 +455,14 @@ export default function AdditionalConditionPage() {
                             <h3 className="text-lg font-semibold text-gray-800 text-center">
                                 Батарея
                             </h3>
+                            
+                            {/* Сообщение о зависимости */}
+                            {!canSelectSection('battery') && (
+                                <div className="text-center text-sm text-gray-600 bg-gray-100 rounded-lg p-2">
+                                    Сначала выберите заднюю камеру
+                                </div>
+                            )}
+                            
                             <div className={`grid grid-cols-4 gap-1 ${!canSelectSection('battery') ? 'opacity-50' : ''}`}>
                                 {batteryConditions.map((condition) => {
                                     const isSelected = additionalConditions.battery === condition.label;

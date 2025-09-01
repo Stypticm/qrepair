@@ -6,7 +6,7 @@ export const config = {
 
   // Версия приложения для обхода кэширования
   appVersion:
-    process.env.NEXT_PUBLIC_APP_VERSION || '1.0.11',
+    process.env.NEXT_PUBLIC_APP_VERSION || '1.0.12',
 
   // Получить автоматическую версию с увеличением на 1
   getAutoVersion: () => {
