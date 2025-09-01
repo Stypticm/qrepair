@@ -503,6 +503,13 @@ export default function AdditionalConditionPage() {
                         {/* Face ID и Touch ID в одной строке */}
                         <div className="space-y-2">
                             <h3 className="text-lg font-semibold text-gray-800 text-center">Face ID / Touch ID</h3>
+                            
+                            {/* Сообщение о зависимости */}
+                            {!canSelectSection('faceId') && (
+                                <div className="text-center text-sm text-gray-600 bg-gray-100 rounded-lg p-2">
+                                    Сначала выберите заднюю камеру и батарею
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-2 gap-2">
                                 {/* Face ID */}
