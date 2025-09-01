@@ -31,38 +31,56 @@ export function useSafeArea() {
       const webApp = window.Telegram.WebApp
       console.log('Attempting to request fullscreen...')
 
+      // Проверяем версию Telegram
+      const supportsFullscreen =
+        webApp.isVersionAtLeast?.('8.0') || false
+      const isMenuButton =
+        !webApp.initDataUnsafe?.start_param
+      const urlParams = new URLSearchParams(
+        window.location.search
+      )
+      const isFullscreenMode =
+        urlParams.get('mode') === 'fullscreen'
+
       if (
+        supportsFullscreen &&
         'requestFullscreen' in webApp &&
         typeof webApp.requestFullscreen === 'function'
       ) {
+        console.log('Using requestFullscreen...')
         webApp.requestFullscreen()
       } else {
         console.log(
-          'requestFullscreen not available, falling back to expand...'
+          'requestFullscreen not available or older version, falling back to expand...'
         )
         webApp.expand()
       }
 
-      // Проверяем через 100ms и повторяем, если не в fullscreen
-      setTimeout(() => {
-        const isCurrentlyFullscreen =
-          'isFullscreen' in webApp
-            ? webApp.isFullscreen
-            : webApp.isExpanded
-        if (!isCurrentlyFullscreen) {
-          console.log(
-            'Fullscreen not achieved, retrying...'
-          )
-          if (
-            'requestFullscreen' in webApp &&
-            typeof webApp.requestFullscreen === 'function'
-          ) {
-            webApp.requestFullscreen()
-          } else {
-            webApp.expand()
+      // Немедленная повторная попытка для Menu Button или mode=fullscreen
+      if (isMenuButton || isFullscreenMode) {
+        console.log(
+          'Menu Button or fullscreen mode detected, ensuring fullscreen...'
+        )
+        setTimeout(() => {
+          const isCurrentlyFullscreen =
+            'isFullscreen' in webApp
+              ? webApp.isFullscreen
+              : webApp.isExpanded
+          if (!isCurrentlyFullscreen) {
+            console.log(
+              'Fullscreen not achieved, retrying immediately...'
+            )
+            if (
+              supportsFullscreen &&
+              'requestFullscreen' in webApp
+            ) {
+              webApp?.requestFullscreen?.()
+            } else {
+              webApp.expand()
+            }
           }
-        }
-      }, 100)
+        }, 0) // Немедленный вызов через setTimeout(..., 0)
+      }
     }
   }, [])
 
@@ -87,37 +105,20 @@ export function useSafeArea() {
             !webApp.initDataUnsafe?.start_param
           console.log('Is Menu Button:', isMenuButton)
 
-          // Запрашиваем fullscreen
-          forceFullscreen()
-
-          // Дополнительные попытки для Menu Button
-          if (isMenuButton) {
+          // Немедленно запрашиваем fullscreen
+          if (
+            'requestFullscreen' in webApp &&
+            typeof webApp.requestFullscreen === 'function'
+          ) {
             console.log(
-              'Menu Button detected, ensuring fullscreen...'
+              'Calling requestFullscreen immediately after ready...'
             )
-            const retrySequence = [100, 300, 500]
-            retrySequence.forEach((delay) => {
-              setTimeout(() => {
-                const isCurrentlyFullscreen =
-                  'isFullscreen' in webApp
-                    ? webApp.isFullscreen
-                    : webApp.isExpanded
-                if (!isCurrentlyFullscreen) {
-                  console.log(
-                    `Fullscreen retry at ${delay}ms...`
-                  )
-                  if (
-                    'requestFullscreen' in webApp &&
-                    typeof webApp.requestFullscreen ===
-                      'function'
-                  ) {
-                    webApp.requestFullscreen()
-                  } else {
-                    webApp.expand()
-                  }
-                }
-              }, delay)
-            })
+            webApp.requestFullscreen()
+          } else {
+            console.log(
+              'requestFullscreen not available, calling expand immediately...'
+            )
+            webApp.expand()
           }
 
           // Устанавливаем цвета

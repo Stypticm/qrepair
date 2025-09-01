@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
-import { config } from '@/core/lib/config'
 
 export async function POST(req: Request) {
   try {

@@ -10,7 +10,7 @@ let content = fs.readFileSync(configPath, 'utf8')
 
 // Находим текущую версию
 const versionMatch = content.match(
-  /appVersion:\s*process\.env\.NEXT_PUBLIC_APP_VERSION\s*\|\|\s*['"`]([^'"`]+)['"`]/
+  /export const appVersion\s*=\s*process\.env\.NEXT_PUBLIC_APP_VERSION\s*\|\|\s*'([^']+)'/
 )
 if (!versionMatch) {
   console.error('Не удалось найти версию в config.ts')
@@ -23,10 +23,10 @@ const lastPart = parseInt(parts[parts.length - 1]) || 0
 parts[parts.length - 1] = (lastPart + 1).toString()
 const newVersion = parts.join('.')
 
-// Заменяем версию
+// Заменяем версию - учитываем возможный перенос строки
 content = content.replace(
-  /appVersion:\s*process\.env\.NEXT_PUBLIC_APP_VERSION\s*\|\|\s*['"`][^'"`]+['"`]/,
-  `appVersion:\n    process.env.NEXT_PUBLIC_APP_VERSION || '${newVersion}'`
+  /export const appVersion\s*=\s*process\.env\.NEXT_PUBLIC_APP_VERSION\s*\|\|\s*'[^']+'/,
+  `export const appVersion =\n  process.env.NEXT_PUBLIC_APP_VERSION || '${newVersion}'`
 )
 
 // Записываем обратно

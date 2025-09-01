@@ -5,7 +5,6 @@ import {
   editTelegramReplyMarkup,
   answerCallbackQuery,
 } from '@/core/lib/sendTelegramMessage'
-import { config } from '@/core/lib/config'
 
 export async function POST(req: Request) {
   try {

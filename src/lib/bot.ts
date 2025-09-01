@@ -1,5 +1,14 @@
 import { Bot } from 'grammy'
-import { config } from '@/core/lib/config'
+
+// Simple config for bot
+const config = {
+  getTelegramWebAppUrl: () => {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      'https://qrepair-git-dev-stypticms-projects.vercel.app'
+    return `${baseUrl}/request`
+  },
+}
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
