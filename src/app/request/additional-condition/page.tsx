@@ -398,11 +398,6 @@ export default function AdditionalConditionPage() {
             <div className="space-y-1">
                 <h3 className="text-lg font-semibold text-gray-800 text-center">
                     {title}
-                    {!canSelectSection(type) && (
-                        <span className="block text-sm text-gray-500 font-normal mt-1">
-                            {type === 'battery' ? 'Сначала выберите заднюю камеру' : 'Сначала выберите все предыдущие условия'}
-                        </span>
-                    )}
                 </h3>
                 <div className={`grid ${gridCols} gap-1 ${!canSelectSection(type) ? 'opacity-50' : ''}`}>
                     {conditions.map((condition) => {
@@ -470,16 +465,9 @@ export default function AdditionalConditionPage() {
 
                         {/* Батарея */}
                         <div className="space-y-1">
-                            <Tooltip content="Оцените состояние батареи. Это влияет на цену выкупа.">
-                                <h3 className="text-lg font-semibold text-gray-800 text-center cursor-help">
-                                    Батарея
-                                </h3>
-                            </Tooltip>
-                            {!canSelectSection('battery') && (
-                                <span className="block text-sm text-gray-500 font-normal text-center">
-                                    Сначала выберите заднюю камеру
-                                </span>
-                            )}
+                            <h3 className="text-lg font-semibold text-gray-800 text-center">
+                                Батарея
+                            </h3>
                             <div className={`grid grid-cols-4 gap-1 ${!canSelectSection('battery') ? 'opacity-50' : ''}`}>
                                 {batteryConditions.map((condition) => {
                                     const isSelected = additionalConditions.battery === condition.label;
@@ -528,16 +516,6 @@ export default function AdditionalConditionPage() {
                         {/* Face ID и Touch ID в одной строке */}
                         <div className="space-y-2">
                             <h3 className="text-lg font-semibold text-gray-800 text-center">Face ID / Touch ID</h3>
-                            {!canSelectSection('faceId') && (
-                                <span className="block text-sm text-gray-500 font-normal text-center">
-                                    Сначала выберите батарею
-                                </span>
-                            )}
-                            {canSelectSection('faceId') && !canSelectSection('touchId') && (
-                                <span className="block text-sm text-gray-500 font-normal text-center">
-                                    Сначала выберите Face ID
-                                </span>
-                            )}
 
                             <div className="grid grid-cols-2 gap-2">
                                 {/* Face ID */}
@@ -545,7 +523,6 @@ export default function AdditionalConditionPage() {
                                     <div className="text-center">
                                         <span className="text-2xl">👁️</span>
                                         <h4 className="text-sm font-medium text-gray-700">Face ID</h4>
-                                        <p className="text-xs text-gray-500">Разблокировка взглядом</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         {faceIdConditions.map((condition) => {
@@ -576,7 +553,6 @@ export default function AdditionalConditionPage() {
                                     <div className="text-center">
                                         <span className="text-2xl">👆</span>
                                         <h4 className="text-sm font-medium text-gray-700">Touch ID</h4>
-                                        <p className="text-xs text-gray-500">Разблокировка отпечатком</p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         {touchIdConditions.map((condition) => {
