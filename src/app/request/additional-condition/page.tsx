@@ -398,6 +398,11 @@ export default function AdditionalConditionPage() {
             <div className="space-y-1">
                 <h3 className="text-lg font-semibold text-gray-800 text-center">
                     {title}
+                    {!canSelectSection(type) && showHints && (
+                        <span className="block text-sm text-gray-500 font-normal mt-1">
+                            {type === 'battery' ? 'Сначала выберите заднюю камеру' : 'Сначала выберите все предыдущие условия'}
+                        </span>
+                    )}
                 </h3>
                 <div className={`grid ${gridCols} gap-1 ${!canSelectSection(type) ? 'opacity-50' : ''}`}>
                     {conditions.map((condition) => {
@@ -468,6 +473,11 @@ export default function AdditionalConditionPage() {
                             <h3 className="text-lg font-semibold text-gray-800 text-center">
                                 Батарея
                             </h3>
+                            {!canSelectSection('battery') && showHints && (
+                                <span className="block text-sm text-gray-500 font-normal text-center">
+                                    Сначала выберите заднюю камеру
+                                </span>
+                            )}
                             <div className={`grid grid-cols-4 gap-1 ${!canSelectSection('battery') ? 'opacity-50' : ''}`}>
                                 {batteryConditions.map((condition) => {
                                     const isSelected = additionalConditions.battery === condition.label;
@@ -516,6 +526,16 @@ export default function AdditionalConditionPage() {
                         {/* Face ID и Touch ID в одной строке */}
                         <div className="space-y-2">
                             <h3 className="text-lg font-semibold text-gray-800 text-center">Face ID / Touch ID</h3>
+                            {!canSelectSection('faceId') && showHints && (
+                                <span className="block text-sm text-gray-500 font-normal text-center">
+                                    Сначала выберите батарею
+                                </span>
+                            )}
+                            {canSelectSection('faceId') && !canSelectSection('touchId') && showHints && (
+                                <span className="block text-sm text-gray-500 font-normal text-center">
+                                    Сначала выберите Face ID
+                                </span>
+                            )}
 
                             <div className="grid grid-cols-2 gap-2">
                                 {/* Face ID */}
