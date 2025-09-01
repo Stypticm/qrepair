@@ -339,7 +339,8 @@ export default function AdditionalConditionPage() {
     const canSelectSection = (type: 'faceId' | 'touchId' | 'backCamera' | 'battery'): boolean => {
         if (type === 'backCamera') return true; // Задняя камера всегда доступна
         if (type === 'battery') return !!additionalConditions.backCamera; // Батарея только после выбора задней камеры
-        if (type === 'faceId' || type === 'touchId') return !!additionalConditions.battery; // Face ID и Touch ID только после выбора батареи
+        if (type === 'faceId') return !!additionalConditions.battery; // Face ID только после выбора батареи
+        if (type === 'touchId') return !!additionalConditions.faceId; // Touch ID только после выбора Face ID
         return false;
     };
 
@@ -432,8 +433,14 @@ export default function AdditionalConditionPage() {
                                     Сначала выберите батарею
                                 </span>
                             )}
+                            {canSelectSection('faceId') && !canSelectSection('touchId') && (
+                                <span className="block text-sm text-gray-500 font-normal text-center">
+                                    Сначала выберите Face ID
+                                </span>
+                            )}
                             <div className="grid grid-cols-2 gap-6">
                                 <div className="space-y-2">
+                                    <h4 className="text-sm font-medium text-gray-700 text-center">Face ID</h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         {faceIdConditions.map((condition) => {
                                             const isSelected = additionalConditions.faceId === condition.label;
@@ -476,6 +483,7 @@ export default function AdditionalConditionPage() {
                                 </div>
 
                                 <div className="space-y-2">
+                                    <h4 className="text-sm font-medium text-gray-700 text-center">Touch ID</h4>
                                     <div className="grid grid-cols-2 gap-2">
                                         {touchIdConditions.map((condition) => {
                                             const isSelected = additionalConditions.touchId === condition.label;

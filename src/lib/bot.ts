@@ -1,4 +1,5 @@
 import { Bot } from 'grammy'
+import { config } from '@/core/lib/config'
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
@@ -15,7 +16,7 @@ bot.command('start', async (ctx) => {
             {
               text: '🚀 Открыть QoS',
               web_app: {
-                url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                url: config.getTelegramWebAppUrl(),
               },
             },
           ],
@@ -33,7 +34,7 @@ bot.command('start', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                  url: config.getTelegramWebAppUrl(),
                 },
               },
             ],
@@ -53,7 +54,7 @@ bot.command('app', async (ctx) => {
           {
             text: '🚀 Открыть QoS',
             web_app: {
-              url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+              url: config.getTelegramWebAppUrl(),
             },
           },
         ],
@@ -81,7 +82,7 @@ bot.command('help', async (ctx) => {
             {
               text: '🚀 Открыть QoS',
               web_app: {
-                url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                url: config.getTelegramWebAppUrl(),
               },
             },
           ],
@@ -108,7 +109,7 @@ bot.command('settings', async (ctx) => {
             {
               text: '🚀 Открыть QoS',
               web_app: {
-                url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                url: config.getTelegramWebAppUrl(),
               },
             },
           ],
@@ -132,7 +133,7 @@ bot.on('callback_query', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                  url: config.getTelegramWebAppUrl(),
                 },
               },
             ],
@@ -162,7 +163,7 @@ bot.on('message:text', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                  url: config.getTelegramWebAppUrl(),
                 },
               },
             ],
@@ -193,7 +194,7 @@ bot.on('message:text', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                  url: config.getTelegramWebAppUrl(),
                 },
               },
             ],
@@ -222,7 +223,7 @@ bot.on('message:text', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                  url: config.getTelegramWebAppUrl(),
                 },
               },
             ],
@@ -242,7 +243,7 @@ bot.on('message:text', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: 'https://qrepair-git-dev-stypticms-projects.vercel.app/',
+                  url: config.getTelegramWebAppUrl(),
                 },
               },
             ],
@@ -273,7 +274,7 @@ export const initializeBot = async () => {
     ])
 
     // Menu Button "🚀 Open" настраивается через @BotFather
-    // /setmenubutton -> Text: "🚀 Open", URL: https://qrepair-git-dev-stypticms-projects.vercel.app/
+    // /setmenubutton -> Text: "🚀 Open", URL: config.getTelegramWebAppUrl()
     console.log(
       '✅ Menu Button "🚀 Open" настраивается через @BotFather'
     )

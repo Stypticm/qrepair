@@ -10,7 +10,7 @@ export const config = {
 
   // Получить автоматическую версию с увеличением на 1
   getAutoVersion: () => {
-    const baseVersion = config.appVersion // например "1.0.1"
+    const baseVersion = config.appVersion
     const parts = baseVersion.split('.')
     const lastPart = parseInt(parts[parts.length - 1]) || 0
     parts[parts.length - 1] = (lastPart + 1).toString()
@@ -21,12 +21,21 @@ export const config = {
   getWebAppUrlWithVersion: () => {
     const baseUrl = config.webAppUrl
     const version = config.getAutoVersion()
-    return `${baseUrl}?v=${version}`
+    const timestamp = Date.now() // Добавляем timestamp для гарантии уникальности
+    return `${baseUrl}${
+      baseUrl.includes('?') ? '&' : '?'
+    }v=${version}&t=${timestamp}`
   },
 
   // Получить настройки Web App для принудительного full screen
   getWebAppConfig: () => ({
     url: config.getWebAppUrlWithVersion(),
-    is_visible: true, // Принудительно показывать в full screen
+    is_visible: true,
   }),
+
+  // Получить URL с параметрами для Telegram WebApp
+  getTelegramWebAppUrl: () => {
+    const baseUrl = config.getWebAppUrlWithVersion()
+    return `${baseUrl}&mode=fullscreen&no_cache=1`
+  },
 }

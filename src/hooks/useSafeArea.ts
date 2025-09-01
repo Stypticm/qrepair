@@ -17,7 +17,6 @@ export function useSafeArea() {
       bottom: 0,
       left: 0,
     })
-
   const [isReady, setIsReady] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(
@@ -33,7 +32,7 @@ export function useSafeArea() {
       console.log('Force expanding WebApp...')
       webApp.expand()
 
-      // Проверяем результат через небольшую паузу
+      // Проверяем результат через 100ms и повторяем, если не развернуто
       setTimeout(() => {
         if (!webApp.isExpanded) {
           console.log(
@@ -41,7 +40,7 @@ export function useSafeArea() {
           )
           webApp.expand()
         }
-      }, 200)
+      }, 100)
     }
   }, [])
 
@@ -56,59 +55,38 @@ export function useSafeArea() {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
-      // Инициализация и расширение как в BotFather
       const setup = async () => {
         try {
-          // Сначала уведомляем Telegram о готовности
+          // Уведомляем Telegram о готовности
           webApp.ready()
 
-          // Ждем полной инициализации
-          await new Promise((resolve) =>
-            setTimeout(resolve, 200)
-          )
+          // Проверяем, открыто ли через Menu Button
+          const isMenuButton =
+            !webApp.initDataUnsafe?.start_param
+          console.log('Is Menu Button:', isMenuButton)
 
           // Принудительно разворачиваем на весь экран
-          // Это ключевой момент - вызываем expand() после ready()
           webApp.expand()
 
-          // Агрессивное расширение для Menu Button (как в BotFather)
-          // Telegram может применять разные правила для разных контекстов
-          const expandSequence = [
-            100, 300, 500, 800, 1200, 2000,
-          ]
-
-          expandSequence.forEach((delay) => {
-            setTimeout(() => {
-              if (!webApp.isExpanded) {
-                console.log(
-                  `Expand attempt at ${delay}ms...`
-                )
-                webApp.expand()
-
-                // Дополнительно принудительно устанавливаем viewport
-                if (
-                  webApp.viewportHeight &&
-                  webApp.viewportStableHeight
-                ) {
+          // Агрессивное расширение для Menu Button
+          if (isMenuButton) {
+            console.log(
+              'Menu Button detected, forcing full screen...'
+            )
+            const expandSequence = [100, 300, 500]
+            expandSequence.forEach((delay) => {
+              setTimeout(() => {
+                if (!webApp.isExpanded) {
                   console.log(
-                    'Viewport height:',
-                    webApp.viewportHeight
+                    `Expand attempt at ${delay}ms...`
                   )
-                  console.log(
-                    'Stable height:',
-                    webApp.viewportStableHeight
-                  )
+                  webApp.expand()
                 }
-              }
-            }, delay)
-          })
-
-          // Включаем подтверждение закрытия
-          if (webApp.enableClosingConfirmation) {
-            webApp.enableClosingConfirmation()
+              }, delay)
+            })
           }
 
-          // Устанавливаем цвета для лучшего UX
+          // Устанавливаем цвета
           webApp.headerColor = '#2dc2c6'
           webApp.backgroundColor = '#ffffff'
 
@@ -122,91 +100,61 @@ export function useSafeArea() {
             setIsExpanded(webApp.isExpanded)
           }
 
+          // Обновление safe area
+          const updateSafeArea = () => {
+            let newInsets = {
+              top: 0,
+              right: 0,
+              bottom: 0,
+              left: 0,
+            }
+            if (webApp.safeAreaInsets) {
+              newInsets = webApp.safeAreaInsets
+              console.log(
+                'Using safeAreaInsets:',
+                newInsets
+              )
+            } else if (webApp.safeArea) {
+              newInsets = webApp.safeArea
+              console.log('Using safeArea:', newInsets)
+            }
+            setSafeAreaInsets(newInsets)
+          }
+
           updateSafeArea()
           setIsReady(true)
           console.log(
-            'Telegram WebApp initialized successfully like BotFather'
+            'Telegram WebApp initialized successfully'
           )
         } catch (error) {
           console.error(
             'Error initializing Telegram WebApp:',
             error
           )
-          // Fallback - показываем приложение даже при ошибке
-          setIsReady(true)
+          setIsReady(true) // Fallback
         }
       }
 
-      // Обновление safe area
-      const updateSafeArea = () => {
-        let newInsets = {
-          top: 0,
-          right: 0,
-          bottom: 0,
-          left: 0,
-        }
-
-        // Приоритет safeAreaInsets (новый API)
-        if (webApp.safeAreaInsets) {
-          newInsets = webApp.safeAreaInsets
-          console.log('Using safeAreaInsets:', newInsets)
-        }
-        // Fallback на safeArea (старый API)
-        else if (webApp.safeArea) {
-          newInsets = webApp.safeArea
-          console.log('Using safeArea:', newInsets)
-        }
-
-        setSafeAreaInsets(newInsets)
-        console.log('Final safe area insets:', newInsets)
-      }
-
-      // Настройка при загрузке
       setup()
 
-      // Обработчики изменений viewport
+      // Обработчик изменений viewport
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged((event) => {
           console.log('Viewport changed:', event)
-          updateSafeArea()
+          setIsExpanded(event.is_expanded || false)
 
-          // Проверяем, развернуто ли приложение
-          if (event.is_expanded !== undefined) {
-            setIsExpanded(event.is_expanded)
-
-            // Если не развернуто, пытаемся развернуть снова
-            if (!event.is_expanded) {
-              console.log(
-                'Viewport not expanded, trying to expand again...'
-              )
-              // Агрессивное расширение для Menu Button
-              setTimeout(() => webApp.expand(), 100)
-              setTimeout(() => webApp.expand(), 300)
-              setTimeout(() => webApp.expand(), 600)
-            }
+          // Если не развернуто, пытаемся снова
+          if (!event.is_expanded) {
+            console.log(
+              'Viewport not expanded, retrying...'
+            )
+            setTimeout(() => webApp.expand(), 100)
+            setTimeout(() => webApp.expand(), 300)
           }
-
-          // Логируем детали viewport для отладки
-          console.log('Viewport details:', {
-            height: event.height,
-            width: event.width,
-            is_expanded: event.is_expanded,
-            is_state_stable: event.is_state_stable,
-          })
-        })
-      }
-      // Альтернативный способ через onEvent
-      if (webApp.onEvent) {
-        webApp.onEvent('viewport_changed', (event: any) => {
-          console.log(
-            'Viewport changed via onEvent:',
-            event
-          )
-          updateSafeArea()
         })
       }
 
-      // Обработчик изменения темы
+      // Обработчик темы
       if (webApp.onEvent) {
         webApp.onEvent('theme_changed', () => {
           if (webApp.colorScheme) {
@@ -215,51 +163,14 @@ export function useSafeArea() {
         })
       }
 
-      // Обработчик закрытия приложения
-      if (webApp.onCloseRequested) {
-        webApp.onCloseRequested(() => {
-          console.log('App close requested')
-        })
-      }
-
-      // Специальная обработка для Menu Button
-      // Проверяем, открыто ли приложение через Menu Button
-      if (webApp.initDataUnsafe?.start_param) {
-        console.log(
-          'App opened via Menu Button with start_param:',
-          webApp.initDataUnsafe.start_param
-        )
-        // Дополнительное расширение для Menu Button
-        setTimeout(() => {
-          console.log('Menu Button: Force expanding...')
-          webApp.expand()
-        }, 1000)
-      }
-
-      // Обработчик события открытия приложения
-      if (webApp.onEvent) {
-        webApp.onEvent('app_opened', () => {
-          console.log('App opened event - expanding...')
-          webApp.expand()
-        })
-      }
-
-      // Очистка при размонтировании
+      // Очистка
       return () => {
         if (webApp.offViewportChanged)
-          webApp.offViewportChanged(updateSafeArea)
-        if (webApp.offEvent)
-          webApp.offEvent(
-            'viewport_changed',
-            updateSafeArea
-          )
+          webApp.offViewportChanged(() => {})
         if (webApp.offEvent)
           webApp.offEvent('theme_changed', () => {})
-        if (webApp.offCloseRequested)
-          webApp.offCloseRequested(() => {})
       }
     } else {
-      // Не в Telegram - показываем приложение сразу
       console.log(
         'Not in Telegram environment, showing app immediately'
       )
@@ -268,7 +179,6 @@ export function useSafeArea() {
     }
   }, [isMounted])
 
-  // Не рендерим ничего до монтирования
   if (!isMounted) {
     return {
       safeAreaInsets: {
@@ -281,7 +191,7 @@ export function useSafeArea() {
       isTelegram: false,
       theme: 'light',
       isExpanded: false,
-      forceExpand: () => {},
+      forceExpand,
       cssVars: {
         '--safe-area-top': '0px',
         '--safe-area-right': '0px',
@@ -298,7 +208,6 @@ export function useSafeArea() {
     theme,
     isExpanded,
     forceExpand,
-    // CSS переменные для использования в стилях
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,
       '--safe-area-right': `${safeAreaInsets.right}px`,
