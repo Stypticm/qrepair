@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.0.2'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.0.3'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -108,33 +108,46 @@ export function useSafeArea() {
             window.location.href
           )
 
-          // Немедленно запрашиваем fullscreen согласно документации
+          // Пробуем несколько способов для fullscreen
           const supportsFullscreen =
             webApp.isVersionAtLeast('8.0')
+          console.log(
+            'Fullscreen support:',
+            supportsFullscreen
+          )
+          console.log(
+            'Available methods:',
+            Object.keys(webApp)
+          )
+
+          // Способ 1: Сначала expand, потом fullscreen
+          webApp.expand()
+
+          // Способ 2: Пробуем fullscreen с задержкой
           if (
             supportsFullscreen &&
             'requestFullscreen' in webApp
           ) {
-            console.log(
-              'Calling requestFullscreen immediately after ready at',
-              new Date().toISOString()
-            )
-            try {
-              webApp.requestFullscreen?.()
-            } catch (error) {
-              console.error(
-                'requestFullscreen failed:',
-                error
+            setTimeout(() => {
+              console.log(
+                'Trying requestFullscreen with delay...'
               )
-              webApp.expand() // Fallback
-            }
-          } else {
-            console.log(
-              'requestFullscreen not available, calling expand immediately at',
-              new Date().toISOString()
-            )
-            webApp.expand()
+              try {
+                webApp.requestFullscreen?.()
+              } catch (error) {
+                console.error(
+                  'requestFullscreen failed:',
+                  error
+                )
+              }
+            }, 500) // Задержка 500ms
           }
+
+          // Способ 3: Принудительно expand несколько раз
+          setTimeout(() => {
+            console.log('Forcing expand again...')
+            webApp.expand()
+          }, 1000)
 
           // Устанавливаем цвета
           webApp.headerColor = '#2dc2c6'
@@ -190,6 +203,14 @@ export function useSafeArea() {
             'Telegram WebApp initialized successfully at',
             new Date().toISOString()
           )
+
+          // Принудительно expand после инициализации
+          setTimeout(() => {
+            console.log(
+              'Final expand after initialization...'
+            )
+            webApp.expand()
+          }, 2000)
         } catch (error) {
           console.error(
             'Error initializing Telegram WebApp:',
@@ -212,12 +233,12 @@ export function useSafeArea() {
           )
           setIsFullscreen(event.is_expanded || false)
 
+          // Принудительно expand при каждом изменении viewport
           if (!event.is_expanded) {
             console.log(
-              'Viewport not in fullscreen, retrying at',
-              new Date().toISOString()
+              'Viewport not expanded, forcing expand...'
             )
-            forceFullscreen()
+            webApp.expand()
           }
         })
       }
