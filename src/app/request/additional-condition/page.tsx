@@ -398,9 +398,11 @@ export default function AdditionalConditionPage() {
                                                 className="object-cover"
                                             />
                                         </div>
-                                        <span className="text-xs font-medium text-center whitespace-pre-line">
-                                            {condition.label}
-                                        </span>
+                                        {type !== 'battery' && (
+                                            <span className="text-xs font-medium text-gray-900 text-center whitespace-pre-line">
+                                                {condition.label}
+                                            </span>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -450,7 +452,7 @@ export default function AdditionalConditionPage() {
                                                                     className="object-cover"
                                                                 />
                                                             </div>
-                                                            <span className="text-xs font-medium text-center">
+                                                            <span className="text-xs font-medium text-gray-900 text-center">
                                                                 {condition.label}
                                                             </span>
                                                         </div>
@@ -489,7 +491,7 @@ export default function AdditionalConditionPage() {
                                                                     className="object-cover"
                                                                 />
                                                             </div>
-                                                            <span className="text-xs font-medium text-center">
+                                                            <span className="text-xs font-medium text-gray-900 text-center">
                                                                 {condition.label}
                                                             </span>
                                                         </div>
