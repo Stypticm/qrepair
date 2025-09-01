@@ -132,15 +132,12 @@ export default function ConditionPage() {
     // Состояние для диалогового окна
     const [showDialog, setShowDialog] = useState(false);
 
-    // Показываем диалог когда все условия выбраны (включая загруженные из БД)
+    // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {
-        if (isAllConditionsSelected()) {
-            // Небольшая задержка для лучшего UX
-            setTimeout(() => {
-                setShowDialog(true);
-            }, 300);
+        if (isAllConditionsSelected() && hasChanges) {
+            setShowDialog(true);
         }
-    }, [deviceConditions, isAllConditionsSelected]);
+    }, [deviceConditions, isAllConditionsSelected, hasChanges]);
 
     // Создаем заявку при загрузке страницы (если её еще нет)
     useEffect(() => {
@@ -263,6 +260,9 @@ export default function ConditionPage() {
             
             // Сначала обновляем контекст
             setDeviceConditions(newConditions);
+            
+            // Устанавливаем флаг изменений
+            setHasChanges(true);
             
             // Сохраняем в sessionStorage для быстрого восстановления
             if (typeof window !== 'undefined') {
@@ -517,31 +517,41 @@ export default function ConditionPage() {
                      showCloseButton={false}
                  >
                      <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
-                         📱 Наша оценка
+                         
                      </DialogTitle>
                      
                      <div className="text-center">
-                         {/* Показываем выбранные условия */}
-                         <div className="space-y-2 mb-4">
-                             {deviceConditions.front && (
-                                 <div className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-lg">
-                                     <span className="text-gray-600">Передняя панель:</span>
-                                     <span className="font-medium text-gray-900">{deviceConditions.front}</span>
-                                 </div>
-                             )}
-                             {deviceConditions.back && (
-                                 <div className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-lg">
-                                     <span className="text-gray-600">Задняя панель:</span>
-                                     <span className="font-medium text-gray-900">{deviceConditions.back}</span>
-                                                    </div>
-                             )}
-                             {deviceConditions.side && (
-                                 <div className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded-lg">
-                                     <span className="text-gray-600">Боковые грани:</span>
-                                     <span className="font-medium text-gray-900">{deviceConditions.side}</span>
-                    </div>
-                )}
+                         {/* Рамка для выбранных условий */}
+                         <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg mb-4">
+                             <div className="space-y-3">
+                                 {deviceConditions.front && (
+                                     <div className="flex justify-between items-center">
+                                         <span className="text-gray-600 font-medium">Передняя панель:</span>
+                                         <span className="font-semibold text-gray-900 text-right break-words">
+                                             {deviceConditions.front}
+                                         </span>
+                                     </div>
+                                 )}
+                                 {deviceConditions.back && (
+                                     <div className="flex justify-between items-center">
+                                         <span className="text-gray-600 font-medium">Задняя панель:</span>
+                                         <span className="font-semibold text-gray-900 text-right break-words">
+                                             {deviceConditions.back}
+                                         </span>
+                                     </div>
+                                 )}
+                                 {deviceConditions.side && (
+                                     <div className="flex justify-between items-center">
+                                         <span className="text-gray-600 font-medium">Боковые грани:</span>
+                                         <span className="font-semibold text-gray-900 text-right break-words">
+                                             {deviceConditions.side}
+                                         </span>
+                                     </div>
+                                 )}
+                             </div>
                          </div>
+                         
+                         {/* Показываем выбранные условия */}
                          
                          
                          

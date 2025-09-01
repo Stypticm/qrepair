@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,64 @@ const SubmitPage = () => {
     const { telegramId, modelname, answers, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions } = useStartForm();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [dataLoaded, setDataLoaded] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+
+    // Принудительно закрываем любые открытые диалоговые окна при загрузке страницы
+    useEffect(() => {
+        // Закрываем все возможные диалоговые окна
+        const dialogs = document.querySelectorAll('[role="dialog"]');
+        dialogs.forEach(dialog => {
+            if (dialog instanceof HTMLElement) {
+                dialog.style.display = 'none';
+            }
+        });
+        
+        // Также закрываем элементы с классом dialog
+        const dialogElements = document.querySelectorAll('.dialog, [class*="dialog"]');
+        dialogElements.forEach(element => {
+            if (element instanceof HTMLElement) {
+                element.style.display = 'none';
+            }
+        });
+        
+        // Убираем backdrop (серый фон)
+        const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
+        backdrops.forEach(backdrop => {
+            if (backdrop instanceof HTMLElement) {
+                backdrop.style.display = 'none';
+            }
+        });
+    }, []);
+
+    // Проверяем, загружены ли все необходимые данные
+    useEffect(() => {
+        // Если заявка уже отправлена, не проверяем данные
+        if (submitted) return;
+        
+        // Проверяем наличие основных данных
+        const hasBasicData = modelname && telegramId;
+        
+        // Проверяем наличие данных о состояниях устройства
+        const hasDeviceData = deviceConditions && (
+            deviceConditions.front || 
+            deviceConditions.back || 
+            deviceConditions.side
+        );
+        
+        // Проверяем наличие дополнительных данных
+        const hasAdditionalData = additionalConditions && (
+            additionalConditions.faceId || 
+            additionalConditions.touchId || 
+            additionalConditions.backCamera || 
+            additionalConditions.battery
+        );
+        
+        // Данные считаются загруженными, если есть основная модель и хотя бы какие-то данные о состояниях
+        if (hasBasicData && (hasDeviceData || hasAdditionalData)) {
+            setDataLoaded(true);
+        }
+    }, [modelname, telegramId, deviceConditions, additionalConditions, submitted]);
 
 
     const handleSubmit = async () => {
@@ -37,20 +95,27 @@ const SubmitPage = () => {
                 const result = await res.json();
                 console.log('Заявка отправлена успешно:', result);
                 
-                // Очищаем sessionStorage перед сбросом состояний
-                if (typeof window !== 'undefined') {
-                    sessionStorage.removeItem('phoneSelection');
-                    sessionStorage.removeItem('deviceConditions');
-                    sessionStorage.removeItem('additionalConditions');
-                    console.log('sessionStorage очищен при отправке заявки');
-                }
+                // Сразу помечаем как отправленную, чтобы скрыть страницу
+                setSubmitted(true);
                 
-                // Сбрасываем все состояния ТОЛЬКО после успешной отправки
-                resetAllStates();
-                console.log('Состояния сброшены в submit после отправки');
-                
-                // Переходим на главную страницу
+                // Сначала переходим на главную страницу
                 router.push('/');
+                
+                // Затем очищаем sessionStorage и сбрасываем состояния
+                setTimeout(() => {
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem('phoneSelection');
+                        sessionStorage.removeItem('deviceConditions');
+                        sessionStorage.removeItem('additionalConditions');
+                        // Устанавливаем флаг, что заявка была отправлена
+                        sessionStorage.setItem('requestSubmitted', 'true');
+                        console.log('sessionStorage очищен при отправке заявки');
+                    }
+                    
+                    // Сбрасываем все состояния ТОЛЬКО после перехода
+                    resetAllStates();
+                    console.log('Состояния сброшены в submit после отправки');
+                }, 100); // Небольшая задержка для плавного перехода
             } else {
                 console.error('Ошибка при отправке заявки:', res.status);
             }
@@ -189,7 +254,28 @@ const SubmitPage = () => {
         <Page back={true}>
             <div className="w-full h-full bg-gray-50 animate-fadeInUp my-auto">
                 <div className="flex flex-col items-center justify-center w-full h-full px-6">
-                    <div className="w-full max-w-md space-y-6">
+                    {submitted ? (
+                        <div className="w-full max-w-md text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
+                            <p className="text-gray-600">Перенаправляем на главную страницу...</p>
+                        </div>
+                    ) : !dataLoaded ? (
+                        <div className="w-full max-w-md text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
+                            <p className="text-gray-600">Загружаем данные заявки...</p>
+                        </div>
+                    ) : !modelname ? (
+                        <div className="w-full max-w-md text-center">
+                            <p className="text-red-600">Ошибка: данные заявки не найдены</p>
+                            <Button 
+                                onClick={() => router.push('/request/form')}
+                                className="mt-4 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white"
+                            >
+                                Вернуться к форме
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="w-full max-w-md space-y-6">
                         {/* Summary заявки */}
                         <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg">
                             <h3 className="text-xl font-semibold mb-5 text-center text-gray-900">
@@ -206,7 +292,7 @@ const SubmitPage = () => {
                                     <h4 className="font-semibold mb-3 text-gray-900">Состояние устройства:</h4>
                                     <div className="space-y-3">
                                         {/* Основные состояния устройства */}
-                                        {deviceConditions && (
+                                        {deviceConditions && deviceConditions.front && deviceConditions.back && deviceConditions.side && (
                                             <>
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-gray-600 font-medium">Передняя панель:</span>
@@ -230,7 +316,7 @@ const SubmitPage = () => {
                                         )}
 
                                         {/* Дополнительные состояния устройства */}
-                                        {additionalConditions && (
+                                        {additionalConditions && additionalConditions.faceId && additionalConditions.touchId && additionalConditions.backCamera && additionalConditions.battery && (
                                             <>
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-gray-600 font-medium">Face ID:</span>
@@ -295,6 +381,7 @@ const SubmitPage = () => {
                             </Button>
                         </div>
                     </div>
+                )}
                 </div>
             </div>
         </Page>

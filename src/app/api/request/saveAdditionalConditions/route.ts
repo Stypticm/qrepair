@@ -5,7 +5,8 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { telegramId, additionalConditions } = await request.json()
+    const { telegramId, additionalConditions } =
+      await request.json()
 
     console.log(
       'saveAdditionalConditions: telegramId =',
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
         status: 'draft',
       },
       select: { additionalConditions: true },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     })
 
     if (!currentRequest) {
@@ -38,19 +39,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Объединяем существующие условия с новыми
-    const existingConditions = 
-      (currentRequest?.additionalConditions as Record<
-        string,
-        string | null
-      >) || {}
+    // Полностью заменяем существующие условия новыми
+    const mergedConditions = additionalConditions
 
-    const mergedConditions = {
-      ...existingConditions,
-      ...additionalConditions,
-    }
-
-    console.log('Обновляем дополнительные условия:', mergedConditions)
+    console.log(
+      'Обновляем дополнительные условия:',
+      mergedConditions
+    )
 
     // Обновляем заявку с новыми дополнительными условиями
     const updatedRequest = await prisma.skupka.updateMany({
@@ -74,7 +69,10 @@ export async function POST(request: NextRequest) {
       additionalConditions: mergedConditions,
     })
   } catch (error) {
-    console.error('Error saving additional conditions:', error)
+    console.error(
+      'Error saving additional conditions:',
+      error
+    )
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
