@@ -40,10 +40,10 @@ export default function FormPage() {
             sessionStorage.removeItem('phoneSelection');
 
             // Показываем приветственный экран для новых пользователей
-            const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
+            const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
             if (!hasSeenWelcome) {
                 setShowWelcomeModal(true);
-                localStorage.setItem('hasSeenWelcome', 'true');
+                sessionStorage.setItem('hasSeenWelcome', 'true');
             }
         } else {
             console.log('Продолжение заявки - оставляем состояния');
