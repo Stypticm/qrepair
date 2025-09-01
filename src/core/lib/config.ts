@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.0.1'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.0.2'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -43,61 +43,30 @@ export function useSafeArea() {
         new Date().toISOString()
       )
 
-      // Проверяем версию Telegram и контекст
+      // Проверяем версию Telegram согласно документации (Bot API 8.0+)
       const supportsFullscreen =
-        webApp.isVersionAtLeast?.('8.0') || false
-      const isMenuButton =
-        !webApp.initDataUnsafe?.start_param
-      const urlParams = new URLSearchParams(
-        window.location.search
+        webApp.isVersionAtLeast('8.0')
+      console.log(
+        'Telegram version supports fullscreen:',
+        supportsFullscreen
       )
-      const isFullscreenMode =
-        urlParams.get('mode') === 'fullscreen'
 
       if (
         supportsFullscreen &&
-        'requestFullscreen' in webApp &&
-        typeof webApp.requestFullscreen === 'function'
+        'requestFullscreen' in webApp
       ) {
         console.log('Using requestFullscreen...')
-        webApp.requestFullscreen()
+        try {
+          webApp.requestFullscreen?.()
+        } catch (error) {
+          console.error('requestFullscreen failed:', error)
+          webApp.expand() // Fallback
+        }
       } else {
         console.log(
-          'requestFullscreen not available or older version, falling back to expand...'
+          'requestFullscreen not available, falling back to expand...'
         )
         webApp.expand()
-      }
-
-      // Немедленная повторная попытка для Menu Button или mode=fullscreen
-      if (isMenuButton || isFullscreenMode) {
-        console.log(
-          'Menu Button or fullscreen mode detected, ensuring fullscreen...'
-        )
-        setTimeout(() => {
-          const isCurrentlyFullscreen =
-            'isFullscreen' in webApp
-              ? webApp.isFullscreen
-              : webApp.isExpanded
-          if (!isCurrentlyFullscreen) {
-            console.log(
-              'Fullscreen not achieved, retrying immediately at',
-              new Date().toISOString()
-            )
-            if (
-              supportsFullscreen &&
-              'requestFullscreen' in webApp
-            ) {
-              webApp?.requestFullscreen?.()
-            } else {
-              webApp.expand()
-            }
-          } else {
-            console.log(
-              'Fullscreen achieved:',
-              isCurrentlyFullscreen
-            )
-          }
-        }, 0) // Немедленный вызов через setTimeout(..., 0)
       }
     } else {
       console.log('No Telegram WebApp context available')
@@ -139,18 +108,26 @@ export function useSafeArea() {
             window.location.href
           )
 
-          // Немедленно запрашиваем fullscreen
+          // Немедленно запрашиваем fullscreen согласно документации
+          const supportsFullscreen =
+            webApp.isVersionAtLeast('8.0')
           if (
-            'requestFullscreen' in webApp &&
-            typeof webApp.requestFullscreen ===
-              'function' &&
-            webApp.isVersionAtLeast?.('8.0')
+            supportsFullscreen &&
+            'requestFullscreen' in webApp
           ) {
             console.log(
               'Calling requestFullscreen immediately after ready at',
               new Date().toISOString()
             )
-            webApp?.requestFullscreen?.()
+            try {
+              webApp.requestFullscreen?.()
+            } catch (error) {
+              console.error(
+                'requestFullscreen failed:',
+                error
+              )
+              webApp.expand() // Fallback
+            }
           } else {
             console.log(
               'requestFullscreen not available, calling expand immediately at',
