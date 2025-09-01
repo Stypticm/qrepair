@@ -34,7 +34,7 @@ export default function AdditionalConditionPage() {
 
     // Состояние для отслеживания изменений
     const [hasChanges, setHasChanges] = useState(false);
-
+    
     // Флаг для отслеживания загрузки состояний из БД
     const [loadedFromDB, setLoadedFromDB] = useState(false);
 
@@ -46,18 +46,18 @@ export default function AdditionalConditionPage() {
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('additionalConditions');
             console.log('[loadSavedConditions] Проверяем sessionStorage:', savedInSession);
-
+            
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
                     console.log('[loadSavedConditions] Найдено в sessionStorage:', savedInSession);
                     console.log('[loadSavedConditions] Распарсено из sessionStorage:', parsed);
-
+                    
                     // Дополнительная проверка - если данные пустые или некорректные, не загружаем
-                    const hasValidData = parsed &&
-                        typeof parsed === 'object' &&
+                    const hasValidData = parsed && 
+                        typeof parsed === 'object' && 
                         (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery);
-
+                    
                     if (hasValidData) {
                         setAdditionalConditions(parsed);
                         setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
@@ -113,19 +113,19 @@ export default function AdditionalConditionPage() {
 
                     if (data.additionalConditions) {
                         // Проверяем, что это действительно новая заявка, а не старая
-                        const hasOldData = data.additionalConditions.faceId ||
-                            data.additionalConditions.touchId ||
-                            data.additionalConditions.backCamera ||
-                            data.additionalConditions.battery;
-
+                        const hasOldData = data.additionalConditions.faceId || 
+                                         data.additionalConditions.touchId || 
+                                         data.additionalConditions.backCamera || 
+                                         data.additionalConditions.battery;
+                        
                         if (hasOldData) {
                             console.log('[loadSavedConditions] Найдены сохраненные дополнительные состояния, загружаем их:', data.additionalConditions);
                             // Проверяем, что данные корректные (не пустые строки или null)
-                            const isValidData = data.additionalConditions.faceId &&
-                                data.additionalConditions.touchId &&
-                                data.additionalConditions.backCamera &&
-                                data.additionalConditions.battery;
-
+                            const isValidData = data.additionalConditions.faceId && 
+                                              data.additionalConditions.touchId && 
+                                              data.additionalConditions.backCamera && 
+                                              data.additionalConditions.battery;
+                            
                             if (isValidData) {
                                 setAdditionalConditions(data.additionalConditions);
                                 setHasChanges(true); // Устанавливаем флаг изменений для загруженных из БД состояний
@@ -145,7 +145,7 @@ export default function AdditionalConditionPage() {
                     } else {
                         console.log('[loadSavedConditions] Нет дополнительных состояний в БД, оставляем пустыми');
                     }
-
+                    
                     setLoadedFromDB(true);
                 } else {
                     console.log('Не удалось загрузить дополнительные состояния из БД');
@@ -163,7 +163,7 @@ export default function AdditionalConditionPage() {
     // Загружаем состояния при монтировании компонента
     useEffect(() => {
         console.log('[useEffect] Компонент смонтирован, telegramId:', telegramId);
-
+        
         if (telegramId) {
             // Не загружаем состояния сразу - ждем создания заявки
         } else {
@@ -183,7 +183,7 @@ export default function AdditionalConditionPage() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('additionalConditions');
-
+            
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
@@ -197,7 +197,7 @@ export default function AdditionalConditionPage() {
                 }
             }
         }
-
+        
         // Устанавливаем флаг загрузки для новой заявки
         setLoadedFromDB(true);
     }, [setAdditionalConditions]); // Запускается только один раз при загрузке страницы
@@ -222,22 +222,22 @@ export default function AdditionalConditionPage() {
     const handleContinue = () => {
         setShowDialog(false);
         // Принудительно закрываем диалог в DOM и убираем backdrop
-
-        const dialogs = document.querySelectorAll('[role="dialog"]');
-        dialogs.forEach(dialog => {
-            if (dialog instanceof HTMLElement) {
-                dialog.style.display = 'none';
-            }
-        });
-
-        // Убираем backdrop (серый фон)
-        const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
-        backdrops.forEach(backdrop => {
-            if (backdrop instanceof HTMLElement) {
-                backdrop.style.display = 'none';
-            }
-        });
-
+        setTimeout(() => {
+            const dialogs = document.querySelectorAll('[role="dialog"]');
+            dialogs.forEach(dialog => {
+                if (dialog instanceof HTMLElement) {
+                    dialog.style.display = 'none';
+                }
+            });
+            
+            // Убираем backdrop (серый фон)
+            const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
+            backdrops.forEach(backdrop => {
+                if (backdrop instanceof HTMLElement) {
+                    backdrop.style.display = 'none';
+                }
+            });
+        }, 0);
         // Быстрый переход без задержки
         router.push('/request/submit');
     };
@@ -246,7 +246,7 @@ export default function AdditionalConditionPage() {
         setShowDialog(false);
         // При редактировании сбрасываем флаг изменений
         setHasChanges(false);
-
+        
         // Убираем backdrop (серый фон) при редактировании
         setTimeout(() => {
             const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
@@ -291,7 +291,7 @@ export default function AdditionalConditionPage() {
     const handleConditionSelect = (type: 'faceId' | 'touchId' | 'backCamera' | 'battery', conditionId: string) => {
         console.log(`[handleConditionSelect] Начало выбора ${type} с ID: ${conditionId}`);
         console.log(`[handleConditionSelect] Текущие состояния ДО выбора:`, additionalConditions);
-
+        
         // Проверяем, можно ли выбрать этот тип
         if (!canSelectSection(type)) {
             console.log(`[handleConditionSelect] Нельзя выбрать ${type} сейчас`);
@@ -373,8 +373,8 @@ export default function AdditionalConditionPage() {
                             <Card
                                 key={condition.id}
                                 className={`transition-all duration-200 relative ${isSelected
-                                    ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                    : ''
+                                        ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
+                                        : ''
                                     } ${canSelectSection(type)
                                         ? 'cursor-pointer hover:shadow-md'
                                         : 'cursor-not-allowed'
@@ -430,8 +430,8 @@ export default function AdditionalConditionPage() {
                                                 <Card
                                                     key={condition.id}
                                                     className={`transition-all duration-200 relative ${isSelected
-                                                        ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                                        : ''
+                                                            ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
+                                                            : ''
                                                         } cursor-pointer hover:shadow-md`}
                                                     onClick={() => handleConditionSelect('faceId', condition.id)}
                                                 >
@@ -469,8 +469,8 @@ export default function AdditionalConditionPage() {
                                                 <Card
                                                     key={condition.id}
                                                     className={`transition-all duration-200 relative ${isSelected
-                                                        ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                                        : ''
+                                                            ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
+                                                            : ''
                                                         } cursor-pointer hover:shadow-md`}
                                                     onClick={() => handleConditionSelect('touchId', condition.id)}
                                                 >
@@ -511,59 +511,59 @@ export default function AdditionalConditionPage() {
                 </div>
             </div>
 
-            {/* Диалоговое окно с итоговой информацией */}
-            <Dialog open={showDialog} onOpenChange={handleEdit}>
-                <DialogContent
-                    className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
-                    onClick={handleContinue}
-                    showCloseButton={false}
-                >
-                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
-
-                    </DialogTitle>
-
-                    <div className="text-center">
-                        {/* Рамка для выбранных условий */}
-                        <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg mb-4">
-                            <div className="space-y-3">
-                                {additionalConditions.faceId && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">Face ID:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.faceId}
-                                        </span>
-                                    </div>
-                                )}
-                                {additionalConditions.touchId && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">Touch ID:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.touchId}
-                                        </span>
-                                    </div>
-                                )}
-                                {additionalConditions.backCamera && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">Задняя камера:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.backCamera}
-                                        </span>
-                                    </div>
-                                )}
-                                {additionalConditions.battery && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">Батарея:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.battery}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Показываем выбранные условия */}
-
-                        <p className="text-center text-sm text-gray-600 mt-3">
+                         {/* Диалоговое окно с итоговой информацией */}
+             <Dialog open={showDialog} onOpenChange={handleEdit}>
+                 <DialogContent
+                     className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                     onClick={handleContinue}
+                     showCloseButton={false}
+                 >
+                                           <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+                          
+                      </DialogTitle>
+ 
+                                                                                       <div className="text-center">
+                                                {/* Рамка для выбранных условий */}
+                                                                                                 <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg mb-4">
+                                                     <div className="space-y-3">
+                                                         {additionalConditions.faceId && (
+                                                             <div className="flex justify-between items-center">
+                                                                 <span className="text-gray-600 font-medium">Face ID:</span>
+                                                                 <span className="font-semibold text-gray-900 text-right break-words">
+                                                                     {additionalConditions.faceId}
+                                                                 </span>
+                                                             </div>
+                                                         )}
+                                                         {additionalConditions.touchId && (
+                                                             <div className="flex justify-between items-center">
+                                                                 <span className="text-gray-600 font-medium">Touch ID:</span>
+                                                                 <span className="font-semibold text-gray-900 text-right break-words">
+                                                                     {additionalConditions.touchId}
+                                                                 </span>
+                                                             </div>
+                                                         )}
+                                                         {additionalConditions.backCamera && (
+                                                             <div className="flex justify-between items-center">
+                                                                 <span className="text-gray-600 font-medium">Задняя камера:</span>
+                                                                 <span className="font-semibold text-gray-900 text-right break-words">
+                                                                     {additionalConditions.backCamera}
+                                                                 </span>
+                                                             </div>
+                                                         )}
+                                                         {additionalConditions.battery && (
+                                                             <div className="flex justify-between items-center">
+                                                                 <span className="text-gray-600 font-medium">Батарея:</span>
+                                                                 <span className="font-semibold text-gray-900 text-right break-words">
+                                                                     {additionalConditions.battery}
+                                                                 </span>
+                                                             </div>
+                                                         )}
+                                                     </div>
+                                                 </div>
+                          
+                          {/* Показываем выбранные условия */}                         
+                         
+                         <p className="text-center text-sm text-gray-600 mt-3">
                             👆 Нажмите на окно для перехода к следующему шагу
                         </p>
                         <p className="text-center text-sm text-gray-600 mt-1">
