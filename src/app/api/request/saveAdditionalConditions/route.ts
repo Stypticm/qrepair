@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     )
 
     // Обновляем заявку с новыми дополнительными условиями
-    const updatedRequesс await prisma.skupka.updateMany({
+    const updatedRequest = await prisma.skupka.updateMany({
       where: {
         telegramId: telegramId,
         status: 'draft',
