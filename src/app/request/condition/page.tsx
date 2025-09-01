@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { ConditionOption, frontConditions, backConditions, sideConditions } from '@/core/lib/condition';
 import { getPictureUrl } from '@/core/lib/assets';
+import { Tooltip } from '@/components/ui/tooltip';
+import { motion } from 'framer-motion';
+import { ProgressBar } from '@/components/ui/progress-bar';
 
 export default function ConditionPage() {
     const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice } = useStartForm();
@@ -324,7 +327,14 @@ export default function ConditionPage() {
         }
     };
 
-    // Функция для получения процента скидки по ID состояния
+    // Шаги для прогресс-бара
+    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
+
+    // Определяем текущий шаг для прогресс-бара
+    const getCurrentStep = (): number => {
+        // Показываем шаг 2 на странице condition
+        return 2;
+    };
     const getConditionPenalty = (conditionId: string): number => {
         if (conditionId.includes('_new')) {
             return 0;
@@ -434,20 +444,24 @@ export default function ConditionPage() {
                 {/* Сетка вариантов */}
                 <div className="grid grid-cols-4 gap-2">
                     {conditions.map((condition) => (
-                        <Card
+                        <motion.div
                             key={condition.id}
-                            className={`transition-all duration-200 relative ${
-                                deviceConditions[type] === getConditionText(condition.id)
-                                    ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                    : ''
-                            } ${
-                                canSelectSection(type) 
-                                    ? 'cursor-pointer hover:shadow-md' 
-                                    : 'cursor-not-allowed opacity-50'
-                            }`}
-                            onClick={() => canSelectSection(type) && handleConditionSelect(type, condition.id)}
-
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            transition={{ duration: 0.1 }}
                         >
+                            <Card
+                                className={`transition-all duration-200 relative border-0 shadow-none ${
+                                    deviceConditions[type] === getConditionText(condition.id)
+                                        ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
+                                        : ''
+                                } ${
+                                    canSelectSection(type) 
+                                        ? 'cursor-pointer hover:shadow-md' 
+                                        : 'cursor-not-allowed opacity-50'
+                                }`}
+                                onClick={() => canSelectSection(type) && handleConditionSelect(type, condition.id)}
+                            >
                             {deviceConditions[type] === getConditionText(condition.id) && (
                                 <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
                                     <span className="text-white text-xs font-bold">✓</span>
@@ -473,38 +487,48 @@ export default function ConditionPage() {
 
                             </CardContent>
                         </Card>
+                    </motion.div>
                     ))}
                 </div>
             </div>
         );
     };
 
-        return (
-        <Page back={true}>
-            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                <div className="flex-1 p-4">
-                    <div className="w-full max-w-2xl mx-auto h-full flex flex-col">
+                return (
+            <Page back={true}>
+                <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                    {/* Прогресс-бар */}
+                    <div className="pt-2">
+                        <ProgressBar 
+                            currentStep={getCurrentStep()} 
+                            totalSteps={4} 
+                            steps={steps} 
+                        />
+                    </div>
+
+                    <div className="flex-1 p-3 pt-6">
+                        <div className="w-full max-w-2xl mx-auto flex flex-col gap-1">
                         
                         {/* Секция передней части экрана */}
-                        <div className="flex-1 flex flex-col justify-center space-y-4">
+                        <div className="flex-1 flex flex-col justify-center space-y-1">
                             {renderConditionSection('front', frontConditions)}
                         </div>
 
                         {/* Разделитель */}
-                        <div className="border-t border-gray-200 my-3"></div>
+                        <div className="my-1"></div>
 
                         {/* Секция задней панели */}
-                        <div className={`flex-1 flex flex-col justify-center space-y-4 ${!canSelectSection('back') ? 'opacity-50' : ''}`}>
+                        <div className={`flex-1 flex flex-col justify-center space-y-1 ${!canSelectSection('back') ? 'opacity-50' : ''}`}>
                             {renderConditionSection('back', backConditions)}
                         </div>
 
-                        {/* Разделитель */}
-                        <div className="border-t border-gray-200 my-3"></div>
+                                                {/* Разделитель */}
+                        <div className="my-1"></div>
 
                         {/* Секция боковых граней */}
-                        <div className={`flex-1 flex flex-col justify-center space-y-4 ${!canSelectSection('side') ? 'opacity-50' : ''}`}>
+                        <div className={`flex-1 flex flex-col justify-center space-y-1 ${!canSelectSection('side') ? 'opacity-50' : ''}`}>
                             {renderConditionSection('side', sideConditions)}
-                                    </div>
+                        </div>
                                         </div>
                                     </div>
                                 </div>
@@ -512,7 +536,7 @@ export default function ConditionPage() {
              {/* Диалоговое окно с итоговой информацией */}
              <Dialog open={showDialog} onOpenChange={handleEdit}>
                  <DialogContent
-                     className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                     className="bg-white cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
                      onClick={handleContinue}
                      showCloseButton={false}
                  >
@@ -522,7 +546,7 @@ export default function ConditionPage() {
                      
                      <div className="text-center">
                          {/* Рамка для выбранных условий */}
-                         <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg mb-4">
+                         <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
                              <div className="space-y-3">
                                  {deviceConditions.front && (
                                      <div className="flex justify-between items-center">

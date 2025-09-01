@@ -16,6 +16,10 @@ import {
     AdditionalConditionOption
 } from '@/core/lib/additionalCondition';
 import { getPictureUrl } from '@/core/lib/assets';
+import { Tooltip } from '@/components/ui/tooltip';
+import { motion } from 'framer-motion';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { SelectionFeedback, useSelectionFeedback } from '@/components/ui/selection-feedback';
 
 export default function AdditionalConditionPage() {
     const {
@@ -34,9 +38,25 @@ export default function AdditionalConditionPage() {
 
     // Состояние для отслеживания изменений
     const [hasChanges, setHasChanges] = useState(false);
-    
+
     // Флаг для отслеживания загрузки состояний из БД
     const [loadedFromDB, setLoadedFromDB] = useState(false);
+
+    // Обратная связь при выборе
+    const { feedback, showFeedback, hideFeedback } = useSelectionFeedback();
+    // Флаг для отключения подсказок при загрузке данных
+    const [showHints, setShowHints] = useState(true);
+
+    // Шаги для прогресс-бара
+    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
+
+    // Определяем текущий шаг для прогресс-бара
+    const getCurrentStep = (): number => {
+        // Показываем шаг 3 на странице additional-condition
+        return 3;
+    };
+
+
 
     // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {
@@ -46,21 +66,22 @@ export default function AdditionalConditionPage() {
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('additionalConditions');
             console.log('[loadSavedConditions] Проверяем sessionStorage:', savedInSession);
-            
+
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
                     console.log('[loadSavedConditions] Найдено в sessionStorage:', savedInSession);
                     console.log('[loadSavedConditions] Распарсено из sessionStorage:', parsed);
-                    
+
                     // Дополнительная проверка - если данные пустые или некорректные, не загружаем
-                    const hasValidData = parsed && 
-                        typeof parsed === 'object' && 
+                    const hasValidData = parsed &&
+                        typeof parsed === 'object' &&
                         (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery);
-                    
+
                     if (hasValidData) {
                         setAdditionalConditions(parsed);
                         setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
+                        setShowHints(false); // Отключаем подсказки при загрузке данных
                         console.log('[loadSavedConditions] Дополнительные состояния загружены из sessionStorage и установлены:', parsed);
                     } else {
                         console.log('[loadSavedConditions] Данные в sessionStorage некорректные, очищаем');
@@ -113,22 +134,23 @@ export default function AdditionalConditionPage() {
 
                     if (data.additionalConditions) {
                         // Проверяем, что это действительно новая заявка, а не старая
-                        const hasOldData = data.additionalConditions.faceId || 
-                                         data.additionalConditions.touchId || 
-                                         data.additionalConditions.backCamera || 
-                                         data.additionalConditions.battery;
-                        
+                        const hasOldData = data.additionalConditions.faceId ||
+                            data.additionalConditions.touchId ||
+                            data.additionalConditions.backCamera ||
+                            data.additionalConditions.battery;
+
                         if (hasOldData) {
                             console.log('[loadSavedConditions] Найдены сохраненные дополнительные состояния, загружаем их:', data.additionalConditions);
                             // Проверяем, что данные корректные (не пустые строки или null)
-                            const isValidData = data.additionalConditions.faceId && 
-                                              data.additionalConditions.touchId && 
-                                              data.additionalConditions.backCamera && 
-                                              data.additionalConditions.battery;
-                            
+                            const isValidData = data.additionalConditions.faceId &&
+                                data.additionalConditions.touchId &&
+                                data.additionalConditions.backCamera &&
+                                data.additionalConditions.battery;
+
                             if (isValidData) {
                                 setAdditionalConditions(data.additionalConditions);
                                 setHasChanges(true); // Устанавливаем флаг изменений для загруженных из БД состояний
+                                setShowHints(false); // Отключаем подсказки при загрузке данных
                                 // Сохраняем в sessionStorage для быстрого доступа
                                 sessionStorage.setItem('additionalConditions', JSON.stringify(data.additionalConditions));
                             } else {
@@ -145,7 +167,7 @@ export default function AdditionalConditionPage() {
                     } else {
                         console.log('[loadSavedConditions] Нет дополнительных состояний в БД, оставляем пустыми');
                     }
-                    
+
                     setLoadedFromDB(true);
                 } else {
                     console.log('Не удалось загрузить дополнительные состояния из БД');
@@ -163,7 +185,7 @@ export default function AdditionalConditionPage() {
     // Загружаем состояния при монтировании компонента
     useEffect(() => {
         console.log('[useEffect] Компонент смонтирован, telegramId:', telegramId);
-        
+
         if (telegramId) {
             // Не загружаем состояния сразу - ждем создания заявки
         } else {
@@ -183,13 +205,14 @@ export default function AdditionalConditionPage() {
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('additionalConditions');
-            
+
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
                     console.log('Продолжение заявки - восстановлены дополнительные состояния из sessionStorage:', parsed);
                     setAdditionalConditions(parsed);
                     setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
+                    setShowHints(false); // Отключаем подсказки при загрузке данных
                     setLoadedFromDB(true); // Устанавливаем флаг загрузки
                 } catch (e) {
                     console.error('Ошибка при парсинге sessionStorage при возврате:', e);
@@ -197,18 +220,18 @@ export default function AdditionalConditionPage() {
                 }
             }
         }
-        
+
         // Устанавливаем флаг загрузки для новой заявки
         setLoadedFromDB(true);
     }, [setAdditionalConditions]); // Запускается только один раз при загрузке страницы
 
     // Проверяем, заполнены ли все состояния
-    const areAllConditionsSelected = () => {
+    const areAllConditionsSelected = useCallback(() => {
         return additionalConditions.faceId &&
             additionalConditions.touchId &&
             additionalConditions.backCamera &&
             additionalConditions.battery;
-    };
+    }, [additionalConditions]);
 
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {
@@ -229,7 +252,7 @@ export default function AdditionalConditionPage() {
                     dialog.style.display = 'none';
                 }
             });
-            
+
             // Убираем backdrop (серый фон)
             const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
             backdrops.forEach(backdrop => {
@@ -246,7 +269,7 @@ export default function AdditionalConditionPage() {
         setShowDialog(false);
         // При редактировании сбрасываем флаг изменений
         setHasChanges(false);
-        
+
         // Убираем backdrop (серый фон) при редактировании
         setTimeout(() => {
             const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
@@ -291,10 +314,13 @@ export default function AdditionalConditionPage() {
     const handleConditionSelect = (type: 'faceId' | 'touchId' | 'backCamera' | 'battery', conditionId: string) => {
         console.log(`[handleConditionSelect] Начало выбора ${type} с ID: ${conditionId}`);
         console.log(`[handleConditionSelect] Текущие состояния ДО выбора:`, additionalConditions);
-        
+
         // Проверяем, можно ли выбрать этот тип
         if (!canSelectSection(type)) {
             console.log(`[handleConditionSelect] Нельзя выбрать ${type} сейчас`);
+            if (showHints) {
+                showFeedback('Сначала выберите предыдущие условия', 'warning');
+            }
             return;
         }
 
@@ -321,6 +347,17 @@ export default function AdditionalConditionPage() {
 
             // Сразу устанавливаем флаг изменений для мгновенного показа диалога
             setHasChanges(true);
+
+            // Показываем обратную связь
+            const feedbackMessages = {
+                backCamera: 'Задняя камера выбрана! Теперь выберите батарею',
+                battery: 'Батарея выбрана! Теперь выберите Face ID',
+                faceId: 'Face ID выбран! Теперь выберите Touch ID',
+                touchId: 'Touch ID выбран! Все условия заполнены'
+            };
+            if (showHints) {
+                showFeedback(feedbackMessages[type], 'success');
+            }
 
             // Сохраняем в sessionStorage для быстрого восстановления
             if (typeof window !== 'undefined') {
@@ -353,12 +390,12 @@ export default function AdditionalConditionPage() {
     ) => {
         // Определяем размеры контейнера в зависимости от типа
         const getImageContainerSize = () => {
-            if (type === 'battery') return 'w-18 h-26'; // Вертикальные картинки батареи
+            if (type === 'battery') return 'w-14 h-24'; // Вертикальные картинки батареи
             return 'w-14 h-14'; // Квадратные картинки для остальных
         };
 
         return (
-            <div className="space-y-3">
+            <div className="space-y-1">
                 <h3 className="text-lg font-semibold text-gray-800 text-center">
                     {title}
                     {!canSelectSection(type) && (
@@ -367,15 +404,15 @@ export default function AdditionalConditionPage() {
                         </span>
                     )}
                 </h3>
-                <div className={`grid ${gridCols} gap-3 ${!canSelectSection(type) ? 'opacity-50' : ''}`}>
+                <div className={`grid ${gridCols} gap-1 ${!canSelectSection(type) ? 'opacity-50' : ''}`}>
                     {conditions.map((condition) => {
                         const isSelected = additionalConditions[type] === condition.label;
                         return (
                             <Card
                                 key={condition.id}
-                                className={`transition-all duration-200 relative ${isSelected
-                                        ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                        : ''
+                                className={`transition-all duration-200 relative border-0 shadow-none ${isSelected
+                                    ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
+                                    : ''
                                     } ${canSelectSection(type)
                                         ? 'cursor-pointer hover:shadow-md'
                                         : 'cursor-not-allowed'
@@ -415,18 +452,81 @@ export default function AdditionalConditionPage() {
     return (
         <Page back={true}>
             <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-                    <div className="w-full max-w-md mx-auto space-y-6">
+                {/* Прогресс-бар */}
+                <div className="pt-2 pb-1">
+                    <ProgressBar
+                        currentStep={getCurrentStep()}
+                        totalSteps={4}
+                        steps={steps}
+                    />
+                </div>
+
+                <div className="flex-1 p-3 pt-6">
+                    <div className="w-full max-w-md mx-auto space-y-1">
 
 
                         {/* Задняя камера */}
                         {renderConditionSection('Задняя камера', backCameraConditions, 'backCamera', 'grid-cols-4')}
 
                         {/* Батарея */}
-                        {renderConditionSection('Батарея', batteryConditions, 'battery', 'grid-cols-4')}
+                        <div className="space-y-1">
+                            <Tooltip content="Оцените состояние батареи. Это влияет на цену выкупа.">
+                                <h3 className="text-lg font-semibold text-gray-800 text-center cursor-help">
+                                    Батарея
+                                </h3>
+                            </Tooltip>
+                            {!canSelectSection('battery') && (
+                                <span className="block text-sm text-gray-500 font-normal text-center">
+                                    Сначала выберите заднюю камеру
+                                </span>
+                            )}
+                            <div className={`grid grid-cols-4 gap-1 ${!canSelectSection('battery') ? 'opacity-50' : ''}`}>
+                                {batteryConditions.map((condition) => {
+                                    const isSelected = additionalConditions.battery === condition.label;
+                                    const percentage = parseInt(condition.label.replace('%', ''));
+                                    return (
+                                        <motion.div
+                                            key={condition.id}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            transition={{ duration: 0.1 }}
+                                        >
+                                            <Card
+                                                className={`transition-all duration-200 relative border-0 shadow-none ${isSelected
+                                                    ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
+                                                    : ''
+                                                    } ${canSelectSection('battery')
+                                                        ? 'cursor-pointer hover:shadow-md'
+                                                        : 'cursor-not-allowed'
+                                                    }`}
+                                                onClick={() => canSelectSection('battery') && handleConditionSelect('battery', condition.id)}
+                                            >
+                                                {isSelected && (
+                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <span className="text-white text-xs font-bold">✓</span>
+                                                    </div>
+                                                )}
+                                                <CardContent className="p-3">
+                                                    <div className="flex flex-col items-center space-y-2">
+                                                        <div className="relative w-16 h-24 rounded-lg overflow-hidden bg-gray-100">
+                                                            <Image
+                                                                src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`}
+                                                                alt={condition.label}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </motion.div>
+                                    );
+                                })}
+                            </div>
+                        </div>
 
                         {/* Face ID и Touch ID в одной строке */}
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             <h3 className="text-lg font-semibold text-gray-800 text-center">Face ID / Touch ID</h3>
                             {!canSelectSection('faceId') && (
                                 <span className="block text-sm text-gray-500 font-normal text-center">
@@ -438,88 +538,65 @@ export default function AdditionalConditionPage() {
                                     Сначала выберите Face ID
                                 </span>
                             )}
-                            <div className="grid grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-gray-700 text-center">Face ID</h4>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                {/* Face ID */}
+                                <div className="space-y-1">
+                                    <div className="text-center">
+                                        <span className="text-2xl">👁️</span>
+                                        <h4 className="text-sm font-medium text-gray-700">Face ID</h4>
+                                        <p className="text-xs text-gray-500">Разблокировка взглядом</p>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         {faceIdConditions.map((condition) => {
                                             const isSelected = additionalConditions.faceId === condition.label;
                                             return (
-                                                <Card
-                                                    key={condition.id}
-                                                    className={`transition-all duration-200 relative ${isSelected
-                                                            ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                                            : ''
-                                                        } ${canSelectSection('faceId')
-                                                            ? 'cursor-pointer hover:shadow-md'
-                                                            : 'cursor-not-allowed opacity-50'
-                                                        }`}
-                                                    onClick={() => canSelectSection('faceId') && handleConditionSelect('faceId', condition.id)}
-                                                >
-                                                    {isSelected && (
-                                                        <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                            <span className="text-white text-xs font-bold">✓</span>
-                                                        </div>
-                                                    )}
-                                                    <CardContent className="p-0.5">
-                                                        <div className="flex flex-col items-center space-y-1">
-                                                            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                                                                <Image
-                                                                    src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`}
-                                                                    alt={condition.label}
-                                                                    fill
-                                                                    className="object-cover"
-                                                                />
+                                                <motion.div key={condition.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
+                                                    <Card className={`transition-all duration-200 relative border-0 shadow-none ${isSelected ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10' : ''} ${canSelectSection('faceId') ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}`} onClick={() => canSelectSection('faceId') && handleConditionSelect('faceId', condition.id)}>
+                                                        {isSelected && (<div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>)}
+                                                        <CardContent className="p-2">
+                                                            <div className="flex flex-col items-center space-y-1">
+                                                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
+                                                                    <Image src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`} alt={condition.label} fill className="object-cover" />
+                                                                </div>
+                                                                <span className="text-xs font-medium text-gray-900 text-center">
+                                                                    {condition.label}
+                                                                </span>
                                                             </div>
-                                                            <span className="text-xs font-medium text-gray-900 text-center">
-                                                                {condition.label}
-                                                            </span>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
+                                                        </CardContent>
+                                                    </Card>
+                                                </motion.div>
                                             );
                                         })}
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-gray-700 text-center">Touch ID</h4>
+                                {/* Touch ID */}
+                                <div className="space-y-1">
+                                    <div className="text-center">
+                                        <span className="text-2xl">👆</span>
+                                        <h4 className="text-sm font-medium text-gray-700">Touch ID</h4>
+                                        <p className="text-xs text-gray-500">Разблокировка отпечатком</p>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         {touchIdConditions.map((condition) => {
                                             const isSelected = additionalConditions.touchId === condition.label;
                                             return (
-                                                <Card
-                                                    key={condition.id}
-                                                    className={`transition-all duration-200 relative ${isSelected
-                                                            ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                                            : ''
-                                                        } ${canSelectSection('touchId')
-                                                            ? 'cursor-pointer hover:shadow-md'
-                                                            : 'cursor-not-allowed opacity-50'
-                                                        }`}
-                                                    onClick={() => canSelectSection('touchId') && handleConditionSelect('touchId', condition.id)}
-                                                >
-                                                    {isSelected && (
-                                                        <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                            <span className="text-white text-xs font-bold">✓</span>
-                                                        </div>
-                                                    )}
-                                                    <CardContent className="p-0.5">
-                                                        <div className="flex flex-col items-center space-y-1">
-                                                            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                                                                <Image
-                                                                    src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`}
-                                                                    alt={condition.label}
-                                                                    fill
-                                                                    className="object-cover"
-                                                                />
+                                                <motion.div key={condition.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
+                                                    <Card className={`transition-all duration-200 relative border-0 shadow-none ${isSelected ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10' : ''} ${canSelectSection('touchId') ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}`} onClick={() => canSelectSection('touchId') && handleConditionSelect('touchId', condition.id)}>
+                                                        {isSelected && (<div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>)}
+                                                        <CardContent className="p-2">
+                                                            <div className="flex flex-col items-center space-y-1">
+                                                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
+                                                                    <Image src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`} alt={condition.label} fill className="object-cover" />
+                                                                </div>
+                                                                <span className="text-xs font-medium text-gray-900 text-center">
+                                                                    {condition.label}
+                                                                </span>
                                                             </div>
-                                                            <span className="text-xs font-medium text-gray-900 text-center">
-                                                                {condition.label}
-                                                            </span>
-                                                        </div>
-                                                    </CardContent>
-                                                </Card>
+                                                        </CardContent>
+                                                    </Card>
+                                                </motion.div>
                                             );
                                         })}
                                     </div>
@@ -530,59 +607,59 @@ export default function AdditionalConditionPage() {
                 </div>
             </div>
 
-                         {/* Диалоговое окно с итоговой информацией */}
-             <Dialog open={showDialog} onOpenChange={handleEdit}>
-                 <DialogContent
-                     className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
-                     onClick={handleContinue}
-                     showCloseButton={false}
-                 >
-                                           <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
-                          
-                      </DialogTitle>
- 
-                                                                                       <div className="text-center">
-                                                {/* Рамка для выбранных условий */}
-                                                                                                 <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg mb-4">
-                                                     <div className="space-y-3">
-                                                         {additionalConditions.faceId && (
-                                                             <div className="flex justify-between items-center">
-                                                                 <span className="text-gray-600 font-medium">Face ID:</span>
-                                                                 <span className="font-semibold text-gray-900 text-right break-words">
-                                                                     {additionalConditions.faceId}
-                                                                 </span>
-                                                             </div>
-                                                         )}
-                                                         {additionalConditions.touchId && (
-                                                             <div className="flex justify-between items-center">
-                                                                 <span className="text-gray-600 font-medium">Touch ID:</span>
-                                                                 <span className="font-semibold text-gray-900 text-right break-words">
-                                                                     {additionalConditions.touchId}
-                                                                 </span>
-                                                             </div>
-                                                         )}
-                                                         {additionalConditions.backCamera && (
-                                                             <div className="flex justify-between items-center">
-                                                                 <span className="text-gray-600 font-medium">Задняя камера:</span>
-                                                                 <span className="font-semibold text-gray-900 text-right break-words">
-                                                                     {additionalConditions.backCamera}
-                                                                 </span>
-                                                             </div>
-                                                         )}
-                                                         {additionalConditions.battery && (
-                                                             <div className="flex justify-between items-center">
-                                                                 <span className="text-gray-600 font-medium">Батарея:</span>
-                                                                 <span className="font-semibold text-gray-900 text-right break-words">
-                                                                     {additionalConditions.battery}
-                                                                 </span>
-                                                             </div>
-                                                         )}
-                                                     </div>
-                                                 </div>
-                          
-                          {/* Показываем выбранные условия */}                         
-                         
-                         <p className="text-center text-sm text-gray-600 mt-3">
+            {/* Диалоговое окно с итоговой информацией */}
+            <Dialog open={showDialog} onOpenChange={handleEdit}>
+                <DialogContent
+                    className="bg-white cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    onClick={handleContinue}
+                    showCloseButton={false}
+                >
+                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+
+                    </DialogTitle>
+
+                    <div className="text-center">
+                        {/* Рамка для выбранных условий */}
+                        <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
+                            <div className="space-y-3">
+                                {additionalConditions.faceId && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 font-medium">Face ID:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                            {additionalConditions.faceId}
+                                        </span>
+                                    </div>
+                                )}
+                                {additionalConditions.touchId && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 font-medium">Touch ID:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                            {additionalConditions.touchId}
+                                        </span>
+                                    </div>
+                                )}
+                                {additionalConditions.backCamera && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 font-medium">Задняя камера:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                            {additionalConditions.backCamera}
+                                        </span>
+                                    </div>
+                                )}
+                                {additionalConditions.battery && (
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-600 font-medium">Батарея:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                            {additionalConditions.battery}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Показываем выбранные условия */}
+
+                        <p className="text-center text-sm text-gray-600 mt-3">
                             👆 Нажмите на окно для перехода к следующему шагу
                         </p>
                         <p className="text-center text-sm text-gray-600 mt-1">
@@ -591,6 +668,14 @@ export default function AdditionalConditionPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Обратная связь при выборе */}
+            <SelectionFeedback
+                isVisible={feedback.isVisible}
+                message={feedback.message}
+                type={feedback.type}
+                onClose={hideFeedback}
+            />
         </Page>
     );
 }

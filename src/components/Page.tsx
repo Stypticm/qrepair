@@ -45,7 +45,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
         paddingBottom: `${safeAreaInsets.bottom}px`,
         paddingLeft: `${safeAreaInsets.left}px`,
         paddingRight: `${safeAreaInsets.right}px`,
-        minHeight: '100vh',
+        height: '90vh',
         boxSizing: 'border-box'
       }}
     >

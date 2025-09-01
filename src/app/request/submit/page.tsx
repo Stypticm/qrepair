@@ -251,7 +251,7 @@ const SubmitPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-full bg-gray-50 animate-fadeInUp my-auto">
+            <div className="w-full h-full bg-gray-50 animate-fadeInUp my-auto pt-6">
                 <div className="flex flex-col items-center justify-center w-full h-full px-6">
                     {submitted ? (
                         <div className="w-full max-w-md text-center">
@@ -276,7 +276,7 @@ const SubmitPage = () => {
                     ) : (
                         <div className="w-full max-w-md space-y-6">
                         {/* Summary заявки */}
-                        <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg">
+                        <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg">
                             <h3 className="text-xl font-semibold mb-5 text-center text-gray-900">
                                 Заявка
                             </h3>
