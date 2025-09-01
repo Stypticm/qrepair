@@ -232,7 +232,7 @@ export default function ConditionPage() {
     // Обработчики диалогового окна
     const handleContinue = () => {
         setShowDialog(false);
-        router.push('/request/submit');
+        router.push('/request/additional-condition');
     };
 
     const handleEdit = () => {

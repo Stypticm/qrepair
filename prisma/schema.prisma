@@ -40,6 +40,7 @@ model Skupka {
   condition            String?      // Состояние царапин экрана
   cracks               String?      // Состояние трещин экрана
   deviceConditions     Json?        // Детальное состояние устройства (front, back, side)
+  additionalConditions Json?        // Дополнительные условия (faceId, touchId, backCamera, battery)
   submittedAt          DateTime?    // Время отправки заявки
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt

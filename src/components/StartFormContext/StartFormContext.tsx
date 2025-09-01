@@ -32,6 +32,19 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         side: null
     });
 
+    // Дополнительные состояния устройства
+    const [additionalConditions, setAdditionalConditions] = useState<{
+        faceId: string | null;
+        touchId: string | null;
+        backCamera: string | null;
+        battery: string | null;
+    }>({
+        faceId: null,
+        touchId: null,
+        backCamera: null,
+        battery: null
+    });
+
     // Функция для сброса всех состояний
     const resetAllStates = () => {
         console.log('Сбрасываю все состояния формы...');
@@ -46,6 +59,12 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             front: null,
             back: null,
             side: null
+        });
+        setAdditionalConditions({
+            faceId: null,
+            touchId: null,
+            backCamera: null,
+            battery: null
         });
         
         // Очищаем sessionStorage при сбросе состояний
@@ -79,6 +98,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 showQuestionsSuccess,
                 onNext,
                 deviceConditions,
+                additionalConditions,
                 setOnNext,
                 setTelegramId,
                 setComment,
@@ -90,6 +110,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setShowQuestionsSuccess,
                 setPrice,
                 setDeviceConditions,
+                setAdditionalConditions,
                 resetAllStates
             }}
         >

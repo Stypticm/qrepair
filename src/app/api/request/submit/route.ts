@@ -1,6 +1,7 @@
 import prisma from '@/core/lib/prisma'
 import { NextResponse } from 'next/server'
 import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
+import { getAdditionalConditionPenalty } from '@/core/lib/additionalCondition'
 
 export async function POST(request: Request) {
   try {
@@ -41,59 +42,109 @@ export async function POST(request: Request) {
 
     // Отправляем уведомление в Telegram
     try {
-      // Получаем deviceConditions из БД для расчета процентов
+      // Получаем deviceConditions и additionalConditions из БД для расчета процентов
       const deviceConditions =
         existingRequest.deviceConditions as any
+      const additionalConditions =
+        existingRequest.additionalConditions as any
       let totalPenalty = 0
 
       if (deviceConditions) {
-                      if (deviceConditions.front) {
-                if (deviceConditions.front === 'Новый')
-                  totalPenalty += 0
-                else if (
-                  deviceConditions.front === 'Очень хорошее'
-                )
-                  totalPenalty += -3
-                else if (
-                  deviceConditions.front ===
-                  'Заметные царапины'
-                )
-                  totalPenalty += -8
-                else if (deviceConditions.front === 'Трещины')
-                  totalPenalty += -15
-              }
+        if (deviceConditions.front) {
+          if (deviceConditions.front === 'Новый')
+            totalPenalty += 0
+          else if (
+            deviceConditions.front === 'Очень хорошее'
+          )
+            totalPenalty += -3
+          else if (
+            deviceConditions.front === 'Заметные царапины'
+          )
+            totalPenalty += -8
+          else if (deviceConditions.front === 'Трещины')
+            totalPenalty += -15
+        }
 
-              if (deviceConditions.back) {
-                if (deviceConditions.back === 'Новый')
-                  totalPenalty += 0
-                else if (
-                  deviceConditions.back === 'Очень хорошее'
-                )
-                  totalPenalty += -3
-                else if (
-                  deviceConditions.back ===
-                  'Заметные царапины'
-                )
-                  totalPenalty += -8
-                else if (deviceConditions.back === 'Трещины')
-                  totalPenalty += -15
-              }
+        if (deviceConditions.back) {
+          if (deviceConditions.back === 'Новый')
+            totalPenalty += 0
+          else if (
+            deviceConditions.back === 'Очень хорошее'
+          )
+            totalPenalty += -3
+          else if (
+            deviceConditions.back === 'Заметные царапины'
+          )
+            totalPenalty += -8
+          else if (deviceConditions.back === 'Трещины')
+            totalPenalty += -15
+        }
 
-              if (deviceConditions.side) {
-                if (deviceConditions.side === 'Новый')
-                  totalPenalty += 0
-                else if (
-                  deviceConditions.side === 'Очень хорошее'
-                )
-                  totalPenalty += -3
-                else if (
-                  deviceConditions.side ===
-                  'Заметные царапины'
-                )
-                  totalPenalty += -8
-                else if (deviceConditions.side === 'Трещины')
-                  totalPenalty += -15
-              }
+        if (deviceConditions.side) {
+          if (deviceConditions.side === 'Новый')
+            totalPenalty += 0
+          else if (
+            deviceConditions.side === 'Очень хорошее'
+          )
+            totalPenalty += -3
+          else if (
+            deviceConditions.side === 'Заметные царапины'
+          )
+            totalPenalty += -8
+          else if (deviceConditions.side === 'Трещины')
+            totalPenalty += -15
+        }
+      }
+
+      // Добавляем штрафы за дополнительные условия
+      if (additionalConditions) {
+        if (additionalConditions.faceId) {
+          if (additionalConditions.faceId === 'Работает')
+            totalPenalty += 0
+          else if (
+            additionalConditions.faceId === 'Не работает'
+          )
+            totalPenalty += -10
+        }
+
+        if (additionalConditions.touchId) {
+          if (additionalConditions.touchId === 'Работает')
+            totalPenalty += 0
+          else if (
+            additionalConditions.touchId === 'Не работает'
+          )
+            totalPenalty += -8
+        }
+
+        if (additionalConditions.backCamera) {
+          if (additionalConditions.backCamera === 'Новый')
+            totalPenalty += 0
+          else if (
+            additionalConditions.backCamera ===
+            'Очень хорошее'
+          )
+            totalPenalty += -3
+          else if (
+            additionalConditions.backCamera ===
+            'Заметные царапины'
+          )
+            totalPenalty += -8
+          else if (
+            additionalConditions.backCamera === 'Трещины'
+          )
+            totalPenalty += -15
+        }
+
+        if (additionalConditions.battery) {
+          if (additionalConditions.battery === '95%')
+            totalPenalty += 0
+          else if (additionalConditions.battery === '90%')
+            totalPenalty += -2
+          else if (additionalConditions.battery === '85%')
+            totalPenalty += -5
+          else if (additionalConditions.battery === '75%')
+            totalPenalty += -10
+        }
       }
 
       // Используем переданную цену вместо расчета

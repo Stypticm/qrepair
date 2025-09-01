@@ -10,7 +10,7 @@ import { Page } from '@/components/Page';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, answers, deviceConditions, price, resetAllStates, setDeviceConditions } = useStartForm();
+    const { telegramId, modelname, answers, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions } = useStartForm();
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
@@ -41,6 +41,7 @@ const SubmitPage = () => {
                 if (typeof window !== 'undefined') {
                     sessionStorage.removeItem('phoneSelection');
                     sessionStorage.removeItem('deviceConditions');
+                    sessionStorage.removeItem('additionalConditions');
                     console.log('sessionStorage очищен при отправке заявки');
                 }
                 
@@ -78,10 +79,48 @@ const SubmitPage = () => {
         }
     };
 
+    // Функция для отображения состояния с процентом
+    const getConditionWithPenalty = (conditionText: string): string => {
+        if (conditionText === 'Новый') {
+            return 'Новый (0%)';
+        } else if (conditionText === 'Очень хорошее') {
+            return 'Очень хорошее (-3%)';
+        } else if (conditionText === 'Заметные царапины') {
+            return 'Заметные царапины (-8%)';
+        } else if (conditionText === 'Трещины') {
+            return 'Трещины (-15%)';
+        } else {
+            return conditionText;
+        }
+    };
+
+    // Функция для отображения дополнительного состояния с процентом
+    const getAdditionalConditionWithPenalty = (conditionText: string, type: string): string => {
+        if (type === 'faceId') {
+            return conditionText === 'Не работает' ? 'Не работает (-10%)' : 'Работает (0%)';
+        } else if (type === 'touchId') {
+            return conditionText === 'Не работает' ? 'Не работает (-8%)' : 'Работает (0%)';
+        } else if (type === 'backCamera') {
+            if (conditionText === 'Новый') return 'Новый (0%)';
+            else if (conditionText === 'Очень хорошее') return 'Очень хорошее (-3%)';
+            else if (conditionText === 'Заметные царапины') return 'Заметные царапины (-8%)';
+            else if (conditionText === 'Трещины') return 'Трещины (-15%)';
+            return conditionText;
+        } else if (type === 'battery') {
+            if (conditionText === '95%') return '95% (0%)';
+            else if (conditionText === '90%') return '90% (-2%)';
+            else if (conditionText === '85%') return '85% (-5%)';
+            else if (conditionText === '75%') return '75% (-10%)';
+            return conditionText;
+        }
+        return conditionText;
+    };
+
     // Функция для расчета общего процента вычета
     const calculateTotalPenalty = (): number => {
         let totalPenalty = 0;
         
+        // Штрафы за основные состояния устройства
         if (deviceConditions.front) {
             if (deviceConditions.front === 'Новый') totalPenalty += 0;
             else if (deviceConditions.front === 'Очень хорошее') totalPenalty += -3;
@@ -102,8 +141,48 @@ const SubmitPage = () => {
             else if (deviceConditions.side === 'Заметные царапины') totalPenalty += -8;
             else if (deviceConditions.side === 'Трещины') totalPenalty += -15;
         }
+
+        // Штрафы за дополнительные состояния
+        if (additionalConditions) {
+            if (additionalConditions.faceId === 'Не работает') totalPenalty += -10;
+            if (additionalConditions.touchId === 'Не работает') totalPenalty += -8;
+            
+            // Штрафы за заднюю камеру
+            if (additionalConditions.backCamera === 'Новый') totalPenalty += 0;
+            else if (additionalConditions.backCamera === 'Очень хорошее') totalPenalty += -3;
+            else if (additionalConditions.backCamera === 'Заметные царапины') totalPenalty += -8;
+            else if (additionalConditions.backCamera === 'Трещины') totalPenalty += -15;
+            
+            // Штрафы за батарею
+            if (additionalConditions.battery === '95%') totalPenalty += 0;
+            else if (additionalConditions.battery === '90%') totalPenalty += -2;
+            else if (additionalConditions.battery === '85%') totalPenalty += -5;
+            else if (additionalConditions.battery === '75%') totalPenalty += -10;
+        }
         
         return totalPenalty;
+    };
+
+    // Функция для получения процента скидки по дополнительным условиям
+    const getAdditionalConditionPenalty = (conditionText: string, type: string): string => {
+        if (type === 'faceId') {
+            return conditionText === 'Не работает' ? '-10%' : '0%';
+        } else if (type === 'touchId') {
+            return conditionText === 'Не работает' ? '-8%' : '0%';
+        } else if (type === 'backCamera') {
+            if (conditionText === 'Новый') return '0%';
+            else if (conditionText === 'Очень хорошее') return '-3%';
+            else if (conditionText === 'Заметные царапины') return '-8%';
+            else if (conditionText === 'Трещины') return '-15%';
+            return '0%';
+        } else if (type === 'battery') {
+            if (conditionText === '95%') return '0%';
+            else if (conditionText === '90%') return '-2%';
+            else if (conditionText === '85%') return '-5%';
+            else if (conditionText === '75%') return '-10%';
+            return '0%';
+        }
+        return '0%';
     };
 
     return (
@@ -112,8 +191,8 @@ const SubmitPage = () => {
                 <div className="flex flex-col items-center justify-center w-full h-full px-6">
                     <div className="w-full max-w-md space-y-6">
                         {/* Summary заявки */}
-                        <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
-                            <h3 className="text-xl font-semibold mb-6 text-center text-gray-900">
+                        <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg">
+                            <h3 className="text-xl font-semibold mb-5 text-center text-gray-900">
                                 Заявка
                             </h3>
                             
@@ -126,25 +205,55 @@ const SubmitPage = () => {
                                 <div className="border-t border-gray-200 pt-4">
                                     <h4 className="font-semibold mb-3 text-gray-900">Состояние устройства:</h4>
                                     <div className="space-y-3">
-                                        {/* Новые состояния устройства из контекста */}
+                                        {/* Основные состояния устройства */}
                                         {deviceConditions && (
                                             <>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Состояние передней панели:</span>
+                                                    <span className="text-gray-600 font-medium">Передняя панель:</span>
                                                     <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {deviceConditions.front || 'Не выбрано'}
+                                                        {deviceConditions.front ? getConditionWithPenalty(deviceConditions.front) : 'Не выбрано'}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Состояние задней панели:</span>
+                                                    <span className="text-gray-600 font-medium">Задняя панель:</span>
                                                     <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {deviceConditions.back || 'Не выбрано'}
+                                                        {deviceConditions.back ? getConditionWithPenalty(deviceConditions.back) : 'Не выбрано'}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between items-center">
-                                                    <span className="text-gray-600 font-medium">Состояние боковой панели:</span>
+                                                    <span className="text-gray-600 font-medium">Боковая панель:</span>
                                                     <span className="font-semibold text-gray-900 text-right break-words">
-                                                        {deviceConditions.side || 'Не выбрано'}
+                                                        {deviceConditions.side ? getConditionWithPenalty(deviceConditions.side) : 'Не выбрано'}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {/* Дополнительные состояния устройства */}
+                                        {additionalConditions && (
+                                            <>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600 font-medium">Face ID:</span>
+                                                    <span className="font-semibold text-gray-900 text-right break-words">
+                                                        {additionalConditions.faceId ? getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId') : 'Не выбрано'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600 font-medium">Touch ID:</span>
+                                                    <span className="font-semibold text-gray-900 text-right break-words">
+                                                        {additionalConditions.touchId ? getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId') : 'Не выбрано'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600 font-medium">Задняя камера:</span>
+                                                    <span className="font-semibold text-gray-900 text-right break-words">
+                                                        {additionalConditions.backCamera ? getAdditionalConditionWithPenalty(additionalConditions.backCamera, 'backCamera') : 'Не выбрано'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600 font-medium">Батарея:</span>
+                                                    <span className="font-semibold text-gray-900 text-right break-words">
+                                                        {additionalConditions.battery ? getAdditionalConditionWithPenalty(additionalConditions.battery, 'battery') : 'Не выбрано'}
                                                     </span>
                                                 </div>
                                             </>
@@ -153,41 +262,12 @@ const SubmitPage = () => {
                                 </div>
                                 
                                 <div className="border-t border-gray-200 pt-4">
-                                    <h4 className="font-semibold mb-3 text-gray-900">Оценка стоимости:</h4>
+                                    <h4 className="font-semibold mb-3 text-gray-900">Итоговая оценка:</h4>
                                     <div className="space-y-3">
-                                        {/* Проценты по состояниям */}
-                                        {deviceConditions && (
-                                            <>
-                                                {deviceConditions.front && (
-                                                    <div className="flex justify-between items-center text-sm">
-                                                        <span className="text-gray-600">Передняя панель:</span>
-                                                        <span className="font-medium text-gray-900">
-                                                            {getConditionPenalty(deviceConditions.front)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {deviceConditions.back && (
-                                                    <div className="flex justify-between items-center text-sm">
-                                                        <span className="text-gray-600">Задняя панель:</span>
-                                                        <span className="font-medium text-gray-900">
-                                                            {getConditionPenalty(deviceConditions.back)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {deviceConditions.side && (
-                                                    <div className="flex justify-between items-center text-sm">
-                                                        <span className="text-gray-600">Боковые грани:</span>
-                                                        <span className="font-medium text-gray-900">
-                                                            {getConditionPenalty(deviceConditions.side)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                        
                                         {/* Общий процент вычета */}
-                                        {deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side) && (
-                                            <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+                                        {((deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) || 
+                                          (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery))) && (
+                                            <div className="flex justify-between items-center">
                                                 <span className="font-semibold text-gray-900">Общий вычет:</span>
                                                 <span className="font-bold text-red-600">
                                                     {calculateTotalPenalty() === 0 ? '0%' : `${calculateTotalPenalty()}%`}

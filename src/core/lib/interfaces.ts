@@ -47,6 +47,20 @@ export type FormState = {
     side: string | null
   }) => void
 
+  // Дополнительные состояния устройства
+  additionalConditions: {
+    faceId: string | null
+    touchId: string | null
+    backCamera: string | null
+    battery: string | null
+  }
+  setAdditionalConditions: (conditions: {
+    faceId: string | null
+    touchId: string | null
+    backCamera: string | null
+    battery: string | null
+  }) => void
+
   // Сброс всех состояний
   resetAllStates: () => void
 }
@@ -83,6 +97,7 @@ export interface SkupkaRequest {
   condition?: string
   cracks?: string
   deviceConditions?: any
+  additionalConditions?: any
   submittedAt?: string
   createdAt: string
   updatedAt: string
