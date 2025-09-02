@@ -577,22 +577,13 @@ export default function DeviceInfoPage() {
                         {/* Кнопка для iPhone */}
                         <button
                             onClick={() => {
-                                if (typeof window !== 'undefined') {
-                                    // Для iPhone
-                                    const iosUrl = 'App-Prefs:root=General&path=About';
-                                    
-                                    try {
-                                        window.open(iosUrl, '_blank');
-                                    } catch (e) {
-                                        if ((window as any).Telegram?.WebApp) {
-                                            (window as any).Telegram.WebApp.showAlert('Откройте Настройки → Основные → Об этом устройстве. Найдите IMEI и скопируйте его долгим нажатием.');
-                                        }
-                                    }
+                                if ((window as any).Telegram?.WebApp) {
+                                    (window as any).Telegram.WebApp.showAlert('Для получения IMEI:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите IMEI и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте IMEI');
                                 }
                             }}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors duration-200 text-sm"
                         >
-                            ⚙️ Открыть Настройки iPhone
+                            📱 Инструкции для iPhone
                         </button>
 
                         {/* Поле ввода */}
@@ -608,7 +599,7 @@ export default function DeviceInfoPage() {
                                 className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-base font-mono bg-gray-50"
                             />
                             <p className="text-xs text-gray-500 mt-1 text-center">
-                                15 цифр
+                                15 цифр • Можно вставить из буфера обмена
                             </p>
                         </div>
 
