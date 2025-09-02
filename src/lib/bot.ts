@@ -6,7 +6,7 @@ const config = {
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       'https://qrepair-git-dev-stypticms-projects.vercel.app'
-    return `${baseUrl}?mode=fullscreen`
+    return `${baseUrl}`
   },
 }
 
