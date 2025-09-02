@@ -370,8 +370,9 @@ export default function DeviceInfoPage() {
 
     // Загружаем данные при монтировании компонента
     useEffect(() => {
-        loadSavedData();
-    }, [loadSavedData]);
+        // Убираем loadSavedData() чтобы избежать бесконечного цикла
+        // Данные уже загружаются в handleStartForm на главной странице
+    }, []);
 
     // Проверяем, готовы ли данные для обработки OCR S/N
     const isReadyForSnOCR = useCallback(() => {
@@ -784,7 +785,7 @@ const ImeiInputMethod = ({
                             }}
                         />
                         <p className="text-xs text-gray-400 text-center">
-                            15 цифр
+                            15 цифр • Тестовый: 123456789012347
                         </p>
                     </div>
                 </CardContent>
