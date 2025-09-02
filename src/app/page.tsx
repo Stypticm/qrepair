@@ -68,7 +68,7 @@ export default function Home() {
 
         if (response.ok) {
           draftData = await response.json();
-          
+
           // Загружаем данные в контекст
           if (draftData) {
             if (draftData.modelname) setModel(draftData.modelname);
@@ -92,7 +92,7 @@ export default function Home() {
               (result: boolean) => resolve(result)
             );
           });
-          
+
           if (!confirmed) {
             setIsLoading(false);
             return; // Пользователь отменил
@@ -149,7 +149,7 @@ export default function Home() {
         router.push('/request/condition');
         return;
       }
-      
+
       // 6. Нет сохраненных данных - начинаем с form (новая заявка)
       router.push('/request/form');
     } catch (error) {
@@ -167,29 +167,25 @@ export default function Home() {
     return (
       <AdaptiveContainer>
         <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
+          {/* Гиф с танцующим кокосом */}
           <motion.div
-            initial={{ x: -300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 70, 
-              damping: 12,
-              duration: 2.2
-            }}
-            className="relative w-32 h-32 mb-4"
+            initial={{ y: -20 }}
+            animate={{ y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="w-24 h-24 mx-auto mb-6 flex items-center justify-center"
           >
             <Image
-              src="/coconut-dancing.gif"
-              alt="Loading..."
-              fill
-              className="object-contain"
-              unoptimized
+              src={getPictureUrl('coconut-dancing.gif') || '/coconut-dancing.gif'}
+              alt="Танцующий кокос"
+              width={96}
+              height={96}
+              className="object-contain rounded-2xl"
             />
           </motion.div>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ 
+            transition={{
               delay: 0.5,
               duration: 0.6,
               ease: "easeOut"
@@ -211,9 +207,9 @@ export default function Home() {
             <motion.div
               initial={{ x: -300, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ 
-                type: "spring", 
-                stiffness: 70, 
+              transition={{
+                type: "spring",
+                stiffness: 70,
                 damping: 12,
                 duration: 2.2
               }}
@@ -230,7 +226,7 @@ export default function Home() {
 
             <div className="flex flex-col gap-4 w-full">
 
-              
+
               <Button
                 variant="outline"
                 className="w-full h-16 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
