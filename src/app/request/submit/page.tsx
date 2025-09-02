@@ -306,7 +306,7 @@ const SubmitPage = () => {
             else if (additionalConditions.battery === '75%') totalPenalty += -10;
         }
         
-        return totalPenalty;
+        return Math.abs(totalPenalty);
     };
 
     return (

@@ -53,7 +53,6 @@ export default function DeviceInfoPage() {
 
     // Состояние диалогового окна
     const [showDialog, setShowDialog] = useState(false);
-    const [showImeiDialog, setShowImeiDialog] = useState(false);
 
     // Шаги для прогресс-бара
     const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
@@ -122,8 +121,7 @@ export default function DeviceInfoPage() {
             sessionStorage.setItem('imei', manualImei);
         }
 
-        // Закрываем диалог и переходим к следующему шагу
-        setShowImeiDialog(false);
+        // Переходим к следующему шагу
         setSelectedMethod('sn_screenshot');
         setOcrError(null);
     };
@@ -463,7 +461,7 @@ export default function DeviceInfoPage() {
                                             <h4 className="text-lg font-semibold text-gray-900 mb-4">Выберите способ</h4>
                                             <div className="space-y-3">
                                                 <button
-                                                    onClick={() => setShowImeiDialog(true)}
+                                                    onClick={() => setSelectedMethod('imei_dial')}
                                                     className="w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors duration-200"
                                                 >
                                                     <div className="flex items-center space-x-3">
@@ -500,6 +498,22 @@ export default function DeviceInfoPage() {
                         )}
 
 
+
+                        {/* Метод ввода IMEI */}
+                        {selectedMethod === 'imei_dial' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                            >
+                                <ImeiInputMethod 
+                                    manualImei={manualImei}
+                                    setManualImei={setManualImei}
+                                    onConfirm={handleImeiInput}
+                                    onBack={() => setSelectedMethod(null)}
+                                />
+                            </motion.div>
+                        )}
 
                         {/* Метод ввода S/N */}
                         {selectedMethod === 'sn_screenshot' && (
@@ -574,89 +588,7 @@ export default function DeviceInfoPage() {
                 </div>
             </div>
 
-            {/* Диалоговое окно для ввода IMEI */}
-            <Dialog open={showImeiDialog} onOpenChange={setShowImeiDialog}>
-                <DialogContent
-                    className="bg-white w-[90vw] max-w-sm mx-auto rounded-xl shadow-lg max-h-[80vh] overflow-y-auto"
-                    showCloseButton={true}
-                >
-                    <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-3">
-                        Введите IMEI
-                    </DialogTitle>
 
-                    <div className="space-y-3">
-                        {/* Инструкции для IMEI */}
-                        <Card className="p-3 bg-blue-50 border border-blue-200">
-                            <CardContent>
-                                <h4 className="font-semibold text-blue-800 mb-2">
-                                    📱 Как получить IMEI
-                                </h4>
-                                <div className="space-y-2 text-sm text-blue-700">
-                                    <div className="flex items-center space-x-2">
-                                        <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
-                                        <span>Настройки → Основные → Об этом устройстве</span>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
-                                        <span>Найдите IMEI и скопируйте</span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Кнопка для iPhone */}
-                        <button
-                            onClick={() => {
-                                if ((window as any).Telegram?.WebApp) {
-                                    (window as any).Telegram.WebApp.showAlert('Для получения IMEI:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите IMEI и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте IMEI');
-                                }
-                            }}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors duration-200 text-sm"
-                        >
-                            📱 Инструкции для iPhone
-                        </button>
-
-                        {/* Поле ввода IMEI */}
-                        <Card className="p-3 border border-gray-200">
-                            <CardContent>
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-semibold text-gray-900">
-                                        IMEI
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={manualImei}
-                                        onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                                        placeholder="Введите IMEI"
-                                        className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
-                                    />
-                                    <p className="text-xs text-gray-500 text-center">
-                                        15 цифр
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Ошибка */}
-                        {ocrError && (
-                            <Card className="p-3 bg-red-50 border border-red-200">
-                                <CardContent>
-                                    <p className="text-sm text-red-700">{ocrError}</p>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Кнопка подтверждения */}
-                        <Button
-                            onClick={handleImeiInput}
-                            disabled={!manualImei || manualImei.length !== 15}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white"
-                        >
-                            Подтвердить
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             {/* Диалоговое окно с итоговой информацией */}
             <Dialog open={showDialog} onOpenChange={handleEdit}>
@@ -718,6 +650,94 @@ export default function DeviceInfoPage() {
         </Page>
     );
 }
+
+// Компонент для метода ввода IMEI
+const ImeiInputMethod = ({
+    manualImei,
+    setManualImei,
+    onConfirm,
+    onBack
+}: {
+    manualImei: string;
+    setManualImei: (value: string) => void;
+    onConfirm: () => void;
+    onBack: () => void;
+}) => {
+    return (
+        <div className="space-y-3">
+            {/* Кнопка назад */}
+            <Button
+                onClick={onBack}
+                variant="outline"
+                size="sm"
+                className="w-full"
+            >
+                ← Назад
+            </Button>
+
+            {/* Инструкции для IMEI */}
+            <Card className="p-3 bg-blue-50 border border-blue-200">
+                <CardContent>
+                    <h4 className="font-semibold text-blue-800 mb-2">
+                        📱 Как получить IMEI
+                    </h4>
+                    <div className="space-y-2 text-sm text-blue-700">
+                        <div className="flex items-center space-x-2">
+                            <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
+                            <span>Настройки → Основные → Об этом устройстве</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
+                            <span>Найдите IMEI и скопируйте</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Кнопка для iPhone */}
+            <button
+                onClick={() => {
+                    if ((window as any).Telegram?.WebApp) {
+                        (window as any).Telegram.WebApp.showAlert('Для получения IMEI:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите IMEI и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте IMEI');
+                    }
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors duration-200 text-sm"
+            >
+                📱 Инструкции для iPhone
+            </button>
+
+            {/* Поле ввода IMEI */}
+            <Card className="p-3 border border-gray-200">
+                <CardContent>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-900">
+                            IMEI
+                        </label>
+                        <input
+                            type="text"
+                            value={manualImei}
+                            onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                            placeholder="Введите IMEI"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
+                        />
+                        <p className="text-xs text-gray-500 text-center">
+                            15 цифр
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Кнопка подтверждения */}
+            <Button
+                onClick={onConfirm}
+                disabled={!manualImei || manualImei.length !== 15}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white"
+            >
+                Подтвердить
+            </Button>
+        </div>
+    );
+};
 
 // Компонент для метода ввода S/N
 const SnInputMethod = ({
