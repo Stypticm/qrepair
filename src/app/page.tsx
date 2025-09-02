@@ -75,7 +75,6 @@ export default function Home() {
           const draftData = await response.json();
           if (draftData && draftData.status === 'submitted') {
             // Есть уже отправленная заявка
-            setIsLoading(false);
             if (window.Telegram?.WebApp) {
               const webApp = window.Telegram.WebApp;
               const confirmed = await new Promise((resolve) => {
@@ -86,6 +85,7 @@ export default function Home() {
               });
               
               if (!confirmed) {
+                setIsLoading(false);
                 return; // Пользователь отменил
               }
             }
@@ -116,7 +116,6 @@ export default function Home() {
 
       // 4. Используем currentStep из БД для перенаправления
       if (currentStep) {
-        setIsLoading(false);
         switch (currentStep) {
           case 'form':
             router.push('/request/condition');
@@ -142,33 +141,27 @@ export default function Home() {
       // 5. Fallback: определяем шаг на основе сохраненных данных
       if (imei && serialNumber) {
         // Все данные заполнены - перенаправляем на submit
-        setIsLoading(false);
         router.push('/request/submit');
         return;
       } else if (imei) {
         // IMEI заполнен, но нет S/N - перенаправляем на device-info
-        setIsLoading(false);
         router.push('/request/device-info');
         return;
       } else if (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery)) {
         // Дополнительные условия заполнены - перенаправляем на device-info
-        setIsLoading(false);
         router.push('/request/device-info');
         return;
       } else if (deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) {
         // Состояния устройства заполнены - перенаправляем на additional-condition
-        setIsLoading(false);
         router.push('/request/additional-condition');
         return;
       } else if (modelname && modelname !== 'Apple iPhone 11') {
         // Модель выбрана - перенаправляем на condition
-        setIsLoading(false);
         router.push('/request/condition');
         return;
       }
       
       // 6. Нет сохраненных данных - начинаем с form (новая заявка)
-      setIsLoading(false);
       router.push('/request/form');
     } catch (error) {
       console.error('Ошибка проверки заявки:', error);
