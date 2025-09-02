@@ -1,7 +1,11 @@
 import prisma from '@/core/lib/prisma'
 import { NextResponse } from 'next/server'
-import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage'
+import {
+  sendTelegramMessage,
+  sendTelegramPhoto,
+} from '@/core/lib/sendTelegramMessage'
 import { getAdditionalConditionPenalty } from '@/core/lib/additionalCondition'
+import { getPictureUrl } from '@/core/lib/assets'
 
 export async function POST(request: Request) {
   try {
@@ -151,7 +155,7 @@ export async function POST(request: Request) {
       // Используем переданную цену вместо расчета
       const finalPrice = price || 48000
 
-      const message = `✅ *Заявка принята!*
+      const caption = `✅ *Заявка принята!*
 
 📱 *Модель:* ${modelname}
 📊 *Оценка состояния:* ${Math.abs(totalPenalty)}%
@@ -159,9 +163,16 @@ export async function POST(request: Request) {
 
 Мы свяжемся с вами в ближайшее время для уточнения деталей.`
 
-      await sendTelegramMessage(telegramId, message, {
-        parse_mode: 'Markdown',
-      })
+      // Отправляем фото с подписью из Supabase
+      const photoUrl = getPictureUrl('submit.png')
+      await sendTelegramPhoto(
+        telegramId,
+        photoUrl,
+        caption,
+        {
+          parse_mode: 'Markdown',
+        }
+      )
     } catch (telegramError) {
       console.error(
         'Error sending Telegram message:',
