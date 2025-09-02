@@ -26,7 +26,7 @@ const SubmitPage = () => {
                         setModel(parsed.model);
                     }
                 } catch (e) {
-                    console.error('[SubmitPage] Ошибка парсинга phoneSelection:', e);
+                    // Ошибка парсинга phoneSelection
                 }
             }
             
@@ -40,7 +40,7 @@ const SubmitPage = () => {
                         setDeviceConditions(parsed);
                     }
                 } catch (e) {
-                    console.error('[SubmitPage] Ошибка парсинга deviceConditions:', e);
+                    // Ошибка парсинга deviceConditions
                 }
             }
             
@@ -54,7 +54,7 @@ const SubmitPage = () => {
                         setAdditionalConditions(parsed);
                     }
                 } catch (e) {
-                    console.error('[SubmitPage] Ошибка парсинга additionalConditions:', e);
+                    // Ошибка парсинга additionalConditions
                 }
             }
 
@@ -149,7 +149,6 @@ const SubmitPage = () => {
 
             if (res.ok) {
                 const result = await res.json();
-                console.log('Заявка отправлена успешно:', result);
                 
                 // Сразу помечаем как отправленную, чтобы скрыть страницу
                 setSubmitted(true);
@@ -165,18 +164,16 @@ const SubmitPage = () => {
                         sessionStorage.removeItem('additionalConditions');
                         // Устанавливаем флаг, что заявка была отправлена
                         sessionStorage.setItem('requestSubmitted', 'true');
-                        console.log('sessionStorage очищен при отправке заявки');
                     }
                     
                     // Сбрасываем все состояния ТОЛЬКО после перехода
                     resetAllStates();
-                    console.log('Состояния сброшены в submit после отправки');
                 }, 100); // Небольшая задержка для плавного перехода
             } else {
-                console.error('Ошибка при отправке заявки:', res.status);
+                // Ошибка при отправке заявки
             }
         } catch (error) {
-            console.error('Ошибка при отправке заявки:', error);
+            // Ошибка при отправке заявки
         } finally {
             setSubmitting(false);
         }
@@ -230,7 +227,7 @@ const SubmitPage = () => {
                     
                     return fullModel;
                 } catch (e) {
-                    console.error('[SubmitPage] Ошибка парсинга phoneSelection для полной модели:', e);
+                    // Ошибка парсинга phoneSelection для полной модели
                 }
             }
         }
@@ -465,14 +462,33 @@ const SubmitPage = () => {
                             </div>
                         </div>
 
-                        {/* Кнопка отправки */}
-                        <div className="w-full">
+                        {/* Кнопки */}
+                        <div className="w-full space-y-3">
                             <Button
                                 onClick={handleSubmit}
                                 disabled={submitting || !modelname}
                                 className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                             >
                                 {submitting ? 'Отправляем...' : 'Отправить заявку'}
+                            </Button>
+                            
+                            <Button
+                                onClick={() => {
+                                    // Сбрасываем все состояния
+                                    resetAllStates();
+                                    
+                                    // Очищаем sessionStorage
+                                    if (typeof window !== 'undefined') {
+                                        sessionStorage.clear();
+                                    }
+                                    
+                                    // Переходим к форме
+                                    router.push('/request/form');
+                                }}
+                                variant="outline"
+                                className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                            >
+                                Начать с начала
                             </Button>
                         </div>
                     </div>

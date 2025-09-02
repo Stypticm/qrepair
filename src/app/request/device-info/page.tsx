@@ -748,6 +748,22 @@ const ImeiInputMethod = ({
                 📱 Инструкции для iPhone
             </button>
 
+            {/* Подсказки перед полем ввода */}
+            {manualImei.length === 15 && (
+                <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs text-green-600 text-center font-medium">
+                        ✅ Готово! Нажмите &quot;Подтвердить&quot; или клавишу &quot;Ввод&quot; на клавиатуре
+                    </p>
+                </div>
+            )}
+            {manualImei.length > 0 && manualImei.length < 15 && (
+                <div className="p-2 bg-orange-50 border border-orange-200 rounded-lg">
+                    <p className="text-xs text-orange-600 text-center font-medium">
+                        ⚠️ Введите еще {15 - manualImei.length} цифр
+                    </p>
+                </div>
+            )}
+
             {/* Поле ввода IMEI */}
             <Card className="p-3 border border-gray-200">
                 <CardContent>
@@ -770,16 +786,6 @@ const ImeiInputMethod = ({
                         <p className="text-xs text-gray-400 text-center">
                             15 цифр
                         </p>
-                        {manualImei.length === 15 && (
-                            <p className="text-xs text-green-600 text-center font-medium">
-                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или клавишу &quot;Ввод&quot; на клавиатуре
-                            </p>
-                        )}
-                        {manualImei.length > 0 && manualImei.length < 15 && (
-                            <p className="text-xs text-orange-600 text-center font-medium">
-                                ⚠️ Введите еще {15 - manualImei.length} цифр
-                            </p>
-                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -855,6 +861,22 @@ const SnInputMethod = ({
                 📱 Инструкции для iPhone
             </button>
 
+            {/* Подсказки перед полем ввода */}
+            {manualSerialNumber.length >= 10 && (
+                <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-xs text-green-600 text-center font-medium">
+                        ✅ Готово! Нажмите &quot;Подтвердить&quot; или клавишу &quot;Ввод&quot; на клавиатуре
+                    </p>
+                </div>
+            )}
+            {manualSerialNumber.length > 0 && manualSerialNumber.length < 10 && (
+                <div className="p-2 bg-orange-50 border border-orange-200 rounded-lg">
+                    <p className="text-xs text-orange-600 text-center font-medium">
+                        ⚠️ Введите еще {10 - manualSerialNumber.length} символов
+                    </p>
+                </div>
+            )}
+
             {/* Поле ввода S/N */}
             <Card className="p-3 border border-gray-200">
                 <CardContent>
@@ -877,16 +899,6 @@ const SnInputMethod = ({
                         <p className="text-xs text-gray-400 text-center">
                             10-12 символов
                         </p>
-                        {manualSerialNumber.length >= 10 && (
-                            <p className="text-xs text-green-600 text-center font-medium">
-                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или клавишу &quot;Ввод&quot; на клавиатуре
-                            </p>
-                        )}
-                        {manualSerialNumber.length > 0 && manualSerialNumber.length < 10 && (
-                            <p className="text-xs text-orange-600 text-center font-medium">
-                                ⚠️ Введите еще {10 - manualSerialNumber.length} символов
-                            </p>
-                        )}
                     </div>
                 </CardContent>
             </Card>

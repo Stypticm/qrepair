@@ -8,7 +8,7 @@ import { Link } from '@/components/Link/Link';
 import tonSvg from './_assets/ton.svg';
 import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+
 import { motion } from 'framer-motion';
 import { getPictureUrl } from '@/core/lib/assets';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
@@ -26,8 +26,6 @@ export default function Home() {
   const { forceFullscreen, isFullscreen } = useSafeArea();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasSavedData, setHasSavedData] = useState(false);
-  const [showProgress, setShowProgress] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -122,13 +120,6 @@ export default function Home() {
           return;
         }
         
-        // Проверяем, есть ли сохраненные данные
-        const hasData = !!(modelname && modelname !== 'Apple iPhone 11') || 
-                       !!(deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) ||
-                       !!(additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery)) ||
-                       !!imei || !!serialNumber;
-        
-        setHasSavedData(hasData);
         setIsLoading(false);
       } catch (error) {
         console.error('Ошибка проверки сохраненных данных:', error);
@@ -139,31 +130,75 @@ export default function Home() {
     checkSavedData();
   }, [telegramId, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber, router]);
 
-  // Функция для сброса всех данных и начала заново
-  const handleStartNew = async () => {
+
+
+  // Функция для начала формы с проверкой существующей заявки
+  const handleStartForm = async () => {
     try {
-      // Сбрасываем все состояния
-      resetAllStates();
-      
-      // Сбрасываем локальное состояние
-      setHasSavedData(false);
-      
-      // Показываем уведомление
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert('✅ Данные сброшены. Можете начать новую заявку.');
+      // 1. Проверяем, есть ли уже отправленная заявка
+      if (telegramId) {
+        const response = await fetch('/api/request/getDraft', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ telegramId }),
+        });
+
+        if (response.ok) {
+          const draftData = await response.json();
+          if (draftData && draftData.status === 'submitted') {
+            // Есть уже отправленная заявка
+            if (window.Telegram?.WebApp) {
+              const webApp = window.Telegram.WebApp;
+              const confirmed = await new Promise((resolve) => {
+                webApp.showConfirm(
+                  'У вас уже есть отправленная заявка. Хотите создать новую?',
+                  (result: boolean) => resolve(result)
+                );
+              });
+              
+              if (!confirmed) {
+                return; // Пользователь отменил
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Проверяем сохраненные данные и определяем нужный шаг
+      if (imei && serialNumber) {
+        // Все данные заполнены - перенаправляем на submit
+        router.push('/request/submit');
+        return;
+      } else if (imei) {
+        // IMEI заполнен, но нет S/N - перенаправляем на device-info
+        router.push('/request/device-info');
+        return;
+      } else if (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery)) {
+        // Дополнительные условия заполнены - перенаправляем на device-info
+        router.push('/request/device-info');
+        return;
+      } else if (deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) {
+        // Состояния устройства заполнены - перенаправляем на additional-condition
+        router.push('/request/additional-condition');
+        return;
+      } else if (modelname && modelname !== 'Apple iPhone 11') {
+        // Модель выбрана - перенаправляем на condition
+        router.push('/request/condition');
+        return;
       }
       
-      // Перенаправляем на форму
+      // 3. Нет сохраненных данных - начинаем с form (новая заявка)
       router.push('/request/form');
     } catch (error) {
-      console.error('Ошибка сброса данных:', error);
+      console.error('Ошибка проверки заявки:', error);
+      // В случае ошибки просто переходим к форме
+      router.push('/request/form');
     }
   };
 
-  // Функция для показа прогресса
-  const handleShowProgress = () => {
-    setShowProgress(true);
-  };
+
 
   // Показываем загрузку пока проверяем сохраненные данные
   if (isLoading) {
@@ -203,36 +238,14 @@ export default function Home() {
             </motion.div>
 
             <div className="flex flex-col gap-4 w-full">
-              {hasSavedData && (
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3">
-                  <p className="text-sm text-gray-700 text-center mb-3 font-medium">
-                    У вас есть незавершенная заявка
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-12 bg-white hover:bg-gray-50 text-gray-700 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
-                      onClick={handleShowProgress}
-                    >
-                      Прогресс
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 h-12 bg-white hover:bg-gray-50 text-gray-700 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
-                      onClick={handleStartNew}
-                    >
-                      Заново
-                    </Button>
-                  </div>
-                </div>
-              )}
+
               
               <Button
                 variant="outline"
                 className="w-full h-16 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
-                onClick={() => router.push('/request/form')}
+                onClick={handleStartForm}
               >
-                {hasSavedData ? 'Продолжить оценку' : 'Оценить смартфон'}
+                Оценить смартфон
               </Button>
               <Button
                 variant="outline"
@@ -272,73 +285,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Диалоговое окно с прогрессом */}
-      <Dialog open={showProgress} onOpenChange={setShowProgress}>
-        <DialogContent className="bg-white w-[90vw] max-w-sm mx-auto rounded-2xl shadow-2xl border-0 max-h-[80vh] overflow-y-auto">
-          <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-4">
-            Прогресс заявки
-          </DialogTitle>
 
-          <div className="space-y-4">
-            {/* Шаги */}
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  modelname && modelname !== 'Apple iPhone 11' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {modelname && modelname !== 'Apple iPhone 11' ? '✓' : '1'}
-                </div>
-                <span className={`text-sm ${modelname && modelname !== 'Apple iPhone 11' ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                  Модель устройства
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side) ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side) ? '✓' : '2'}
-                </div>
-                <span className={`text-sm ${deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side) ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                  Состояние устройства
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery) ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery) ? '✓' : '3'}
-                </div>
-                <span className={`text-sm ${additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery) ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                  Дополнительные функции
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  imei && serialNumber ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
-                }`}>
-                  {imei && serialNumber ? '✓' : '4'}
-                </div>
-                <span className={`text-sm ${imei && serialNumber ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                  IMEI и S/N
-                </span>
-              </div>
-            </div>
-
-            {/* Кнопки */}
-            <div className="space-y-2 pt-4">
-              <Button
-                onClick={() => setShowProgress(false)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-200"
-              >
-                Понятно
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AdaptiveContainer>
   );
 }
