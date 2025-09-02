@@ -10,6 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "update-version": "node scripts/update-version.js",
+    "prepare": "npm run update-version && git add . && git config --global core.autocrlf true",
+    "precommit": "npm run update-version && git add . && git config --global core.autocrlf true && git add .",
     "deploy": "npm run update-version && git add . && git commit -m \"Update version for deployment\" && git push origin dev"
   },
   "dependencies": {

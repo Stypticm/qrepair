@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createWorker } from 'tesseract.js'
+import { createWorker, PSM } from 'tesseract.js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,12 +18,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Реальная OCR обработка
-    const result = await processOCR(snImage, imeiImage)
+    // Временно используем моковые данные для тестирования
+    const useMockData =
+      process.env.NODE_ENV === 'development' &&
+      process.env.USE_MOCK_OCR === 'true'
+
+    let result
+    if (useMockData) {
+      result = {
+        serialNumber: 'F2LQ12345678',
+        imei: '123456789012345',
+        confidence: 95,
+        method: 'mock',
+        isValidIMEI: true,
+        isValidSN: true,
+      }
+    } else {
+      // Реальная OCR обработка
+      result = await processOCR(snImage, imeiImage)
+    }
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('OCR processing error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -36,10 +52,12 @@ async function processOCR(snImage: File, imeiImage: File) {
   const worker = await createWorker('eng')
 
   try {
-    // Настройки для лучшего распознавания
+    // Оптимизированные настройки для быстрого распознавания
     await worker.setParameters({
       tessedit_char_whitelist:
-        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      tessedit_pageseg_mode: PSM.SINGLE_WORD, // Treat the image as a single word
+      tessedit_ocr_engine_mode: 2, // Neural nets LSTM engine only
     })
 
     // Обрабатываем изображение S/N
