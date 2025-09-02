@@ -949,7 +949,15 @@ export default function FormPage() {
                         {/* Приветственный экран */}
                         <WelcomeModal
                             isOpen={showWelcomeModal}
-                            onClose={() => setShowWelcomeModal(false)}
+                            onClose={() => {
+                                setShowWelcomeModal(false);
+                                // Если пользователь закрыл модал крестиком, возвращаем на главную
+                                router.push('/');
+                            }}
+                            onStart={() => {
+                                setShowWelcomeModal(false);
+                                // Если пользователь нажал "Начать оценку", остаемся на странице
+                            }}
                         />
                     </div>
                 </div>

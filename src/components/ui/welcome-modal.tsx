@@ -3,14 +3,17 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { getPictureUrl } from '@/core/lib/assets'
+
 import Image from 'next/image'
 
 interface WelcomeModalProps {
   isOpen: boolean
   onClose: () => void
+  onStart: () => void
 }
 
-export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
+export function WelcomeModal({ isOpen, onClose, onStart }: WelcomeModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -28,14 +31,14 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
                 initial={{ y: -20 }}
                 animate={{ y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="w-20 h-20 mx-auto mb-6"
+                className="w-24 h-24 mx-auto mb-6 flex items-center justify-center"
               >
                 <Image
-                  src="/coconut-dancing.gif" 
+                  src={getPictureUrl('coconut-dancing.gif') || '/coconut-dancing.gif'}
                   alt="Танцующий кокос" 
-                  width={80}
-                  height={80}
-                  className="w-full h-full object-contain rounded-2xl"
+                  width={96}
+                  height={96}
+                  className="object-contain rounded-2xl"
                 />
               </motion.div>
 
@@ -67,7 +70,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
                 transition={{ delay: 0.4 }}
               >
                 <Button
-                  onClick={onClose}
+                  onClick={onStart}
                   className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-4 rounded-2xl text-lg transition-all duration-200 hover:shadow-lg"
                 >
                   Начать оценку
