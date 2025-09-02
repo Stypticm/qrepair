@@ -18,64 +18,87 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Временно используем моковые данные для тестирования
-    const useMockData = false // Принудительно включаем моковые данные
-
-    let result
-    if (useMockData) {
-      // Имитируем задержку обработки
-      await new Promise((resolve) =>
-        setTimeout(resolve, 2000)
-      )
-
-      result = {
-        serialNumber: 'F2LQ12345678',
-        imei: '123456789012345',
-        confidence: 95,
-        method: 'mock',
-        isValidIMEI: true,
-        isValidSN: true,
-      }
-    } else {
-      // Реальная OCR обработка
-      result = await processOCR(snImage, imeiImage)
-    }
+    // Реальная OCR обработка
+    const result = await processOCR(snImage, imeiImage)
 
     return NextResponse.json(result)
   } catch (error) {
+    console.error('OCR API Error:', error)
+
+    // Возвращаем более детальную ошибку
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : 'Unknown error'
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'OCR processing failed',
+        details: errorMessage,
+        suggestion:
+          'Попробуйте изображения с более четким текстом или меньшего размера',
+      },
       { status: 500 }
     )
   }
 }
 
+// Функция для обработки одного изображения с таймаутом
+async function processSingleImage(
+  image: File,
+  worker: any
+) {
+  // File уже является Blob, поэтому используем arrayBuffer() напрямую
+  const arrayBuffer = await image.arrayBuffer()
+
+  // Добавляем таймаут для каждого изображения
+  return await Promise.race([
+    worker.recognize(Buffer.from(arrayBuffer)),
+    new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error('Single image OCR timeout')),
+        20000
+      )
+    ),
+  ])
+}
+
 // Функция для обработки OCR с Tesseract.js
 async function processOCR(snImage: File, imeiImage: File) {
-  const worker = await createWorker('eng')
+  // Создаем отдельные worker'ы для каждого изображения
+  const [snWorker, imeiWorker] = await Promise.all([
+    createWorker('eng'),
+    createWorker('eng'),
+  ])
 
   try {
-    // Оптимизированные настройки для быстрого распознавания
-    await worker.setParameters({
-      tessedit_char_whitelist:
-        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-      tessedit_pageseg_mode: PSM.SINGLE_WORD, // Treat the image as a single word
-      tessedit_ocr_engine_mode: 2, // Neural nets LSTM engine only
-    })
+    // Настраиваем оба worker'а
+    const setupWorker = async (worker: any) => {
+      await worker.setParameters({
+        tessedit_char_whitelist:
+          '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        tessedit_pageseg_mode: PSM.SINGLE_WORD,
+        tessedit_ocr_engine_mode: 2,
+        tessedit_do_invert: '0',
+        tessedit_char_blacklist:
+          '!@#$%^&*()_+-=[]{}|;:,.<>?/~`',
+      })
+    }
 
-    // Обрабатываем изображение S/N
-    const snImageBuffer = await snImage.arrayBuffer()
-    const snResult = await worker.recognize(
-      Buffer.from(snImageBuffer)
-    )
+    // Настраиваем worker'ы параллельно
+    await Promise.all([
+      setupWorker(snWorker),
+      setupWorker(imeiWorker),
+    ])
+
+    // Обрабатываем изображения параллельно с отдельными worker'ами
+    const [snResult, imeiResult] = await Promise.all([
+      processSingleImage(snImage, snWorker),
+      processSingleImage(imeiImage, imeiWorker),
+    ])
+
     const serialNumber = extractSerialNumber(
       snResult.data.text
-    )
-
-    // Обрабатываем изображение IMEI
-    const imeiImageBuffer = await imeiImage.arrayBuffer()
-    const imeiResult = await worker.recognize(
-      Buffer.from(imeiImageBuffer)
     )
     const imei = extractIMEI(imeiResult.data.text)
 
@@ -97,7 +120,11 @@ async function processOCR(snImage: File, imeiImage: File) {
 
     return result
   } finally {
-    await worker.terminate()
+    // Завершаем оба worker'а
+    await Promise.all([
+      snWorker.terminate(),
+      imeiWorker.terminate(),
+    ])
   }
 }
 

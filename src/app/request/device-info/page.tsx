@@ -72,6 +72,30 @@ export default function DeviceInfoPage() {
 
 
 
+    // Функция для плавного прогресса
+    const animateProgress = (targetProgress: number, duration: number = 1000) => {
+        return new Promise<void>((resolve) => {
+            const startProgress = processingProgress;
+            const startTime = Date.now();
+            
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const currentProgress = startProgress + (targetProgress - startProgress) * progress;
+                setProcessingProgress(Math.round(currentProgress));
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    resolve();
+                }
+            };
+            
+            animate();
+        });
+    };
+
     // Функция для обработки OCR
     const processOCR = async () => {
         setIsProcessing(true);
@@ -98,20 +122,20 @@ export default function DeviceInfoPage() {
                 formData.append('initData', (window as any).Telegram.WebApp.initData);
             }
 
-            // Быстрый прогресс загрузки
-            setProcessingProgress(10);
+            // Плавный прогресс загрузки
             setProcessingMessage('Загрузка изображений...');
+            await animateProgress(15, 500);
 
-            setProcessingProgress(25);
             setProcessingMessage('Отправка на сервер...');
+            await animateProgress(25, 300);
 
-                        // Отправляем запрос на API
-            setProcessingProgress(40);
+            // Отправляем запрос на API
             setProcessingMessage('Обработка OCR...');
+            await animateProgress(40, 200);
             
-            // Добавляем таймаут для запроса (60 секунд)
+            // Добавляем таймаут для запроса (45 секунд)
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000);
+            const timeoutId = setTimeout(() => controller.abort(), 45000);
             
             const response = await fetch('/api/ocr/process-device-photos', {
                 method: 'POST',
@@ -121,8 +145,8 @@ export default function DeviceInfoPage() {
             
             clearTimeout(timeoutId);
             
-            setProcessingProgress(70);
             setProcessingMessage('Извлечение данных...');
+            await animateProgress(70, 300);
 
             if (!response.ok) {
                 throw new Error('OCR processing failed');
@@ -131,7 +155,9 @@ export default function DeviceInfoPage() {
             const result = await response.json();
 
             if (result.error) {
-                throw new Error(result.error);
+                const errorMsg = result.details ? `${result.error}: ${result.details}` : result.error;
+                const suggestion = result.suggestion ? `\n\n${result.suggestion}` : '';
+                throw new Error(errorMsg + suggestion);
             }
 
             // Проверяем, удалось ли извлечь данные
@@ -149,8 +175,8 @@ export default function DeviceInfoPage() {
                 sessionStorage.setItem('serialNumber', result.serialNumber);
             }
 
-            setProcessingProgress(100);
             setProcessingMessage('Готово!');
+            await animateProgress(100, 500);
 
             // Отправляем сообщение в Telegram
             if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
@@ -163,9 +189,11 @@ export default function DeviceInfoPage() {
 
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
-                setOcrError('Время обработки истекло. Попробуйте еще раз с изображениями меньшего размера.');
+                setOcrError('Время обработки истекло (45 сек). Попробуйте еще раз с изображениями меньшего размера или лучшего качества.');
+            } else if (error instanceof Error && error.message.includes('OCR timeout')) {
+                setOcrError('OCR обработка заняла слишком много времени. Попробуйте изображения с более четким текстом.');
             } else {
-                setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображений');
+                setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображений. Проверьте качество фото.');
             }
         } finally {
             setIsProcessing(false);
