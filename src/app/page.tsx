@@ -8,6 +8,7 @@ import { Link } from '@/components/Link/Link';
 import tonSvg from './_assets/ton.svg';
 import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import { getPictureUrl } from '@/core/lib/assets';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
@@ -44,13 +45,25 @@ export default function Home() {
       <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50 pt-20">
         <div className="w-full max-w-md mx-auto text-center space-y-8">
           <div className="space-y-6">
-            <Image
-              src={getPictureUrl(`logo3.png`) || '/logo3.png'}
-              alt="Логотип"
-              width={300}
-              height={150}
-              className="w-full h-auto object-contain mx-auto rounded-2xl shadow-lg"
-            />
+            <motion.div
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 70, 
+                damping: 12,
+                duration: 2.2
+              }}
+              className="w-full"
+            >
+              <Image
+                src={getPictureUrl(`logo4.png`) || '/logo4.png'}
+                alt="Логотип"
+                width={300}
+                height={150}
+                className="w-full h-auto object-contain mx-auto rounded-2xl shadow-lg"
+              />
+            </motion.div>
 
             <div className="flex flex-col gap-4 w-full">
               <Button
