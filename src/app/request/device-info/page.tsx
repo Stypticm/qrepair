@@ -468,8 +468,8 @@ export default function DeviceInfoPage() {
                     />
                 </div>
 
-                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-3 pb-4">
+                <div className="flex-1 p-2 pt-1 flex items-center justify-center">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-2 pb-2">
 
                         {/* Заголовок */}
                         <motion.div
@@ -478,10 +478,10 @@ export default function DeviceInfoPage() {
                             transition={{ duration: 0.2 }}
                             className="text-center"
                         >
-                            <h2 className="text-xl font-semibold text-gray-900 mb-1">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-0">
                                 IMEI и S/N
                             </h2>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-xs text-gray-500">
                                 Получите данные устройства
                             </p>
                         </motion.div>
@@ -492,16 +492,16 @@ export default function DeviceInfoPage() {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.2, delay: 0.1 }}
-                                className="space-y-3"
+                                className="space-y-2"
                             >
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                                        <div className="p-4">
-                                            <h4 className="text-base font-semibold text-gray-900 mb-3">Выберите способ</h4>
+                                        <div className="p-3">
+                                            <h4 className="text-sm font-semibold text-gray-900 mb-2">Выберите способ</h4>
                                             <div className="space-y-2">
                                                 <button
                                                     onClick={() => setSelectedMethod('imei_dial')}
-                                                    className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors duration-200"
+                                                    className="w-full p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors duration-200"
                                                 >
                                                     <div className="flex items-center space-x-3">
                                                         <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
@@ -517,7 +517,7 @@ export default function DeviceInfoPage() {
                                                 <button
                                                     onClick={() => setSelectedMethod('sn_screenshot')}
                                                     disabled={!manualImei || manualImei.length !== 15}
-                                                    className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="w-full p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <div className="flex items-center space-x-3">
                                                         <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
@@ -691,11 +691,11 @@ export default function DeviceInfoPage() {
 }
 
 // Компонент для метода ввода IMEI
-const ImeiInputMethod = ({
-    manualImei,
-    setManualImei,
-    onConfirm,
-    onBack
+const ImeiInputMethod = ({ 
+    manualImei, 
+    setManualImei, 
+    onConfirm, 
+    onBack 
 }: {
     manualImei: string;
     setManualImei: (value: string) => void;
@@ -703,24 +703,24 @@ const ImeiInputMethod = ({
     onBack: () => void;
 }) => {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             {/* Кнопка назад */}
             <Button
                 onClick={onBack}
                 variant="outline"
                 size="sm"
-                className="w-full"
+                className="w-full py-1"
             >
                 ← Назад
             </Button>
 
             {/* Инструкции для IMEI */}
-            <Card className="p-3 bg-gray-50 border border-gray-200">
+            <Card className="p-2 bg-gray-50 border border-gray-200">
                 <CardContent>
-                    <h4 className="font-medium text-gray-800 mb-2 text-sm">
+                    <h4 className="font-medium text-gray-800 mb-1 text-sm">
                         📱 Как получить IMEI
                     </h4>
-                    <div className="space-y-1.5 text-xs text-gray-600">
+                    <div className="space-y-1 text-xs text-gray-600">
                         <div className="flex items-center space-x-2">
                             <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
                             <span>Настройки → Основные → Об этом устройстве</span>
@@ -766,9 +766,9 @@ const ImeiInputMethod = ({
             )}
 
             {/* Поле ввода IMEI */}
-            <Card className="p-3 border border-gray-200">
+            <Card className="p-2 border border-gray-200">
                 <CardContent>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700">
                             IMEI
                         </label>
@@ -795,7 +795,7 @@ const ImeiInputMethod = ({
             <Button
                 onClick={onConfirm}
                 disabled={!manualImei || manualImei.length !== 15}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 text-sm"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-1 text-sm"
             >
                 Подтвердить
             </Button>
@@ -804,11 +804,11 @@ const ImeiInputMethod = ({
 };
 
 // Компонент для метода ввода S/N
-const SnInputMethod = ({
-    manualSerialNumber,
-    setManualSerialNumber,
-    onConfirm,
-    onBack
+const SnInputMethod = ({ 
+    manualSerialNumber, 
+    setManualSerialNumber, 
+    onConfirm, 
+    onBack 
 }: {
     manualSerialNumber: string;
     setManualSerialNumber: (value: string) => void;
@@ -816,24 +816,24 @@ const SnInputMethod = ({
     onBack: () => void;
 }) => {
     return (
-        <div className="space-y-3">
+        <div className="space-y-2">
             {/* Кнопка назад */}
             <Button
                 onClick={onBack}
                 variant="outline"
                 size="sm"
-                className="w-full"
+                className="w-full py-1"
             >
                 ← Назад к IMEI
             </Button>
 
             {/* Инструкции для S/N */}
-            <Card className="p-3 bg-gray-50 border border-gray-200">
+            <Card className="p-2 bg-gray-50 border border-gray-200">
                 <CardContent>
-                    <h4 className="font-medium text-gray-800 mb-2 text-sm">
+                    <h4 className="font-medium text-gray-800 mb-1 text-sm">
                         📱 Как получить S/N
                     </h4>
-                    <div className="space-y-1.5 text-xs text-gray-600">
+                    <div className="space-y-1 text-xs text-gray-600">
                         <div className="flex items-center space-x-2">
                             <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
                             <span>Настройки → Основные → Об этом устройстве</span>
@@ -879,9 +879,9 @@ const SnInputMethod = ({
             )}
 
             {/* Поле ввода S/N */}
-            <Card className="p-3 border border-gray-200">
+            <Card className="p-2 border border-gray-200">
                 <CardContent>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         <label className="block text-xs font-medium text-gray-700">
                             S/N
                         </label>
@@ -908,7 +908,7 @@ const SnInputMethod = ({
             <Button
                 onClick={onConfirm}
                 disabled={!manualSerialNumber || manualSerialNumber.length < 10}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 text-sm"
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-1 text-sm"
             >
                 Подтвердить
             </Button>
