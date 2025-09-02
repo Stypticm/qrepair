@@ -562,37 +562,41 @@ export default function DeviceInfoPage() {
                         {/* Инструкции */}
                         <div className="bg-blue-50 rounded-xl p-4">
                             <h4 className="font-semibold text-blue-900 mb-3">Как получить IMEI</h4>
-                            <div className="space-y-2 text-sm text-blue-800">
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">1</span>
-                                    <span>Откройте приложение <strong>Телефон</strong></span>
+                            <div className="space-y-3 text-sm text-blue-800">
+                                <div className="flex items-start space-x-3">
+                                    <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                                    <div>
+                                        <p className="font-semibold">Откройте Настройки</p>
+                                        <p className="text-xs text-blue-600 mt-1">Найдите иконку ⚙️ на главном экране</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">2</span>
-                                    <span>Наберите: <span className="bg-white px-2 py-1 rounded font-mono">*#06#</span></span>
+                                <div className="flex items-start space-x-3">
+                                    <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                                    <div>
+                                        <p className="font-semibold">Основные → Об этом устройстве</p>
+                                        <p className="text-xs text-blue-600 mt-1">Прокрутите вниз до &quot;IMEI&quot;</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">3</span>
-                                    <span>Запомните IMEI (15 цифр)</span>
+                                <div className="flex items-start space-x-3">
+                                    <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                                    <div>
+                                        <p className="font-semibold">Скопируйте IMEI</p>
+                                        <p className="text-xs text-blue-600 mt-1">Нажмите и удерживайте на IMEI, выберите &quot;Копировать&quot;</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Кнопка открытия телефона */}
+                        {/* Кнопка для открытия настроек */}
                         <button
                             onClick={() => {
-                                if (typeof window !== 'undefined') {
-                                    const phoneUrl = 'tel:*#06#';
-                                    window.open(phoneUrl, '_blank');
-                                    
-                                    if ((window as any).Telegram?.WebApp) {
-                                        (window as any).Telegram.WebApp.showAlert('Открываю приложение Телефон. Наберите *#06# в появившемся окне.');
-                                    }
+                                if ((window as any).Telegram?.WebApp) {
+                                    (window as any).Telegram.WebApp.showAlert('Откройте Настройки → Основные → Об этом устройстве. Найдите IMEI и скопируйте его долгим нажатием.');
                                 }
                             }}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors duration-200"
                         >
-                            📞 Открыть Телефон
+                            ⚙️ Открыть Настройки
                         </button>
 
                         {/* Поле ввода */}
@@ -608,7 +612,7 @@ export default function DeviceInfoPage() {
                                 className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono bg-gray-50"
                             />
                             <p className="text-sm text-gray-500 mt-1 text-center">
-                                15 цифр
+                                15 цифр • Скопируйте из Настроек
                             </p>
                         </div>
 
@@ -730,13 +734,29 @@ const SnScreenshotMethod = ({
                     <h4 className="font-semibold text-green-800 mb-2">
                         📸 Как получить S/N:
                     </h4>
-                    <ol className="text-sm text-green-700 space-y-1">
-                        <li>1. Откройте <strong>Настройки</strong></li>
-                        <li>2. Перейдите в <strong>Основные → Об этом устройстве</strong></li>
-                        <li>3. <strong>Прокрутите вниз</strong> до &quot;Серийный номер&quot;</li>
-                        <li>4. Сделайте скриншот этой страницы</li>
-                        <li>5. Загрузите скриншот ниже</li>
-                    </ol>
+                    <div className="space-y-3 text-sm text-green-700">
+                        <div className="flex items-start space-x-3">
+                            <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                            <div>
+                                <p className="font-semibold">Откройте Настройки</p>
+                                <p className="text-xs text-green-600 mt-1">Найдите иконку ⚙️ на главном экране</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                            <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                            <div>
+                                <p className="font-semibold">Основные → Об этом устройстве</p>
+                                <p className="text-xs text-green-600 mt-1">Прокрутите вниз до &quot;Серийный номер&quot;</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                            <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                            <div>
+                                <p className="font-semibold">Сделайте скриншот</p>
+                                <p className="text-xs text-green-600 mt-1">Нажмите кнопки питания + громкость вверх</p>
+                            </div>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
