@@ -5,8 +5,12 @@ import { useEffect, useCallback, useState } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { motion } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
+
+type InputMethod = 'screenshot' | 'photo' | null;
 
 export default function DeviceInfoPage() {
     const {
@@ -19,17 +23,33 @@ export default function DeviceInfoPage() {
     } = useStartForm();
     const router = useRouter();
 
+    // Состояние выбора способа ввода
+    const [selectedMethod, setSelectedMethod] = useState<InputMethod>(null);
+    
+    // Состояние для скриншотов
+    const [screenshots, setScreenshots] = useState<{
+        snScreenshot: File | null;
+        imeiScreenshot: File | null;
+    }>({ snScreenshot: null, imeiScreenshot: null });
+    
+    // Состояние для фото
+    const [photos, setPhotos] = useState<{
+        snPhoto: Blob | null;
+        imeiPhoto: Blob | null;
+    }>({ snPhoto: null, imeiPhoto: null });
+    
+    // Состояние обработки OCR
+    const [isProcessing, setIsProcessing] = useState(false);
+    
+    // Состояние результата OCR
+    const [ocrResult, setOcrResult] = useState<{
+        imei: string;
+        serialNumber: string;
+        confidence: number;
+    } | null>(null);
+    
     // Состояние диалогового окна
     const [showDialog, setShowDialog] = useState(false);
-
-    // Состояние для отслеживания изменений
-    const [hasChanges, setHasChanges] = useState(false);
-
-    // Состояние для режима редактирования
-    const [isEditing, setIsEditing] = useState(false);
-    
-    // Состояние для определения, все ли выбрано
-    const [isAllSelected, setIsAllSelected] = useState(false);
 
     // Шаги для прогресс-бара
     const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
@@ -37,6 +57,68 @@ export default function DeviceInfoPage() {
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
         return 4;
+    };
+
+    // Проверяем, доступен ли Telegram WebApp API
+    const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+
+    // Функция для обработки скриншотов
+    const handleScreenshotUpload = (type: 'sn' | 'imei', file: File) => {
+        if (type === 'sn') {
+            setScreenshots(prev => ({ ...prev, snScreenshot: file }));
+        } else {
+            setScreenshots(prev => ({ ...prev, imeiScreenshot: file }));
+        }
+    };
+
+    // Функция для обработки фото через Telegram WebApp
+    const handlePhotoCapture = (type: 'sn' | 'imei') => {
+        if (!isTelegramWebApp) return;
+
+        const webApp = (window as any).Telegram.WebApp;
+        
+        webApp.openCamera({}, (result: any) => {
+            if (result && result.photos && result.photos.length > 0) {
+                const photoBlob = result.photos[0];
+                if (type === 'sn') {
+                    setPhotos(prev => ({ ...prev, snPhoto: photoBlob }));
+                } else {
+                    setPhotos(prev => ({ ...prev, imeiPhoto: photoBlob }));
+                }
+            }
+        });
+    };
+
+    // Функция для обработки OCR
+    const processOCR = async () => {
+        setIsProcessing(true);
+        
+        try {
+            // Здесь будет API вызов для OCR
+            // Пока что симулируем результат
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const mockResult = {
+                imei: '123456789012345',
+                serialNumber: 'ABC123DEF456',
+                confidence: 95
+            };
+            
+            setOcrResult(mockResult);
+            setImei(mockResult.imei);
+            setSerialNumber(mockResult.serialNumber);
+            
+            // Сохраняем в sessionStorage
+            if (typeof window !== 'undefined') {
+                sessionStorage.setItem('imei', mockResult.imei);
+                sessionStorage.setItem('serialNumber', mockResult.serialNumber);
+            }
+            
+        } catch (error) {
+            console.error('OCR processing error:', error);
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     // Загрузка сохраненных данных из sessionStorage
@@ -67,14 +149,14 @@ export default function DeviceInfoPage() {
                 console.log('[loadSavedData] S/N загружен из sessionStorage:', savedSerialNumber);
             }
 
-            // Проверяем, есть ли уже введенные данные (режим редактирования)
-            if (savedImei || savedSerialNumber) {
-                setIsEditing(true);
-                // Проверяем, все ли заполнено
-                const allFilled = savedImei && savedImei.length === 15 && 
-                                savedSerialNumber && savedSerialNumber.length >= 10;
-                setIsAllSelected(!!allFilled);
-                setHasChanges(true);
+            // Если есть сохраненные данные, показываем диалог подтверждения
+            if (savedImei && savedSerialNumber) {
+                setOcrResult({
+                    imei: savedImei,
+                    serialNumber: savedSerialNumber,
+                    confidence: 100
+                });
+                setShowDialog(true);
             }
         }
     }, [setImei, setSerialNumber, resetAllStates]);
@@ -84,22 +166,22 @@ export default function DeviceInfoPage() {
         loadSavedData();
     }, [loadSavedData]);
 
-    // Проверяем, заполнены ли все поля
-    const areAllFieldsFilled = useCallback(() => {
-        return imei && imei.length === 15 &&
-               serialNumber && serialNumber.length >= 10;
-    }, [imei, serialNumber]);
-
-    // Показываем диалог когда все поля заполнены
-    useEffect(() => {
-        if (areAllFieldsFilled() && hasChanges) {
-            console.log('[useEffect] Показываем диалог - все поля заполнены');
-            setShowDialog(true);
-            
-            // Устанавливаем флаг "все заполнено"
-            setIsAllSelected(true);
+    // Проверяем, готовы ли данные для обработки OCR
+    const isReadyForOCR = useCallback(() => {
+        if (selectedMethod === 'screenshot') {
+            return screenshots.snScreenshot && screenshots.imeiScreenshot;
+        } else if (selectedMethod === 'photo') {
+            return photos.snPhoto && photos.imeiPhoto;
         }
-    }, [imei, serialNumber, areAllFieldsFilled, hasChanges]);
+        return false;
+    }, [selectedMethod, screenshots, photos]);
+
+    // Автоматически запускаем OCR когда готовы данные
+    useEffect(() => {
+        if (isReadyForOCR() && !isProcessing && !ocrResult) {
+            processOCR();
+        }
+    }, [isReadyForOCR, isProcessing, ocrResult]);
 
     // Обработчики диалогового окна
     const handleContinue = () => {
@@ -127,8 +209,13 @@ export default function DeviceInfoPage() {
 
     const handleEdit = () => {
         setShowDialog(false);
-        // При редактировании сбрасываем флаг изменений
-        setHasChanges(false);
+        // Сбрасываем все состояния для повторного ввода
+        setSelectedMethod(null);
+        setScreenshots({ snScreenshot: null, imeiScreenshot: null });
+        setPhotos({ snPhoto: null, imeiPhoto: null });
+        setOcrResult(null);
+        setImei('');
+        setSerialNumber('');
 
         // Убираем backdrop (серый фон) при редактировании
         setTimeout(() => {
@@ -154,155 +241,111 @@ export default function DeviceInfoPage() {
                 </div>
 
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
+                        
+                        {/* Заголовок */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-center"
+                        >
+                            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                                📱 Получение IMEI и S/N
+                            </h2>
+                            <p className="text-sm text-gray-600">
+                                Выберите способ получения данных устройства
+                            </p>
+                        </motion.div>
 
-                        {/* IMEI поле */}
-                        {true && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
+                        {/* Выбор способа ввода */}
+                        {!selectedMethod && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
+                                transition={{ duration: 0.2, delay: 0.1 }}
+                                className="grid grid-cols-1 gap-3"
                             >
-                                <div className="space-y-3">
-                                    <h3 className="text-lg font-semibold text-gray-800 text-center">IMEI</h3>
-                                    
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            IMEI (15 цифр)
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={imei || ''}
-                                                onChange={(e) => {
-                                                    const value = e.target.value.replace(/\D/g, '').slice(0, 15);
-                                                    setImei(value);
-                                                    setHasChanges(true);
-                                                    
-                                                    // Сбрасываем режим редактирования при новом вводе
-                                                    setIsEditing(false);
-                                                    setIsAllSelected(false);
-                                                    
-                                                    // Сохраняем в sessionStorage
-                                                    if (typeof window !== 'undefined') {
-                                                        sessionStorage.setItem('imei', value);
-                                                    }
-                                                }}
-                                                placeholder="Введите IMEI"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent"
-                                                maxLength={15}
-                                            />
-                                            {imei && imei.length === 15 && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
+                                <Card 
+                                    className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                                    onClick={() => setSelectedMethod('screenshot')}
+                                >
+                                    <CardContent className="space-y-3">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                                <span className="text-2xl">📸</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-gray-800">Сделать скриншот</h3>
+                                                <p className="text-sm text-gray-600">Для вашего текущего телефона</p>
+                                            </div>
                                         </div>
-                                        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-                                            <strong>Как найти IMEI:</strong><br/>
-                                            • На iPhone: Настройки → Основные → Об этом устройстве → IMEI<br/>
-                                            • На коробке: 15-значный код на наклейке<br/>
-                                            • На задней панели: Выгравирован мелким шрифтом<br/>
-                                            <br/>
-                                            <strong>💡 Если не знаете IMEI, введите: 111111111111111</strong>
+                                    </CardContent>
+                                </Card>
+
+                                <Card 
+                                    className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                                    onClick={() => setSelectedMethod('photo')}
+                                >
+                                    <CardContent className="space-y-3">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                                                <span className="text-2xl">📷</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-gray-800">Сфотографировать устройство</h3>
+                                                <p className="text-sm text-gray-600">Для продажи другого телефона</p>
+                                            </div>
                                         </div>
-                                        
-                                        {/* Кнопка "Не знаю" для IMEI */}
-                                        <button
-                                            onClick={() => {
-                                                const defaultImei = '111111111111111';
-                                                setImei(defaultImei);
-                                                setHasChanges(true);
-                                                setIsEditing(false);
-                                                setIsAllSelected(false);
-                                                
-                                                if (typeof window !== 'undefined') {
-                                                    sessionStorage.setItem('imei', defaultImei);
-                                                }
-                                            }}
-                                            className="w-full mt-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
-                                        >
-                                            🤔 Не знаю IMEI - заполнить автоматически
-                                        </button>
-                                    </div>
-                                </div>
+                                    </CardContent>
+                                </Card>
                             </motion.div>
                         )}
 
-                        {/* S/N поле */}
-                        {imei && imei.length === 15 && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
-                            >
-                                <div className="space-y-3">
-                                    <h3 className="text-lg font-semibold text-gray-800 text-center">Серийный номер (S/N)</h3>
+                        {/* Контент для выбранного способа */}
+                        <AnimatePresence mode="wait">
+                            {selectedMethod && (
+                                <motion.div
+                                    key={selectedMethod}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    transition={{ duration: 0.15 }}
+                                >
+                                    {selectedMethod === 'screenshot' && (
+                                        <ScreenshotMethod 
+                                            screenshots={screenshots}
+                                            onScreenshotUpload={handleScreenshotUpload}
+                                            isProcessing={isProcessing}
+                                        />
+                                    )}
                                     
-                                    <div className="space-y-2">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Серийный номер (S/N)
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                value={serialNumber || ''}
-                                                onChange={(e) => {
-                                                    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12);
-                                                    setSerialNumber(value);
-                                                    setHasChanges(true);
-                                                    
-                                                    // Сбрасываем режим редактирования при новом вводе
-                                                    setIsEditing(false);
-                                                    setIsAllSelected(false);
-                                                    
-                                                    // Сохраняем в sessionStorage
-                                                    if (typeof window !== 'undefined') {
-                                                        sessionStorage.setItem('serialNumber', value);
-                                                    }
-                                                }}
-                                                placeholder="Введите S/N"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent"
-                                                maxLength={12}
-                                            />
-                                            {serialNumber && serialNumber.length >= 10 && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-                                            <strong>Как найти S/N:</strong><br/>
-                                            • На iPhone: Настройки → Основные → Об этом устройстве → Серийный номер<br/>
-                                            • На коробке: 12-значный код на наклейке<br/>
-                                            • На задней панели: Выгравирован мелким шрифтом<br/>
-                                            <br/>
-                                            <strong>💡 Если не знаете S/N, введите: 111111111111</strong>
-                                        </div>
-                                        
-                                        {/* Кнопка "Не знаю" для S/N */}
-                                        <button
-                                            onClick={() => {
-                                                const defaultSerialNumber = '111111111111';
-                                                setSerialNumber(defaultSerialNumber);
-                                                setHasChanges(true);
-                                                setIsEditing(false);
-                                                setIsAllSelected(false);
-                                                
-                                                if (typeof window !== 'undefined') {
-                                                    sessionStorage.setItem('serialNumber', defaultSerialNumber);
-                                                }
-                                            }}
-                                            className="w-full mt-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200 text-sm font-medium"
-                                        >
-                                            🤔 Не знаю S/N - заполнить автоматически
-                                        </button>
-                                    </div>
-                                </div>
+                                    {selectedMethod === 'photo' && (
+                                        <PhotoMethod 
+                                            photos={photos}
+                                            onPhotoCapture={handlePhotoCapture}
+                                            isProcessing={isProcessing}
+                                            isTelegramWebApp={isTelegramWebApp}
+                                        />
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        {/* Кнопка возврата к выбору способа */}
+                        {selectedMethod && !isProcessing && !ocrResult && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setSelectedMethod(null)}
+                                    className="w-full"
+                                >
+                                    ← Выбрать другой способ
+                                </Button>
                             </motion.div>
                         )}
                     </div>
@@ -324,19 +367,19 @@ export default function DeviceInfoPage() {
                         {/* Рамка для выбранных данных */}
                         <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
                             <div className="space-y-3">
-                                {imei && (
+                                {ocrResult?.imei && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600 font-medium">IMEI:</span>
                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                            {imei}
+                                            {ocrResult.imei}
                                         </span>
                                     </div>
                                 )}
-                                {serialNumber && (
+                                {ocrResult?.serialNumber && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600 font-medium">S/N:</span>
                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                            {serialNumber}
+                                            {ocrResult.serialNumber}
                                         </span>
                                     </div>
                                 )}
@@ -355,3 +398,176 @@ export default function DeviceInfoPage() {
         </Page>
     );
 }
+
+// Компонент для метода скриншота
+const ScreenshotMethod = ({ 
+    screenshots, 
+    onScreenshotUpload, 
+    isProcessing 
+}: {
+    screenshots: { snScreenshot: File | null; imeiScreenshot: File | null };
+    onScreenshotUpload: (type: 'sn' | 'imei', file: File) => void;
+    isProcessing: boolean;
+}) => {
+    return (
+        <div className="space-y-4">
+            {/* Инструкции */}
+            <Card className="p-4 bg-blue-50 border border-blue-200">
+                <CardContent>
+                    <h4 className="font-semibold text-blue-800 mb-2">
+                        📸 Как сделать скриншот:
+                    </h4>
+                    <ol className="text-sm text-blue-700 space-y-1">
+                        <li>1. Откройте Настройки → Основные → Об этом устройстве</li>
+                        <li>2. Нажмите одновременно: <strong>Кнопка питания + Кнопка увеличения громкости</strong></li>
+                        <li>3. Экран мигнет - скриншот готов!</li>
+                        <li>4. Нажмите на превью скриншота</li>
+                        <li>5. Выберите "Полный экран"</li>
+                    </ol>
+                </CardContent>
+            </Card>
+
+            {/* Скриншот S/N */}
+            <Card className="p-4 border border-gray-200">
+                <CardContent className="space-y-3">
+                    <h4 className="font-semibold text-gray-800">Скриншот 1: S/N (верхняя часть)</h4>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) onScreenshotUpload('sn', file);
+                        }}
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                    />
+                    {screenshots.snScreenshot && (
+                        <div className="text-sm text-green-600 flex items-center">
+                            <span className="mr-2">✓</span>
+                            Скриншот S/N загружен
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Скриншот IMEI */}
+            <Card className="p-4 border border-gray-200">
+                <CardContent className="space-y-3">
+                    <h4 className="font-semibold text-gray-800">Скриншот 2: IMEI (нижняя часть)</h4>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) onScreenshotUpload('imei', file);
+                        }}
+                        className="w-full p-2 border border-gray-300 rounded-lg"
+                    />
+                    {screenshots.imeiScreenshot && (
+                        <div className="text-sm text-green-600 flex items-center">
+                            <span className="mr-2">✓</span>
+                            Скриншот IMEI загружен
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Loader */}
+            {isProcessing && (
+                <Card className="p-4 bg-gray-50 border border-gray-200">
+                    <CardContent className="text-center">
+                        <div className="space-y-3">
+                            <div className="w-8 h-8 border-4 border-[#2dc2c6] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            <p className="text-sm text-gray-600">Обрабатываем скриншоты...</p>
+                            <p className="text-xs text-gray-500">Извлекаем IMEI и S/N</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+};
+
+// Компонент для метода фото
+const PhotoMethod = ({ 
+    photos, 
+    onPhotoCapture, 
+    isProcessing, 
+    isTelegramWebApp 
+}: {
+    photos: { snPhoto: Blob | null; imeiPhoto: Blob | null };
+    onPhotoCapture: (type: 'sn' | 'imei') => void;
+    isProcessing: boolean;
+    isTelegramWebApp: boolean;
+}) => {
+    return (
+        <div className="space-y-4">
+            {/* Инструкции */}
+            <Card className="p-4 bg-green-50 border border-green-200">
+                <CardContent>
+                    <h4 className="font-semibold text-green-800 mb-2">
+                        📷 Как сфотографировать:
+                    </h4>
+                    <ol className="text-sm text-green-700 space-y-1">
+                        <li>1. Возьмите другой телефон</li>
+                        <li>2. Сфотографируйте наклейку на коробке</li>
+                        <li>3. Или заднюю панель устройства</li>
+                        <li>4. Убедитесь, что текст четко виден</li>
+                    </ol>
+                </CardContent>
+            </Card>
+
+            {/* Фото S/N */}
+            <Card className="p-4 border border-gray-200">
+                <CardContent className="space-y-3">
+                    <h4 className="font-semibold text-gray-800">Фото 1: S/N (верхняя часть)</h4>
+                    <Button
+                        onClick={() => onPhotoCapture('sn')}
+                        disabled={!isTelegramWebApp}
+                        className="w-full"
+                    >
+                        📷 Сделать фото S/N
+                    </Button>
+                    {photos.snPhoto && (
+                        <div className="text-sm text-green-600 flex items-center">
+                            <span className="mr-2">✓</span>
+                            Фото S/N сделано
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Фото IMEI */}
+            <Card className="p-4 border border-gray-200">
+                <CardContent className="space-y-3">
+                    <h4 className="font-semibold text-gray-800">Фото 2: IMEI (нижняя часть)</h4>
+                    <Button
+                        onClick={() => onPhotoCapture('imei')}
+                        disabled={!isTelegramWebApp}
+                        className="w-full"
+                    >
+                        📷 Сделать фото IMEI
+                    </Button>
+                    {photos.imeiPhoto && (
+                        <div className="text-sm text-green-600 flex items-center">
+                            <span className="mr-2">✓</span>
+                            Фото IMEI сделано
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* Loader */}
+            {isProcessing && (
+                <Card className="p-4 bg-gray-50 border border-gray-200">
+                    <CardContent className="text-center">
+                        <div className="space-y-3">
+                            <div className="w-8 h-8 border-4 border-[#2dc2c6] border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            <p className="text-sm text-gray-600">Обрабатываем фото...</p>
+                            <p className="text-xs text-gray-500">Извлекаем IMEI и S/N</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    );
+};
