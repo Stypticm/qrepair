@@ -102,8 +102,13 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             if (response.ok) {
                 const data = await response.json();
                 if (data) {
+                    console.log('Загружаем данные из БД:', data);
+                    
                     // Восстанавливаем данные из БД
-                    if (data.modelname) setModel(data.modelname);
+                    if (data.modelname) {
+                        console.log('Восстанавливаем modelname из БД:', data.modelname);
+                        setModel(data.modelname);
+                    }
                     if (data.price) setPrice(data.price);
                     if (data.imei) setImei(data.imei);
                     if (data.sn) setSerialNumber(data.sn);
@@ -111,6 +116,8 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                     if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
                     
                     console.log('Данные восстановлены из БД:', data);
+                } else {
+                    console.log('Нет данных в БД для telegramId:', telegramId);
                 }
             }
         } catch (error) {

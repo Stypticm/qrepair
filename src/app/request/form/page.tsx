@@ -385,16 +385,45 @@ export default function FormPage() {
         selectedOptions.country !== '' &&
         matchingPhone;
 
+    // Функция для сохранения модели в БД
+    const saveModelToDB = async (modelName: string) => {
+        if (telegramId) {
+            try {
+                const response = await fetch('/api/request/model', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        telegramId,
+                        modelname: modelName,
+                    }),
+                });
+
+                if (response.ok) {
+                    console.log('Модель сохранена в БД:', modelName);
+                } else {
+                    console.error('Ошибка сохранения модели в БД');
+                }
+            } catch (error) {
+                console.error('Ошибка при сохранении модели:', error);
+            }
+        }
+    };
+
     useEffect(() => {
         if (matchingPhone) {
             const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${matchingPhone.variant}` : ''} ${matchingPhone.storage} ${getColorLabel(matchingPhone.color)} ${matchingPhone.country.split(' ')[0]} ${matchingPhone.simType}`;
 
             setModel(fullName);
             
+            // Сохраняем модель в БД
+            saveModelToDB(fullName);
+            
             // Показываем диалог с итоговой информацией когда все выбрано
             setShowSummaryDialog(true);
         }
-    }, [matchingPhone, setModel]);
+    }, [matchingPhone, setModel, telegramId]);
 
     // Создаем заявку при загрузке страницы
     useEffect(() => {
