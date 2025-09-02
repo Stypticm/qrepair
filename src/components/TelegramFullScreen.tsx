@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { miniApp, expandViewport, viewport } from '@telegram-apps/sdk';
 
 interface TelegramFullScreenProps {
   children: React.ReactNode;
@@ -8,86 +9,39 @@ interface TelegramFullScreenProps {
 
 export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isMenuButton, setIsMenuButton] = useState(false);
 
   useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      const webApp = window.Telegram.WebApp;
-
-      // Проверяем контекст Menu Button
-      const isMenuButtonContext = !webApp.initDataUnsafe?.start_param;
-      setIsMenuButton(isMenuButtonContext);
-
+    if (miniApp && miniApp.isSupported()) {
       // Принудительное fullscreen
       const requestFull = () => {
-        console.log(isMenuButtonContext ? 'Menu Button: Requesting fullscreen...' : 'Requesting fullscreen...');
-        if ('requestFullscreen' in webApp && typeof webApp.requestFullscreen === 'function') {
-          webApp.requestFullscreen();
-        } else {
-          console.log('requestFullscreen not available, falling back to expand...');
-          webApp.expand();
+        try {
+          // Используем requestFullscreen согласно документации
+          if (viewport.requestFullscreen) {
+            viewport.requestFullscreen();
+          } else {
+            viewport.expand();
+          }
+        } catch (error) {
+          // Fallback к expand
+          try {
+            viewport.expand();
+          } catch (e) {
+            // Если и expand не работает, используем expandViewport
+            expandViewport();
+          }
         }
-
-        // Повторные попытки
-        [100, 300].forEach((delay) => {
-          setTimeout(() => {
-            const isCurrentlyFullscreen = 'isFullscreen' in webApp ? webApp.isFullscreen : webApp.isExpanded;
-            if (!isCurrentlyFullscreen) {
-              console.log(`Fullscreen attempt at ${delay}ms`);
-              if ('requestFullscreen' in webApp && typeof webApp.requestFullscreen === 'function') {
-                webApp.requestFullscreen();
-              } else {
-                webApp.expand();
-              }
-            }
-          }, delay);
-        });
       };
 
+      // Немедленно запрашиваем fullscreen
       requestFull();
 
-      // Обработчик изменений viewport (для совместимости)
-      if (webApp.onViewportChanged) {
-        webApp.onViewportChanged((event) => {
-          console.log('Viewport changed:', event);
-          setIsFullscreen(event.is_expanded || false);
-
-          if (!event.is_expanded) {
-            console.log('Viewport not in fullscreen, retrying...');
-            requestFull();
-          }
-        });
-      }
-
-      // Обработчик событий fullscreen
-      if (webApp.onEvent) {
-        const fullscreenChangedHandler = (event: { isFullscreen: boolean }) => {
-          console.log('Fullscreen changed:', event);
-          setIsFullscreen(event.isFullscreen);
-          if (!event.isFullscreen) {
-            requestFull();
-          }
-        };
-
-        const fullscreenFailedHandler = (error: any) => {
-          console.error('Fullscreen request failed:', error);
-          webApp.expand(); // Fallback
-        };
-
-        webApp.onEvent('fullscreenChanged', fullscreenChangedHandler);
-        webApp.onEvent('fullscreenFailed', fullscreenFailedHandler);
-
-        // Очистка
-        return () => {
-          if (webApp.offEvent) {
-            webApp.offEvent('fullscreenChanged', fullscreenChangedHandler);
-            webApp.offEvent('fullscreenFailed', fullscreenFailedHandler);
-          }
-          if (webApp.offViewportChanged) {
-            webApp.offViewportChanged(() => { });
-          }
-        };
-      }
+      // Повторные попытки через небольшие интервалы
+      const retryIntervals = [100, 300, 500];
+      retryIntervals.forEach((delay) => {
+        setTimeout(() => {
+          requestFull();
+        }, delay);
+      });
     }
   }, []);
 

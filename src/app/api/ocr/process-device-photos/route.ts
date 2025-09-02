@@ -19,12 +19,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Временно используем моковые данные для тестирования
-    const useMockData =
-      process.env.NODE_ENV === 'development' &&
-      process.env.USE_MOCK_OCR === 'true'
+    const useMockData = false // Принудительно включаем моковые данные
 
     let result
     if (useMockData) {
+      // Имитируем задержку обработки
+      await new Promise((resolve) =>
+        setTimeout(resolve, 2000)
+      )
+
       result = {
         serialNumber: 'F2LQ12345678',
         imei: '123456789012345',

@@ -176,16 +176,15 @@ export default function DeviceInfoPage() {
 
     // Загрузка сохраненных данных из sessionStorage
     const loadSavedData = useCallback(async () => {
-
-
         if (typeof window !== 'undefined') {
             // Проверяем, есть ли данные о выборе модели (новая заявка)
             const phoneSelection = sessionStorage.getItem('phoneSelection');
 
             if (!phoneSelection) {
                 // Новая заявка - очищаем старые данные
-
                 resetAllStates();
+                setSelectedMethod(null); // Сбрасываем выбор метода
+                setScreenshots([]); // Очищаем скриншоты
                 return;
             }
 
@@ -194,12 +193,10 @@ export default function DeviceInfoPage() {
 
             if (savedImei) {
                 setImei(savedImei);
-
             }
 
             if (savedSerialNumber) {
                 setSerialNumber(savedSerialNumber);
-
             }
 
             // Если есть сохраненные данные, показываем диалог подтверждения
@@ -210,6 +207,10 @@ export default function DeviceInfoPage() {
                     confidence: 100
                 });
                 setShowDialog(true);
+            } else {
+                // Если нет сохраненных данных, сбрасываем выбор метода
+                setSelectedMethod(null);
+                setScreenshots([]);
             }
         }
     }, [setImei, setSerialNumber, resetAllStates]);
@@ -274,6 +275,20 @@ export default function DeviceInfoPage() {
                 }
             });
         }, 50);
+
+        // Очищаем sessionStorage
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('imei');
+            sessionStorage.removeItem('serialNumber');
+        }
+    };
+
+    // Функция для сброса при нажатии "Назад"
+    const handleBack = () => {
+        setSelectedMethod(null);
+        setScreenshots([]);
+        setOcrError(null);
+        router.back();
     };
 
     return (
