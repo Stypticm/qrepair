@@ -65,7 +65,16 @@ export default function DeviceInfoPage() {
     };
 
     // Проверяем, доступен ли Telegram WebApp API
-    const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+    const isTelegramWebApp = typeof window !== 'undefined' && 
+        (window as any).Telegram?.WebApp && 
+        (window as any).Telegram.WebApp.openCamera;
+    
+    // Отладочная информация
+    if (typeof window !== 'undefined') {
+        console.log('Telegram WebApp доступен:', !!(window as any).Telegram?.WebApp);
+        console.log('openCamera доступен:', !!(window as any).Telegram?.WebApp?.openCamera);
+        console.log('isTelegramWebApp:', isTelegramWebApp);
+    }
 
     // Функция для обработки скриншотов
     const handleScreenshotUpload = (type: 'sn' | 'imei', file: File | null) => {
@@ -128,6 +137,8 @@ export default function DeviceInfoPage() {
         setProcessingMessage('Подготовка изображений...');
         setOcrError(null);
         
+        let progressInterval: NodeJS.Timeout | undefined;
+        
         try {
             const formData = new FormData();
             
@@ -157,20 +168,30 @@ export default function DeviceInfoPage() {
             // Быстрый прогресс загрузки
             setProcessingProgress(10);
             setProcessingMessage('Загрузка изображений...');
-            await new Promise(resolve => setTimeout(resolve, 200));
             
             setProcessingProgress(25);
             setProcessingMessage('Отправка на сервер...');
-            await new Promise(resolve => setTimeout(resolve, 200));
             
             // Отправляем запрос на API
             setProcessingProgress(40);
             setProcessingMessage('Обработка OCR...');
+            
+            // Запускаем прогресс-бар во время обработки
+            progressInterval = setInterval(() => {
+                setProcessingProgress(prev => {
+                    if (prev < 70) {
+                        return prev + 2;
+                    }
+                    return prev;
+                });
+            }, 200);
+            
             const response = await fetch('/api/ocr/process-device-photos', {
                 method: 'POST',
                 body: formData
             });
             
+            clearInterval(progressInterval);
             setProcessingProgress(70);
             setProcessingMessage('Извлечение данных...');
             
@@ -209,6 +230,10 @@ export default function DeviceInfoPage() {
             console.error('OCR processing error:', error);
             setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображений');
         } finally {
+            // Очищаем интервал если он был создан
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
             setIsProcessing(false);
             setProcessingProgress(0);
             setProcessingMessage('');
