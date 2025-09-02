@@ -77,15 +77,19 @@ export default function Home() {
           // Используем currentStep из БД для перенаправления
           switch (currentStep) {
             case 'form':
+              setIsLoading(false);
               router.push('/request/condition');
               return;
             case 'condition':
+              setIsLoading(false);
               router.push('/request/additional-condition');
               return;
             case 'additional-condition':
+              setIsLoading(false);
               router.push('/request/device-info');
               return;
             case 'device-info':
+              setIsLoading(false);
               if (imei && serialNumber) {
                 router.push('/request/submit');
               } else {
@@ -100,22 +104,27 @@ export default function Home() {
         // Fallback: определяем шаг на основе сохраненных данных
         if (imei && serialNumber) {
           // Все данные заполнены - перенаправляем на submit
+          setIsLoading(false);
           router.push('/request/submit');
           return;
         } else if (imei) {
           // IMEI заполнен, но нет S/N - перенаправляем на device-info
+          setIsLoading(false);
           router.push('/request/device-info');
           return;
         } else if (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery)) {
           // Дополнительные условия заполнены - перенаправляем на device-info
+          setIsLoading(false);
           router.push('/request/device-info');
           return;
         } else if (deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) {
           // Состояния устройства заполнены - перенаправляем на additional-condition
+          setIsLoading(false);
           router.push('/request/additional-condition');
           return;
         } else if (modelname && modelname !== 'Apple iPhone 11') {
           // Модель выбрана - перенаправляем на condition
+          setIsLoading(false);
           router.push('/request/condition');
           return;
         }
