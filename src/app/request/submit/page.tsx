@@ -128,7 +128,7 @@ const SubmitPage = () => {
                 },
                 body: JSON.stringify({
                     telegramId,
-                    modelname,
+                    modelname: getFullModelName(),
                     price: finalPrice,
                 }),
             });

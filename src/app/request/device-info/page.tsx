@@ -577,28 +577,32 @@ export default function DeviceInfoPage() {
             {/* Диалоговое окно для ввода IMEI */}
             <Dialog open={showImeiDialog} onOpenChange={setShowImeiDialog}>
                 <DialogContent
-                    className="bg-white w-[85vw] max-w-xs mx-auto rounded-lg shadow-lg max-h-[75vh] overflow-y-auto"
+                    className="bg-white w-[90vw] max-w-sm mx-auto rounded-xl shadow-lg max-h-[80vh] overflow-y-auto"
                     showCloseButton={true}
                 >
-                    <DialogTitle className="text-center text-base font-semibold text-gray-900 mb-2">
+                    <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-3">
                         Введите IMEI
                     </DialogTitle>
 
-                    <div className="space-y-2">
-                        {/* Компактные инструкции */}
-                        <div className="bg-blue-50 rounded-md p-2">
-                            <h4 className="font-semibold text-blue-900 mb-1 text-xs">Как получить IMEI</h4>
-                            <div className="space-y-1 text-xs text-blue-800">
-                                <div className="flex items-center space-x-1">
-                                    <span className="w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
-                                    <span>Настройки → Основные → Об этом устройстве</span>
+                    <div className="space-y-3">
+                        {/* Инструкции для IMEI */}
+                        <Card className="p-3 bg-blue-50 border border-blue-200">
+                            <CardContent>
+                                <h4 className="font-semibold text-blue-800 mb-2">
+                                    📱 Как получить IMEI
+                                </h4>
+                                <div className="space-y-2 text-sm text-blue-700">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
+                                        <span>Настройки → Основные → Об этом устройстве</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
+                                        <span>Найдите IMEI и скопируйте</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center space-x-1">
-                                    <span className="w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
-                                    <span>Найдите IMEI и скопируйте</span>
-                                </div>
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
 
                         {/* Кнопка для iPhone */}
                         <button
@@ -607,43 +611,49 @@ export default function DeviceInfoPage() {
                                     (window as any).Telegram.WebApp.showAlert('Для получения IMEI:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите IMEI и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте IMEI');
                                 }
                             }}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 rounded-md transition-colors duration-200 text-xs"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors duration-200 text-sm"
                         >
                             📱 Инструкции для iPhone
                         </button>
 
-                        {/* Поле ввода */}
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-900 mb-1">
-                                IMEI
-                            </label>
-                            <input
-                                type="text"
-                                value={manualImei}
-                                onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                                placeholder="Введите IMEI"
-                                className="w-full p-1.5 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
-                            />
-                            <p className="text-xs text-gray-500 mt-0.5 text-center">
-                                15 цифр
-                            </p>
-                        </div>
+                        {/* Поле ввода IMEI */}
+                        <Card className="p-3 border border-gray-200">
+                            <CardContent>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-semibold text-gray-900">
+                                        IMEI
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={manualImei}
+                                        onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                                        placeholder="Введите IMEI"
+                                        className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
+                                    />
+                                    <p className="text-xs text-gray-500 text-center">
+                                        15 цифр
+                                    </p>
+                                </div>
+                            </CardContent>
+                        </Card>
 
                         {/* Ошибка */}
                         {ocrError && (
-                            <div className="p-1.5 bg-red-50 border border-red-200 rounded-md">
-                                <p className="text-xs text-red-700">{ocrError}</p>
-                            </div>
+                            <Card className="p-3 bg-red-50 border border-red-200">
+                                <CardContent>
+                                    <p className="text-sm text-red-700">{ocrError}</p>
+                                </CardContent>
+                            </Card>
                         )}
 
                         {/* Кнопка подтверждения */}
-                        <button
+                        <Button
                             onClick={handleImeiInput}
                             disabled={!manualImei || manualImei.length !== 15}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-1.5 rounded-md transition-colors duration-200 text-xs"
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white"
                         >
                             Подтвердить
-                        </button>
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
