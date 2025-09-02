@@ -9,8 +9,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
+import QRCode from 'qrcode';
+import Image from 'next/image';
 
-type InputMethod = 'screenshot' | null;
+type InputMethod = 'imei_dial' | 'sn_screenshot' | null;
 
 export default function DeviceInfoPage() {
     const {
@@ -26,8 +28,14 @@ export default function DeviceInfoPage() {
     // Состояние выбора способа ввода
     const [selectedMethod, setSelectedMethod] = useState<InputMethod>(null);
 
-    // Состояние для скриншотов
-    const [screenshots, setScreenshots] = useState<File[]>([]);
+    // Состояние для скриншотов S/N
+    const [snScreenshots, setSnScreenshots] = useState<File[]>([]);
+
+    // Состояние для ручного ввода IMEI
+    const [manualImei, setManualImei] = useState('');
+
+    // Состояние для QR-кода
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
     // Состояние обработки OCR
     const [isProcessing, setIsProcessing] = useState(false);
@@ -60,14 +68,80 @@ export default function DeviceInfoPage() {
         (window as any).Telegram?.WebApp &&
         ((window as any).Telegram.WebApp.openCamera || (window as any).Telegram.WebApp.openPhotoGallery);
 
+    // Функция для валидации IMEI (алгоритм Луна)
+    const validateIMEI = (imei: string): boolean => {
+        if (!imei || imei.length !== 15 || !/^\d+$/.test(imei)) {
+            return false;
+        }
+
+        let sum = 0;
+        for (let i = 0; i < 14; i++) {
+            let digit = parseInt(imei[i]);
+            if (i % 2 === 1) {
+                digit *= 2;
+                if (digit > 9) {
+                    digit = Math.floor(digit / 10) + (digit % 10);
+                }
+            }
+            sum += digit;
+        }
+
+        const checkDigit = (10 - (sum % 10)) % 10;
+        return checkDigit === parseInt(imei[14]);
+    };
+
+    // Функция для валидации серийного номера
+    const validateSerialNumber = (sn: string): boolean => {
+        return Boolean(sn && sn.length >= 10 && sn.length <= 12 && /^[A-Z0-9]+$/i.test(sn));
+    };
+
+    // Функция для генерации QR-кода
+    const generateQRCode = useCallback(async () => {
+        try {
+            const qrDataUrl = await QRCode.toDataURL('*#06#', {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            });
+            setQrCodeDataUrl(qrDataUrl);
+        } catch (error) {
+            console.error('Ошибка генерации QR-кода:', error);
+        }
+    }, []);
 
 
-    // Функция для обработки скриншотов (упрощенная)
-    const handleScreenshotUpload = (files: FileList | null) => {
+
+    // Функция для обработки скриншотов S/N
+    const handleSnScreenshotUpload = (files: FileList | null) => {
         if (files && files.length > 0) {
             const fileArray = Array.from(files);
-            setScreenshots(fileArray);
+            setSnScreenshots(fileArray);
         }
+    };
+
+    // Функция для обработки ручного ввода IMEI
+    const handleImeiInput = () => {
+        const isValidImei = validateIMEI(manualImei);
+
+        if (!isValidImei) {
+            setOcrError('Проверьте правильность введенного IMEI. Должно быть 15 цифр.');
+            return;
+        }
+
+        // Сохраняем IMEI
+        setImei(manualImei);
+        
+        // Сохраняем в sessionStorage
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('imei', manualImei);
+        }
+
+        // Переходим к следующему шагу - вводу S/N
+        setSelectedMethod('sn_screenshot');
+        setOcrError(null);
     };
 
 
@@ -96,34 +170,32 @@ export default function DeviceInfoPage() {
         });
     };
 
-    // Функция для обработки OCR
-    const processOCR = async () => {
+    // Функция для обработки OCR S/N
+    const processSnOCR = async () => {
         setIsProcessing(true);
         setProcessingProgress(0);
-        setProcessingMessage('Подготовка изображений...');
+        setProcessingMessage('Подготовка изображения...');
         setOcrError(null);
 
         try {
             const formData = new FormData();
 
-            // Добавляем изображения
-            if (screenshots.length >= 2) {
-                formData.append('snImage', screenshots[0]);
-                formData.append('imeiImage', screenshots[1]);
-            } else if (screenshots.length === 1) {
-                // Если только один файл, используем его для обоих
-                formData.append('snImage', screenshots[0]);
-                formData.append('imeiImage', screenshots[0]);
+            // Добавляем изображение S/N
+            if (snScreenshots.length > 0) {
+                formData.append('snImage', snScreenshots[0]);
+                // Для IMEI используем уже введенный вручную
+                formData.append('imeiImage', snScreenshots[0]); // Дублируем для API
             }
 
             // Добавляем дополнительные данные
             formData.append('telegramId', telegramId || '');
+            formData.append('manualImei', manualImei); // Передаем уже введенный IMEI
             if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
                 formData.append('initData', (window as any).Telegram.WebApp.initData);
             }
 
             // Плавный прогресс загрузки
-            setProcessingMessage('Загрузка изображений...');
+            setProcessingMessage('Загрузка изображения...');
             await animateProgress(15, 500);
 
             setProcessingMessage('Отправка на сервер...');
@@ -145,7 +217,7 @@ export default function DeviceInfoPage() {
             
             clearTimeout(timeoutId);
             
-            setProcessingMessage('Извлечение данных...');
+            setProcessingMessage('Извлечение S/N...');
             await animateProgress(70, 300);
 
             if (!response.ok) {
@@ -160,18 +232,23 @@ export default function DeviceInfoPage() {
                 throw new Error(errorMsg + suggestion);
             }
 
-            // Проверяем, удалось ли извлечь данные
-            if (!result.imei || !result.serialNumber) {
-                throw new Error('Не удалось извлечь IMEI или S/N из изображений. Попробуйте сделать фото заново с лучшим качеством.');
+            // Проверяем, удалось ли извлечь S/N
+            if (!result.serialNumber) {
+                throw new Error('Не удалось извлечь S/N из изображения. Попробуйте сделать фото заново с лучшим качеством.');
             }
 
-            setOcrResult(result);
-            setImei(result.imei);
+            // Используем введенный вручную IMEI и извлеченный S/N
+            const finalResult = {
+                imei: manualImei,
+                serialNumber: result.serialNumber,
+                confidence: result.confidence || 100
+            };
+
+            setOcrResult(finalResult);
             setSerialNumber(result.serialNumber);
 
             // Сохраняем в sessionStorage
             if (typeof window !== 'undefined') {
-                sessionStorage.setItem('imei', result.imei);
                 sessionStorage.setItem('serialNumber', result.serialNumber);
             }
 
@@ -189,11 +266,11 @@ export default function DeviceInfoPage() {
 
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
-                setOcrError('Время обработки истекло (45 сек). Попробуйте еще раз с изображениями меньшего размера или лучшего качества.');
+                setOcrError('Время обработки истекло (45 сек). Попробуйте еще раз с изображением меньшего размера или лучшего качества.');
             } else if (error instanceof Error && error.message.includes('OCR timeout')) {
-                setOcrError('OCR обработка заняла слишком много времени. Попробуйте изображения с более четким текстом.');
+                setOcrError('OCR обработка заняла слишком много времени. Попробуйте изображение с более четким текстом.');
             } else {
-                setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображений. Проверьте качество фото.');
+                setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображения. Проверьте качество фото.');
             }
         } finally {
             setIsProcessing(false);
@@ -212,7 +289,8 @@ export default function DeviceInfoPage() {
                 // Новая заявка - очищаем старые данные
                 resetAllStates();
                 setSelectedMethod(null); // Сбрасываем выбор метода
-                setScreenshots([]); // Очищаем скриншоты
+                setSnScreenshots([]); // Очищаем скриншоты S/N
+                setManualImei(''); // Очищаем ручной ввод IMEI
                 return;
             }
 
@@ -221,6 +299,7 @@ export default function DeviceInfoPage() {
 
             if (savedImei) {
                 setImei(savedImei);
+                setManualImei(savedImei);
             }
 
             if (savedSerialNumber) {
@@ -235,10 +314,12 @@ export default function DeviceInfoPage() {
                     confidence: 100
                 });
                 setShowDialog(true);
+            } else if (savedImei && !savedSerialNumber) {
+                // Если есть IMEI, но нет S/N - переходим к вводу S/N
+                setSelectedMethod('sn_screenshot');
             } else {
-                // Если нет сохраненных данных, сбрасываем выбор метода
-                setSelectedMethod(null);
-                setScreenshots([]);
+                // Если нет сохраненных данных, начинаем с ввода IMEI
+                setSelectedMethod('imei_dial');
             }
         }
     }, [setImei, setSerialNumber, resetAllStates]);
@@ -246,19 +327,20 @@ export default function DeviceInfoPage() {
     // Загружаем данные при монтировании компонента
     useEffect(() => {
         loadSavedData();
-    }, [loadSavedData]);
+        generateQRCode();
+    }, [loadSavedData, generateQRCode]);
 
-    // Проверяем, готовы ли данные для обработки OCR
-    const isReadyForOCR = useCallback(() => {
-        return screenshots.length >= 1; // Достаточно хотя бы одного файла
-    }, [screenshots]);
+    // Проверяем, готовы ли данные для обработки OCR S/N
+    const isReadyForSnOCR = useCallback(() => {
+        return snScreenshots.length >= 1 && manualImei.length === 15; // Есть скриншот и IMEI
+    }, [snScreenshots, manualImei]);
 
     // Автоматически запускаем OCR когда готовы данные
     useEffect(() => {
-        if (isReadyForOCR() && !isProcessing && !ocrResult) {
-            processOCR();
+        if (isReadyForSnOCR() && !isProcessing && !ocrResult && selectedMethod === 'sn_screenshot') {
+            processSnOCR();
         }
-    }, [isReadyForOCR, isProcessing, ocrResult]);
+    }, [isReadyForSnOCR, isProcessing, ocrResult, selectedMethod]);
 
     // Обработчики диалогового окна
     const handleContinue = () => {
@@ -287,8 +369,9 @@ export default function DeviceInfoPage() {
     const handleEdit = () => {
         setShowDialog(false);
         // Сбрасываем все состояния для повторного ввода
-        setSelectedMethod(null);
-        setScreenshots([]);
+        setSelectedMethod('imei_dial'); // Начинаем с ввода IMEI
+        setSnScreenshots([]);
+        setManualImei('');
         setOcrResult(null);
         setOcrError(null);
         setImei('');
@@ -313,10 +396,18 @@ export default function DeviceInfoPage() {
 
     // Функция для сброса при нажатии "Назад"
     const handleBack = () => {
-        setSelectedMethod(null);
-        setScreenshots([]);
-        setOcrError(null);
-        router.back();
+        if (selectedMethod === 'sn_screenshot') {
+            // Если мы на этапе S/N, возвращаемся к IMEI
+            setSelectedMethod('imei_dial');
+            setSnScreenshots([]);
+            setOcrError(null);
+        } else {
+            // Если мы на этапе IMEI, возвращаемся к выбору
+            setSelectedMethod(null);
+            setManualImei('');
+            setOcrError(null);
+            router.back();
+        }
     };
 
     return (
@@ -349,19 +440,78 @@ export default function DeviceInfoPage() {
                             </p>
                         </motion.div>
 
-                        {/* Загрузка скриншотов */}
+                        {/* Выбор метода ввода */}
                         {!selectedMethod && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2, delay: 0.1 }}
+                                className="space-y-3"
                             >
-                                <ScreenshotMethod 
-                                    screenshots={screenshots}
-                                    onScreenshotUpload={handleScreenshotUpload}
+                                <Card className="p-3 border border-gray-200">
+                                    <CardContent>
+                                        <h4 className="font-semibold text-gray-800 mb-3">Получение данных устройства:</h4>
+                                        <div className="space-y-3">
+                                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                                <h5 className="font-medium text-blue-800 mb-2">📱 Шаг 1: IMEI</h5>
+                                                <p className="text-sm text-blue-700 mb-2">Быстро через код *#06#</p>
+                                                <Button
+                                                    onClick={() => setSelectedMethod('imei_dial')}
+                                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                                >
+                                                    ⌨️ Ввести IMEI
+                                                </Button>
+                                            </div>
+                                            
+                                            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                                                <h5 className="font-medium text-green-800 mb-2">📸 Шаг 2: S/N</h5>
+                                                <p className="text-sm text-green-700 mb-2">Скриншот из настроек</p>
+                                                <Button
+                                                    onClick={() => setSelectedMethod('sn_screenshot')}
+                                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                                    disabled={!manualImei || manualImei.length !== 15}
+                                                >
+                                                    📸 Загрузить S/N
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        )}
+
+                        {/* Метод ввода IMEI */}
+                        {selectedMethod === 'imei_dial' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, delay: 0.1 }}
+                            >
+                                <ImeiInputMethod
+                                    manualImei={manualImei}
+                                    setManualImei={setManualImei}
+                                    onConfirm={handleImeiInput}
+                                    onBack={() => setSelectedMethod(null)}
+                                    qrCodeDataUrl={qrCodeDataUrl}
+                                />
+                            </motion.div>
+                        )}
+
+                        {/* Метод скриншота S/N */}
+                        {selectedMethod === 'sn_screenshot' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, delay: 0.1 }}
+                            >
+                                <SnScreenshotMethod 
+                                    snScreenshots={snScreenshots}
+                                    onSnScreenshotUpload={handleSnScreenshotUpload}
                                     isProcessing={isProcessing}
                                     processingProgress={processingProgress}
                                     processingMessage={processingMessage}
+                                    onBack={() => setSelectedMethod('imei_dial')}
+                                    manualImei={manualImei}
                                 />
                             </motion.div>
                         )}
@@ -385,7 +535,7 @@ export default function DeviceInfoPage() {
                                             <Button
                                                 onClick={() => {
                                                     setOcrError(null);
-                                                    setScreenshots([]);
+                                                    setSnScreenshots([]);
                                                 }}
                                                 variant="outline"
                                                 className="w-full"
@@ -411,7 +561,7 @@ export default function DeviceInfoPage() {
                                     variant="outline"
                                     onClick={() => {
                                         setOcrResult(null);
-                                        setScreenshots([]);
+                                        setSnScreenshots([]);
                                     }}
                                     className="w-full"
                                 >
@@ -484,66 +634,91 @@ export default function DeviceInfoPage() {
     );
 }
 
-// Компонент для метода скриншота
-const ScreenshotMethod = ({
-    screenshots,
-    onScreenshotUpload,
+// Компонент для метода скриншота S/N
+const SnScreenshotMethod = ({
+    snScreenshots,
+    onSnScreenshotUpload,
     isProcessing,
     processingProgress,
-    processingMessage
+    processingMessage,
+    onBack,
+    manualImei
 }: {
-    screenshots: File[];
-    onScreenshotUpload: (files: FileList | null) => void;
+    snScreenshots: File[];
+    onSnScreenshotUpload: (files: FileList | null) => void;
     isProcessing: boolean;
     processingProgress: number;
     processingMessage: string;
+    onBack: () => void;
+    manualImei: string;
 }) => {
     return (
         <div className="space-y-3">
-            {/* Инструкции */}
+            {/* Кнопка назад */}
+            <Button
+                onClick={onBack}
+                variant="outline"
+                size="sm"
+                className="w-full"
+            >
+                ← Назад к IMEI
+            </Button>
+
+            {/* Показываем введенный IMEI */}
             <Card className="p-3 bg-blue-50 border border-blue-200">
                 <CardContent>
-                    <h4 className="font-semibold text-blue-800 mb-2">
-                        📸 Как сделать скриншот:
+                    <div className="text-center">
+                        <h4 className="font-semibold text-blue-800 mb-2">✅ IMEI введен</h4>
+                        <p className="text-sm text-blue-700 font-mono bg-white p-2 rounded border">
+                            {manualImei}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Инструкции для S/N */}
+            <Card className="p-3 bg-green-50 border border-green-200">
+                <CardContent>
+                    <h4 className="font-semibold text-green-800 mb-2">
+                        📸 Как получить S/N:
                     </h4>
-                    <ol className="text-sm text-blue-700 space-y-1">
-                        <li>1. Откройте Настройки → Основные → Об этом устройстве</li>
-                        <li>2. Нажмите одновременно: <strong>Кнопка питания + Кнопка увеличения громкости</strong></li>
-                        <li>3. Экран мигнет - скриншот готов!</li>
-                        <li>4. Нажмите на превью скриншота</li>
-                        <li>5. Выберите &quot;Полный экран&quot;</li>
+                    <ol className="text-sm text-green-700 space-y-1">
+                        <li>1. Откройте <strong>Настройки</strong></li>
+                        <li>2. Перейдите в <strong>Основные → Об этом устройстве</strong></li>
+                        <li>3. <strong>Прокрутите вниз</strong> до &quot;Серийный номер&quot;</li>
+                        <li>4. Сделайте скриншот этой страницы</li>
+                        <li>5. Загрузите скриншот ниже</li>
                     </ol>
                 </CardContent>
             </Card>
 
-            {/* Загрузка скриншотов */}
+            {/* Загрузка скриншота S/N */}
             <Card className="p-3 border border-gray-200">
                 <CardContent className="space-y-2">
-                    <h4 className="font-semibold text-gray-800">Загрузите скриншоты</h4>
+                    <h4 className="font-semibold text-gray-800">Загрузите скриншот S/N</h4>
                     <p className="text-sm text-gray-600">
-                        Загрузите 1-2 скриншота с информацией об устройстве. Мы сами определим, где S/N, а где IMEI.
+                        Загрузите скриншот страницы &quot;Об этом устройстве&quot; где виден серийный номер.
                     </p>
                     <input
                         type="file"
                         accept="image/*"
-                        multiple
-                        onChange={(e) => onScreenshotUpload(e.target.files)}
+                        onChange={(e) => onSnScreenshotUpload(e.target.files)}
                         className="w-full p-2 border border-gray-300 rounded-lg"
                     />
-                    {screenshots.length > 0 && (
+                    {snScreenshots.length > 0 && (
                         <div className="space-y-2">
                             <div className="text-sm text-green-600 flex items-center">
                                 <span className="mr-2">✓</span>
-                                Загружено скриншотов: {screenshots.length}
+                                Загружен скриншот S/N
                             </div>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => onScreenshotUpload(null)}
+                                onClick={() => onSnScreenshotUpload(null)}
                                 disabled={isProcessing}
                                 className="text-xs"
                             >
-                                Очистить все
+                                Очистить
                             </Button>
                         </div>
                     )}
@@ -565,11 +740,163 @@ const ScreenshotMethod = ({
                                     style={{ width: `${processingProgress}%` }}
                                 ></div>
                             </div>
-                            <p className="text-xs text-gray-500">Извлекаем IMEI и S/N</p>
+                            <p className="text-xs text-gray-500">Извлекаем S/N</p>
                         </div>
                     </CardContent>
                 </Card>
             )}
+        </div>
+    );
+};
+
+// Компонент для ввода IMEI
+const ImeiInputMethod = ({
+    manualImei,
+    setManualImei,
+    onConfirm,
+    onBack,
+    qrCodeDataUrl
+}: {
+    manualImei: string;
+    setManualImei: (value: string) => void;
+    onConfirm: () => void;
+    onBack: () => void;
+    qrCodeDataUrl: string;
+}) => {
+    return (
+        <div className="space-y-3">
+            {/* Кнопка назад */}
+            <Button
+                onClick={onBack}
+                variant="outline"
+                size="sm"
+                className="w-full"
+            >
+                ← Назад к выбору
+            </Button>
+
+            {/* Инструкции */}
+            <Card className="p-3 bg-blue-50 border border-blue-200">
+                <CardContent>
+                    <h4 className="font-semibold text-blue-800 mb-2">
+                        ⌨️ Как получить IMEI:
+                    </h4>
+                    <ol className="text-sm text-blue-700 space-y-1">
+                        <li>1. Откройте приложение <strong>&quot;Телефон&quot;</strong></li>
+                        <li>2. Наберите код: <strong className="text-lg bg-white px-2 py-1 rounded border">*#06#</strong></li>
+                        <li>3. На экране появится IMEI (15 цифр)</li>
+                        <li>4. Скопируйте и вставьте ниже</li>
+                    </ol>
+                    
+                    {/* Кнопки для помощи */}
+                    <div className="mt-3 space-y-2">
+                        <div className="p-2 bg-white rounded border">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Код для копирования:</span>
+                                <Button
+                                    onClick={() => {
+                                        if (typeof window !== 'undefined' && navigator.clipboard) {
+                                            navigator.clipboard.writeText('*#06#');
+                                            if ((window as any).Telegram?.WebApp) {
+                                                (window as any).Telegram.WebApp.showAlert('Код *#06# скопирован!');
+                                            }
+                                        }
+                                    }}
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs"
+                                >
+                                    📋 Копировать *#06#
+                                </Button>
+                            </div>
+                        </div>
+                        
+                        <div className="p-2 bg-white rounded border">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-gray-600">Открыть приложение:</span>
+                                <Button
+                                    onClick={() => {
+                                        if (typeof window !== 'undefined') {
+                                            // Пытаемся открыть приложение Телефон
+                                            const phoneUrl = 'tel:*#06#';
+                                            window.open(phoneUrl, '_blank');
+                                            
+                                            if ((window as any).Telegram?.WebApp) {
+                                                (window as any).Telegram.WebApp.showAlert('Открываю приложение Телефон. Наберите *#06# в появившемся окне.');
+                                            }
+                                        }
+                                    }}
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-xs"
+                                >
+                                    📞 Открыть Телефон
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* QR-код для быстрого копирования */}
+            {qrCodeDataUrl && (
+                <Card className="p-3 bg-purple-50 border border-purple-200">
+                    <CardContent>
+                        <h4 className="font-semibold text-purple-800 mb-2 text-center">
+                            📱 QR-код для быстрого копирования
+                        </h4>
+                        <div className="text-center space-y-2">
+                            <div className="flex justify-center">
+                                <Image 
+                                    src={qrCodeDataUrl} 
+                                    alt="QR код с *#06#" 
+                                    width={100}
+                                    height={100}
+                                    className="w-32 h-32 border border-gray-300 rounded-lg"
+                                />
+                            </div>
+                            <p className="text-xs text-purple-700">
+                                Отсканируйте QR-код камерой телефона для быстрого копирования кода *#06#
+                            </p>
+                            <div className="text-xs text-gray-500">
+                                <p>• Откройте камеру телефона</p>
+                                <p>• Наведите на QR-код</p>
+                                <p>• Нажмите на уведомление</p>
+                                <p>• Код будет скопирован автоматически</p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Поле ввода IMEI */}
+            <Card className="p-3 border border-gray-200">
+                <CardContent className="space-y-3">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            IMEI (15 цифр):
+                        </label>
+                        <input
+                            type="text"
+                            value={manualImei}
+                            onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                            placeholder="Например: 123456789012345"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono"
+                        />
+                        <p className="text-xs text-gray-500 mt-1 text-center">
+                            Введите только цифры (максимум 15)
+                        </p>
+                    </div>
+
+                    <Button
+                        onClick={onConfirm}
+                        disabled={!manualImei || manualImei.length !== 15}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                        ✅ Подтвердить IMEI
+                    </Button>
+                </CardContent>
+            </Card>
         </div>
     );
 };
