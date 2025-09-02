@@ -5,8 +5,8 @@ const config = {
   getTelegramWebAppUrl: () => {
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
-      'https://qrepair-git-dev-stypticms-projects.vercel.app'
-    return `${baseUrl}/request`
+      'https://qrepair-git-dev-stypticms-projects.vercel.app?mode=fullscreen'
+    return `${baseUrl}`
   },
 }
 
