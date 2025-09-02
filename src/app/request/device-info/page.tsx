@@ -730,7 +730,7 @@ const ImeiInputMethod = ({
                         </p>
                         {manualImei.length === 15 && (
                             <p className="text-xs text-green-600 text-center font-medium">
-                                ✅ Готово! Нажмите "Подтвердить" или Enter
+                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или Enter
                             </p>
                         )}
                     </div>
@@ -828,7 +828,7 @@ const SnInputMethod = ({
                         </p>
                         {manualSerialNumber.length >= 10 && (
                             <p className="text-xs text-green-600 text-center font-medium">
-                                ✅ Готово! Нажмите "Подтвердить" или Enter
+                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или Enter
                             </p>
                         )}
                     </div>
