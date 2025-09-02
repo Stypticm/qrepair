@@ -8,7 +8,7 @@ import { Page } from '@/components/Page';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions } = useStartForm();
+    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber } = useStartForm();
     const [submitting, setSubmitting] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -57,8 +57,20 @@ const SubmitPage = () => {
                     console.error('[SubmitPage] Ошибка парсинга additionalConditions:', e);
                 }
             }
+
+            // Загружаем IMEI
+            const savedImei = sessionStorage.getItem('imei');
+            if (savedImei) {
+                setImei(savedImei);
+            }
+
+            // Загружаем S/N
+            const savedSerialNumber = sessionStorage.getItem('serialNumber');
+            if (savedSerialNumber) {
+                setSerialNumber(savedSerialNumber);
+            }
         }
-    }, [setModel, setDeviceConditions, setAdditionalConditions]);
+    }, [setModel, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber]);
 
     // Принудительно закрываем любые открытые диалоговые окна при загрузке страницы
     useEffect(() => {
@@ -130,6 +142,8 @@ const SubmitPage = () => {
                     telegramId,
                     modelname: getFullModelName(),
                     price: finalPrice,
+                    imei: imei || null,
+                    sn: serialNumber || null,
                 }),
             });
 

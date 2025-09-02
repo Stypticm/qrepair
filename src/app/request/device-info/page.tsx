@@ -105,7 +105,7 @@ export default function DeviceInfoPage() {
     };
 
     // Функция для обработки ручного ввода IMEI
-    const handleImeiInput = () => {
+    const handleImeiInput = async () => {
         const isValidImei = validateIMEI(manualImei);
 
         if (!isValidImei) {
@@ -121,13 +121,30 @@ export default function DeviceInfoPage() {
             sessionStorage.setItem('imei', manualImei);
         }
 
+        // Сохраняем в БД
+        try {
+            await fetch('/api/request/choose', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    telegramId,
+                    username: 'Unknown',
+                    imei: manualImei,
+                }),
+            });
+        } catch (error) {
+            console.error('Ошибка сохранения IMEI в БД:', error);
+        }
+
         // Переходим к следующему шагу
         setSelectedMethod('sn_screenshot');
         setOcrError(null);
     };
 
     // Функция для обработки ручного ввода S/N
-    const handleSnInput = () => {
+    const handleSnInput = async () => {
         const isValidSn = validateSerialNumber(manualSerialNumber);
 
         if (!isValidSn) {
@@ -141,6 +158,23 @@ export default function DeviceInfoPage() {
         // Сохраняем в sessionStorage
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('serialNumber', manualSerialNumber);
+        }
+
+        // Сохраняем в БД
+        try {
+            await fetch('/api/request/choose', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    telegramId,
+                    username: 'Unknown',
+                    sn: manualSerialNumber,
+                }),
+            });
+        } catch (error) {
+            console.error('Ошибка сохранения S/N в БД:', error);
         }
 
         // Показываем диалог с результатами
