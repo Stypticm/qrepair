@@ -44,107 +44,24 @@ export default function Home() {
 
   // Проверяем сохраненные данные и перенаправляем на нужный шаг
   useEffect(() => {
-    const checkSavedData = async () => {
-      if (!telegramId) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Загружаем данные из БД
-        await loadSavedData(telegramId);
-        
-        // Получаем currentStep из БД
-        let currentStep = null;
-        try {
-          const response = await fetch('/api/request/getDraft', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ telegramId }),
-          });
-          
-          if (response.ok) {
-            const draftData = await response.json();
-            currentStep = draftData?.currentStep;
-          }
-        } catch (error) {
-          console.error('Ошибка получения currentStep:', error);
-        }
-        
-        if (currentStep) {
-          // Используем currentStep из БД для перенаправления
-          switch (currentStep) {
-            case 'form':
-              setIsLoading(false);
-              router.push('/request/condition');
-              return;
-            case 'condition':
-              setIsLoading(false);
-              router.push('/request/additional-condition');
-              return;
-            case 'additional-condition':
-              setIsLoading(false);
-              router.push('/request/device-info');
-              return;
-            case 'device-info':
-              setIsLoading(false);
-              if (imei && serialNumber) {
-                router.push('/request/submit');
-              } else {
-                router.push('/request/device-info');
-              }
-              return;
-            default:
-              break;
-          }
-        }
-        
-        // Fallback: определяем шаг на основе сохраненных данных
-        if (imei && serialNumber) {
-          // Все данные заполнены - перенаправляем на submit
-          setIsLoading(false);
-          router.push('/request/submit');
-          return;
-        } else if (imei) {
-          // IMEI заполнен, но нет S/N - перенаправляем на device-info
-          setIsLoading(false);
-          router.push('/request/device-info');
-          return;
-        } else if (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery)) {
-          // Дополнительные условия заполнены - перенаправляем на device-info
-          setIsLoading(false);
-          router.push('/request/device-info');
-          return;
-        } else if (deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) {
-          // Состояния устройства заполнены - перенаправляем на additional-condition
-          setIsLoading(false);
-          router.push('/request/additional-condition');
-          return;
-        } else if (modelname && modelname !== 'Apple iPhone 11') {
-          // Модель выбрана - перенаправляем на condition
-          setIsLoading(false);
-          router.push('/request/condition');
-          return;
-        }
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Ошибка проверки сохраненных данных:', error);
-        setIsLoading(false);
-      }
-    };
-
-    checkSavedData();
-  }, [telegramId, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber, router]);
+    // Просто убираем загрузку при инициализации
+    setIsLoading(false);
+  }, []);
 
 
 
   // Функция для начала формы с проверкой существующей заявки
   const handleStartForm = async () => {
     try {
-      // 1. Проверяем, есть ли уже отправленная заявка
+      // Показываем загрузку
+      setIsLoading(true);
+
+      // 1. Загружаем сохраненные данные
+      if (telegramId) {
+        await loadSavedData(telegramId);
+      }
+
+      // 2. Проверяем, есть ли уже отправленная заявка
       if (telegramId) {
         const response = await fetch('/api/request/getDraft', {
           method: 'POST',
@@ -158,6 +75,7 @@ export default function Home() {
           const draftData = await response.json();
           if (draftData && draftData.status === 'submitted') {
             // Есть уже отправленная заявка
+            setIsLoading(false);
             if (window.Telegram?.WebApp) {
               const webApp = window.Telegram.WebApp;
               const confirmed = await new Promise((resolve) => {
@@ -175,33 +93,86 @@ export default function Home() {
         }
       }
 
-      // 2. Проверяем сохраненные данные и определяем нужный шаг
+      // 3. Получаем currentStep из БД
+      let currentStep = null;
+      if (telegramId) {
+        try {
+          const response = await fetch('/api/request/getDraft', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ telegramId }),
+          });
+          
+          if (response.ok) {
+            const draftData = await response.json();
+            currentStep = draftData?.currentStep;
+          }
+        } catch (error) {
+          console.error('Ошибка получения currentStep:', error);
+        }
+      }
+
+      // 4. Используем currentStep из БД для перенаправления
+      if (currentStep) {
+        setIsLoading(false);
+        switch (currentStep) {
+          case 'form':
+            router.push('/request/condition');
+            return;
+          case 'condition':
+            router.push('/request/additional-condition');
+            return;
+          case 'additional-condition':
+            router.push('/request/device-info');
+            return;
+          case 'device-info':
+            if (imei && serialNumber) {
+              router.push('/request/submit');
+            } else {
+              router.push('/request/device-info');
+            }
+            return;
+          default:
+            break;
+        }
+      }
+
+      // 5. Fallback: определяем шаг на основе сохраненных данных
       if (imei && serialNumber) {
         // Все данные заполнены - перенаправляем на submit
+        setIsLoading(false);
         router.push('/request/submit');
         return;
       } else if (imei) {
         // IMEI заполнен, но нет S/N - перенаправляем на device-info
+        setIsLoading(false);
         router.push('/request/device-info');
         return;
       } else if (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery)) {
         // Дополнительные условия заполнены - перенаправляем на device-info
+        setIsLoading(false);
         router.push('/request/device-info');
         return;
       } else if (deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) {
         // Состояния устройства заполнены - перенаправляем на additional-condition
+        setIsLoading(false);
         router.push('/request/additional-condition');
         return;
       } else if (modelname && modelname !== 'Apple iPhone 11') {
         // Модель выбрана - перенаправляем на condition
+        setIsLoading(false);
         router.push('/request/condition');
         return;
       }
       
-      // 3. Нет сохраненных данных - начинаем с form (новая заявка)
+      // 6. Нет сохраненных данных - начинаем с form (новая заявка)
+      setIsLoading(false);
       router.push('/request/form');
     } catch (error) {
       console.error('Ошибка проверки заявки:', error);
+      setIsLoading(false);
       // В случае ошибки просто переходим к форме
       router.push('/request/form');
     }
