@@ -136,17 +136,41 @@ const SubmitPage = () => {
         }
     }, [modelname, telegramId, deviceConditions, additionalConditions, submitted]);
 
-    const handleReset = () => {
-        // Сбрасываем все состояния
-        resetAllStates();
-        
-        // Очищаем sessionStorage
-        if (typeof window !== 'undefined') {
-            sessionStorage.clear();
+    const handleReset = async () => {
+        try {
+            // Сбрасываем все состояния
+            resetAllStates();
+            
+            // Сбрасываем навигацию
+            setCurrentStep(null);
+            
+            // Очищаем sessionStorage
+            if (typeof window !== 'undefined') {
+                sessionStorage.clear();
+            }
+            
+            // Очищаем данные в базе данных
+            if (telegramId) {
+                const response = await fetch('/api/request/clearDraft', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ telegramId }),
+                });
+                
+                if (!response.ok) {
+                    console.error('Ошибка очистки данных в БД');
+                }
+            }
+            
+            // Переходим к форме
+            router.push('/request/form');
+        } catch (error) {
+            console.error('Ошибка при сбросе данных:', error);
+            // В случае ошибки всё равно переходим к форме
+            router.push('/request/form');
         }
-        
-        // Переходим к форме
-        router.push('/request/form');
     };
 
     const handleSubmit = async () => {
