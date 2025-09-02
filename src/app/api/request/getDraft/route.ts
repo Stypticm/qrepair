@@ -14,18 +14,32 @@ export async function POST(req: Request) {
 
     // Ищем последнюю draft заявку пользователя
     const draftRequest = await prisma.skupka.findFirst({
-      where: { 
-        telegramId, 
-        status: 'draft' 
+      where: {
+        telegramId,
+        status: 'draft',
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
+        updatedAt: 'desc',
+      },
     })
 
     if (!draftRequest) {
+      console.log(
+        'No draft found for telegramId:',
+        telegramId
+      )
       return NextResponse.json(null)
     }
+
+    console.log('Found draft in DB:', {
+      id: draftRequest.id,
+      modelname: draftRequest.modelname,
+      price: draftRequest.price,
+      imei: draftRequest.imei,
+      sn: draftRequest.sn,
+      currentStep: draftRequest.currentStep,
+      status: draftRequest.status,
+    })
 
     // Возвращаем данные заявки
     return NextResponse.json({
@@ -35,11 +49,12 @@ export async function POST(req: Request) {
       imei: draftRequest.imei,
       sn: draftRequest.sn,
       deviceConditions: draftRequest.deviceConditions,
-      additionalConditions: draftRequest.additionalConditions,
+      additionalConditions:
+        draftRequest.additionalConditions,
       currentStep: draftRequest.currentStep,
       status: draftRequest.status,
       createdAt: draftRequest.createdAt,
-      updatedAt: draftRequest.updatedAt
+      updatedAt: draftRequest.updatedAt,
     })
   } catch (error) {
     return NextResponse.json(

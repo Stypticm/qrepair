@@ -12,6 +12,9 @@ export async function POST(request: Request) {
     const { telegramId, modelname, price, imei, sn } =
       await request.json()
 
+    // Логируем полученную модель для отладки
+    console.log('Received modelname:', modelname)
+
     if (!telegramId || !modelname) {
       return NextResponse.json(
         { error: 'Telegram ID and modelname required' },

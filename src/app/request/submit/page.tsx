@@ -12,6 +12,7 @@ const SubmitPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [showResetDialog, setShowResetDialog] = useState(false);
 
     // Загружаем данные из sessionStorage при монтировании
     useEffect(() => {
@@ -128,11 +129,30 @@ const SubmitPage = () => {
         }
     }, [modelname, telegramId, deviceConditions, additionalConditions, submitted]);
 
+    const handleReset = () => {
+        // Сбрасываем все состояния
+        resetAllStates();
+        
+        // Очищаем sessionStorage
+        if (typeof window !== 'undefined') {
+            sessionStorage.clear();
+        }
+        
+        // Переходим к форме
+        router.push('/request/form');
+    };
+
     const handleSubmit = async () => {
         if (submitting) return;
         setSubmitting(true);
 
         try {
+            const fullModelName = getFullModelName();
+            
+            // Логируем отправляемую модель для отладки
+            console.log('Sending modelname:', fullModelName);
+            console.log('Context modelname:', modelname);
+            
             const res = await fetch('/api/request/submit', {
                 method: 'POST',
                 headers: {
@@ -140,7 +160,7 @@ const SubmitPage = () => {
                 },
                 body: JSON.stringify({
                     telegramId,
-                    modelname: getFullModelName(),
+                    modelname: fullModelName,
                     price: finalPrice,
                     imei: imei || null,
                     sn: serialNumber || null,
@@ -198,9 +218,13 @@ const SubmitPage = () => {
     const getFullModelName = (): string => {
         if (typeof window !== 'undefined') {
             const savedPhoneSelection = sessionStorage.getItem('phoneSelection');
+            console.log('phoneSelection from sessionStorage:', savedPhoneSelection);
+            
             if (savedPhoneSelection) {
                 try {
                     const parsed = JSON.parse(savedPhoneSelection);
+                    console.log('Parsed phoneSelection:', parsed);
+                    
                     let fullModel = `iPhone ${parsed.model}`;
                     
                     if (parsed.variant) {
@@ -225,14 +249,16 @@ const SubmitPage = () => {
                         fullModel += ` ${parsed.country.split(' ')[0]}`;
                     }
                     
+                    console.log('Generated full model:', fullModel);
                     return fullModel;
                 } catch (e) {
-                    // Ошибка парсинга phoneSelection для полной модели
+                    console.error('Error parsing phoneSelection:', e);
                 }
             }
         }
         
         // Возвращаем базовую модель если не удалось получить полную
+        console.log('Using fallback modelname:', modelname);
         return modelname || 'Модель не найдена';
     };
 
@@ -463,7 +489,7 @@ const SubmitPage = () => {
                         </div>
 
                         {/* Кнопки */}
-                        <div className="w-full space-y-3">
+                        <div className="w-full space-y-4">
                             <Button
                                 onClick={handleSubmit}
                                 disabled={submitting || !modelname}
@@ -473,28 +499,54 @@ const SubmitPage = () => {
                             </Button>
                             
                             <Button
-                                onClick={() => {
-                                    // Сбрасываем все состояния
-                                    resetAllStates();
-                                    
-                                    // Очищаем sessionStorage
-                                    if (typeof window !== 'undefined') {
-                                        sessionStorage.clear();
-                                    }
-                                    
-                                    // Переходим к форме
-                                    router.push('/request/form');
-                                }}
+                                onClick={() => setShowResetDialog(true)}
                                 variant="outline"
                                 className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
                             >
-                                Начать с начала
+                                Начать заново
                             </Button>
                         </div>
                     </div>
                 )}
                 </div>
             </div>
+
+            {/* Диалог подтверждения сброса */}
+            {showResetDialog && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-2xl">⚠️</span>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                Начать заново?
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Все введенные данные будут удалены. Это действие нельзя отменить.
+                            </p>
+                            <div className="flex space-x-3">
+                                <Button
+                                    onClick={() => setShowResetDialog(false)}
+                                    variant="outline"
+                                    className="flex-1 py-2 text-sm"
+                                >
+                                    Отмена
+                                </Button>
+                                <Button
+                                    onClick={() => {
+                                        setShowResetDialog(false);
+                                        handleReset();
+                                    }}
+                                    className="flex-1 py-2 text-sm bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                    Да, начать заново
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </Page>
     );
 };
