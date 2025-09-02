@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { useNavigation } from '@/components/NavigationContext/NavigationContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { iphones, IPhone } from '@/core/appleModels';
 import { Button } from '@/components/ui/button';
@@ -17,10 +18,16 @@ import { motion, LazyMotion, domAnimation } from 'framer-motion';
 
 export default function FormPage() {
     const { modelname, setModel, telegramId, username } = useStartForm();
+    const { setCurrentStep } = useNavigation();
     const router = useRouter();
 
     // Проверяем, доступен ли Telegram WebApp API
     const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+
+    // Устанавливаем текущий шаг при загрузке страницы
+    useEffect(() => {
+        setCurrentStep('form');
+    }, [setCurrentStep]);
 
     // Сбрасываем все состояния при загрузке страницы (только если это новая заявка)
     useEffect(() => {

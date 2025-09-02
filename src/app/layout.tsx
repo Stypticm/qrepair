@@ -2,6 +2,7 @@ import type { PropsWithChildren } from 'react';
 import { I18nProvider } from '@/core/i18n/provider';
 import { Comic_Neue } from 'next/font/google';
 import { StartFormProvider } from '@/components/StartFormContext/StartFormContext';
+import { NavigationProvider } from '@/components/NavigationContext/NavigationContext';
 import { ClientLayoutContent } from '@/components/ClientLayoutContent/ClientLayoutContent';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
@@ -35,7 +36,9 @@ export default function RootLayout({
       <body>
         <I18nProvider>
           <StartFormProvider>
-            <ClientLayoutContent>{children}</ClientLayoutContent>
+            <NavigationProvider>
+              <ClientLayoutContent>{children}</ClientLayoutContent>
+            </NavigationProvider>
           </StartFormProvider>
         </I18nProvider>
       </body>

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useCallback, useState } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { useNavigation } from '@/components/NavigationContext/NavigationContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ export default function DeviceInfoPage() {
         setSerialNumber,
         resetAllStates
     } = useStartForm();
+    const { setCurrentStep } = useNavigation();
     const router = useRouter();
 
     // Состояние выбора способа ввода
@@ -35,6 +37,11 @@ export default function DeviceInfoPage() {
     
     // Состояние для ручного ввода S/N
     const [manualSerialNumber, setManualSerialNumber] = useState('');
+
+    // Устанавливаем текущий шаг при загрузке страницы
+    useEffect(() => {
+        setCurrentStep('device-info');
+    }, [setCurrentStep]);
 
     // Состояние обработки OCR
     const [isProcessing, setIsProcessing] = useState(false);

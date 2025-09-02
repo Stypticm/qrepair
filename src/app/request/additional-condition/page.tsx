@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { useNavigation } from '@/components/NavigationContext/NavigationContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
@@ -31,7 +32,13 @@ export default function AdditionalConditionPage() {
         setModel,
         setPrice
     } = useStartForm();
+    const { setCurrentStep } = useNavigation();
     const router = useRouter();
+
+    // Устанавливаем текущий шаг при загрузке страницы
+    useEffect(() => {
+        setCurrentStep('additional-condition');
+    }, [setCurrentStep]);
 
     // Состояние диалогового окна
     const [showDialog, setShowDialog] = useState(false);

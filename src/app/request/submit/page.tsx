@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { useNavigation } from '@/components/NavigationContext/NavigationContext';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
@@ -9,10 +10,16 @@ import { Page } from '@/components/Page';
 const SubmitPage = () => {
     const router = useRouter();
     const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber } = useStartForm();
+    const { setCurrentStep } = useNavigation();
     const [submitting, setSubmitting] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [showResetDialog, setShowResetDialog] = useState(false);
+
+    // Устанавливаем текущий шаг при загрузке страницы
+    useEffect(() => {
+        setCurrentStep('submit');
+    }, [setCurrentStep]);
 
     // Загружаем данные из sessionStorage при монтировании
     useEffect(() => {

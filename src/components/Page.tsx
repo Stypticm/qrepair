@@ -4,6 +4,7 @@ import { backButton } from '@telegram-apps/sdk-react';
 import { PropsWithChildren, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
+import { useNavigation } from '@/components/NavigationContext/NavigationContext';
 
 export function Page({ children, back = true }: PropsWithChildren<{
   /**
@@ -14,6 +15,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
 }>) {
   const router = useRouter();
   const { safeAreaInsets, cssVars } = useSafeArea();
+  const { goToPreviousStep, canGoBack } = useNavigation();
 
   useEffect(() => {
     if (back) {
@@ -25,7 +27,13 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   useEffect(() => {
     const handleBackClick = () => {
-      router.back();
+      // Используем навигацию по шагам вместо router.back()
+      if (canGoBack) {
+        goToPreviousStep();
+      } else {
+        // Если не можем идти назад по шагам, используем обычную навигацию
+        router.back();
+      }
     };
 
     backButton.onClick(handleBackClick);
@@ -34,7 +42,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
     return () => {
       backButton.offClick(handleBackClick);
     };
-  }, [router]);
+  }, [router, goToPreviousStep, canGoBack]);
 
   return (
     <section
