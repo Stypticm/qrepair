@@ -26,11 +26,8 @@ export default function DeviceInfoPage() {
     // Состояние выбора способа ввода
     const [selectedMethod, setSelectedMethod] = useState<InputMethod>(null);
     
-    // Состояние для скриншотов
-    const [screenshots, setScreenshots] = useState<{
-        snScreenshot: File | null;
-        imeiScreenshot: File | null;
-    }>({ snScreenshot: null, imeiScreenshot: null });
+    // Состояние для скриншотов (упрощенное)
+    const [screenshots, setScreenshots] = useState<File[]>([]);
     
     // Состояние для фото
     const [photos, setPhotos] = useState<{
@@ -52,7 +49,7 @@ export default function DeviceInfoPage() {
     
     // Состояние ошибки OCR
     const [ocrError, setOcrError] = useState<string | null>(null);
-    
+
     // Состояние диалогового окна
     const [showDialog, setShowDialog] = useState(false);
 
@@ -67,67 +64,116 @@ export default function DeviceInfoPage() {
     // Проверяем, доступен ли Telegram WebApp API
     const isTelegramWebApp = typeof window !== 'undefined' && 
         (window as any).Telegram?.WebApp && 
-        (window as any).Telegram.WebApp.openCamera;
+        ((window as any).Telegram.WebApp.openCamera || (window as any).Telegram.WebApp.openPhotoGallery);
     
     // Отладочная информация
     if (typeof window !== 'undefined') {
-        console.log('Telegram WebApp доступен:', !!(window as any).Telegram?.WebApp);
-        console.log('openCamera доступен:', !!(window as any).Telegram?.WebApp?.openCamera);
-        console.log('isTelegramWebApp:', isTelegramWebApp);
+        console.log('🔍 Telegram WebApp доступен:', !!(window as any).Telegram?.WebApp);
+        console.log('📷 openCamera доступен:', !!(window as any).Telegram?.WebApp?.openCamera);
+        console.log('🖼️ openPhotoGallery доступен:', !!(window as any).Telegram?.WebApp?.openPhotoGallery);
+        console.log('✅ isTelegramWebApp:', isTelegramWebApp);
     }
 
-    // Функция для обработки скриншотов
-    const handleScreenshotUpload = (type: 'sn' | 'imei', file: File | null) => {
-        if (type === 'sn') {
-            setScreenshots(prev => ({ ...prev, snScreenshot: file }));
-        } else {
-            setScreenshots(prev => ({ ...prev, imeiScreenshot: file }));
+    // Функция для обработки скриншотов (упрощенная)
+    const handleScreenshotUpload = (files: FileList | null) => {
+        if (files && files.length > 0) {
+            const fileArray = Array.from(files);
+            setScreenshots(fileArray);
         }
     };
 
     // Функция для обработки фото через Telegram WebApp
     const handlePhotoCapture = (type: 'sn' | 'imei') => {
+        console.log('🔍 Проверяем доступность камеры...');
+        console.log('isTelegramWebApp:', isTelegramWebApp);
+        console.log('Telegram.WebApp:', (window as any).Telegram?.WebApp);
+        console.log('openCamera method:', (window as any).Telegram?.WebApp?.openCamera);
+        
         if (!isTelegramWebApp) {
+            console.error('❌ Камера недоступна - не в Telegram WebApp');
             alert('Функция камеры доступна только в Telegram WebApp');
             return;
         }
 
         const webApp = (window as any).Telegram.WebApp;
         
-        // Настройки для камеры
-        const cameraOptions = {
-            source: 'camera', // Используем камеру, а не галерею
-            quality: 'high'   // Высокое качество для лучшего OCR
-        };
-        
-        console.log(`Открываем камеру для ${type === 'sn' ? 'S/N' : 'IMEI'}`);
-        
-        webApp.openCamera(cameraOptions, (result: any) => {
-            console.log('Результат камеры:', result);
+        try {
+            console.log(`📸 Открываем камеру для ${type === 'sn' ? 'S/N' : 'IMEI'}`);
             
-            if (result && result.photos && result.photos.length > 0) {
-                const photoBlob = result.photos[0];
-                console.log(`Фото ${type} получено, размер:`, photoBlob.size);
+            // Попробуем разные варианты вызова API
+            if (typeof webApp.openCamera === 'function') {
+                // Вариант 1: С параметрами
+                const cameraOptions = {
+                    source: 'camera',
+                    quality: 'high'
+                };
                 
-                if (type === 'sn') {
-                    setPhotos(prev => ({ ...prev, snPhoto: photoBlob }));
-                } else {
-                    setPhotos(prev => ({ ...prev, imeiPhoto: photoBlob }));
+                console.log('📋 Параметры камеры:', cameraOptions);
+                
+                // Попробуем сначала с параметрами
+                try {
+                    webApp.openCamera(cameraOptions, (result: any) => {
+                        console.log('📷 Результат камеры (с параметрами):', result);
+                        handleCameraResult(result, type, webApp);
+                    });
+                } catch (error) {
+                    console.log('⚠️ Ошибка с параметрами, пробуем без них:', error);
+                    
+                    // Вариант 2: Без параметров
+                    try {
+                        webApp.openCamera((result: any) => {
+                            console.log('📷 Результат камеры (без параметров):', result);
+                            handleCameraResult(result, type, webApp);
+                        });
+                    } catch (error2) {
+                        console.error('❌ Ошибка без параметров:', error2);
+                        webApp.showAlert('Не удалось открыть камеру. Попробуйте обновить Telegram.');
+                    }
                 }
-                
-                // Показываем уведомление об успехе
-                webApp.showAlert(`Фото ${type === 'sn' ? 'S/N' : 'IMEI'} успешно сделано!`);
             } else {
-                console.log('Фото не было сделано или произошла ошибка');
-                webApp.showAlert('Не удалось сделать фото. Попробуйте еще раз.');
+                console.error('❌ openCamera не является функцией');
+                
+                // Попробуем альтернативный метод - галерея
+                if (typeof webApp.openPhotoGallery === 'function') {
+                    console.log('📷 Пробуем открыть галерею как альтернативу...');
+                    webApp.openPhotoGallery((result: any) => {
+                        console.log('📷 Результат галереи:', result);
+                        handleCameraResult(result, type, webApp);
+                    });
+                } else {
+                    alert('Методы камеры недоступны в этой версии Telegram');
+                }
             }
-        });
+            
+        } catch (error) {
+            console.error('❌ Ошибка при вызове openCamera:', error);
+            webApp.showAlert('Ошибка при открытии камеры: ' + (error instanceof Error ? error.message : 'Неизвестная ошибка'));
+        }
         
         // Обработка ошибок камеры
         webApp.onEvent('cameraError', (error: any) => {
-            console.error('Ошибка камеры:', error);
+            console.error('❌ Ошибка камеры:', error);
             webApp.showAlert('Ошибка доступа к камере. Проверьте разрешения.');
         });
+    };
+
+    // Функция для обработки результата камеры
+    const handleCameraResult = (result: any, type: 'sn' | 'imei', webApp: any) => {
+        if (result && result.photos && result.photos.length > 0) {
+            const photoBlob = result.photos[0];
+            console.log(`✅ Фото ${type} получено, размер:`, photoBlob.size);
+            
+            if (type === 'sn') {
+                setPhotos(prev => ({ ...prev, snPhoto: photoBlob }));
+            } else {
+                setPhotos(prev => ({ ...prev, imeiPhoto: photoBlob }));
+            }
+            
+            webApp.showAlert(`Фото ${type === 'sn' ? 'S/N' : 'IMEI'} успешно сделано!`);
+        } else {
+            console.log('❌ Фото не было сделано или произошла ошибка');
+            webApp.showAlert('Не удалось сделать фото. Попробуйте еще раз.');
+        }
     };
 
     // Функция для обработки OCR
@@ -144,11 +190,13 @@ export default function DeviceInfoPage() {
             
             // Добавляем изображения в зависимости от выбранного способа
             if (selectedMethod === 'screenshot') {
-                if (screenshots.snScreenshot) {
-                    formData.append('snImage', screenshots.snScreenshot);
-                }
-                if (screenshots.imeiScreenshot) {
-                    formData.append('imeiImage', screenshots.imeiScreenshot);
+                if (screenshots.length >= 2) {
+                    formData.append('snImage', screenshots[0]);
+                    formData.append('imeiImage', screenshots[1]);
+                } else if (screenshots.length === 1) {
+                    // Если только один файл, используем его для обоих
+                    formData.append('snImage', screenshots[0]);
+                    formData.append('imeiImage', screenshots[0]);
                 }
             } else if (selectedMethod === 'photo') {
                 if (photos.snPhoto) {
@@ -180,18 +228,23 @@ export default function DeviceInfoPage() {
             progressInterval = setInterval(() => {
                 setProcessingProgress(prev => {
                     if (prev < 70) {
-                        return prev + 2;
+                        return prev + 1; // Медленнее увеличиваем
                     }
                     return prev;
                 });
-            }, 200);
+            }, 300); // Реже обновляем
             
             const response = await fetch('/api/ocr/process-device-photos', {
                 method: 'POST',
                 body: formData
             });
             
-            clearInterval(progressInterval);
+            // Останавливаем интервал сразу после получения ответа
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = undefined;
+            }
+            
             setProcessingProgress(70);
             setProcessingMessage('Извлечение данных...');
             
@@ -288,7 +341,7 @@ export default function DeviceInfoPage() {
     // Проверяем, готовы ли данные для обработки OCR
     const isReadyForOCR = useCallback(() => {
         if (selectedMethod === 'screenshot') {
-            return screenshots.snScreenshot && screenshots.imeiScreenshot;
+            return screenshots.length >= 1; // Достаточно хотя бы одного файла
         } else if (selectedMethod === 'photo') {
             return photos.snPhoto && photos.imeiPhoto;
         }
@@ -330,7 +383,7 @@ export default function DeviceInfoPage() {
         setShowDialog(false);
         // Сбрасываем все состояния для повторного ввода
         setSelectedMethod(null);
-        setScreenshots({ snScreenshot: null, imeiScreenshot: null });
+        setScreenshots([]);
         setPhotos({ snPhoto: null, imeiPhoto: null });
         setOcrResult(null);
         setOcrError(null);
@@ -380,7 +433,7 @@ export default function DeviceInfoPage() {
 
                         {/* Выбор способа ввода */}
                         {!selectedMethod && (
-                            <motion.div
+                            <motion.div 
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2, delay: 0.1 }}
@@ -394,11 +447,11 @@ export default function DeviceInfoPage() {
                                         <div className="flex items-center space-x-3">
                                             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                                                 <span className="text-2xl">📸</span>
-                                            </div>
+                                                </div>
                                             <div className="flex-1">
                                                 <h3 className="font-semibold text-gray-800">Сделать скриншот</h3>
                                                 <p className="text-sm text-gray-600">Для вашего текущего телефона</p>
-                                            </div>
+                                        </div>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -415,8 +468,8 @@ export default function DeviceInfoPage() {
                                             <div className="flex-1">
                                                 <h3 className="font-semibold text-gray-800">Сфотографировать устройство</h3>
                                                 <p className="text-sm text-gray-600">Для продажи другого телефона</p>
-                                            </div>
-                                        </div>
+                                    </div>
+                                </div>
                                     </CardContent>
                                 </Card>
                             </motion.div>
@@ -458,7 +511,7 @@ export default function DeviceInfoPage() {
 
                         {/* Отображение ошибки OCR */}
                         {ocrError && (
-                            <motion.div
+                            <motion.div 
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.2 }}
@@ -473,7 +526,7 @@ export default function DeviceInfoPage() {
                                             <Button
                                                 onClick={() => {
                                                     setOcrError(null);
-                                                    setScreenshots({ snScreenshot: null, imeiScreenshot: null });
+                                                    setScreenshots([]);
                                                     setPhotos({ snPhoto: null, imeiPhoto: null });
                                                 }}
                                                 variant="outline"
@@ -513,9 +566,9 @@ export default function DeviceInfoPage() {
                             >
                                 <Button
                                     variant="outline"
-                                    onClick={() => {
+                                            onClick={() => {
                                         setOcrResult(null);
-                                        setScreenshots({ snScreenshot: null, imeiScreenshot: null });
+                                        setScreenshots([]);
                                         setPhotos({ snPhoto: null, imeiPhoto: null });
                                     }}
                                     className="w-full"
@@ -597,8 +650,8 @@ const ScreenshotMethod = ({
     processingProgress,
     processingMessage
 }: {
-    screenshots: { snScreenshot: File | null; imeiScreenshot: File | null };
-    onScreenshotUpload: (type: 'sn' | 'imei', file: File | null) => void;
+    screenshots: File[];
+    onScreenshotUpload: (files: FileList | null) => void;
     isProcessing: boolean;
     processingProgress: number;
     processingMessage: string;
@@ -621,64 +674,33 @@ const ScreenshotMethod = ({
                 </CardContent>
             </Card>
 
-            {/* Скриншот S/N */}
+            {/* Загрузка скриншотов */}
             <Card className="p-3 border border-gray-200">
                 <CardContent className="space-y-2">
-                    <h4 className="font-semibold text-gray-800">Скриншот 1: S/N (верхняя часть)</h4>
+                    <h4 className="font-semibold text-gray-800">Загрузите скриншоты</h4>
+                    <p className="text-sm text-gray-600">
+                        Загрузите 1-2 скриншота с информацией об устройстве. Мы сами определим, где S/N, а где IMEI.
+                    </p>
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            onScreenshotUpload('sn', file || null);
-                        }}
+                        multiple
+                        onChange={(e) => onScreenshotUpload(e.target.files)}
                         className="w-full p-2 border border-gray-300 rounded-lg"
                     />
-                    {screenshots.snScreenshot && (
-                        <div className="flex items-center justify-between">
+                    {screenshots.length > 0 && (
+                        <div className="space-y-2">
                             <div className="text-sm text-green-600 flex items-center">
                                 <span className="mr-2">✓</span>
-                                Скриншот S/N загружен
+                                Загружено скриншотов: {screenshots.length}
                             </div>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => onScreenshotUpload('sn', null)}
+                                onClick={() => onScreenshotUpload(null)}
                                 className="text-xs"
                             >
-                                Заменить
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Скриншот IMEI */}
-            <Card className="p-3 border border-gray-200">
-                <CardContent className="space-y-2">
-                    <h4 className="font-semibold text-gray-800">Скриншот 2: IMEI (нижняя часть)</h4>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            onScreenshotUpload('imei', file || null);
-                        }}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
-                    />
-                    {screenshots.imeiScreenshot && (
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-green-600 flex items-center">
-                                <span className="mr-2">✓</span>
-                                Скриншот IMEI загружен
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onScreenshotUpload('imei', null)}
-                                className="text-xs"
-                            >
-                                Заменить
+                                Очистить все
                             </Button>
                         </div>
                     )}
