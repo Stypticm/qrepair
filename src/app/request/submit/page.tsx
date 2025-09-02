@@ -266,6 +266,8 @@ const SubmitPage = () => {
     const calculateTotalPenalty = (): number => {
         let totalPenalty = 0;
         
+
+        
         // Штрафы за основные состояния устройства
         if (deviceConditions.front) {
             if (deviceConditions.front === 'Новый') totalPenalty += 0;
@@ -305,6 +307,8 @@ const SubmitPage = () => {
             else if (additionalConditions.battery === '85%') totalPenalty += -5;
             else if (additionalConditions.battery === '75%') totalPenalty += -10;
         }
+        
+
         
         return Math.abs(totalPenalty);
     };

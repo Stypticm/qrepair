@@ -439,10 +439,10 @@ export default function DeviceInfoPage() {
                             transition={{ duration: 0.3, ease: "easeOut" }}
                             className="text-center"
                         >
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-1">
                                 IMEI и S/N
                             </h2>
-                            <p className="text-base text-gray-600">
+                            <p className="text-sm text-gray-500">
                                 Получите данные устройства
                             </p>
                         </motion.div>
@@ -455,22 +455,22 @@ export default function DeviceInfoPage() {
                                 transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                                 className="space-y-3"
                             >
-                                <div className="space-y-4">
-                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className="p-6">
-                                            <h4 className="text-lg font-semibold text-gray-900 mb-4">Выберите способ</h4>
-                                            <div className="space-y-3">
+                                <div className="space-y-3">
+                                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                                        <div className="p-4">
+                                            <h4 className="text-base font-semibold text-gray-900 mb-3">Выберите способ</h4>
+                                            <div className="space-y-2">
                                                 <button
                                                     onClick={() => setSelectedMethod('imei_dial')}
-                                                    className="w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors duration-200"
+                                                    className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors duration-200"
                                                 >
                                                     <div className="flex items-center space-x-3">
-                                                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                                                            <span className="text-white text-lg">⌨️</span>
+                                                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                                            <span className="text-white text-sm">⌨️</span>
                                                         </div>
                                                         <div className="text-left">
-                                                            <h5 className="font-semibold text-gray-900">IMEI</h5>
-                                                            <p className="text-sm text-gray-600">Через код *#06#</p>
+                                                            <h5 className="font-medium text-gray-900 text-sm">IMEI</h5>
+                                                            <p className="text-xs text-gray-500">Через код *#06#</p>
                                                         </div>
                                                     </div>
                                                 </button>
@@ -478,15 +478,15 @@ export default function DeviceInfoPage() {
                                                 <button
                                                     onClick={() => setSelectedMethod('sn_screenshot')}
                                                     disabled={!manualImei || manualImei.length !== 15}
-                                                    className="w-full p-4 bg-green-50 hover:bg-green-100 rounded-xl border border-green-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     <div className="flex items-center space-x-3">
-                                                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                                                            <span className="text-white text-lg">📸</span>
+                                                        <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                                                            <span className="text-white text-sm">📸</span>
                                                         </div>
                                                         <div className="text-left">
-                                                            <h5 className="font-semibold text-gray-900">S/N</h5>
-                                                            <p className="text-sm text-gray-600">Скриншот настроек</p>
+                                                            <h5 className="font-medium text-gray-900 text-sm">S/N</h5>
+                                                            <p className="text-xs text-gray-500">Скриншот настроек</p>
                                                         </div>
                                                     </div>
                                                 </button>
@@ -676,19 +676,23 @@ const ImeiInputMethod = ({
             </Button>
 
             {/* Инструкции для IMEI */}
-            <Card className="p-3 bg-blue-50 border border-blue-200">
+            <Card className="p-3 bg-gray-50 border border-gray-200">
                 <CardContent>
-                    <h4 className="font-semibold text-blue-800 mb-2">
+                    <h4 className="font-medium text-gray-800 mb-2 text-sm">
                         📱 Как получить IMEI
                     </h4>
-                    <div className="space-y-2 text-sm text-blue-700">
+                    <div className="space-y-1.5 text-xs text-gray-600">
                         <div className="flex items-center space-x-2">
-                            <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
+                            <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
                             <span>Настройки → Основные → Об этом устройстве</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
+                            <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
                             <span>Найдите IMEI и скопируйте</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">3</span>
+                            <span>Вставьте в поле ниже и нажмите &quot;Ввод&quot;</span>
                         </div>
                     </div>
                 </CardContent>
@@ -701,7 +705,7 @@ const ImeiInputMethod = ({
                         (window as any).Telegram.WebApp.showAlert('Для получения IMEI:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите IMEI и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте IMEI');
                     }
                 }}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition-colors duration-200 text-sm"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg transition-colors duration-200 text-xs border border-gray-300"
             >
                 📱 Инструкции для iPhone
             </button>
@@ -710,7 +714,7 @@ const ImeiInputMethod = ({
             <Card className="p-3 border border-gray-200">
                 <CardContent>
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-900">
+                        <label className="block text-xs font-medium text-gray-700">
                             IMEI
                         </label>
                         <input
@@ -718,19 +722,24 @@ const ImeiInputMethod = ({
                             value={manualImei}
                             onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                             placeholder="Введите IMEI"
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-center text-sm font-mono bg-white"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && manualImei.length === 15) {
                                     onConfirm();
                                 }
                             }}
                         />
-                        <p className="text-xs text-gray-500 text-center">
+                        <p className="text-xs text-gray-400 text-center">
                             15 цифр
                         </p>
                         {manualImei.length === 15 && (
                             <p className="text-xs text-green-600 text-center font-medium">
-                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или Enter
+                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или клавишу &quot;Ввод&quot; на клавиатуре
+                            </p>
+                        )}
+                        {manualImei.length > 0 && manualImei.length < 15 && (
+                            <p className="text-xs text-orange-600 text-center font-medium">
+                                ⚠️ Введите еще {15 - manualImei.length} цифр
                             </p>
                         )}
                     </div>
@@ -741,7 +750,7 @@ const ImeiInputMethod = ({
             <Button
                 onClick={onConfirm}
                 disabled={!manualImei || manualImei.length !== 15}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 text-sm"
             >
                 Подтвердить
             </Button>
@@ -774,19 +783,23 @@ const SnInputMethod = ({
             </Button>
 
             {/* Инструкции для S/N */}
-            <Card className="p-3 bg-green-50 border border-green-200">
+            <Card className="p-3 bg-gray-50 border border-gray-200">
                 <CardContent>
-                    <h4 className="font-semibold text-green-800 mb-2">
+                    <h4 className="font-medium text-gray-800 mb-2 text-sm">
                         📱 Как получить S/N
                     </h4>
-                    <div className="space-y-2 text-sm text-green-700">
+                    <div className="space-y-1.5 text-xs text-gray-600">
                         <div className="flex items-center space-x-2">
-                            <span className="w-4 h-4 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
+                            <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
                             <span>Настройки → Основные → Об этом устройстве</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <span className="w-4 h-4 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
+                            <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
                             <span>Найдите S/N и скопируйте</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <span className="w-3 h-3 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">3</span>
+                            <span>Вставьте в поле ниже и нажмите &quot;Ввод&quot;</span>
                         </div>
                     </div>
                 </CardContent>
@@ -799,7 +812,7 @@ const SnInputMethod = ({
                         (window as any).Telegram.WebApp.showAlert('Для получения S/N:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите "Серийный номер" и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте S/N');
                     }
                 }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg transition-colors duration-200 text-sm"
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 rounded-lg transition-colors duration-200 text-xs border border-gray-300"
             >
                 📱 Инструкции для iPhone
             </button>
@@ -808,7 +821,7 @@ const SnInputMethod = ({
             <Card className="p-3 border border-gray-200">
                 <CardContent>
                     <div className="space-y-2">
-                        <label className="block text-sm font-semibold text-gray-900">
+                        <label className="block text-xs font-medium text-gray-700">
                             S/N
                         </label>
                         <input
@@ -816,19 +829,24 @@ const SnInputMethod = ({
                             value={manualSerialNumber}
                             onChange={(e) => setManualSerialNumber(e.target.value.toUpperCase().slice(0, 12))}
                             placeholder="Введите S/N"
-                            className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-green-500 text-center text-sm font-mono bg-white"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && manualSerialNumber.length >= 10) {
                                     onConfirm();
                                 }
                             }}
                         />
-                        <p className="text-xs text-gray-500 text-center">
+                        <p className="text-xs text-gray-400 text-center">
                             10-12 символов
                         </p>
                         {manualSerialNumber.length >= 10 && (
                             <p className="text-xs text-green-600 text-center font-medium">
-                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или Enter
+                                ✅ Готово! Нажмите &quot;Подтвердить&quot; или клавишу &quot;Ввод&quot; на клавиатуре
+                            </p>
+                        )}
+                        {manualSerialNumber.length > 0 && manualSerialNumber.length < 10 && (
+                            <p className="text-xs text-orange-600 text-center font-medium">
+                                ⚠️ Введите еще {10 - manualSerialNumber.length} символов
                             </p>
                         )}
                     </div>
@@ -839,7 +857,7 @@ const SnInputMethod = ({
             <Button
                 onClick={onConfirm}
                 disabled={!manualSerialNumber || manualSerialNumber.length < 10}
-                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white"
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 text-sm"
             >
                 Подтвердить
             </Button>
