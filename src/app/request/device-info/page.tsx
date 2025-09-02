@@ -32,6 +32,9 @@ export default function DeviceInfoPage() {
 
     // Состояние для ручного ввода IMEI
     const [manualImei, setManualImei] = useState('');
+    
+    // Состояние для ручного ввода S/N
+    const [manualSerialNumber, setManualSerialNumber] = useState('');
 
     // Состояние обработки OCR
     const [isProcessing, setIsProcessing] = useState(false);
@@ -122,6 +125,28 @@ export default function DeviceInfoPage() {
         // Закрываем диалог и переходим к следующему шагу
         setShowImeiDialog(false);
         setSelectedMethod('sn_screenshot');
+        setOcrError(null);
+    };
+
+    // Функция для обработки ручного ввода S/N
+    const handleSnInput = () => {
+        const isValidSn = validateSerialNumber(manualSerialNumber);
+
+        if (!isValidSn) {
+            setOcrError('Проверьте правильность введенного S/N. Должно быть 10-12 символов.');
+            return;
+        }
+
+        // Сохраняем S/N
+        setSerialNumber(manualSerialNumber);
+        
+        // Сохраняем в sessionStorage
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('serialNumber', manualSerialNumber);
+        }
+
+        // Показываем диалог с результатами
+        setShowDialog(true);
         setOcrError(null);
     };
 
@@ -272,6 +297,7 @@ export default function DeviceInfoPage() {
                 setSelectedMethod(null); // Сбрасываем выбор метода
                 setSnScreenshots([]); // Очищаем скриншоты S/N
                 setManualImei(''); // Очищаем ручной ввод IMEI
+                setManualSerialNumber(''); // Очищаем ручной ввод S/N
                 return;
             }
 
@@ -285,6 +311,7 @@ export default function DeviceInfoPage() {
 
             if (savedSerialNumber) {
                 setSerialNumber(savedSerialNumber);
+                setManualSerialNumber(savedSerialNumber);
             }
 
             // Если есть сохраненные данные, показываем диалог подтверждения
@@ -352,6 +379,7 @@ export default function DeviceInfoPage() {
         setSelectedMethod('imei_dial'); // Начинаем с ввода IMEI
         setSnScreenshots([]);
         setManualImei('');
+        setManualSerialNumber('');
         setOcrResult(null);
         setOcrError(null);
         setImei('');
@@ -385,6 +413,7 @@ export default function DeviceInfoPage() {
             // Если мы на этапе IMEI, возвращаемся к выбору
             setSelectedMethod(null);
             setManualImei('');
+            setManualSerialNumber('');
             setOcrError(null);
             router.back();
         }
@@ -472,21 +501,18 @@ export default function DeviceInfoPage() {
 
 
 
-                        {/* Метод скриншота S/N */}
+                        {/* Метод ввода S/N */}
                         {selectedMethod === 'sn_screenshot' && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                             >
-                                <SnScreenshotMethod 
-                                    snScreenshots={snScreenshots}
-                                    onSnScreenshotUpload={handleSnScreenshotUpload}
-                                    isProcessing={isProcessing}
-                                    processingProgress={processingProgress}
-                                    processingMessage={processingMessage}
+                                <SnInputMethod 
+                                    manualSerialNumber={manualSerialNumber}
+                                    setManualSerialNumber={setManualSerialNumber}
+                                    onConfirm={handleSnInput}
                                     onBack={() => setSelectedMethod('imei_dial')}
-                                    manualImei={manualImei}
                                 />
                             </motion.div>
                         )}
@@ -551,24 +577,24 @@ export default function DeviceInfoPage() {
             {/* Диалоговое окно для ввода IMEI */}
             <Dialog open={showImeiDialog} onOpenChange={setShowImeiDialog}>
                 <DialogContent
-                    className="bg-white w-[90vw] max-w-sm mx-auto rounded-xl shadow-lg max-h-[80vh] overflow-y-auto"
+                    className="bg-white w-[85vw] max-w-xs mx-auto rounded-lg shadow-lg max-h-[75vh] overflow-y-auto"
                     showCloseButton={true}
                 >
-                    <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-3">
+                    <DialogTitle className="text-center text-base font-semibold text-gray-900 mb-2">
                         Введите IMEI
                     </DialogTitle>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {/* Компактные инструкции */}
-                        <div className="bg-blue-50 rounded-lg p-3">
-                            <h4 className="font-semibold text-blue-900 mb-2 text-sm">Как получить IMEI</h4>
-                            <div className="space-y-2 text-xs text-blue-800">
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
+                        <div className="bg-blue-50 rounded-md p-2">
+                            <h4 className="font-semibold text-blue-900 mb-1 text-xs">Как получить IMEI</h4>
+                            <div className="space-y-1 text-xs text-blue-800">
+                                <div className="flex items-center space-x-1">
+                                    <span className="w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
                                     <span>Настройки → Основные → Об этом устройстве</span>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                    <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
+                                <div className="flex items-center space-x-1">
+                                    <span className="w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
                                     <span>Найдите IMEI и скопируйте</span>
                                 </div>
                             </div>
@@ -581,14 +607,14 @@ export default function DeviceInfoPage() {
                                     (window as any).Telegram.WebApp.showAlert('Для получения IMEI:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите IMEI и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте IMEI');
                                 }
                             }}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors duration-200 text-sm"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 rounded-md transition-colors duration-200 text-xs"
                         >
                             📱 Инструкции для iPhone
                         </button>
 
                         {/* Поле ввода */}
                         <div>
-                            <label className="block text-sm font-semibold text-gray-900 mb-1">
+                            <label className="block text-xs font-semibold text-gray-900 mb-1">
                                 IMEI
                             </label>
                             <input
@@ -596,16 +622,16 @@ export default function DeviceInfoPage() {
                                 value={manualImei}
                                 onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                                 placeholder="Введите IMEI"
-                                className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-base font-mono bg-gray-50"
+                                className="w-full p-1.5 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
                             />
-                            <p className="text-xs text-gray-500 mt-1 text-center">
-                                15 цифр • Можно вставить из буфера обмена
+                            <p className="text-xs text-gray-500 mt-0.5 text-center">
+                                15 цифр
                             </p>
                         </div>
 
                         {/* Ошибка */}
                         {ocrError && (
-                            <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="p-1.5 bg-red-50 border border-red-200 rounded-md">
                                 <p className="text-xs text-red-700">{ocrError}</p>
                             </div>
                         )}
@@ -614,7 +640,7 @@ export default function DeviceInfoPage() {
                         <button
                             onClick={handleImeiInput}
                             disabled={!manualImei || manualImei.length !== 15}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-lg transition-colors duration-200 text-sm"
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-1.5 rounded-md transition-colors duration-200 text-xs"
                         >
                             Подтвердить
                         </button>
@@ -683,23 +709,17 @@ export default function DeviceInfoPage() {
     );
 }
 
-// Компонент для метода скриншота S/N
-const SnScreenshotMethod = ({
-    snScreenshots,
-    onSnScreenshotUpload,
-    isProcessing,
-    processingProgress,
-    processingMessage,
-    onBack,
-    manualImei
+// Компонент для метода ввода S/N
+const SnInputMethod = ({
+    manualSerialNumber,
+    setManualSerialNumber,
+    onConfirm,
+    onBack
 }: {
-    snScreenshots: File[];
-    onSnScreenshotUpload: (files: FileList | null) => void;
-    isProcessing: boolean;
-    processingProgress: number;
-    processingMessage: string;
+    manualSerialNumber: string;
+    setManualSerialNumber: (value: string) => void;
+    onConfirm: () => void;
     onBack: () => void;
-    manualImei: string;
 }) => {
     return (
         <div className="space-y-3">
@@ -713,93 +733,66 @@ const SnScreenshotMethod = ({
                 ← Назад к IMEI
             </Button>
 
-
-
             {/* Инструкции для S/N */}
             <Card className="p-3 bg-green-50 border border-green-200">
                 <CardContent>
                     <h4 className="font-semibold text-green-800 mb-2">
-                        📸 Как получить S/N:
+                        📱 Как получить S/N
                     </h4>
-                    <div className="space-y-3 text-sm text-green-700">
-                        <div className="flex items-start space-x-3">
-                            <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-                            <div>
-                                <p className="font-semibold">Откройте Настройки</p>
-                                <p className="text-xs text-green-600 mt-1">Найдите иконку ⚙️ на главном экране</p>
-                            </div>
+                    <div className="space-y-2 text-sm text-green-700">
+                        <div className="flex items-center space-x-2">
+                            <span className="w-4 h-4 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
+                            <span>Настройки → Основные → Об этом устройстве</span>
                         </div>
-                        <div className="flex items-start space-x-3">
-                            <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">2</span>
-                            <div>
-                                <p className="font-semibold">Основные → Об этом устройстве</p>
-                                <p className="text-xs text-green-600 mt-1">Прокрутите вниз до &quot;Серийный номер&quot;</p>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-3">
-                            <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">3</span>
-                            <div>
-                                <p className="font-semibold">Сделайте скриншот</p>
-                                <p className="text-xs text-green-600 mt-1">Нажмите кнопки питания + громкость вверх</p>
-                            </div>
+                        <div className="flex items-center space-x-2">
+                            <span className="w-4 h-4 bg-green-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
+                            <span>Найдите S/N и скопируйте</span>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Загрузка скриншота S/N */}
+            {/* Кнопка для iPhone */}
+            <button
+                onClick={() => {
+                    if ((window as any).Telegram?.WebApp) {
+                        (window as any).Telegram.WebApp.showAlert('Для получения S/N:\n\n1. Откройте Настройки на iPhone\n2. Перейдите в Основные → Об этом устройстве\n3. Найдите "Серийный номер" и нажмите на него\n4. Выберите "Копировать"\n5. Вернитесь в приложение и вставьте S/N');
+                    }
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 rounded-lg transition-colors duration-200 text-sm"
+            >
+                📱 Инструкции для iPhone
+            </button>
+
+            {/* Поле ввода S/N */}
             <Card className="p-3 border border-gray-200">
-                <CardContent className="space-y-2">
-                    <h4 className="font-semibold text-gray-800">Загрузите скриншот S/N</h4>
-                    <p className="text-sm text-gray-600">
-                        Загрузите скриншот страницы &quot;Об этом устройстве&quot; где виден серийный номер.
-                    </p>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => onSnScreenshotUpload(e.target.files)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
-                    />
-                    {snScreenshots.length > 0 && (
-                        <div className="space-y-2">
-                            <div className="text-sm text-green-600 flex items-center">
-                                <span className="mr-2">✓</span>
-                                Загружен скриншот S/N
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onSnScreenshotUpload(null)}
-                                disabled={isProcessing}
-                                className="text-xs"
-                            >
-                                Очистить
-                            </Button>
-                        </div>
-                    )}
+                <CardContent>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-900">
+                            S/N
+                        </label>
+                        <input
+                            type="text"
+                            value={manualSerialNumber}
+                            onChange={(e) => setManualSerialNumber(e.target.value.toUpperCase().slice(0, 12))}
+                            placeholder="Введите S/N"
+                            className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
+                        />
+                        <p className="text-xs text-gray-500 text-center">
+                            10-12 символов
+                        </p>
+                    </div>
                 </CardContent>
             </Card>
 
-            {/* Прогресс-бар */}
-            {isProcessing && (
-                <Card className="p-3 bg-gray-50 border border-gray-200">
-                    <CardContent className="text-center">
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm text-gray-600">
-                                <span>{processingMessage || 'Обрабатываем скриншоты...'}</span>
-                                <span>{processingProgress}%</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                <div
-                                    className="bg-[#2dc2c6] h-2 rounded-full transition-all duration-300 ease-out"
-                                    style={{ width: `${processingProgress}%` }}
-                                ></div>
-                            </div>
-                            <p className="text-xs text-gray-500">Извлекаем S/N</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+            {/* Кнопка подтверждения */}
+            <Button
+                onClick={onConfirm}
+                disabled={!manualSerialNumber || manualSerialNumber.length < 10}
+                className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white"
+            >
+                Подтвердить
+            </Button>
         </div>
     );
 };
