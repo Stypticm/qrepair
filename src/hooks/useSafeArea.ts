@@ -27,61 +27,103 @@ export function useSafeArea() {
 
   // Функция для принудительного полноэкранного режима
   const forceFullscreen = useCallback(() => {
-    if (window.Telegram?.WebApp) {
-      const webApp = window.Telegram.WebApp
-      console.log('Attempting to request fullscreen...')
-
-      // Проверяем версию Telegram
-      const supportsFullscreen =
-        webApp.isVersionAtLeast?.('8.0') || false
-      const isMenuButton =
-        !webApp.initDataUnsafe?.start_param
-      const urlParams = new URLSearchParams(
-        window.location.search
+    if (!window.Telegram?.WebApp) {
+      console.log(
+        'No Telegram WebApp context available at',
+        new Date().toISOString()
       )
-      const isFullscreenMode =
-        urlParams.get('mode') === 'fullscreen'
-
-      if (
-        supportsFullscreen &&
-        'requestFullscreen' in webApp &&
-        typeof webApp.requestFullscreen === 'function'
-      ) {
-        console.log('Using requestFullscreen...')
-        webApp.requestFullscreen()
-      } else {
-        console.log(
-          'requestFullscreen not available or older version, falling back to expand...'
-        )
-        webApp.expand()
-      }
-
-      // Немедленная повторная попытка для Menu Button или mode=fullscreen
-      if (isMenuButton || isFullscreenMode) {
-        console.log(
-          'Menu Button or fullscreen mode detected, ensuring fullscreen...'
-        )
-        setTimeout(() => {
-          const isCurrentlyFullscreen =
-            'isFullscreen' in webApp
-              ? webApp.isFullscreen
-              : webApp.isExpanded
-          if (!isCurrentlyFullscreen) {
-            console.log(
-              'Fullscreen not achieved, retrying immediately...'
-            )
-            if (
-              supportsFullscreen &&
-              'requestFullscreen' in webApp
-            ) {
-              webApp?.requestFullscreen?.()
-            } else {
-              webApp.expand()
-            }
-          }
-        }, 0) // Немедленный вызов через setTimeout(..., 0)
-      }
+      return
     }
+
+    const webApp = window.Telegram.WebApp
+    console.log(
+      'Attempting to request fullscreen at',
+      new Date().toISOString(),
+      'URL:',
+      window.location.href
+    )
+
+    // Проверяем версию Telegram и контекст
+    const supportsFullscreen =
+      webApp.isVersionAtLeast?.('8.0') || false
+    const startParam = webApp.initDataUnsafe?.start_param
+    const urlParams = new URLSearchParams(
+      window.location.search
+    )
+    const isFullscreenMode =
+      urlParams.get('mode') === 'fullscreen'
+    console.log(
+      'Supports fullscreen:',
+      supportsFullscreen,
+      'Start param:',
+      startParam,
+      'Is Fullscreen Mode:',
+      isFullscreenMode
+    )
+
+    // Вызываем requestFullscreen и expand
+    if (
+      supportsFullscreen &&
+      'requestFullscreen' in webApp &&
+      typeof webApp.requestFullscreen === 'function'
+    ) {
+      console.log('Using requestFullscreen...')
+      webApp.requestFullscreen()
+      webApp.expand() // Резервный вызов
+    } else {
+      console.log(
+        'requestFullscreen not available, using expand...'
+      )
+      webApp.expand()
+    }
+
+    // Многократные повторные попытки
+    const retryFullscreen = (
+      attempt = 1,
+      maxAttempts = 3
+    ) => {
+      setTimeout(() => {
+        const isCurrentlyFullscreen =
+          'isFullscreen' in webApp
+            ? webApp.isFullscreen
+            : webApp.isExpanded
+        if (
+          !isCurrentlyFullscreen &&
+          attempt <= maxAttempts
+        ) {
+          console.log(
+            `Fullscreen not achieved, retrying (attempt ${attempt}/${maxAttempts}) at`,
+            new Date().toISOString()
+          )
+          if (
+            supportsFullscreen &&
+            'requestFullscreen' in webApp
+          ) {
+            webApp?.requestFullscreen?.()
+            webApp.expand()
+          } else {
+            webApp.expand()
+          }
+          retryFullscreen(attempt + 1, maxAttempts)
+        } else if (isCurrentlyFullscreen) {
+          console.log(
+            'Fullscreen achieved:',
+            isCurrentlyFullscreen,
+            'at',
+            new Date().toISOString()
+          )
+        } else {
+          console.log(
+            'Fullscreen not achieved after',
+            maxAttempts,
+            'attempts at',
+            new Date().toISOString()
+          )
+        }
+      }, attempt * 100) // Увеличиваем задержку для каждой попытки
+    }
+
+    retryFullscreen()
   }, [])
 
   useEffect(() => {
@@ -95,28 +137,47 @@ export function useSafeArea() {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
+      // Добавляем CSS-класс немедленно
+      document.documentElement.classList.add(
+        'telegram-fullscreen'
+      )
+
       const setup = async () => {
         try {
           // Уведомляем Telegram о готовности
+          console.log(
+            'Calling webApp.ready at',
+            new Date().toISOString()
+          )
           webApp.ready()
 
-          // Проверяем, открыто ли через Menu Button
-          const isMenuButton =
-            !webApp.initDataUnsafe?.start_param
-          console.log('Is Menu Button:', isMenuButton)
+          // Проверяем контекст
+          const startParam =
+            webApp.initDataUnsafe?.start_param
+          console.log(
+            'Start param:',
+            startParam,
+            'URL:',
+            window.location.href
+          )
 
           // Немедленно запрашиваем fullscreen
           if (
             'requestFullscreen' in webApp &&
-            typeof webApp.requestFullscreen === 'function'
+            typeof webApp.requestFullscreen ===
+              'function' &&
+            webApp.isVersionAtLeast?.('8.0')
           ) {
             console.log(
-              'Calling requestFullscreen immediately after ready...'
+              'Calling requestFullscreen immediately after ready at',
+              new Date().toISOString()
             )
             webApp.requestFullscreen()
+            webApp.expand()
           } else {
             console.log(
-              'requestFullscreen not available, calling expand immediately...'
+              'requestFullscreen not available, calling expand immediately at',
+              new Date().toISOString()
             )
             webApp.expand()
           }
@@ -136,8 +197,16 @@ export function useSafeArea() {
             webApp.isFullscreen !== undefined
           ) {
             setIsFullscreen(webApp.isFullscreen)
+            console.log(
+              'Initial fullscreen status:',
+              webApp.isFullscreen
+            )
           } else {
             setIsFullscreen(webApp.isExpanded)
+            console.log(
+              'Initial expanded status:',
+              webApp.isExpanded
+            )
           }
 
           // Обновление safe area
@@ -164,7 +233,8 @@ export function useSafeArea() {
           updateSafeArea()
           setIsReady(true)
           console.log(
-            'Telegram WebApp initialized successfully'
+            'Telegram WebApp initialized successfully at',
+            new Date().toISOString()
           )
         } catch (error) {
           console.error(
@@ -180,12 +250,18 @@ export function useSafeArea() {
       // Обработчик изменений viewport
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged((event) => {
-          console.log('Viewport changed:', event)
+          console.log(
+            'Viewport changed:',
+            event,
+            'at',
+            new Date().toISOString()
+          )
           setIsFullscreen(event.is_expanded || false)
 
           if (!event.is_expanded) {
             console.log(
-              'Viewport not in fullscreen, retrying...'
+              'Viewport not in fullscreen, retrying at',
+              new Date().toISOString()
             )
             forceFullscreen()
           }
@@ -197,16 +273,29 @@ export function useSafeArea() {
         const fullscreenChangedHandler = (event: {
           isFullscreen: boolean
         }) => {
-          console.log('Fullscreen changed:', event)
+          console.log(
+            'Fullscreen changed:',
+            event,
+            'at',
+            new Date().toISOString()
+          )
           setIsFullscreen(event.isFullscreen)
           if (!event.isFullscreen) {
-            console.log('Not in fullscreen, retrying...')
+            console.log(
+              'Not in fullscreen, retrying at',
+              new Date().toISOString()
+            )
             forceFullscreen()
           }
         }
 
         const fullscreenFailedHandler = (error: any) => {
-          console.error('Fullscreen request failed:', error)
+          console.error(
+            'Fullscreen request failed:',
+            error,
+            'at',
+            new Date().toISOString()
+          )
           webApp.expand() // Fallback
         }
 
@@ -223,6 +312,12 @@ export function useSafeArea() {
         const themeChangedHandler = () => {
           if (webApp.colorScheme) {
             setTheme(webApp.colorScheme)
+            console.log(
+              'Theme changed:',
+              webApp.colorScheme,
+              'at',
+              new Date().toISOString()
+            )
           }
         }
 
@@ -247,11 +342,15 @@ export function useSafeArea() {
               themeChangedHandler
             )
           }
+          document.documentElement.classList.remove(
+            'telegram-fullscreen'
+          )
         }
       }
     } else {
       console.log(
-        'Not in Telegram environment, showing app immediately'
+        'Not in Telegram environment, showing app immediately at',
+        new Date().toISOString()
       )
       setIsTelegram(false)
       setIsReady(true)

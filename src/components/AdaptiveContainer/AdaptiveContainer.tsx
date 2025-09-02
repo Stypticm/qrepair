@@ -41,11 +41,11 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       const webApp = window.Telegram.WebApp;
       const isMenuButtonContext = !webApp.initDataUnsafe?.start_param;
       setIsMenuButton(isMenuButtonContext);
-      console.log('App opened via Menu Button:', isMenuButtonContext);
+      console.log('App opened via Menu Button:', isMenuButtonContext, 'Start param:', webApp.initDataUnsafe?.start_param);
 
-      // Принудительно запрашиваем fullscreen для Menu Button
-      if (isMenuButtonContext && !isFullscreen) {
-        console.log('Menu Button detected, forcing fullscreen...');
+      // Принудительно запрашиваем fullscreen для всех контекстов, если не в fullscreen
+      if (!isFullscreen) {
+        console.log('Not in fullscreen, forcing fullscreen at', new Date().toISOString());
         forceFullscreen();
       }
     }
@@ -71,14 +71,12 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     if (!isTelegram) {
       // Браузерный режим (ПК или мобильный)
       if (isDesktop) {
-        // Desktop - центрируем и ограничиваем размер
         return {
           container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
           main: 'flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl',
           wrapper: 'w-full max-w-md mx-auto',
         };
       } else if (isMobile) {
-        // Mobile браузер - фиксированный размер
         return {
           container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
           main: 'flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-white rounded-2xl',
@@ -89,7 +87,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
 
     // Telegram режим - используем полный экран
     return {
-      container: `min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen ${isMenuButton ? 'telegram-menu-button telegram-expanded' : ''}`,
+      container: `min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen`,
       main: 'flex-1 w-full p-4',
       wrapper: 'w-full',
     };

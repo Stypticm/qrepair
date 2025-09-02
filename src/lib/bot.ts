@@ -25,7 +25,9 @@ bot.command('start', async (ctx) => {
             {
               text: '🚀 Открыть QoS',
               web_app: {
-                url: config.getTelegramWebAppUrl(),
+                url:
+                  config.getTelegramWebAppUrl() +
+                  '?mode=fullscreen',
               },
             },
           ],
@@ -43,7 +45,9 @@ bot.command('start', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: config.getTelegramWebAppUrl(),
+                  url:
+                    config.getTelegramWebAppUrl() +
+                    '?mode=fullscreen',
                 },
               },
             ],
@@ -63,7 +67,9 @@ bot.command('app', async (ctx) => {
           {
             text: '🚀 Открыть QoS',
             web_app: {
-              url: config.getTelegramWebAppUrl(),
+              url:
+                config.getTelegramWebAppUrl() +
+                '?mode=fullscreen',
             },
           },
         ],
@@ -91,7 +97,9 @@ bot.command('help', async (ctx) => {
             {
               text: '🚀 Открыть QoS',
               web_app: {
-                url: config.getTelegramWebAppUrl(),
+                url:
+                  config.getTelegramWebAppUrl() +
+                  '?mode=fullscreen',
               },
             },
           ],
@@ -118,7 +126,9 @@ bot.command('settings', async (ctx) => {
             {
               text: '🚀 Открыть QoS',
               web_app: {
-                url: config.getTelegramWebAppUrl(),
+                url:
+                  config.getTelegramWebAppUrl() +
+                  '?mode=fullscreen',
               },
             },
           ],
@@ -142,7 +152,9 @@ bot.on('callback_query', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: config.getTelegramWebAppUrl(),
+                  url:
+                    config.getTelegramWebAppUrl() +
+                    '?mode=fullscreen',
                 },
               },
             ],
@@ -172,7 +184,9 @@ bot.on('message:text', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: config.getTelegramWebAppUrl(),
+                  url:
+                    config.getTelegramWebAppUrl() +
+                    '?mode=fullscreen',
                 },
               },
             ],
@@ -203,7 +217,9 @@ bot.on('message:text', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: config.getTelegramWebAppUrl(),
+                  url:
+                    config.getTelegramWebAppUrl() +
+                    '?mode=fullscreen',
                 },
               },
             ],
@@ -252,7 +268,9 @@ bot.on('message:text', async (ctx) => {
               {
                 text: '🚀 Открыть QoS',
                 web_app: {
-                  url: config.getTelegramWebAppUrl(),
+                  url:
+                    config.getTelegramWebAppUrl() +
+                    '?mode=fullscreen',
                 },
               },
             ],

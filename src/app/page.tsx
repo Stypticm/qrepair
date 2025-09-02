@@ -4,73 +4,40 @@
 export const dynamic = 'force-dynamic';
 
 import Image from 'next/image';
-
 import { Link } from '@/components/Link/Link';
 import tonSvg from './_assets/ton.svg';
 import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
 import { getPictureUrl } from '@/core/lib/assets';
-
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
-
 import { useRouter } from 'next/navigation';
-
 import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { ExpandButton } from '@/components/ExpandButton';
 import { tailwindColors } from '@/core/colors';
 import { ChatContext } from '@/components/ChatContext';
+import { useSafeArea } from '@/hooks/useSafeArea';
 
 export default function Home() {
   const { telegramId, setModel, resetAllStates } = useStartForm();
+  const { forceFullscreen, isFullscreen } = useSafeArea();
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // Telegram WebApp expand() теперь полностью обрабатывается в хуке useSafeArea
-    // Убираем дублирующий код инициализации
-
-    if (!telegramId) return
-
-    if (telegramId === '1' || telegramId === '296925626' || telegramId === '531360988') {
-      setIsAdmin(true)
+    // Принудительно вызываем fullscreen при загрузке страницы
+    if (!isFullscreen && window.Telegram?.WebApp) {
+      console.log('Page loaded, forcing fullscreen at', new Date().toISOString());
+      forceFullscreen();
     }
 
-    // const sendStartCommand = async () => {
-    //   try {
-    //     const response = await fetch('/api/telegram/send-command', {
-    //       method: 'POST',
-    //       headers: { 'Content-Type': 'application/json' },
-    //       body: JSON.stringify({ telegramId, command: '/start' }),
-    //     });
+    if (!telegramId) return;
 
-    //     if (!response.ok) {
-    //       throw new Error('Failed to send /start command');
-    //     }
-    //     console.log('Successfully sent /start command');
-    //   } catch (error) {
-    //     console.error('Error sending /start command:', error);
-    //   }
-    // };
-
-    // const fetchStep = async () => {
-    //   try {
-    //     const res = await fetch(`/api/step?telegramId=${telegramId}`)
-    //     const data = await res.json()
-
-    //     if (data?.existing) {
-    //       const req = data.existing
-    //       setModel(req.modelname ?? '')
-    //     }
-    //   } catch (e) {
-    //     console.error(e)
-    //   }
-    // }
-
-    // sendStartCommand()
-    // fetchStep()
-  }, [telegramId])
+    if (telegramId === '1' || telegramId === '296925626' || telegramId === '531360988') {
+      setIsAdmin(true);
+    }
+  }, [telegramId, isFullscreen, forceFullscreen]);
 
   return (
     <AdaptiveContainer>
@@ -110,7 +77,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className='fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2'>
+          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
             {/* Кнопка для принудительного расширения */}
             <ExpandButton className="w-full" />
 
