@@ -551,57 +551,53 @@ export default function DeviceInfoPage() {
             {/* Диалоговое окно для ввода IMEI */}
             <Dialog open={showImeiDialog} onOpenChange={setShowImeiDialog}>
                 <DialogContent
-                    className="bg-white w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    className="bg-white w-[90vw] max-w-sm mx-auto rounded-xl shadow-lg max-h-[80vh] overflow-y-auto"
                     showCloseButton={true}
                 >
-                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-4">
+                    <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-3">
                         Введите IMEI
                     </DialogTitle>
 
-                    <div className="space-y-4">
-                        {/* Инструкции */}
-                        <div className="bg-blue-50 rounded-xl p-4">
-                            <h4 className="font-semibold text-blue-900 mb-3">Как получить IMEI</h4>
-                            <div className="space-y-3 text-sm text-blue-800">
-                                <div className="flex items-start space-x-3">
-                                    <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-                                    <div>
-                                        <p className="font-semibold">Откройте Настройки</p>
-                                        <p className="text-xs text-blue-600 mt-1">Найдите иконку ⚙️ на главном экране</p>
-                                    </div>
+                    <div className="space-y-3">
+                        {/* Компактные инструкции */}
+                        <div className="bg-blue-50 rounded-lg p-3">
+                            <h4 className="font-semibold text-blue-900 mb-2 text-sm">Как получить IMEI</h4>
+                            <div className="space-y-2 text-xs text-blue-800">
+                                <div className="flex items-center space-x-2">
+                                    <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">1</span>
+                                    <span>Настройки → Основные → Об этом устройстве</span>
                                 </div>
-                                <div className="flex items-start space-x-3">
-                                    <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">2</span>
-                                    <div>
-                                        <p className="font-semibold">Основные → Об этом устройстве</p>
-                                        <p className="text-xs text-blue-600 mt-1">Прокрутите вниз до &quot;IMEI&quot;</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-3">
-                                    <span className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">3</span>
-                                    <div>
-                                        <p className="font-semibold">Скопируйте IMEI</p>
-                                        <p className="text-xs text-blue-600 mt-1">Нажмите и удерживайте на IMEI, выберите &quot;Копировать&quot;</p>
-                                    </div>
+                                <div className="flex items-center space-x-2">
+                                    <span className="w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">2</span>
+                                    <span>Найдите IMEI и скопируйте</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Кнопка для открытия настроек */}
+                        {/* Кнопка для iPhone */}
                         <button
                             onClick={() => {
-                                if ((window as any).Telegram?.WebApp) {
-                                    (window as any).Telegram.WebApp.showAlert('Откройте Настройки → Основные → Об этом устройстве. Найдите IMEI и скопируйте его долгим нажатием.');
+                                if (typeof window !== 'undefined') {
+                                    // Для iPhone
+                                    const iosUrl = 'App-Prefs:root=General&path=About';
+                                    
+                                    try {
+                                        window.open(iosUrl, '_blank');
+                                    } catch (e) {
+                                        if ((window as any).Telegram?.WebApp) {
+                                            (window as any).Telegram.WebApp.showAlert('Откройте Настройки → Основные → Об этом устройстве. Найдите IMEI и скопируйте его долгим нажатием.');
+                                        }
+                                    }
                                 }
                             }}
-                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors duration-200"
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors duration-200 text-sm"
                         >
-                            ⚙️ Открыть Настройки
+                            ⚙️ Открыть Настройки iPhone
                         </button>
 
                         {/* Поле ввода */}
                         <div>
-                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                            <label className="block text-sm font-semibold text-gray-900 mb-1">
                                 IMEI
                             </label>
                             <input
@@ -609,17 +605,17 @@ export default function DeviceInfoPage() {
                                 value={manualImei}
                                 onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                                 placeholder="Введите IMEI"
-                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono bg-gray-50"
+                                className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-base font-mono bg-gray-50"
                             />
-                            <p className="text-sm text-gray-500 mt-1 text-center">
-                                15 цифр • Скопируйте из Настроек
+                            <p className="text-xs text-gray-500 mt-1 text-center">
+                                15 цифр
                             </p>
                         </div>
 
                         {/* Ошибка */}
                         {ocrError && (
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
-                                <p className="text-sm text-red-700">{ocrError}</p>
+                            <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-xs text-red-700">{ocrError}</p>
                             </div>
                         )}
 
@@ -627,7 +623,7 @@ export default function DeviceInfoPage() {
                         <button
                             onClick={handleImeiInput}
                             disabled={!manualImei || manualImei.length !== 15}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors duration-200"
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-lg transition-colors duration-200 text-sm"
                         >
                             Подтвердить
                         </button>
