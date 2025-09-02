@@ -7,10 +7,9 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import QRCode from 'qrcode';
-import Image from 'next/image';
+
 
 type InputMethod = 'imei_dial' | 'sn_screenshot' | null;
 
@@ -33,9 +32,6 @@ export default function DeviceInfoPage() {
 
     // Состояние для ручного ввода IMEI
     const [manualImei, setManualImei] = useState('');
-
-    // Состояние для QR-кода
-    const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
 
     // Состояние обработки OCR
     const [isProcessing, setIsProcessing] = useState(false);
@@ -94,23 +90,6 @@ export default function DeviceInfoPage() {
     const validateSerialNumber = (sn: string): boolean => {
         return Boolean(sn && sn.length >= 10 && sn.length <= 12 && /^[A-Z0-9]+$/i.test(sn));
     };
-
-    // Функция для генерации QR-кода
-    const generateQRCode = useCallback(async () => {
-        try {
-            const qrDataUrl = await QRCode.toDataURL('*#06#', {
-                width: 200,
-                margin: 2,
-                color: {
-                    dark: '#000000',
-                    light: '#FFFFFF'
-                }
-            });
-            setQrCodeDataUrl(qrDataUrl);
-        } catch (error) {
-            console.error('Ошибка генерации QR-кода:', error);
-        }
-    }, []);
 
 
 
@@ -318,8 +297,8 @@ export default function DeviceInfoPage() {
                 // Если есть IMEI, но нет S/N - переходим к вводу S/N
                 setSelectedMethod('sn_screenshot');
             } else {
-                // Если нет сохраненных данных, начинаем с ввода IMEI
-                setSelectedMethod('imei_dial');
+                // Если нет сохраненных данных, показываем выбор метода
+                setSelectedMethod(null);
             }
         }
     }, [setImei, setSerialNumber, resetAllStates]);
@@ -327,8 +306,7 @@ export default function DeviceInfoPage() {
     // Загружаем данные при монтировании компонента
     useEffect(() => {
         loadSavedData();
-        generateQRCode();
-    }, [loadSavedData, generateQRCode]);
+    }, [loadSavedData]);
 
     // Проверяем, готовы ли данные для обработки OCR S/N
     const isReadyForSnOCR = useCallback(() => {
@@ -429,7 +407,7 @@ export default function DeviceInfoPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
                             className="text-center"
                         >
                             <h2 className="text-xl font-semibold text-gray-800 mb-2">
@@ -445,7 +423,7 @@ export default function DeviceInfoPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, delay: 0.1 }}
+                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                                 className="space-y-3"
                             >
                                 <Card className="p-3 border border-gray-200">
@@ -485,14 +463,13 @@ export default function DeviceInfoPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, delay: 0.1 }}
+                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                             >
                                 <ImeiInputMethod
                                     manualImei={manualImei}
                                     setManualImei={setManualImei}
                                     onConfirm={handleImeiInput}
                                     onBack={() => setSelectedMethod(null)}
-                                    qrCodeDataUrl={qrCodeDataUrl}
                                 />
                             </motion.div>
                         )}
@@ -502,7 +479,7 @@ export default function DeviceInfoPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2, delay: 0.1 }}
+                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                             >
                                 <SnScreenshotMethod 
                                     snScreenshots={snScreenshots}
@@ -523,7 +500,7 @@ export default function DeviceInfoPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.2 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
                             >
                                 <Card className="p-4 bg-red-50 border border-red-200">
                                     <CardContent>
@@ -555,7 +532,7 @@ export default function DeviceInfoPage() {
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ duration: 0.2 }}
+                                transition={{ duration: 0.3, ease: "easeOut" }}
                             >
                                 <Button
                                     variant="outline"
@@ -754,14 +731,12 @@ const ImeiInputMethod = ({
     manualImei,
     setManualImei,
     onConfirm,
-    onBack,
-    qrCodeDataUrl
+    onBack
 }: {
     manualImei: string;
     setManualImei: (value: string) => void;
     onConfirm: () => void;
     onBack: () => void;
-    qrCodeDataUrl: string;
 }) => {
     return (
         <div className="space-y-3">
@@ -784,90 +759,51 @@ const ImeiInputMethod = ({
                     <ol className="text-sm text-blue-700 space-y-1">
                         <li>1. Откройте приложение <strong>&quot;Телефон&quot;</strong></li>
                         <li>2. Наберите код: <strong className="text-lg bg-white px-2 py-1 rounded border">*#06#</strong></li>
-                        <li>3. На экране появится IMEI (15 цифр)</li>
-                        <li>4. Скопируйте и вставьте ниже</li>
+                        <li>3. На экране появится <strong>IMEI (15 цифр)</strong></li>
+                        <li>4. <strong>Запомните или запишите</strong> IMEI</li>
+                        <li>5. Введите IMEI в поле ниже</li>
                     </ol>
                     
-                    {/* Кнопки для помощи */}
-                    <div className="mt-3 space-y-2">
-                        <div className="p-2 bg-white rounded border">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600">Код для копирования:</span>
-                                <Button
-                                    onClick={() => {
-                                        if (typeof window !== 'undefined' && navigator.clipboard) {
-                                            navigator.clipboard.writeText('*#06#');
-                                            if ((window as any).Telegram?.WebApp) {
-                                                (window as any).Telegram.WebApp.showAlert('Код *#06# скопирован!');
-                                            }
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-xs text-yellow-800">
+                            <strong>💡 Совет:</strong> Если не получается скопировать, просто запомните или запишите IMEI на бумаге, затем введите вручную.
+                        </p>
+                    </div>
+                    
+                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
+                        <p className="text-xs text-green-800">
+                            <strong>🔄 Альтернатива:</strong> Также можно найти IMEI в <strong>Настройки → Основные → Об этом устройстве</strong>
+                        </p>
+                    </div>
+                    
+                    {/* Кнопка для открытия приложения Телефон */}
+                    <div className="mt-3 p-2 bg-white rounded border">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Открыть приложение:</span>
+                            <Button
+                                onClick={() => {
+                                    if (typeof window !== 'undefined') {
+                                        // Пытаемся открыть приложение Телефон
+                                        const phoneUrl = 'tel:*#06#';
+                                        window.open(phoneUrl, '_blank');
+                                        
+                                        if ((window as any).Telegram?.WebApp) {
+                                            (window as any).Telegram.WebApp.showAlert('Открываю приложение Телефон. Наберите *#06# в появившемся окне.');
                                         }
-                                    }}
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs"
-                                >
-                                    📋 Копировать *#06#
-                                </Button>
-                            </div>
-                        </div>
-                        
-                        <div className="p-2 bg-white rounded border">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-gray-600">Открыть приложение:</span>
-                                <Button
-                                    onClick={() => {
-                                        if (typeof window !== 'undefined') {
-                                            // Пытаемся открыть приложение Телефон
-                                            const phoneUrl = 'tel:*#06#';
-                                            window.open(phoneUrl, '_blank');
-                                            
-                                            if ((window as any).Telegram?.WebApp) {
-                                                (window as any).Telegram.WebApp.showAlert('Открываю приложение Телефон. Наберите *#06# в появившемся окне.');
-                                            }
-                                        }
-                                    }}
-                                    size="sm"
-                                    variant="outline"
-                                    className="text-xs"
-                                >
-                                    📞 Открыть Телефон
-                                </Button>
-                            </div>
+                                    }
+                                }}
+                                size="sm"
+                                variant="outline"
+                                className="text-xs"
+                            >
+                                📞 Открыть Телефон
+                            </Button>
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* QR-код для быстрого копирования */}
-            {qrCodeDataUrl && (
-                <Card className="p-3 bg-purple-50 border border-purple-200">
-                    <CardContent>
-                        <h4 className="font-semibold text-purple-800 mb-2 text-center">
-                            📱 QR-код для быстрого копирования
-                        </h4>
-                        <div className="text-center space-y-2">
-                            <div className="flex justify-center">
-                                <Image 
-                                    src={qrCodeDataUrl} 
-                                    alt="QR код с *#06#" 
-                                    width={100}
-                                    height={100}
-                                    className="w-32 h-32 border border-gray-300 rounded-lg"
-                                />
-                            </div>
-                            <p className="text-xs text-purple-700">
-                                Отсканируйте QR-код камерой телефона для быстрого копирования кода *#06#
-                            </p>
-                            <div className="text-xs text-gray-500">
-                                <p>• Откройте камеру телефона</p>
-                                <p>• Наведите на QR-код</p>
-                                <p>• Нажмите на уведомление</p>
-                                <p>• Код будет скопирован автоматически</p>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+
 
             {/* Поле ввода IMEI */}
             <Card className="p-3 border border-gray-200">
@@ -880,11 +816,11 @@ const ImeiInputMethod = ({
                             type="text"
                             value={manualImei}
                             onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                            placeholder="Например: 123456789012345"
+                            placeholder="Введите IMEI вручную"
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono"
                         />
                         <p className="text-xs text-gray-500 mt-1 text-center">
-                            Введите только цифры (максимум 15)
+                            Введите IMEI вручную (15 цифр)
                         </p>
                     </div>
 
