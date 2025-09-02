@@ -33,7 +33,6 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json({ success: true, updated })
   } catch (error) {
-    console.error(error)
     return NextResponse.json(
       { error: 'Server error' },
       { status: 500 }

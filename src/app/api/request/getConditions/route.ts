@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/core/lib/prisma'
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // 🔥 ВАЖНО: Этот лог должен быть виден в серверной консоли!
-    console.log('🔥🔥🔥 API getConditions ВЫЗВАН! 🔥🔥🔥')
+    // Получаем telegramId из body
+    const { telegramId } = await request.json()
 
-    // Получаем telegramId из заголовков
-    const telegramId =
-      request.headers.get('x-telegram-id') || 'test-user'
-    console.log('API GET: telegramId:', telegramId)
+    if (!telegramId) {
+      return NextResponse.json(
+        { error: 'Telegram ID required' },
+        { status: 400 }
+      )
+    }
 
     // Ищем активную заявку для данного telegramId
     const activeRequest = await prisma.skupka.findFirst({
@@ -44,9 +46,6 @@ export async function GET(request: NextRequest) {
       response.headers.set('Pragma', 'no-cache')
       response.headers.set('Expires', '0')
 
-      console.log(
-        '🔥🔥🔥 API getConditions ЗАВЕРШЕН! 🔥🔥🔥'
-      )
       return response
     } else {
       const response = NextResponse.json({
@@ -61,16 +60,9 @@ export async function GET(request: NextRequest) {
       response.headers.set('Pragma', 'no-cache')
       response.headers.set('Expires', '0')
 
-      console.log(
-        '🔥🔥🔥 API getConditions ЗАВЕРШЕН! 🔥🔥🔥'
-      )
       return response
     }
   } catch (error) {
-    console.error(
-      '🔥🔥🔥 Ошибка в API getConditions:',
-      error
-    )
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

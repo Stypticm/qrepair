@@ -420,6 +420,7 @@ export default function FormPage() {
                             telegramId,
                             username: username || 'Unknown',
                             price: basePrice,
+                            currentStep: 'form',
                         }),
                     });
                 } catch (error) {

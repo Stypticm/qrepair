@@ -35,20 +35,12 @@ export async function POST(request: NextRequest) {
         status: activeRequest.status,
       })
     } else {
-      console.log(
-        'Активная заявка не найдена для telegramId:',
-        telegramId
-      )
       return NextResponse.json({
         additionalConditions: null,
         status: null,
       })
     }
   } catch (error) {
-    console.error(
-      'Error in getAdditionalConditions:',
-      error
-    )
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

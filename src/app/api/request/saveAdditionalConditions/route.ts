@@ -5,15 +5,8 @@ const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const { telegramId, additionalConditions } =
+    const { telegramId, additionalConditions, currentStep } =
       await request.json()
-
-    console.log(
-      'saveAdditionalConditions: telegramId =',
-      telegramId,
-      'additionalConditions =',
-      JSON.stringify(additionalConditions, null, 2)
-    )
 
     if (!telegramId || !additionalConditions) {
       return NextResponse.json(
@@ -42,11 +35,6 @@ export async function POST(request: NextRequest) {
     // Полностью заменяем существующие условия новыми
     const mergedConditions = additionalConditions
 
-    console.log(
-      'Обновляем дополнительные условия:',
-      mergedConditions
-    )
-
     // Обновляем заявку с новыми дополнительными условиями
     const updatedRequest = await prisma.skupka.updateMany({
       where: {
@@ -55,24 +43,15 @@ export async function POST(request: NextRequest) {
       },
       data: {
         additionalConditions: mergedConditions,
+        currentStep: currentStep || undefined,
       },
     })
-
-    console.log(
-      'Дополнительные условия успешно сохранены:',
-      updatedRequest.count,
-      'записей обновлено'
-    )
 
     return NextResponse.json({
       success: true,
       additionalConditions: mergedConditions,
     })
   } catch (error) {
-    console.error(
-      'Error saving additional conditions:',
-      error
-    )
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

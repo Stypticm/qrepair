@@ -132,6 +132,7 @@ export default function DeviceInfoPage() {
                     telegramId,
                     username: 'Unknown',
                     imei: manualImei,
+                    currentStep: 'device-info',
                 }),
             });
         } catch (error) {
@@ -171,6 +172,7 @@ export default function DeviceInfoPage() {
                     telegramId,
                     username: 'Unknown',
                     sn: manualSerialNumber,
+                    currentStep: 'device-info',
                 }),
             });
         } catch (error) {
@@ -627,29 +629,29 @@ export default function DeviceInfoPage() {
             {/* Диалоговое окно с итоговой информацией */}
             <Dialog open={showDialog} onOpenChange={handleEdit}>
                 <DialogContent
-                    className="bg-white w-[85vw] max-w-xs mx-auto rounded-lg shadow-lg max-h-[75vh] overflow-y-auto"
+                    className="bg-white w-[90vw] max-w-sm mx-auto rounded-2xl shadow-2xl border-0 max-h-[80vh] overflow-y-auto"
                     showCloseButton={true}
                 >
-                    <DialogTitle className="text-center text-base font-semibold text-gray-900 mb-2">
-                        Проверьте данные
+                    <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-4">
+                        ✅ Данные готовы
                     </DialogTitle>
 
-                    <div className="text-center">
+                    <div className="text-center space-y-4">
                         {/* Рамка для выбранных данных */}
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-3">
-                            <div className="space-y-2">
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200 shadow-sm">
+                            <div className="space-y-3">
                                 {ocrResult?.imei && (
                                     <div className="flex justify-between items-center">
-                                        <span className="text-xs text-gray-600 font-medium">IMEI:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words text-sm">
+                                        <span className="text-sm text-gray-600 font-medium">IMEI:</span>
+                                        <span className="font-mono font-semibold text-gray-900 text-right break-words text-sm bg-white px-2 py-1 rounded-md border">
                                             {ocrResult.imei}
                                         </span>
                                     </div>
                                 )}
                                 {ocrResult?.serialNumber && (
                                     <div className="flex justify-between items-center">
-                                        <span className="text-xs text-gray-600 font-medium">S/N:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words text-sm">
+                                        <span className="text-sm text-gray-600 font-medium">S/N:</span>
+                                        <span className="font-mono font-semibold text-gray-900 text-right break-words text-sm bg-white px-2 py-1 rounded-md border">
                                             {ocrResult.serialNumber}
                                         </span>
                                     </div>
@@ -658,25 +660,25 @@ export default function DeviceInfoPage() {
                         </div>
 
                         {/* Кнопки действий */}
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <Button
                                 onClick={handleContinue}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 text-xs"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl"
                             >
-                                ✅ Подтвердить
+                                Продолжить
                             </Button>
 
                             <Button
                                 onClick={handleEdit}
                                 variant="outline"
-                                className="w-full py-1.5 text-xs"
+                                className="w-full py-3 text-sm font-medium rounded-xl border-gray-300 hover:bg-gray-50 transition-all duration-200"
                             >
-                                ✏️ Заново
+                                Изменить
                             </Button>
                         </div>
 
-                        <p className="text-center text-xs text-gray-500 mt-2">
-                            Проверьте данные
+                        <p className="text-center text-xs text-gray-500">
+                            Проверьте правильность данных перед продолжением
                         </p>
                     </div>
                 </DialogContent>

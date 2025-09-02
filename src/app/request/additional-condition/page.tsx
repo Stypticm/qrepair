@@ -322,7 +322,8 @@ export default function AdditionalConditionPage() {
                 },
                 body: JSON.stringify({
                     telegramId,
-                    additionalConditions: newConditions
+                    additionalConditions: newConditions,
+                    currentStep: 'additional-condition'
                 }),
             });
 

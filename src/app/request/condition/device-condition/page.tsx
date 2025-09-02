@@ -199,7 +199,8 @@ export default function DeviceConditionPage() {
                     },
                     body: JSON.stringify({
                         telegramId,
-                        username
+                        username,
+                        currentStep: 'device-condition'
                     }),
                 });
             } catch (error) {

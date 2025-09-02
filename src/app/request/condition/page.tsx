@@ -69,9 +69,11 @@ export default function ConditionPage() {
             const url = `/api/request/getConditions?t=${timestamp}`;
 
             const response = await fetch(url, {
+                method: 'POST',
                 headers: {
-                    'x-telegram-id': telegramId || 'test-user'
-                }
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ telegramId: telegramId || 'test-user' })
             });
             if (response.ok) {
                 const data = await response.json();
@@ -190,6 +192,7 @@ export default function ConditionPage() {
                         body: JSON.stringify({
                             telegramId,
                             username: username || 'Unknown',
+                            currentStep: 'condition',
                         }),
                     });
 
@@ -332,14 +335,15 @@ export default function ConditionPage() {
 
             const requestBody = {
                 deviceConditions: newConditions,
-                price: finalPrice
+                price: finalPrice,
+                currentStep: 'condition',
+                telegramId: telegramId || 'test-user'
             };
 
             const response = await fetch('/api/request/saveConditions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-telegram-id': telegramId || 'test-user'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(requestBody),
             });

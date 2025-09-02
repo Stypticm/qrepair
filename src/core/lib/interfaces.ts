@@ -63,6 +63,9 @@ export type FormState = {
 
   // Сброс всех состояний
   resetAllStates: () => void
+
+  // Загрузка сохраненных данных из БД
+  loadSavedData: (telegramId: string) => Promise<void>
 }
 
 export interface SkupkaRequest {

@@ -88,6 +88,43 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         }
     }, [initDataState]);
 
+    // Функция для загрузки сохраненных данных из БД
+    const loadSavedData = async (telegramId: string) => {
+        try {
+            const response = await fetch('/api/request/getDraft', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ telegramId }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data) {
+                    // Восстанавливаем данные из БД
+                    if (data.modelname) setModel(data.modelname);
+                    if (data.price) setPrice(data.price);
+                    if (data.imei) setImei(data.imei);
+                    if (data.sn) setSerialNumber(data.sn);
+                    if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
+                    if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
+                    
+                    console.log('Данные восстановлены из БД:', data);
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки данных из БД:', error);
+        }
+    };
+
+    // Загружаем данные при инициализации telegramId
+    useEffect(() => {
+        if (telegramId) {
+            loadSavedData(telegramId);
+        }
+    }, [telegramId]);
+
     return (
         <StartFormContext.Provider
             value={{
@@ -115,7 +152,8 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setPrice,
                 setDeviceConditions,
                 setAdditionalConditions,
-                resetAllStates
+                resetAllStates,
+                loadSavedData
             }}
         >
             {children}

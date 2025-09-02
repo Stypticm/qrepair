@@ -1,9 +1,9 @@
 import prisma from '@/core/lib/prisma'
 import { NextResponse } from 'next/server'
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
-    const telegramId = request.headers.get('x-telegram-id')
+    const { telegramId } = await request.json()
 
     if (!telegramId) {
       return NextResponse.json(
@@ -29,7 +29,6 @@ export async function GET(request: Request) {
       price: existingRequest.price,
     })
   } catch (error) {
-    console.error('Error getting price:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

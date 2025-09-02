@@ -306,8 +306,11 @@ const SubmitPage = () => {
 
         // Штрафы за дополнительные состояния
         if (additionalConditions) {
-            if (additionalConditions.faceId === 'Не работает') totalPenalty += -10;
-            if (additionalConditions.touchId === 'Не работает') totalPenalty += -8;
+            if (additionalConditions.faceId === 'Работает') totalPenalty += 0;
+            else if (additionalConditions.faceId === 'Не работает') totalPenalty += -10;
+            
+            if (additionalConditions.touchId === 'Работает') totalPenalty += 0;
+            else if (additionalConditions.touchId === 'Не работает') totalPenalty += -8;
             
             // Штрафы за заднюю камеру
             if (additionalConditions.backCamera === 'Новый') totalPenalty += 0;
