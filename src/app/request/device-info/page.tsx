@@ -48,6 +48,9 @@ export default function DeviceInfoPage() {
         confidence: number;
     } | null>(null);
     
+    // Состояние ошибки OCR
+    const [ocrError, setOcrError] = useState<string | null>(null);
+    
     // Состояние диалогового окна
     const [showDialog, setShowDialog] = useState(false);
 
@@ -63,7 +66,7 @@ export default function DeviceInfoPage() {
     const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
 
     // Функция для обработки скриншотов
-    const handleScreenshotUpload = (type: 'sn' | 'imei', file: File) => {
+    const handleScreenshotUpload = (type: 'sn' | 'imei', file: File | null) => {
         if (type === 'sn') {
             setScreenshots(prev => ({ ...prev, snScreenshot: file }));
         } else {
@@ -92,30 +95,71 @@ export default function DeviceInfoPage() {
     // Функция для обработки OCR
     const processOCR = async () => {
         setIsProcessing(true);
+        setOcrError(null);
         
         try {
-            // Здесь будет API вызов для OCR
-            // Пока что симулируем результат
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            const formData = new FormData();
             
-            const mockResult = {
-                imei: '123456789012345',
-                serialNumber: 'ABC123DEF456',
-                confidence: 95
-            };
+            // Добавляем изображения в зависимости от выбранного способа
+            if (selectedMethod === 'screenshot') {
+                if (screenshots.snScreenshot) {
+                    formData.append('snImage', screenshots.snScreenshot);
+                }
+                if (screenshots.imeiScreenshot) {
+                    formData.append('imeiImage', screenshots.imeiScreenshot);
+                }
+            } else if (selectedMethod === 'photo') {
+                if (photos.snPhoto) {
+                    formData.append('snImage', photos.snPhoto);
+                }
+                if (photos.imeiPhoto) {
+                    formData.append('imeiImage', photos.imeiPhoto);
+                }
+            }
             
-            setOcrResult(mockResult);
-            setImei(mockResult.imei);
-            setSerialNumber(mockResult.serialNumber);
+            // Добавляем дополнительные данные
+            formData.append('telegramId', telegramId || '');
+            if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+                formData.append('initData', (window as any).Telegram.WebApp.initData);
+            }
+            
+            // Отправляем запрос на API
+            const response = await fetch('/api/ocr/process-device-photos', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!response.ok) {
+                throw new Error('OCR processing failed');
+            }
+            
+            const result = await response.json();
+            
+            if (result.error) {
+                throw new Error(result.error);
+            }
+            
+            // Проверяем, удалось ли извлечь данные
+            if (!result.imei || !result.serialNumber) {
+                throw new Error('Не удалось извлечь IMEI или S/N из изображений. Попробуйте сделать фото заново с лучшим качеством.');
+            }
+            
+            setOcrResult(result);
+            setImei(result.imei);
+            setSerialNumber(result.serialNumber);
             
             // Сохраняем в sessionStorage
             if (typeof window !== 'undefined') {
-                sessionStorage.setItem('imei', mockResult.imei);
-                sessionStorage.setItem('serialNumber', mockResult.serialNumber);
+                sessionStorage.setItem('imei', result.imei);
+                sessionStorage.setItem('serialNumber', result.serialNumber);
             }
+            
+            // Показываем диалог подтверждения
+            setShowDialog(true);
             
         } catch (error) {
             console.error('OCR processing error:', error);
+            setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображений');
         } finally {
             setIsProcessing(false);
         }
@@ -214,6 +258,7 @@ export default function DeviceInfoPage() {
         setScreenshots({ snScreenshot: null, imeiScreenshot: null });
         setPhotos({ snPhoto: null, imeiPhoto: null });
         setOcrResult(null);
+        setOcrError(null);
         setImei('');
         setSerialNumber('');
 
@@ -332,8 +377,39 @@ export default function DeviceInfoPage() {
                             )}
                         </AnimatePresence>
 
+                        {/* Отображение ошибки OCR */}
+                        {ocrError && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <Card className="p-4 bg-red-50 border border-red-200">
+                                    <CardContent>
+                                        <div className="text-center space-y-3">
+                                            <div className="text-red-600">
+                                                <span className="text-2xl">⚠️</span>
+                                            </div>
+                                            <p className="text-sm text-red-700">{ocrError}</p>
+                                            <Button
+                                                onClick={() => {
+                                                    setOcrError(null);
+                                                    setScreenshots({ snScreenshot: null, imeiScreenshot: null });
+                                                    setPhotos({ snPhoto: null, imeiPhoto: null });
+                                                }}
+                                                variant="outline"
+                                                className="w-full"
+                                            >
+                                                Попробовать еще раз
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        )}
+
                         {/* Кнопка возврата к выбору способа */}
-                        {selectedMethod && !isProcessing && !ocrResult && (
+                        {selectedMethod && !isProcessing && !ocrResult && !ocrError && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -348,6 +424,27 @@ export default function DeviceInfoPage() {
                                 </Button>
                             </motion.div>
                         )}
+
+                        {/* Кнопка повторной обработки после успешного OCR */}
+                        {ocrResult && !isProcessing && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2 }}
+                            >
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setOcrResult(null);
+                                        setScreenshots({ snScreenshot: null, imeiScreenshot: null });
+                                        setPhotos({ snPhoto: null, imeiPhoto: null });
+                                    }}
+                                    className="w-full"
+                                >
+                                    🔄 Обработать заново
+                                </Button>
+                            </motion.div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -355,9 +452,8 @@ export default function DeviceInfoPage() {
             {/* Диалоговое окно с итоговой информацией */}
             <Dialog open={showDialog} onOpenChange={handleEdit}>
                 <DialogContent
-                    className="bg-white cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
-                    onClick={handleContinue}
-                    showCloseButton={false}
+                    className="bg-white w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    showCloseButton={true}
                 >
                     <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
                         Проверьте данные
@@ -386,11 +482,26 @@ export default function DeviceInfoPage() {
                             </div>
                         </div>
 
-                        <p className="text-center text-sm text-gray-600 mt-3">
-                            👆 Нажмите на окно для перехода к следующему шагу
-                        </p>
-                        <p className="text-center text-sm text-gray-600 mt-1">
-                            ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
+                        {/* Кнопки действий */}
+                        <div className="space-y-3">
+                            <Button
+                                onClick={handleContinue}
+                                className="w-full bg-[#2dc2c6] hover:bg-[#2dc2c6]/90 text-white"
+                            >
+                                ✅ Подтвердить и продолжить
+                            </Button>
+                            
+                            <Button
+                                onClick={handleEdit}
+                                variant="outline"
+                                className="w-full"
+                            >
+                                ✏️ Загрузить заново
+                            </Button>
+                        </div>
+
+                        <p className="text-center text-xs text-gray-500 mt-3">
+                            Проверьте правильность данных перед продолжением
                         </p>
                     </div>
                 </DialogContent>
@@ -406,7 +517,7 @@ const ScreenshotMethod = ({
     isProcessing 
 }: {
     screenshots: { snScreenshot: File | null; imeiScreenshot: File | null };
-    onScreenshotUpload: (type: 'sn' | 'imei', file: File) => void;
+    onScreenshotUpload: (type: 'sn' | 'imei', file: File | null) => void;
     isProcessing: boolean;
 }) => {
     return (
@@ -436,14 +547,24 @@ const ScreenshotMethod = ({
                         accept="image/*"
                         onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) onScreenshotUpload('sn', file);
+                            onScreenshotUpload('sn', file || null);
                         }}
                         className="w-full p-2 border border-gray-300 rounded-lg"
                     />
                     {screenshots.snScreenshot && (
-                        <div className="text-sm text-green-600 flex items-center">
-                            <span className="mr-2">✓</span>
-                            Скриншот S/N загружен
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-green-600 flex items-center">
+                                <span className="mr-2">✓</span>
+                                Скриншот S/N загружен
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onScreenshotUpload('sn', null)}
+                                className="text-xs"
+                            >
+                                Заменить
+                            </Button>
                         </div>
                     )}
                 </CardContent>
@@ -458,14 +579,24 @@ const ScreenshotMethod = ({
                         accept="image/*"
                         onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) onScreenshotUpload('imei', file);
+                            onScreenshotUpload('imei', file || null);
                         }}
                         className="w-full p-2 border border-gray-300 rounded-lg"
                     />
                     {screenshots.imeiScreenshot && (
-                        <div className="text-sm text-green-600 flex items-center">
-                            <span className="mr-2">✓</span>
-                            Скриншот IMEI загружен
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-green-600 flex items-center">
+                                <span className="mr-2">✓</span>
+                                Скриншот IMEI загружен
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onScreenshotUpload('imei', null)}
+                                className="text-xs"
+                            >
+                                Заменить
+                            </Button>
                         </div>
                     )}
                 </CardContent>
@@ -528,9 +659,20 @@ const PhotoMethod = ({
                         📷 Сделать фото S/N
                     </Button>
                     {photos.snPhoto && (
-                        <div className="text-sm text-green-600 flex items-center">
-                            <span className="mr-2">✓</span>
-                            Фото S/N сделано
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-green-600 flex items-center">
+                                <span className="mr-2">✓</span>
+                                Фото S/N сделано
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onPhotoCapture('sn')}
+                                disabled={!isTelegramWebApp}
+                                className="text-xs"
+                            >
+                                Заменить
+                            </Button>
                         </div>
                     )}
                 </CardContent>
@@ -548,9 +690,20 @@ const PhotoMethod = ({
                         📷 Сделать фото IMEI
                     </Button>
                     {photos.imeiPhoto && (
-                        <div className="text-sm text-green-600 flex items-center">
-                            <span className="mr-2">✓</span>
-                            Фото IMEI сделано
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-green-600 flex items-center">
+                                <span className="mr-2">✓</span>
+                                Фото IMEI сделано
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onPhotoCapture('imei')}
+                                disabled={!isTelegramWebApp}
+                                className="text-xs"
+                            >
+                                Заменить
+                            </Button>
                         </div>
                     )}
                 </CardContent>
