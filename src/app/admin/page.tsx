@@ -12,7 +12,7 @@ const AdminPage = () => {
           <div className="w-full max-w-2xl mx-auto">
                          <div className='text-center mb-8 mt-12'>
                <h1 className='text-3xl font-bold text-gray-900 mb-2'>Панель администратора</h1>
-               <p className='text-gray-600'>Управление системой QoS</p>
+               <p className='text-gray-600'>Управление системой Qoqos</p>
              </div>
             
             <section className='flex flex-col gap-4 w-full'>

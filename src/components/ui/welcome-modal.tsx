@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import Image from 'next/image'
 
 interface WelcomeModalProps {
   isOpen: boolean
@@ -22,14 +23,20 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="text-center"
             >
-              {/* Иконка */}
+              {/* Гиф с танцующим кокосом */}
               <motion.div
                 initial={{ y: -20 }}
                 animate={{ y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="w-16 h-16 bg-[#2dc2c6]/10 rounded-2xl flex items-center justify-center mx-auto mb-6"
+                className="w-20 h-20 mx-auto mb-6"
               >
-                <span className="text-3xl">📱</span>
+                <Image
+                  src="/coconut-dancing.gif" 
+                  alt="Танцующий кокос" 
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-contain rounded-2xl"
+                />
               </motion.div>
 
               {/* Заголовок */}
@@ -39,7 +46,7 @@ export function WelcomeModal({ isOpen, onClose }: WelcomeModalProps) {
                 transition={{ delay: 0.2 }}
                 className="text-2xl font-bold text-gray-900 mb-3"
               >
-                Добро пожаловать в QoS
+                Добро пожаловать в Qoqos
               </motion.h2>
 
               {/* Описание */}

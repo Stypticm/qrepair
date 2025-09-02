@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createWorker } from 'tesseract.js'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,13 +18,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(
-      'Processing OCR for telegramId:',
-      telegramId
-    )
-    console.log('SN Image size:', snImage.size)
-    console.log('IMEI Image size:', imeiImage.size)
-
     // Реальная OCR обработка
     const result = await processOCR(snImage, imeiImage)
 
@@ -37,45 +31,52 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Функция для обработки OCR (упрощенная версия)
+// Функция для обработки OCR с Tesseract.js
 async function processOCR(snImage: File, imeiImage: File) {
-  console.log('🚀 Начинаем упрощенную OCR обработку...')
+  const worker = await createWorker('eng')
 
   try {
-    // Пока что возвращаем моковые данные для тестирования
-    // В реальном приложении здесь будет настоящий OCR
-    console.log('📸 Обрабатываем изображения...')
+    // Настройки для лучшего распознавания
+    await worker.setParameters({
+      tessedit_char_whitelist:
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+    })
 
-    // Симулируем обработку
-    await new Promise((resolve) =>
-      setTimeout(resolve, 1000)
+    // Обрабатываем изображение S/N
+    const snImageBuffer = await snImage.arrayBuffer()
+    const snResult = await worker.recognize(
+      Buffer.from(snImageBuffer)
+    )
+    const serialNumber = extractSerialNumber(
+      snResult.data.text
     )
 
-    // Моковые данные для тестирования
-    const mockSerialNumber = 'ABC123456789'
-    const mockIMEI = '123456789012345'
-
-    console.log('✅ S/N извлечен:', mockSerialNumber)
-    console.log('✅ IMEI извлечен:', mockIMEI)
+    // Обрабатываем изображение IMEI
+    const imeiImageBuffer = await imeiImage.arrayBuffer()
+    const imeiResult = await worker.recognize(
+      Buffer.from(imeiImageBuffer)
+    )
+    const imei = extractIMEI(imeiResult.data.text)
 
     // Валидируем результаты
-    const isValidIMEI = validateIMEI(mockIMEI)
-    const isValidSN = validateSerialNumber(mockSerialNumber)
+    const isValidIMEI = validateIMEI(imei)
+    const isValidSN = validateSerialNumber(serialNumber)
 
     const result = {
-      serialNumber: isValidSN ? mockSerialNumber : null,
-      imei: isValidIMEI ? mockIMEI : null,
-      confidence: 95,
-      method: 'mock',
+      serialNumber: isValidSN ? serialNumber : null,
+      imei: isValidIMEI ? imei : null,
+      confidence: Math.min(
+        snResult.data.confidence,
+        imeiResult.data.confidence
+      ),
+      method: 'ocr',
       isValidIMEI,
       isValidSN,
     }
 
-    console.log('🎯 Результат OCR:', result)
     return result
-  } catch (error) {
-    console.error('OCR processing error:', error)
-    throw error
+  } finally {
+    await worker.terminate()
   }
 }
 

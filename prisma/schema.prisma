@@ -18,6 +18,7 @@ model Skupka {
   status               SkupkaStatus @default(draft)
   comment              String?
   imei                 String?
+  sn                   String?        // Серийный номер устройства
   contractUrl          String?
   price                Float?
   damagePercent        Float        @default(0)

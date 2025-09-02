@@ -29,11 +29,8 @@ export default function DeviceInfoPage() {
     // Состояние для скриншотов (упрощенное)
     const [screenshots, setScreenshots] = useState<File[]>([]);
     
-    // Состояние для фото
-    const [photos, setPhotos] = useState<{
-        snPhoto: Blob | null;
-        imeiPhoto: Blob | null;
-    }>({ snPhoto: null, imeiPhoto: null });
+    // Состояние для фото (упрощенное)
+    const [photos, setPhotos] = useState<Blob[]>([]);
     
     // Состояние обработки OCR
     const [isProcessing, setIsProcessing] = useState(false);
@@ -66,13 +63,7 @@ export default function DeviceInfoPage() {
         (window as any).Telegram?.WebApp && 
         ((window as any).Telegram.WebApp.openCamera || (window as any).Telegram.WebApp.openPhotoGallery);
     
-    // Отладочная информация
-    if (typeof window !== 'undefined') {
-        console.log('🔍 Telegram WebApp доступен:', !!(window as any).Telegram?.WebApp);
-        console.log('📷 openCamera доступен:', !!(window as any).Telegram?.WebApp?.openCamera);
-        console.log('🖼️ openPhotoGallery доступен:', !!(window as any).Telegram?.WebApp?.openPhotoGallery);
-        console.log('✅ isTelegramWebApp:', isTelegramWebApp);
-    }
+
 
     // Функция для обработки скриншотов (упрощенная)
     const handleScreenshotUpload = (files: FileList | null) => {
@@ -83,14 +74,8 @@ export default function DeviceInfoPage() {
     };
 
     // Функция для обработки фото через Telegram WebApp
-    const handlePhotoCapture = (type: 'sn' | 'imei') => {
-        console.log('🔍 Проверяем доступность камеры...');
-        console.log('isTelegramWebApp:', isTelegramWebApp);
-        console.log('Telegram.WebApp:', (window as any).Telegram?.WebApp);
-        console.log('openCamera method:', (window as any).Telegram?.WebApp?.openCamera);
-        
+    const handlePhotoCapture = () => {
         if (!isTelegramWebApp) {
-            console.error('❌ Камера недоступна - не в Telegram WebApp');
             alert('Функция камеры доступна только в Telegram WebApp');
             return;
         }
@@ -98,80 +83,41 @@ export default function DeviceInfoPage() {
         const webApp = (window as any).Telegram.WebApp;
         
         try {
-            console.log(`📸 Открываем камеру для ${type === 'sn' ? 'S/N' : 'IMEI'}`);
-            
-            // Попробуем разные варианты вызова API
             if (typeof webApp.openCamera === 'function') {
-                // Вариант 1: С параметрами
                 const cameraOptions = {
                     source: 'camera',
                     quality: 'high'
                 };
                 
-                console.log('📋 Параметры камеры:', cameraOptions);
-                
-                // Попробуем сначала с параметрами
-                try {
-                    webApp.openCamera(cameraOptions, (result: any) => {
-                        console.log('📷 Результат камеры (с параметрами):', result);
-                        handleCameraResult(result, type, webApp);
-                    });
-                } catch (error) {
-                    console.log('⚠️ Ошибка с параметрами, пробуем без них:', error);
-                    
-                    // Вариант 2: Без параметров
-                    try {
-                        webApp.openCamera((result: any) => {
-                            console.log('📷 Результат камеры (без параметров):', result);
-                            handleCameraResult(result, type, webApp);
-                        });
-                    } catch (error2) {
-                        console.error('❌ Ошибка без параметров:', error2);
-                        webApp.showAlert('Не удалось открыть камеру. Попробуйте обновить Telegram.');
-                    }
-                }
+                webApp.openCamera(cameraOptions, (result: any) => {
+                    handleCameraResult(result, webApp);
+                });
+            } else if (typeof webApp.openPhotoGallery === 'function') {
+                webApp.openPhotoGallery((result: any) => {
+                    handleCameraResult(result, webApp);
+                });
             } else {
-                console.error('❌ openCamera не является функцией');
-                
-                // Попробуем альтернативный метод - галерея
-                if (typeof webApp.openPhotoGallery === 'function') {
-                    console.log('📷 Пробуем открыть галерею как альтернативу...');
-                    webApp.openPhotoGallery((result: any) => {
-                        console.log('📷 Результат галереи:', result);
-                        handleCameraResult(result, type, webApp);
-                    });
-                } else {
-                    alert('Методы камеры недоступны в этой версии Telegram');
-                }
+                alert('Методы камеры недоступны в этой версии Telegram');
             }
-            
         } catch (error) {
-            console.error('❌ Ошибка при вызове openCamera:', error);
             webApp.showAlert('Ошибка при открытии камеры: ' + (error instanceof Error ? error.message : 'Неизвестная ошибка'));
         }
         
-        // Обработка ошибок камеры
         webApp.onEvent('cameraError', (error: any) => {
-            console.error('❌ Ошибка камеры:', error);
             webApp.showAlert('Ошибка доступа к камере. Проверьте разрешения.');
         });
     };
 
     // Функция для обработки результата камеры
-    const handleCameraResult = (result: any, type: 'sn' | 'imei', webApp: any) => {
+    const handleCameraResult = (result: any, webApp: any) => {
         if (result && result.photos && result.photos.length > 0) {
             const photoBlob = result.photos[0];
-            console.log(`✅ Фото ${type} получено, размер:`, photoBlob.size);
             
-            if (type === 'sn') {
-                setPhotos(prev => ({ ...prev, snPhoto: photoBlob }));
-            } else {
-                setPhotos(prev => ({ ...prev, imeiPhoto: photoBlob }));
-            }
+            // Добавляем фото в массив
+            setPhotos(prev => [...prev, photoBlob]);
             
-            webApp.showAlert(`Фото ${type === 'sn' ? 'S/N' : 'IMEI'} успешно сделано!`);
+            webApp.showAlert(`Фото успешно сделано! Всего фото: ${photos.length + 1}`);
         } else {
-            console.log('❌ Фото не было сделано или произошла ошибка');
             webApp.showAlert('Не удалось сделать фото. Попробуйте еще раз.');
         }
     };
@@ -182,8 +128,6 @@ export default function DeviceInfoPage() {
         setProcessingProgress(0);
         setProcessingMessage('Подготовка изображений...');
         setOcrError(null);
-        
-        let progressInterval: NodeJS.Timeout | undefined;
         
         try {
             const formData = new FormData();
@@ -199,11 +143,13 @@ export default function DeviceInfoPage() {
                     formData.append('imeiImage', screenshots[0]);
                 }
             } else if (selectedMethod === 'photo') {
-                if (photos.snPhoto) {
-                    formData.append('snImage', photos.snPhoto);
-                }
-                if (photos.imeiPhoto) {
-                    formData.append('imeiImage', photos.imeiPhoto);
+                if (photos.length >= 2) {
+                    formData.append('snImage', photos[0]);
+                    formData.append('imeiImage', photos[1]);
+                } else if (photos.length === 1) {
+                    // Если только одно фото, используем его для обоих
+                    formData.append('snImage', photos[0]);
+                    formData.append('imeiImage', photos[0]);
                 }
             }
             
@@ -224,26 +170,10 @@ export default function DeviceInfoPage() {
             setProcessingProgress(40);
             setProcessingMessage('Обработка OCR...');
             
-            // Запускаем прогресс-бар во время обработки
-            progressInterval = setInterval(() => {
-                setProcessingProgress(prev => {
-                    if (prev < 70) {
-                        return prev + 1; // Медленнее увеличиваем
-                    }
-                    return prev;
-                });
-            }, 300); // Реже обновляем
-            
             const response = await fetch('/api/ocr/process-device-photos', {
                 method: 'POST',
                 body: formData
             });
-            
-            // Останавливаем интервал сразу после получения ответа
-            if (progressInterval) {
-                clearInterval(progressInterval);
-                progressInterval = undefined;
-            }
             
             setProcessingProgress(70);
             setProcessingMessage('Извлечение данных...');
@@ -276,6 +206,12 @@ export default function DeviceInfoPage() {
             setProcessingProgress(100);
             setProcessingMessage('Готово!');
             
+            // Отправляем сообщение в Telegram
+            if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+                const webApp = (window as any).Telegram.WebApp;
+                webApp.showAlert('✅ IMEI и S/N загружены и всё!');
+            }
+            
             // Показываем диалог подтверждения
             setShowDialog(true);
             
@@ -283,10 +219,6 @@ export default function DeviceInfoPage() {
             console.error('OCR processing error:', error);
             setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображений');
         } finally {
-            // Очищаем интервал если он был создан
-            if (progressInterval) {
-                clearInterval(progressInterval);
-            }
             setIsProcessing(false);
             setProcessingProgress(0);
             setProcessingMessage('');
@@ -295,7 +227,7 @@ export default function DeviceInfoPage() {
 
     // Загрузка сохраненных данных из sessionStorage
     const loadSavedData = useCallback(async () => {
-        console.log('Загружаю сохраненные IMEI и S/N...');
+
 
         if (typeof window !== 'undefined') {
             // Проверяем, есть ли данные о выборе модели (новая заявка)
@@ -303,7 +235,7 @@ export default function DeviceInfoPage() {
             
             if (!phoneSelection) {
                 // Новая заявка - очищаем старые данные
-                console.log('[loadSavedData] Новая заявка - очищаем старые данные IMEI и S/N');
+
                 resetAllStates();
                 return;
             }
@@ -313,12 +245,12 @@ export default function DeviceInfoPage() {
             
             if (savedImei) {
                 setImei(savedImei);
-                console.log('[loadSavedData] IMEI загружен из sessionStorage:', savedImei);
+
             }
             
             if (savedSerialNumber) {
                 setSerialNumber(savedSerialNumber);
-                console.log('[loadSavedData] S/N загружен из sessionStorage:', savedSerialNumber);
+
             }
 
             // Если есть сохраненные данные, показываем диалог подтверждения
@@ -343,7 +275,7 @@ export default function DeviceInfoPage() {
         if (selectedMethod === 'screenshot') {
             return screenshots.length >= 1; // Достаточно хотя бы одного файла
         } else if (selectedMethod === 'photo') {
-            return photos.snPhoto && photos.imeiPhoto;
+            return photos.length >= 1; // Достаточно хотя бы одного фото
         }
         return false;
     }, [selectedMethod, screenshots, photos]);
@@ -384,7 +316,7 @@ export default function DeviceInfoPage() {
         // Сбрасываем все состояния для повторного ввода
         setSelectedMethod(null);
         setScreenshots([]);
-        setPhotos({ snPhoto: null, imeiPhoto: null });
+        setPhotos([]);
         setOcrResult(null);
         setOcrError(null);
         setImei('');
@@ -499,6 +431,7 @@ export default function DeviceInfoPage() {
                                         <PhotoMethod 
                                             photos={photos}
                                             onPhotoCapture={handlePhotoCapture}
+                                            onPhotosClear={() => setPhotos([])}
                                             isProcessing={isProcessing}
                                             processingProgress={processingProgress}
                                             processingMessage={processingMessage}
@@ -527,7 +460,7 @@ export default function DeviceInfoPage() {
                                                 onClick={() => {
                                                     setOcrError(null);
                                                     setScreenshots([]);
-                                                    setPhotos({ snPhoto: null, imeiPhoto: null });
+                                                    setPhotos([]);
                                                 }}
                                                 variant="outline"
                                                 className="w-full"
@@ -569,7 +502,7 @@ export default function DeviceInfoPage() {
                                             onClick={() => {
                                         setOcrResult(null);
                                         setScreenshots([]);
-                                        setPhotos({ snPhoto: null, imeiPhoto: null });
+                                        setPhotos([]);
                                     }}
                                     className="w-full"
                                 >
@@ -698,6 +631,7 @@ const ScreenshotMethod = ({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => onScreenshotUpload(null)}
+                                disabled={isProcessing}
                                 className="text-xs"
                             >
                                 Очистить все
@@ -735,13 +669,15 @@ const ScreenshotMethod = ({
 const PhotoMethod = ({ 
     photos, 
     onPhotoCapture, 
+    onPhotosClear,
     isProcessing,
     processingProgress,
     processingMessage,
     isTelegramWebApp 
 }: {
-    photos: { snPhoto: Blob | null; imeiPhoto: Blob | null };
-    onPhotoCapture: (type: 'sn' | 'imei') => void;
+    photos: Blob[];
+    onPhotoCapture: () => void;
+    onPhotosClear: () => void;
     isProcessing: boolean;
     processingProgress: number;
     processingMessage: string;
@@ -757,10 +693,10 @@ const PhotoMethod = ({
                     </h4>
                     <ol className="text-sm text-green-700 space-y-1">
                         <li>1. Возьмите другой телефон</li>
-                        <li>2. Нажмите &quot;Открыть камеру&quot; - откроется камера Telegram</li>
+                        <li>2. Нажмите &quot;Сделать фото&quot; - откроется камера Telegram</li>
                         <li>3. Сфотографируйте наклейку на коробке или заднюю панель</li>
                         <li>4. Убедитесь, что S/N и IMEI четко видны</li>
-                        <li>5. Сделайте 2 отдельных фото: одно для S/N, другое для IMEI</li>
+                        <li>5. Сделайте 1-2 фото с информацией об устройстве</li>
                     </ol>
                     <div className="mt-3 p-2 bg-green-100 rounded text-xs text-green-600">
                         💡 <strong>Совет:</strong> Камера Telegram автоматически сохранит фото и вернет вас в приложение
@@ -768,72 +704,39 @@ const PhotoMethod = ({
                 </CardContent>
             </Card>
 
-            {/* Фото S/N */}
+            {/* Загрузка фото */}
             <Card className="p-3 border border-gray-200">
                 <CardContent className="space-y-2">
-                    <h4 className="font-semibold text-gray-800">Фото 1: S/N (верхняя часть)</h4>
+                    <h4 className="font-semibold text-gray-800">Сделайте фото</h4>
+                    <p className="text-sm text-gray-600">
+                        Сделайте 1-2 фото с информацией об устройстве. Мы сами определим, где S/N, а где IMEI.
+                    </p>
                     <Button
-                        onClick={() => onPhotoCapture('sn')}
-                        disabled={!isTelegramWebApp}
+                        onClick={onPhotoCapture}
+                        disabled={!isTelegramWebApp || isProcessing}
                         className="w-full bg-green-600 hover:bg-green-700 text-white"
                     >
-                        📷 Открыть камеру для S/N
+                        📷 Сделать фото
                     </Button>
                     {!isTelegramWebApp && (
                         <p className="text-xs text-red-600">
                             ⚠️ Функция камеры доступна только в Telegram
                         </p>
                     )}
-                    {photos.snPhoto && (
-                        <div className="flex items-center justify-between">
+                    {photos.length > 0 && (
+                        <div className="space-y-2">
                             <div className="text-sm text-green-600 flex items-center">
                                 <span className="mr-2">✓</span>
-                                Фото S/N сделано
+                                Сделано фото: {photos.length}
                             </div>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => onPhotoCapture('sn')}
-                                disabled={!isTelegramWebApp}
+                                onClick={onPhotosClear}
+                                disabled={isProcessing}
                                 className="text-xs"
                             >
-                                📷 Переснять
-                            </Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Фото IMEI */}
-            <Card className="p-3 border border-gray-200">
-                <CardContent className="space-y-2">
-                    <h4 className="font-semibold text-gray-800">Фото 2: IMEI (нижняя часть)</h4>
-                    <Button
-                        onClick={() => onPhotoCapture('imei')}
-                        disabled={!isTelegramWebApp}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                    >
-                        📷 Открыть камеру для IMEI
-                    </Button>
-                    {!isTelegramWebApp && (
-                        <p className="text-xs text-red-600">
-                            ⚠️ Функция камеры доступна только в Telegram
-                        </p>
-                    )}
-                    {photos.imeiPhoto && (
-                        <div className="flex items-center justify-between">
-                            <div className="text-sm text-green-600 flex items-center">
-                                <span className="mr-2">✓</span>
-                                Фото IMEI сделано
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onPhotoCapture('imei')}
-                                disabled={!isTelegramWebApp}
-                                className="text-xs"
-                            >
-                                📷 Переснять
+                                Очистить все
                             </Button>
                         </div>
                     )}

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   const body = await req.json()
-  let { telegramId, username, price } = body
+  let { telegramId, username, price, imei, sn } = body
 
   if (!username) username = 'local_dev'
   if (!telegramId || !username) {
@@ -18,7 +18,16 @@ export async function POST(req: Request) {
   })
 
   if (existing) {
-    return NextResponse.json({ id: existing.id })
+    // Обновляем существующую заявку с новыми данными
+    const updated = await prisma.skupka.update({
+      where: { id: existing.id },
+      data: {
+        price: price || existing.price,
+        imei: imei || existing.imei,
+        sn: sn || existing.sn,
+      },
+    })
+    return NextResponse.json({ id: updated.id })
   }
 
   const created = await prisma.skupka.create({
@@ -27,6 +36,8 @@ export async function POST(req: Request) {
       username,
       status: 'draft',
       price: price || null,
+      imei: imei || null,
+      sn: sn || null,
     },
   })
 

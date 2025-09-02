@@ -5,12 +5,12 @@ export async function GET() {
   try {
     if (process.env.NODE_ENV === 'production') {
       await initializeBot()
-      console.log('✅ Бот QoS инициализирован через cron')
+      console.log('✅ Бот Qoqos инициализирован через cron')
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Бот QoS инициализирован через cron',
+      message: 'Бот Qoqos инициализирован через cron',
       timestamp: new Date().toISOString(),
     })
   } catch (error) {

@@ -18,12 +18,12 @@ bot.command('start', async (ctx) => {
 
   if (startParam === 'app' || startParam === 'webapp') {
     // Прямое открытие приложения через deep link
-    await ctx.reply('🚀 Открываю QoS прямо сейчас!', {
+    await ctx.reply('🚀 Открываю Qoqos прямо сейчас!', {
       reply_markup: {
         inline_keyboard: [
           [
             {
-              text: '🚀 Открыть QoS',
+              text: '🚀 Открыть Qoqos',
               web_app: {
                 url:
                   config.getTelegramWebAppUrl() +
@@ -37,13 +37,13 @@ bot.command('start', async (ctx) => {
   } else {
     // Обычное приветствие с кнопкой открытия
     await ctx.reply(
-      '🎉 Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
+      '🎉 Добро пожаловать в Qoqos!\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
       {
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: '🚀 Открыть QoS',
+                text: '🚀 Открыть Qoqos',
                 web_app: {
                   url:
                     config.getTelegramWebAppUrl() +
@@ -60,12 +60,12 @@ bot.command('start', async (ctx) => {
 
 // Команда /app - быстрый доступ к приложению
 bot.command('app', async (ctx) => {
-  await ctx.reply('🚀 Открываю QoS прямо сейчас!', {
+  await ctx.reply('🚀 Открываю Qoqos прямо сейчас!', {
     reply_markup: {
       inline_keyboard: [
         [
           {
-            text: '🚀 Открыть QoS',
+            text: '🚀 Открыть Qoqos',
             web_app: {
               url:
                 config.getTelegramWebAppUrl() +
@@ -81,7 +81,7 @@ bot.command('app', async (ctx) => {
 // Команда /help
 bot.command('help', async (ctx) => {
   await ctx.reply(
-    '🔍 **Помощь по QoS**\n\n' +
+    '🔍 **Помощь по Qoqos**\n\n' +
       '📱 **Как это работает:**\n' +
       '1. Откройте приложение\n' +
       '2. Выберите модель телефона\n' +
@@ -95,7 +95,7 @@ bot.command('help', async (ctx) => {
         inline_keyboard: [
           [
             {
-              text: '🚀 Открыть QoS',
+              text: '🚀 Открыть Qoqos',
               web_app: {
                 url:
                   config.getTelegramWebAppUrl() +
@@ -112,7 +112,7 @@ bot.command('help', async (ctx) => {
 // Команда /settings
 bot.command('settings', async (ctx) => {
   await ctx.reply(
-    '⚙️ **Настройки QoS**\n\n' +
+    '⚙️ **Настройки Qoqos**\n\n' +
       '🔧 **Доступные опции:**\n' +
       '• Изменить язык\n' +
       '• Настройки уведомлений\n' +
@@ -124,7 +124,7 @@ bot.command('settings', async (ctx) => {
         inline_keyboard: [
           [
             {
-              text: '🚀 Открыть QoS',
+              text: '🚀 Открыть Qoqos',
               web_app: {
                 url:
                   config.getTelegramWebAppUrl() +
@@ -141,16 +141,16 @@ bot.command('settings', async (ctx) => {
 // Обработка callback_query для inline кнопок
 bot.on('callback_query', async (ctx) => {
   if (ctx.callbackQuery.data === 'open_app') {
-    await ctx.answerCallbackQuery('🚀 Открываю QoS...')
+    await ctx.answerCallbackQuery('🚀 Открываю Qoqos...')
     await ctx.editMessageText(
-      '🚀 **QoS открывается...**\n\nНажмите кнопку ниже:',
+      '🚀 **Qoqos открывается...**\n\nНажмите кнопку ниже:',
       {
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: '🚀 Открыть QoS',
+                text: '🚀 Открыть Qoqos',
                 web_app: {
                   url:
                     config.getTelegramWebAppUrl() +
@@ -176,13 +176,13 @@ bot.on('message:text', async (ctx) => {
     text.includes('hi')
   ) {
     await ctx.reply(
-      '👋 Привет! Добро пожаловать в QoS!\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
+      '👋 Привет! Добро пожаловать в Qoqos!\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
       {
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: '🚀 Открыть QoS',
+                text: '🚀 Открыть Qoqos',
                 web_app: {
                   url:
                     config.getTelegramWebAppUrl() +
@@ -202,7 +202,7 @@ bot.on('message:text', async (ctx) => {
     text.includes('price')
   ) {
     await ctx.reply(
-      '💰 **Оценка стоимости в QoS:**\n\n' +
+      '💰 **Оценка стоимости в Qoqos:**\n\n' +
         '📱 **Базовая цена:** от 48,000 ₽\n' +
         '📊 **Факторы влияния:**\n' +
         '• Модель телефона\n' +
@@ -215,7 +215,7 @@ bot.on('message:text', async (ctx) => {
           inline_keyboard: [
             [
               {
-                text: '🚀 Открыть QoS',
+                text: '🚀 Открыть Qoqos',
                 web_app: {
                   url:
                     config.getTelegramWebAppUrl() +
@@ -234,7 +234,7 @@ bot.on('message:text', async (ctx) => {
     text.includes('help')
   ) {
     await ctx.reply(
-      '🔍 **Помощь по QoS**\n\n' +
+      '🔍 **Помощь по Qoqos**\n\n' +
         '📱 **Основные команды:**\n' +
         '• /help - Показать помощь\n' +
         '• /settings - Настройки\n' +
@@ -246,7 +246,7 @@ bot.on('message:text', async (ctx) => {
           inline_keyboard: [
             [
               {
-                text: '🚀 Открыть QoS',
+                text: '🚀 Открыть Qoqos',
                 web_app: {
                   url: config.getTelegramWebAppUrl(),
                 },
@@ -260,13 +260,13 @@ bot.on('message:text', async (ctx) => {
   // Любое другое сообщение - показываем кнопку открытия
   else {
     await ctx.reply(
-      '🎯 **QoS - Quality of Service**\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
+      '🎯 **Qoqos - Quick, Open, Quality, Optimal, Safe**\n\n🚀 Нажмите кнопку ниже для открытия приложения:',
       {
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: '🚀 Открыть QoS',
+                text: '🚀 Открыть Qoqos',
                 web_app: {
                   url:
                     config.getTelegramWebAppUrl() +
@@ -314,12 +314,12 @@ export const initializeBot = async () => {
     )
 
     console.log(
-      '✅ Бот QoS успешно инициализирован с deep linking, без Menu Button'
+      '✅ Бот Qoqos успешно инициализирован с deep linking, без Menu Button'
     )
 
     // Запускаем бота
     bot.start()
-    console.log('🚀 Бот QoS запущен и готов к работе')
+    console.log('🚀 Бот Qoqos запущен и готов к работе')
   } catch (error) {
     console.error('❌ Ошибка инициализации бота:', error)
   }

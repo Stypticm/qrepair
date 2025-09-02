@@ -75,6 +75,7 @@ export interface SkupkaRequest {
   status?: string
   comment?: string
   imei?: string
+  sn?: string
   contractUrl?: string
   price?: number
   damagePercent?: number

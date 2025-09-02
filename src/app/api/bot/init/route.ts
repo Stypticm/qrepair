@@ -5,12 +5,12 @@ export async function POST() {
   try {
     if (process.env.NODE_ENV === 'production') {
       await initializeBot()
-      console.log('✅ Бот QoS инициализирован через API')
+      console.log('✅ Бот Qoqos инициализирован через API')
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Бот QoS инициализирован',
+      message: 'Бот Qoqos инициализирован',
     })
   } catch (error) {
     console.error('❌ Ошибка инициализации бота:', error)
