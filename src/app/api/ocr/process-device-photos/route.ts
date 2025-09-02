@@ -67,16 +67,16 @@ async function processSingleImage(
 async function processOCR(snImage: File, imeiImage: File) {
   // Создаем отдельные worker'ы для каждого изображения
   const [snWorker, imeiWorker] = await Promise.all([
-    createWorker('eng'),
-    createWorker('eng'),
+    createWorker('eng+rus'), // Английский + русский для S/N
+    createWorker('eng'), // Только английский для IMEI (только цифры)
   ])
 
   try {
-    // Настраиваем оба worker'а
-    const setupWorker = async (worker: any) => {
+    // Настраиваем worker для S/N (с русскими буквами)
+    const setupSnWorker = async (worker: any) => {
       await worker.setParameters({
         tessedit_char_whitelist:
-          '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+          '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
         tessedit_pageseg_mode: PSM.SINGLE_WORD,
         tessedit_ocr_engine_mode: 2,
         tessedit_do_invert: '0',
@@ -85,10 +85,22 @@ async function processOCR(snImage: File, imeiImage: File) {
       })
     }
 
+    // Настраиваем worker для IMEI (только цифры)
+    const setupImeiWorker = async (worker: any) => {
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789',
+        tessedit_pageseg_mode: PSM.SINGLE_WORD,
+        tessedit_ocr_engine_mode: 2,
+        tessedit_do_invert: '0',
+        tessedit_char_blacklist:
+          '!@#$%^&*()_+-=[]{}|;:,.<>?/~`ABCDEFGHIJKLMNOPQRSTUVWXYZАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+      })
+    }
+
     // Настраиваем worker'ы параллельно
     await Promise.all([
-      setupWorker(snWorker),
-      setupWorker(imeiWorker),
+      setupSnWorker(snWorker),
+      setupImeiWorker(imeiWorker),
     ])
 
     // Обрабатываем изображения параллельно с отдельными worker'ами

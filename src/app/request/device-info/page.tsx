@@ -50,6 +50,7 @@ export default function DeviceInfoPage() {
 
     // Состояние диалогового окна
     const [showDialog, setShowDialog] = useState(false);
+    const [showImeiDialog, setShowImeiDialog] = useState(false);
 
     // Шаги для прогресс-бара
     const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
@@ -118,7 +119,8 @@ export default function DeviceInfoPage() {
             sessionStorage.setItem('imei', manualImei);
         }
 
-        // Переходим к следующему шагу - вводу S/N
+        // Закрываем диалог и переходим к следующему шагу
+        setShowImeiDialog(false);
         setSelectedMethod('sn_screenshot');
         setOcrError(null);
     };
@@ -410,11 +412,11 @@ export default function DeviceInfoPage() {
                             transition={{ duration: 0.3, ease: "easeOut" }}
                             className="text-center"
                         >
-                            <h2 className="text-xl font-semibold text-gray-800 mb-2">
-                                📱 Получение IMEI и S/N
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                                IMEI и S/N
                             </h2>
-                            <p className="text-sm text-gray-600">
-                                Выберите способ получения данных устройства
+                            <p className="text-base text-gray-600">
+                                Получите данные устройства
                             </p>
                         </motion.div>
 
@@ -426,53 +428,49 @@ export default function DeviceInfoPage() {
                                 transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
                                 className="space-y-3"
                             >
-                                <Card className="p-3 border border-gray-200">
-                                    <CardContent>
-                                        <h4 className="font-semibold text-gray-800 mb-3">Получение данных устройства:</h4>
-                                        <div className="space-y-3">
-                                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                                <h5 className="font-medium text-blue-800 mb-2">📱 Шаг 1: IMEI</h5>
-                                                <p className="text-sm text-blue-700 mb-2">Быстро через код *#06#</p>
-                                                <Button
-                                                    onClick={() => setSelectedMethod('imei_dial')}
-                                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                <div className="space-y-4">
+                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="p-6">
+                                            <h4 className="text-lg font-semibold text-gray-900 mb-4">Выберите способ</h4>
+                                            <div className="space-y-3">
+                                                <button
+                                                    onClick={() => setShowImeiDialog(true)}
+                                                    className="w-full p-4 bg-blue-50 hover:bg-blue-100 rounded-xl border border-blue-200 transition-colors duration-200"
                                                 >
-                                                    ⌨️ Ввести IMEI
-                                                </Button>
-                                            </div>
-                                            
-                                            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                                                <h5 className="font-medium text-green-800 mb-2">📸 Шаг 2: S/N</h5>
-                                                <p className="text-sm text-green-700 mb-2">Скриншот из настроек</p>
-                                                <Button
+                                                    <div className="flex items-center space-x-3">
+                                                        <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                                                            <span className="text-white text-lg">⌨️</span>
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <h5 className="font-semibold text-gray-900">IMEI</h5>
+                                                            <p className="text-sm text-gray-600">Через код *#06#</p>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                                
+                                                <button
                                                     onClick={() => setSelectedMethod('sn_screenshot')}
-                                                    className="w-full bg-green-600 hover:bg-green-700 text-white"
                                                     disabled={!manualImei || manualImei.length !== 15}
+                                                    className="w-full p-4 bg-green-50 hover:bg-green-100 rounded-xl border border-green-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
-                                                    📸 Загрузить S/N
-                                                </Button>
+                                                    <div className="flex items-center space-x-3">
+                                                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                                                            <span className="text-white text-lg">📸</span>
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <h5 className="font-semibold text-gray-900">S/N</h5>
+                                                            <p className="text-sm text-gray-600">Скриншот настроек</p>
+                                                        </div>
+                                                    </div>
+                                                </button>
                                             </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
+                                    </div>
+                                </div>
                             </motion.div>
                         )}
 
-                        {/* Метод ввода IMEI */}
-                        {selectedMethod === 'imei_dial' && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-                            >
-                                <ImeiInputMethod
-                                    manualImei={manualImei}
-                                    setManualImei={setManualImei}
-                                    onConfirm={handleImeiInput}
-                                    onBack={() => setSelectedMethod(null)}
-                                />
-                            </motion.div>
-                        )}
+
 
                         {/* Метод скриншота S/N */}
                         {selectedMethod === 'sn_screenshot' && (
@@ -549,6 +547,89 @@ export default function DeviceInfoPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Диалоговое окно для ввода IMEI */}
+            <Dialog open={showImeiDialog} onOpenChange={setShowImeiDialog}>
+                <DialogContent
+                    className="bg-white w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    showCloseButton={true}
+                >
+                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-4">
+                        Введите IMEI
+                    </DialogTitle>
+
+                    <div className="space-y-4">
+                        {/* Инструкции */}
+                        <div className="bg-blue-50 rounded-xl p-4">
+                            <h4 className="font-semibold text-blue-900 mb-3">Как получить IMEI</h4>
+                            <div className="space-y-2 text-sm text-blue-800">
+                                <div className="flex items-center space-x-2">
+                                    <span className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">1</span>
+                                    <span>Откройте приложение <strong>Телефон</strong></span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <span className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">2</span>
+                                    <span>Наберите: <span className="bg-white px-2 py-1 rounded font-mono">*#06#</span></span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <span className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">3</span>
+                                    <span>Запомните IMEI (15 цифр)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Кнопка открытия телефона */}
+                        <button
+                            onClick={() => {
+                                if (typeof window !== 'undefined') {
+                                    const phoneUrl = 'tel:*#06#';
+                                    window.open(phoneUrl, '_blank');
+                                    
+                                    if ((window as any).Telegram?.WebApp) {
+                                        (window as any).Telegram.WebApp.showAlert('Открываю приложение Телефон. Наберите *#06# в появившемся окне.');
+                                    }
+                                }
+                            }}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors duration-200"
+                        >
+                            📞 Открыть Телефон
+                        </button>
+
+                        {/* Поле ввода */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                IMEI
+                            </label>
+                            <input
+                                type="text"
+                                value={manualImei}
+                                onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
+                                placeholder="Введите IMEI"
+                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono bg-gray-50"
+                            />
+                            <p className="text-sm text-gray-500 mt-1 text-center">
+                                15 цифр
+                            </p>
+                        </div>
+
+                        {/* Ошибка */}
+                        {ocrError && (
+                            <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
+                                <p className="text-sm text-red-700">{ocrError}</p>
+                            </div>
+                        )}
+
+                        {/* Кнопка подтверждения */}
+                        <button
+                            onClick={handleImeiInput}
+                            disabled={!manualImei || manualImei.length !== 15}
+                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors duration-200"
+                        >
+                            Подтвердить
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Диалоговое окно с итоговой информацией */}
             <Dialog open={showDialog} onOpenChange={handleEdit}>
@@ -641,17 +722,7 @@ const SnScreenshotMethod = ({
                 ← Назад к IMEI
             </Button>
 
-            {/* Показываем введенный IMEI */}
-            <Card className="p-3 bg-blue-50 border border-blue-200">
-                <CardContent>
-                    <div className="text-center">
-                        <h4 className="font-semibold text-blue-800 mb-2">✅ IMEI введен</h4>
-                        <p className="text-sm text-blue-700 font-mono bg-white p-2 rounded border">
-                            {manualImei}
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
+
 
             {/* Инструкции для S/N */}
             <Card className="p-3 bg-green-50 border border-green-200">
@@ -726,115 +797,6 @@ const SnScreenshotMethod = ({
     );
 };
 
-// Компонент для ввода IMEI
-const ImeiInputMethod = ({
-    manualImei,
-    setManualImei,
-    onConfirm,
-    onBack
-}: {
-    manualImei: string;
-    setManualImei: (value: string) => void;
-    onConfirm: () => void;
-    onBack: () => void;
-}) => {
-    return (
-        <div className="space-y-3">
-            {/* Кнопка назад */}
-            <Button
-                onClick={onBack}
-                variant="outline"
-                size="sm"
-                className="w-full"
-            >
-                ← Назад к выбору
-            </Button>
 
-            {/* Инструкции */}
-            <Card className="p-3 bg-blue-50 border border-blue-200">
-                <CardContent>
-                    <h4 className="font-semibold text-blue-800 mb-2">
-                        ⌨️ Как получить IMEI:
-                    </h4>
-                    <ol className="text-sm text-blue-700 space-y-1">
-                        <li>1. Откройте приложение <strong>&quot;Телефон&quot;</strong></li>
-                        <li>2. Наберите код: <strong className="text-lg bg-white px-2 py-1 rounded border">*#06#</strong></li>
-                        <li>3. На экране появится <strong>IMEI (15 цифр)</strong></li>
-                        <li>4. <strong>Запомните или запишите</strong> IMEI</li>
-                        <li>5. Введите IMEI в поле ниже</li>
-                    </ol>
-                    
-                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                        <p className="text-xs text-yellow-800">
-                            <strong>💡 Совет:</strong> Если не получается скопировать, просто запомните или запишите IMEI на бумаге, затем введите вручную.
-                        </p>
-                    </div>
-                    
-                    <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
-                        <p className="text-xs text-green-800">
-                            <strong>🔄 Альтернатива:</strong> Также можно найти IMEI в <strong>Настройки → Основные → Об этом устройстве</strong>
-                        </p>
-                    </div>
-                    
-                    {/* Кнопка для открытия приложения Телефон */}
-                    <div className="mt-3 p-2 bg-white rounded border">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Открыть приложение:</span>
-                            <Button
-                                onClick={() => {
-                                    if (typeof window !== 'undefined') {
-                                        // Пытаемся открыть приложение Телефон
-                                        const phoneUrl = 'tel:*#06#';
-                                        window.open(phoneUrl, '_blank');
-                                        
-                                        if ((window as any).Telegram?.WebApp) {
-                                            (window as any).Telegram.WebApp.showAlert('Открываю приложение Телефон. Наберите *#06# в появившемся окне.');
-                                        }
-                                    }
-                                }}
-                                size="sm"
-                                variant="outline"
-                                className="text-xs"
-                            >
-                                📞 Открыть Телефон
-                            </Button>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-
-
-            {/* Поле ввода IMEI */}
-            <Card className="p-3 border border-gray-200">
-                <CardContent className="space-y-3">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            IMEI (15 цифр):
-                        </label>
-                        <input
-                            type="text"
-                            value={manualImei}
-                            onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
-                            placeholder="Введите IMEI вручную"
-                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono"
-                        />
-                        <p className="text-xs text-gray-500 mt-1 text-center">
-                            Введите IMEI вручную (15 цифр)
-                        </p>
-                    </div>
-
-                    <Button
-                        onClick={onConfirm}
-                        disabled={!manualImei || manualImei.length !== 15}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                        ✅ Подтвердить IMEI
-                    </Button>
-                </CardContent>
-            </Card>
-        </div>
-    );
-};
 
 
