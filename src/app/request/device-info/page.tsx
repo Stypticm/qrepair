@@ -40,6 +40,8 @@ export default function DeviceInfoPage() {
     
     // Состояние обработки OCR
     const [isProcessing, setIsProcessing] = useState(false);
+    const [processingProgress, setProcessingProgress] = useState(0);
+    const [processingMessage, setProcessingMessage] = useState('');
     
     // Состояние результата OCR
     const [ocrResult, setOcrResult] = useState<{
@@ -76,25 +78,54 @@ export default function DeviceInfoPage() {
 
     // Функция для обработки фото через Telegram WebApp
     const handlePhotoCapture = (type: 'sn' | 'imei') => {
-        if (!isTelegramWebApp) return;
+        if (!isTelegramWebApp) {
+            alert('Функция камеры доступна только в Telegram WebApp');
+            return;
+        }
 
         const webApp = (window as any).Telegram.WebApp;
         
-        webApp.openCamera({}, (result: any) => {
+        // Настройки для камеры
+        const cameraOptions = {
+            source: 'camera', // Используем камеру, а не галерею
+            quality: 'high'   // Высокое качество для лучшего OCR
+        };
+        
+        console.log(`Открываем камеру для ${type === 'sn' ? 'S/N' : 'IMEI'}`);
+        
+        webApp.openCamera(cameraOptions, (result: any) => {
+            console.log('Результат камеры:', result);
+            
             if (result && result.photos && result.photos.length > 0) {
                 const photoBlob = result.photos[0];
+                console.log(`Фото ${type} получено, размер:`, photoBlob.size);
+                
                 if (type === 'sn') {
                     setPhotos(prev => ({ ...prev, snPhoto: photoBlob }));
                 } else {
                     setPhotos(prev => ({ ...prev, imeiPhoto: photoBlob }));
                 }
+                
+                // Показываем уведомление об успехе
+                webApp.showAlert(`Фото ${type === 'sn' ? 'S/N' : 'IMEI'} успешно сделано!`);
+            } else {
+                console.log('Фото не было сделано или произошла ошибка');
+                webApp.showAlert('Не удалось сделать фото. Попробуйте еще раз.');
             }
+        });
+        
+        // Обработка ошибок камеры
+        webApp.onEvent('cameraError', (error: any) => {
+            console.error('Ошибка камеры:', error);
+            webApp.showAlert('Ошибка доступа к камере. Проверьте разрешения.');
         });
     };
 
     // Функция для обработки OCR
     const processOCR = async () => {
         setIsProcessing(true);
+        setProcessingProgress(0);
+        setProcessingMessage('Подготовка изображений...');
         setOcrError(null);
         
         try {
@@ -123,11 +154,25 @@ export default function DeviceInfoPage() {
                 formData.append('initData', (window as any).Telegram.WebApp.initData);
             }
             
+            // Быстрый прогресс загрузки
+            setProcessingProgress(10);
+            setProcessingMessage('Загрузка изображений...');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            setProcessingProgress(25);
+            setProcessingMessage('Отправка на сервер...');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
             // Отправляем запрос на API
+            setProcessingProgress(40);
+            setProcessingMessage('Обработка OCR...');
             const response = await fetch('/api/ocr/process-device-photos', {
                 method: 'POST',
                 body: formData
             });
+            
+            setProcessingProgress(70);
+            setProcessingMessage('Извлечение данных...');
             
             if (!response.ok) {
                 throw new Error('OCR processing failed');
@@ -154,6 +199,9 @@ export default function DeviceInfoPage() {
                 sessionStorage.setItem('serialNumber', result.serialNumber);
             }
             
+            setProcessingProgress(100);
+            setProcessingMessage('Готово!');
+            
             // Показываем диалог подтверждения
             setShowDialog(true);
             
@@ -162,6 +210,8 @@ export default function DeviceInfoPage() {
             setOcrError(error instanceof Error ? error.message : 'Ошибка обработки изображений');
         } finally {
             setIsProcessing(false);
+            setProcessingProgress(0);
+            setProcessingMessage('');
         }
     };
 
@@ -286,7 +336,7 @@ export default function DeviceInfoPage() {
                 </div>
 
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-3 pb-4">
                         
                         {/* Заголовок */}
                         <motion.div
@@ -312,10 +362,10 @@ export default function DeviceInfoPage() {
                                 className="grid grid-cols-1 gap-3"
                             >
                                 <Card 
-                                    className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                                    className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
                                     onClick={() => setSelectedMethod('screenshot')}
                                 >
-                                    <CardContent className="space-y-3">
+                                    <CardContent className="space-y-2">
                                         <div className="flex items-center space-x-3">
                                             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                                                 <span className="text-2xl">📸</span>
@@ -329,10 +379,10 @@ export default function DeviceInfoPage() {
                                 </Card>
 
                                 <Card 
-                                    className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
+                                    className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
                                     onClick={() => setSelectedMethod('photo')}
                                 >
-                                    <CardContent className="space-y-3">
+                                    <CardContent className="space-y-2">
                                         <div className="flex items-center space-x-3">
                                             <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                                                 <span className="text-2xl">📷</span>
@@ -362,6 +412,8 @@ export default function DeviceInfoPage() {
                                             screenshots={screenshots}
                                             onScreenshotUpload={handleScreenshotUpload}
                                             isProcessing={isProcessing}
+                                            processingProgress={processingProgress}
+                                            processingMessage={processingMessage}
                                         />
                                     )}
                                     
@@ -370,6 +422,8 @@ export default function DeviceInfoPage() {
                                             photos={photos}
                                             onPhotoCapture={handlePhotoCapture}
                                             isProcessing={isProcessing}
+                                            processingProgress={processingProgress}
+                                            processingMessage={processingMessage}
                                             isTelegramWebApp={isTelegramWebApp}
                                         />
                                     )}
@@ -514,16 +568,20 @@ export default function DeviceInfoPage() {
 const ScreenshotMethod = ({ 
     screenshots, 
     onScreenshotUpload, 
-    isProcessing 
+    isProcessing,
+    processingProgress,
+    processingMessage
 }: {
     screenshots: { snScreenshot: File | null; imeiScreenshot: File | null };
     onScreenshotUpload: (type: 'sn' | 'imei', file: File | null) => void;
     isProcessing: boolean;
+    processingProgress: number;
+    processingMessage: string;
 }) => {
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {/* Инструкции */}
-            <Card className="p-4 bg-blue-50 border border-blue-200">
+            <Card className="p-3 bg-blue-50 border border-blue-200">
                 <CardContent>
                     <h4 className="font-semibold text-blue-800 mb-2">
                         📸 Как сделать скриншот:
@@ -539,8 +597,8 @@ const ScreenshotMethod = ({
             </Card>
 
             {/* Скриншот S/N */}
-            <Card className="p-4 border border-gray-200">
-                <CardContent className="space-y-3">
+            <Card className="p-3 border border-gray-200">
+                <CardContent className="space-y-2">
                     <h4 className="font-semibold text-gray-800">Скриншот 1: S/N (верхняя часть)</h4>
                     <input
                         type="file"
@@ -571,8 +629,8 @@ const ScreenshotMethod = ({
             </Card>
 
             {/* Скриншот IMEI */}
-            <Card className="p-4 border border-gray-200">
-                <CardContent className="space-y-3">
+            <Card className="p-3 border border-gray-200">
+                <CardContent className="space-y-2">
                     <h4 className="font-semibold text-gray-800">Скриншот 2: IMEI (нижняя часть)</h4>
                     <input
                         type="file"
@@ -602,13 +660,21 @@ const ScreenshotMethod = ({
                 </CardContent>
             </Card>
 
-            {/* Loader */}
+            {/* Прогресс-бар */}
             {isProcessing && (
-                <Card className="p-4 bg-gray-50 border border-gray-200">
+                <Card className="p-3 bg-gray-50 border border-gray-200">
                     <CardContent className="text-center">
-                        <div className="space-y-3">
-                            <div className="w-8 h-8 border-4 border-[#2dc2c6] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                            <p className="text-sm text-gray-600">Обрабатываем скриншоты...</p>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                                <span>{processingMessage || 'Обрабатываем скриншоты...'}</span>
+                                <span>{processingProgress}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                    className="bg-[#2dc2c6] h-2 rounded-full transition-all duration-300 ease-out"
+                                    style={{ width: `${processingProgress}%` }}
+                                ></div>
+                            </div>
                             <p className="text-xs text-gray-500">Извлекаем IMEI и S/N</p>
                         </div>
                     </CardContent>
@@ -622,42 +688,55 @@ const ScreenshotMethod = ({
 const PhotoMethod = ({ 
     photos, 
     onPhotoCapture, 
-    isProcessing, 
+    isProcessing,
+    processingProgress,
+    processingMessage,
     isTelegramWebApp 
 }: {
     photos: { snPhoto: Blob | null; imeiPhoto: Blob | null };
     onPhotoCapture: (type: 'sn' | 'imei') => void;
     isProcessing: boolean;
+    processingProgress: number;
+    processingMessage: string;
     isTelegramWebApp: boolean;
 }) => {
     return (
-        <div className="space-y-4">
+        <div className="space-y-3">
             {/* Инструкции */}
-            <Card className="p-4 bg-green-50 border border-green-200">
+            <Card className="p-3 bg-green-50 border border-green-200">
                 <CardContent>
                     <h4 className="font-semibold text-green-800 mb-2">
                         📷 Как сфотографировать:
                     </h4>
                     <ol className="text-sm text-green-700 space-y-1">
                         <li>1. Возьмите другой телефон</li>
-                        <li>2. Сфотографируйте наклейку на коробке</li>
-                        <li>3. Или заднюю панель устройства</li>
-                        <li>4. Убедитесь, что текст четко виден</li>
+                        <li>2. Нажмите &quot;Открыть камеру&quot; - откроется камера Telegram</li>
+                        <li>3. Сфотографируйте наклейку на коробке или заднюю панель</li>
+                        <li>4. Убедитесь, что S/N и IMEI четко видны</li>
+                        <li>5. Сделайте 2 отдельных фото: одно для S/N, другое для IMEI</li>
                     </ol>
+                    <div className="mt-3 p-2 bg-green-100 rounded text-xs text-green-600">
+                        💡 <strong>Совет:</strong> Камера Telegram автоматически сохранит фото и вернет вас в приложение
+                    </div>
                 </CardContent>
             </Card>
 
             {/* Фото S/N */}
-            <Card className="p-4 border border-gray-200">
-                <CardContent className="space-y-3">
+            <Card className="p-3 border border-gray-200">
+                <CardContent className="space-y-2">
                     <h4 className="font-semibold text-gray-800">Фото 1: S/N (верхняя часть)</h4>
                     <Button
                         onClick={() => onPhotoCapture('sn')}
                         disabled={!isTelegramWebApp}
-                        className="w-full"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
                     >
-                        📷 Сделать фото S/N
+                        📷 Открыть камеру для S/N
                     </Button>
+                    {!isTelegramWebApp && (
+                        <p className="text-xs text-red-600">
+                            ⚠️ Функция камеры доступна только в Telegram
+                        </p>
+                    )}
                     {photos.snPhoto && (
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-green-600 flex items-center">
@@ -671,7 +750,7 @@ const PhotoMethod = ({
                                 disabled={!isTelegramWebApp}
                                 className="text-xs"
                             >
-                                Заменить
+                                📷 Переснять
                             </Button>
                         </div>
                     )}
@@ -679,16 +758,21 @@ const PhotoMethod = ({
             </Card>
 
             {/* Фото IMEI */}
-            <Card className="p-4 border border-gray-200">
-                <CardContent className="space-y-3">
+            <Card className="p-3 border border-gray-200">
+                <CardContent className="space-y-2">
                     <h4 className="font-semibold text-gray-800">Фото 2: IMEI (нижняя часть)</h4>
                     <Button
                         onClick={() => onPhotoCapture('imei')}
                         disabled={!isTelegramWebApp}
-                        className="w-full"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
                     >
-                        📷 Сделать фото IMEI
+                        📷 Открыть камеру для IMEI
                     </Button>
+                    {!isTelegramWebApp && (
+                        <p className="text-xs text-red-600">
+                            ⚠️ Функция камеры доступна только в Telegram
+                        </p>
+                    )}
                     {photos.imeiPhoto && (
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-green-600 flex items-center">
@@ -702,20 +786,28 @@ const PhotoMethod = ({
                                 disabled={!isTelegramWebApp}
                                 className="text-xs"
                             >
-                                Заменить
+                                📷 Переснять
                             </Button>
                         </div>
                     )}
                 </CardContent>
             </Card>
 
-            {/* Loader */}
+            {/* Прогресс-бар */}
             {isProcessing && (
-                <Card className="p-4 bg-gray-50 border border-gray-200">
+                <Card className="p-3 bg-gray-50 border border-gray-200">
                     <CardContent className="text-center">
-                        <div className="space-y-3">
-                            <div className="w-8 h-8 border-4 border-[#2dc2c6] border-t-transparent rounded-full animate-spin mx-auto"></div>
-                            <p className="text-sm text-gray-600">Обрабатываем фото...</p>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm text-gray-600">
+                                <span>{processingMessage || 'Обрабатываем фото...'}</span>
+                                <span>{processingProgress}%</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div 
+                                    className="bg-[#2dc2c6] h-2 rounded-full transition-all duration-300 ease-out"
+                                    style={{ width: `${processingProgress}%` }}
+                                ></div>
+                            </div>
                             <p className="text-xs text-gray-500">Извлекаем IMEI и S/N</p>
                         </div>
                     </CardContent>

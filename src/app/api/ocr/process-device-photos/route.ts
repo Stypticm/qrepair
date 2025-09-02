@@ -43,6 +43,12 @@ async function processOCR(snImage: File, imeiImage: File) {
   const worker = await createWorker('eng')
 
   try {
+    // Оптимизированные настройки для быстрой обработки
+    await worker.setParameters({
+      tessedit_char_whitelist:
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+    })
+
     // Обрабатываем изображение S/N
     const snImageBuffer = await snImage.arrayBuffer()
     const snResult = await worker.recognize(
