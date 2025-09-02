@@ -186,8 +186,8 @@ export default function DeviceInfoPage() {
 
 
 
-    // Функция для плавного прогресса
-    const animateProgress = (targetProgress: number, duration: number = 1000) => {
+    // Функция для плавного прогресса (оптимизированная)
+    const animateProgress = (targetProgress: number, duration: number = 500) => {
         return new Promise<void>((resolve) => {
             const startProgress = processingProgress;
             const startTime = Date.now();
@@ -196,7 +196,9 @@ export default function DeviceInfoPage() {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 
-                const currentProgress = startProgress + (targetProgress - startProgress) * progress;
+                // Используем easeOut для более естественного движения
+                const easedProgress = 1 - Math.pow(1 - progress, 3);
+                const currentProgress = startProgress + (targetProgress - startProgress) * easedProgress;
                 setProcessingProgress(Math.round(currentProgress));
                 
                 if (progress < 1) {
@@ -236,14 +238,14 @@ export default function DeviceInfoPage() {
 
             // Плавный прогресс загрузки
             setProcessingMessage('Загрузка изображения...');
-            await animateProgress(15, 500);
+            await animateProgress(15, 300);
 
             setProcessingMessage('Отправка на сервер...');
-            await animateProgress(25, 300);
+            await animateProgress(25, 200);
 
             // Отправляем запрос на API
             setProcessingMessage('Обработка OCR...');
-            await animateProgress(40, 200);
+            await animateProgress(40, 150);
             
             // Добавляем таймаут для запроса (45 секунд)
             const controller = new AbortController();
@@ -258,7 +260,7 @@ export default function DeviceInfoPage() {
             clearTimeout(timeoutId);
             
             setProcessingMessage('Извлечение S/N...');
-            await animateProgress(70, 300);
+            await animateProgress(70, 200);
 
             if (!response.ok) {
                 throw new Error('OCR processing failed');
@@ -293,7 +295,7 @@ export default function DeviceInfoPage() {
             }
 
             setProcessingMessage('Готово!');
-            await animateProgress(100, 500);
+            await animateProgress(100, 300);
 
             // Отправляем сообщение в Telegram
             if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
@@ -470,9 +472,9 @@ export default function DeviceInfoPage() {
 
                         {/* Заголовок */}
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, ease: "easeOut" }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.2 }}
                             className="text-center"
                         >
                             <h2 className="text-xl font-semibold text-gray-900 mb-1">
@@ -486,9 +488,9 @@ export default function DeviceInfoPage() {
                         {/* Выбор метода ввода */}
                         {!selectedMethod && (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2, delay: 0.1 }}
                                 className="space-y-3"
                             >
                                 <div className="space-y-3">
@@ -538,9 +540,9 @@ export default function DeviceInfoPage() {
                         {/* Метод ввода IMEI */}
                         {selectedMethod === 'imei_dial' && (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2, delay: 0.1 }}
                             >
                                 <ImeiInputMethod 
                                     manualImei={manualImei}
@@ -554,9 +556,9 @@ export default function DeviceInfoPage() {
                         {/* Метод ввода S/N */}
                         {selectedMethod === 'sn_screenshot' && (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2, delay: 0.1 }}
                             >
                                 <SnInputMethod 
                                     manualSerialNumber={manualSerialNumber}
@@ -572,9 +574,9 @@ export default function DeviceInfoPage() {
                         {/* Отображение ошибки OCR */}
                         {ocrError && (
                             <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.2 }}
                             >
                                 <Card className="p-4 bg-red-50 border border-red-200">
                                     <CardContent>
@@ -606,7 +608,7 @@ export default function DeviceInfoPage() {
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
+                                transition={{ duration: 0.2 }}
                             >
                                 <Button
                                     variant="outline"
