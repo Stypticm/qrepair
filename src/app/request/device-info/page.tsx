@@ -593,29 +593,29 @@ export default function DeviceInfoPage() {
             {/* Диалоговое окно с итоговой информацией */}
             <Dialog open={showDialog} onOpenChange={handleEdit}>
                 <DialogContent
-                    className="bg-white w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    className="bg-white w-[85vw] max-w-xs mx-auto rounded-lg shadow-lg max-h-[75vh] overflow-y-auto"
                     showCloseButton={true}
                 >
-                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+                    <DialogTitle className="text-center text-base font-semibold text-gray-900 mb-2">
                         Проверьте данные
                     </DialogTitle>
 
                     <div className="text-center">
                         {/* Рамка для выбранных данных */}
-                        <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
-                            <div className="space-y-3">
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 mb-3">
+                            <div className="space-y-2">
                                 {ocrResult?.imei && (
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">IMEI:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                        <span className="text-xs text-gray-600 font-medium">IMEI:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words text-sm">
                                             {ocrResult.imei}
                                         </span>
                                     </div>
                                 )}
                                 {ocrResult?.serialNumber && (
                                     <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">S/N:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
+                                        <span className="text-xs text-gray-600 font-medium">S/N:</span>
+                                        <span className="font-semibold text-gray-900 text-right break-words text-sm">
                                             {ocrResult.serialNumber}
                                         </span>
                                     </div>
@@ -624,25 +624,25 @@ export default function DeviceInfoPage() {
                         </div>
 
                         {/* Кнопки действий */}
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             <Button
                                 onClick={handleContinue}
-                                className="w-full bg-[#2dc2c6] hover:bg-[#2dc2c6]/90 text-white"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 text-xs"
                             >
-                                ✅ Подтвердить и продолжить
+                                ✅ Подтвердить
                             </Button>
 
                             <Button
                                 onClick={handleEdit}
                                 variant="outline"
-                                className="w-full"
+                                className="w-full py-1.5 text-xs"
                             >
-                                ✏️ Загрузить заново
+                                ✏️ Заново
                             </Button>
                         </div>
 
-                        <p className="text-center text-xs text-gray-500 mt-3">
-                            Проверьте правильность данных перед продолжением
+                        <p className="text-center text-xs text-gray-500 mt-2">
+                            Проверьте данные
                         </p>
                     </div>
                 </DialogContent>
@@ -719,10 +719,20 @@ const ImeiInputMethod = ({
                             onChange={(e) => setManualImei(e.target.value.replace(/\D/g, '').slice(0, 15))}
                             placeholder="Введите IMEI"
                             className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && manualImei.length === 15) {
+                                    onConfirm();
+                                }
+                            }}
                         />
                         <p className="text-xs text-gray-500 text-center">
                             15 цифр
                         </p>
+                        {manualImei.length === 15 && (
+                            <p className="text-xs text-green-600 text-center font-medium">
+                                ✅ Готово! Нажмите "Подтвердить" или Enter
+                            </p>
+                        )}
                     </div>
                 </CardContent>
             </Card>
@@ -807,10 +817,20 @@ const SnInputMethod = ({
                             onChange={(e) => setManualSerialNumber(e.target.value.toUpperCase().slice(0, 12))}
                             placeholder="Введите S/N"
                             className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center text-sm font-mono bg-gray-50"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && manualSerialNumber.length >= 10) {
+                                    onConfirm();
+                                }
+                            }}
                         />
                         <p className="text-xs text-gray-500 text-center">
                             10-12 символов
                         </p>
+                        {manualSerialNumber.length >= 10 && (
+                            <p className="text-xs text-green-600 text-center font-medium">
+                                ✅ Готово! Нажмите "Подтвердить" или Enter
+                            </p>
+                        )}
                     </div>
                 </CardContent>
             </Card>

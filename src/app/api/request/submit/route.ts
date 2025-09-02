@@ -152,7 +152,7 @@ export async function POST(request: Request) {
       const message = `✅ *Заявка принята!*
 
 📱 *Модель:* ${modelname}
-📊 *Оценка состояния:* ${totalPenalty}%
+📊 *Оценка состояния:* ${Math.abs(totalPenalty)}%
 💵 *Итоговая цена:* ${finalPrice.toLocaleString()} ₽
 
 Мы свяжемся с вами в ближайшее время для уточнения деталей.`
