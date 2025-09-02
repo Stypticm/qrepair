@@ -3,7 +3,6 @@
 // Принудительно делаем страницу динамической для обхода кэширования
 export const dynamic = 'force-dynamic';
 
-import Image from 'next/image';
 import { Link } from '@/components/Link/Link';
 import tonSvg from './_assets/ton.svg';
 import picture from './_assets/picture.png';
@@ -14,7 +13,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import LoadingSpinner from '@/components/LoadingSpinner/LoadingSpinner';
+import Image from 'next/image';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { ExpandButton } from '@/components/ExpandButton';
 import { tailwindColors } from '@/core/colors';
@@ -22,7 +21,7 @@ import { ChatContext } from '@/components/ChatContext';
 import { useSafeArea } from '@/hooks/useSafeArea';
 
 export default function Home() {
-  const { telegramId, setModel, resetAllStates, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber } = useStartForm();
+  const { telegramId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber } = useStartForm();
   const { forceFullscreen, isFullscreen } = useSafeArea();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,12 +55,8 @@ export default function Home() {
       // Показываем загрузку
       setIsLoading(true);
 
-      // 1. Загружаем сохраненные данные
-      if (telegramId) {
-        await loadSavedData(telegramId);
-      }
-
-      // 2. Проверяем, есть ли уже отправленная заявка
+      // 1. Один запрос для получения всех данных из БД
+      let draftData = null;
       if (telegramId) {
         const response = await fetch('/api/request/getDraft', {
           method: 'POST',
@@ -72,47 +67,41 @@ export default function Home() {
         });
 
         if (response.ok) {
-          const draftData = await response.json();
-          if (draftData && draftData.status === 'submitted') {
-            // Есть уже отправленная заявка
-            if (window.Telegram?.WebApp) {
-              const webApp = window.Telegram.WebApp;
-              const confirmed = await new Promise((resolve) => {
-                webApp.showConfirm(
-                  'У вас уже есть отправленная заявка. Хотите создать новую?',
-                  (result: boolean) => resolve(result)
-                );
-              });
-              
-              if (!confirmed) {
-                setIsLoading(false);
-                return; // Пользователь отменил
-              }
-            }
+          draftData = await response.json();
+          
+          // Загружаем данные в контекст
+          if (draftData) {
+            if (draftData.modelname) setModel(draftData.modelname);
+            if (draftData.price) setPrice(draftData.price);
+            if (draftData.imei) setImei(draftData.imei);
+            if (draftData.sn) setSerialNumber(draftData.sn);
+            if (draftData.deviceConditions) setDeviceConditions(draftData.deviceConditions);
+            if (draftData.additionalConditions) setAdditionalConditions(draftData.additionalConditions);
           }
         }
       }
 
-      // 3. Получаем currentStep из БД
-      let currentStep = null;
-      if (telegramId) {
-        try {
-          const response = await fetch('/api/request/getDraft', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ telegramId }),
+      // 2. Проверяем, есть ли уже отправленная заявка
+      if (draftData && draftData.status === 'submitted') {
+        // Есть уже отправленная заявка
+        if (window.Telegram?.WebApp) {
+          const webApp = window.Telegram.WebApp;
+          const confirmed = await new Promise((resolve) => {
+            webApp.showConfirm(
+              'У вас уже есть отправленная заявка. Хотите создать новую?',
+              (result: boolean) => resolve(result)
+            );
           });
           
-          if (response.ok) {
-            const draftData = await response.json();
-            currentStep = draftData?.currentStep;
+          if (!confirmed) {
+            setIsLoading(false);
+            return; // Пользователь отменил
           }
-        } catch (error) {
-          console.error('Ошибка получения currentStep:', error);
         }
       }
+
+      // 3. Получаем currentStep из уже загруженных данных
+      const currentStep = draftData?.currentStep;
 
       // 4. Используем currentStep из БД для перенаправления
       if (currentStep) {
@@ -178,7 +167,15 @@ export default function Home() {
     return (
       <AdaptiveContainer>
         <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
-          <LoadingSpinner />
+          <div className="relative w-32 h-32 mb-4">
+            <Image
+              src="/coconut-dancing.gif"
+              alt="Loading..."
+              fill
+              className="object-contain"
+              unoptimized
+            />
+          </div>
           <p className="text-gray-600 mt-4">Проверяем сохраненные данные...</p>
         </div>
       </AdaptiveContainer>

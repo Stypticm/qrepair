@@ -489,7 +489,7 @@ const SubmitPage = () => {
                         </div>
 
                         {/* Кнопки */}
-                        <div className="w-full space-y-4">
+                        <div className="w-full space-y-4 gap-1">
                             <Button
                                 onClick={handleSubmit}
                                 disabled={submitting || !modelname}
@@ -525,7 +525,7 @@ const SubmitPage = () => {
                             <p className="text-sm text-gray-600 mb-6">
                                 Все введенные данные будут удалены. Это действие нельзя отменить.
                             </p>
-                            <div className="flex space-x-3">
+                            <div className="flex space-x-3 gap-2">
                                 <Button
                                     onClick={() => setShowResetDialog(false)}
                                     variant="outline"
