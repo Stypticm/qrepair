@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react'
+import Image from 'next/image';
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useNavigation } from '@/components/NavigationContext/NavigationContext';
@@ -193,7 +194,7 @@ export default function DeviceInfoPage() {
                 <div className="flex-1 p-3 pt-1 flex flex-col overflow-y-auto">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-3 pb-2">
 
-                        {/* Инструкция */}
+                        {/* Инструкция с анимацией */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -201,17 +202,20 @@ export default function DeviceInfoPage() {
                         >
                             <Card className="bg-blue-50 border-blue-200">
                                 <CardContent className="p-3">
-                                    <div className="flex items-start space-x-2">
-                                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                                            <span className="text-white text-xs">ℹ️</span>
-                                        </div>
-                                        <div>
-                                            <h4 className="font-semibold text-blue-900 mb-1 text-sm">Где найти серийный номер?</h4>
-                                            <div className="text-sm text-blue-800 space-y-0.5">
-                                                <p>• Настройки → Основные → Об этом устройстве</p>
-                                                <p>• На коробке устройства</p>
-                                                <p>• На задней панели (для старых моделей)</p>
-                                                <p>• В iTunes/Finder при подключении к компьютеру</p>
+                                    <div className="flex flex-col items-center space-y-3">
+                                        <div className="text-center">
+                                            <div className="w-full max-w-xs mx-auto mb-3">
+                                                <Image 
+                                                    src="/animation.gif" 
+                                                    alt="Инструкция по поиску серийного номера"
+                                                    width={300}
+                                                    height={200}
+                                                    className="w-full h-auto rounded-lg border border-blue-200"
+                                                />
+                                            </div>
+                                            <div className="text-xs text-blue-800 space-y-1">
+                                                <p><strong>Где найти:</strong> Настройки → Основные → Об этом устройстве</p>
+                                                <p><strong>Что делать:</strong> Скопируйте серийный номер и вставьте в поле ниже</p>
                                             </div>
                                         </div>
                                     </div>
