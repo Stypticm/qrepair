@@ -59,13 +59,21 @@ export default function Home() {
                             window.location.href.includes('tgWebAppData') ||
                             window.location.href.includes('tgWebAppVersion');
         
-        // В Telegram WebApp должен быть объект Telegram.WebApp
-        const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
+        // Проверяем, что это именно WebApp, а не просто ссылка в Telegram
+        const isWebApp = hasTelegramWebApp && (
+          hasUrlParams || 
+          window.location.href.includes('mode=fullscreen') ||
+          (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param
+        );
+        
+        // В Telegram WebApp должен быть объект Telegram.WebApp И специальные параметры
+        const inTelegram = isWebApp || hasTelegramWebviewProxy;
         
         console.log('🔍 Telegram WebApp Detection:', {
           'Telegram.WebApp': hasTelegramWebApp,
           'TelegramWebviewProxy': hasTelegramWebviewProxy,
           'URL Parameters': hasUrlParams,
+          'Is WebApp': isWebApp,
           'URL': window.location.href,
           'Final Result': inTelegram,
           'Action': inTelegram ? '🚀 Show WebApp' : '🌐 Redirect to Telegram page'
