@@ -106,6 +106,13 @@ export default function Home() {
       // 4. Используем currentStep из БД для перенаправления
       if (currentStep) {
         switch (currentStep) {
+          case 'device-info':
+            if (imei && serialNumber) {
+              router.push('/request/form');
+            } else {
+              router.push('/request/device-info');
+            }
+            return;
           case 'form':
             router.push('/request/condition');
             return;
@@ -113,14 +120,7 @@ export default function Home() {
             router.push('/request/additional-condition');
             return;
           case 'additional-condition':
-            router.push('/request/device-info');
-            return;
-          case 'device-info':
-            if (imei && serialNumber) {
-              router.push('/request/submit');
-            } else {
-              router.push('/request/device-info');
-            }
+            router.push('/request/submit');
             return;
           default:
             break;
@@ -128,35 +128,57 @@ export default function Home() {
       }
 
       // 5. Fallback: определяем шаг на основе сохраненных данных
-      if (imei && serialNumber) {
+      // Если есть currentStep в БД, используем его
+      if (draftData?.currentStep) {
+        switch (draftData.currentStep) {
+          case 'device-info':
+            router.push('/request/device-info');
+            return;
+          case 'form':
+            router.push('/request/form');
+            return;
+          case 'condition':
+            router.push('/request/condition');
+            return;
+          case 'additional-condition':
+            router.push('/request/additional-condition');
+            return;
+          case 'submit':
+            router.push('/request/submit');
+            return;
+        }
+      }
+      
+      // Если нет currentStep, определяем по заполненным данным
+      if (imei && serialNumber && modelname && deviceConditions && additionalConditions) {
         // Все данные заполнены - перенаправляем на submit
         router.push('/request/submit');
         return;
-      } else if (imei) {
-        // IMEI заполнен, но нет S/N - перенаправляем на device-info
-        router.push('/request/device-info');
-        return;
-      } else if (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery)) {
-        // Дополнительные условия заполнены - перенаправляем на device-info
-        router.push('/request/device-info');
-        return;
-      } else if (deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) {
-        // Состояния устройства заполнены - перенаправляем на additional-condition
+      } else if (imei && serialNumber && modelname && deviceConditions) {
+        // Данные до additional-condition заполнены - перенаправляем на additional-condition
         router.push('/request/additional-condition');
         return;
-      } else if (modelname && modelname !== 'Apple iPhone 11') {
-        // Модель выбрана - перенаправляем на condition
+      } else if (imei && serialNumber && modelname) {
+        // Данные до condition заполнены - перенаправляем на condition
         router.push('/request/condition');
+        return;
+      } else if (imei && serialNumber) {
+        // Данные до form заполнены - перенаправляем на form
+        router.push('/request/form');
+        return;
+      } else {
+        // Начинаем с device-info
+        router.push('/request/device-info');
         return;
       }
 
-      // 6. Нет сохраненных данных - начинаем с form (новая заявка)
-      router.push('/request/form');
+      // 6. Нет сохраненных данных - начинаем с device-info (новая заявка)
+      router.push('/request/device-info');
     } catch (error) {
       console.error('Ошибка проверки заявки:', error);
       setIsLoading(false);
-      // В случае ошибки просто переходим к форме
-      router.push('/request/form');
+      // В случае ошибки просто переходим к device-info
+      router.push('/request/device-info');
     }
   };
 

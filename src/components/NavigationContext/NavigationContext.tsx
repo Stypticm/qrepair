@@ -20,10 +20,10 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 
   // Определяем порядок шагов
   const stepOrder = [
+    'device-info',
     'form',
     'condition', 
     'additional-condition',
-    'device-info',
     'submit'
   ];
 
@@ -37,6 +37,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       
       // Перенаправляем на предыдущий шаг
       switch (previousStep) {
+        case 'device-info':
+          router.push('/request/device-info');
+          break;
         case 'form':
           router.push('/request/form');
           break;
@@ -46,14 +49,11 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         case 'additional-condition':
           router.push('/request/additional-condition');
           break;
-        case 'device-info':
-          router.push('/request/device-info');
-          break;
         case 'submit':
           router.push('/request/submit');
           break;
         default:
-          router.push('/request/form');
+          router.push('/request/device-info');
       }
     } else {
       // Если это первый шаг, возвращаемся на главную
@@ -71,6 +71,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       
       // Перенаправляем на следующий шаг
       switch (nextStep) {
+        case 'device-info':
+          router.push('/request/device-info');
+          break;
         case 'form':
           router.push('/request/form');
           break;
@@ -80,14 +83,11 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         case 'additional-condition':
           router.push('/request/additional-condition');
           break;
-        case 'device-info':
-          router.push('/request/device-info');
-          break;
         case 'submit':
           router.push('/request/submit');
           break;
         default:
-          router.push('/request/form');
+          router.push('/request/device-info');
       }
     }
   };

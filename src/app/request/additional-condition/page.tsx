@@ -60,12 +60,12 @@ export default function AdditionalConditionPage() {
     const [isAllSelected, setIsAllSelected] = useState(false);
 
     // Шаги для прогресс-бара
-    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
+    const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
-        // Показываем шаг 3 на странице additional-condition
-        return 3;
+        // Показываем шаг 4 на странице additional-condition
+        return 4;
     };
 
     // Функция для проверки, все ли выбрано
@@ -297,7 +297,7 @@ export default function AdditionalConditionPage() {
             });
         }, 0);
         // Быстрый переход без задержки
-        router.push('/request/device-info');
+        router.push('/request/submit');
     };
 
     const handleEdit = () => {

@@ -379,12 +379,12 @@ export default function ConditionPage() {
     };
 
     // Шаги для прогресс-бара
-    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
+    const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
-        // Показываем шаг 2 на странице condition
-        return 2;
+        // Показываем шаг 3 на странице condition
+        return 3;
     };
     const getConditionPenalty = (conditionId: string): number => {
         if (conditionId.includes('_new')) {

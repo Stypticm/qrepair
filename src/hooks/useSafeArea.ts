@@ -186,6 +186,20 @@ export function useSafeArea() {
           webApp.headerColor = '#2dc2c6'
           webApp.backgroundColor = '#ffffff'
 
+          // Настраиваем цвета кнопок для лучшей видимости
+          if (webApp.MainButton) {
+            webApp.MainButton.color = '#2dc2c6'
+            webApp.MainButton.textColor = '#ffffff'
+          }
+
+          // Настраиваем цвета BackButton через themeParams
+          if (webApp.themeParams) {
+            webApp.themeParams.button_color = '#2dc2c6'
+            webApp.themeParams.button_text_color = '#ffffff'
+            webApp.themeParams.bg_color = '#ffffff'
+            webApp.themeParams.text_color = '#000000'
+          }
+
           // Получаем тему
           if (webApp.colorScheme) {
             setTheme(webApp.colorScheme)

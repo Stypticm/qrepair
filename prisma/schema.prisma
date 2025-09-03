@@ -14,7 +14,6 @@ model Skupka {
   username             String
   modelname            String?
   photoUrls            String[]
-  videoUrl             String?
   status               SkupkaStatus @default(draft)
   comment              String?
   imei                 String?
@@ -22,12 +21,11 @@ model Skupka {
   contractUrl          String?
   price                Float?
   damagePercent        Float        @default(0)
-  questionsAnswered    Boolean      @default(false)
   priceConfirmed       Boolean      @default(false)
   inspection           Json?
   inspectionCompleted  Boolean      @default(false)
   inspectionToken      String?
-  imeiInfo             Json?
+  deviceData           Json?        // Данные устройства, получаемые через серийный номер
   phoneData            Json?        // Данные выбранного телефона
   currentStep          String?      // Текущий шаг в процессе
   courierTelegramId    String?
@@ -37,8 +35,6 @@ model Skupka {
   courierReminderSent  Boolean      @default(false)
   courierTimeSlotSent  Boolean      @default(false)
   finalPrice           Float?       // Окончательная цена после проверки
-  condition            String?      // Состояние царапин экрана
-  cracks               String?      // Состояние трещин экрана
   deviceConditions     Json?        // Детальное состояние устройства (front, back, side)
   additionalConditions Json?        // Дополнительные условия (faceId, touchId, backCamera, battery)
   submittedAt          DateTime?    // Время отправки заявки

@@ -74,7 +74,6 @@ export interface SkupkaRequest {
   username: string
   modelname?: string
   photoUrls?: string[]
-  videoUrl?: string
   status?: string
   comment?: string
   imei?: string
@@ -82,12 +81,11 @@ export interface SkupkaRequest {
   contractUrl?: string
   price?: number
   damagePercent?: number
-  questionsAnswered?: boolean
   priceConfirmed?: boolean
   inspection?: any
   inspectionCompleted?: boolean
   inspectionToken?: string
-  imeiInfo?: any
+  deviceData?: any
   phoneData?: any
   currentStep?: string
   courierTelegramId?: string
@@ -97,8 +95,6 @@ export interface SkupkaRequest {
   courierReminderSent?: boolean
   courierTimeSlotSent?: boolean
   finalPrice?: number
-  condition?: string
-  cracks?: string
   deviceConditions?: any
   additionalConditions?: any
   submittedAt?: string

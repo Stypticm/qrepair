@@ -132,7 +132,7 @@ export default function FormPage() {
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
     // Шаги для прогресс-бара
-    const steps = ['Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'IMEI и S/N', 'Подтверждение'];
+    const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
     // Функции для умной фильтрации
     const getAvailableVariants = (): string[] => {
@@ -148,8 +148,8 @@ export default function FormPage() {
 
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
-        // Всегда показываем шаг 1 на странице form
-        return 1;
+        // Всегда показываем шаг 2 на странице form
+        return 2;
     };
 
     const getAvailableStorages = (): string[] => {
