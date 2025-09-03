@@ -133,7 +133,15 @@ export function useSafeArea() {
   useEffect(() => {
     if (!isMounted) return
 
-    if (window.Telegram?.WebApp) {
+    // Проверяем, действительно ли мы в Telegram WebApp
+    const isInTelegram = !!(
+      window.Telegram?.WebApp ||
+      window.location.href.includes('tgWebAppPlatform') ||
+      window.location.href.includes('tgWebAppData') ||
+      window.location.href.includes('tgWebAppVersion')
+    )
+
+    if (isInTelegram && window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 

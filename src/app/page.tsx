@@ -22,15 +22,16 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 
 export default function Home() {
   const { telegramId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber } = useStartForm();
-  const { forceFullscreen, isFullscreen } = useSafeArea();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const router = useRouter();
+  
+  const { forceFullscreen, isFullscreen } = useSafeArea();
 
   useEffect(() => {
-    // Принудительно вызываем fullscreen при загрузке страницы
-    if (!isFullscreen && window.Telegram?.WebApp) {
+    // Принудительно вызываем fullscreen при загрузке страницы только если мы в Telegram
+    if (!isFullscreen && window.Telegram?.WebApp && isInTelegram) {
       console.log('Page loaded, forcing fullscreen at', new Date().toISOString());
       forceFullscreen();
     }
@@ -40,7 +41,7 @@ export default function Home() {
     if (telegramId === '1' || telegramId === '296925626' || telegramId === '531360988') {
       setIsAdmin(true);
     }
-  }, [telegramId, isFullscreen, forceFullscreen]);
+  }, [telegramId, isFullscreen, forceFullscreen, isInTelegram]);
 
   // Проверяем сохраненные данные и перенаправляем на нужный шаг
   useEffect(() => {
