@@ -4,8 +4,7 @@ import { Bot } from 'grammy'
 const config = {
   getTelegramWebAppUrl: () => {
     const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      'https://qrepair-git-dev-stypticms-projects.vercel.app'
+      process.env.NEXT_PUBLIC_APP_URL || 'https://qoqos.ru'
     return `${baseUrl}`
   },
 }

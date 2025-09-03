@@ -43,9 +43,18 @@ export default function Home() {
 
   // Проверяем сохраненные данные и перенаправляем на нужный шаг
   useEffect(() => {
+    // Проверяем, запущено ли приложение в Telegram
+    const isInTelegram = typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp;
+    
+    // Если пользователь зашел через браузер (не из Telegram), перенаправляем на страницу-редирект
+    if (!isInTelegram) {
+      router.push('/telegram');
+      return;
+    }
+    
     // Просто убираем загрузку при инициализации
     setIsLoading(false);
-  }, []);
+  }, [router]);
 
 
 
