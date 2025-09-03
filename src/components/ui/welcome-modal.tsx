@@ -18,7 +18,7 @@ export function WelcomeModal({ isOpen, onClose, onStart }: WelcomeModalProps) {
     <AnimatePresence>
       {isOpen && (
         <Dialog open={isOpen} onOpenChange={onClose}>
-          <DialogContent className="bg-white border-0 shadow-2xl rounded-3xl p-8 max-w-sm mx-auto">
+          <DialogContent showCloseButton={false} className="bg-white border-0 shadow-2xl rounded-3xl p-8 max-w-sm mx-auto">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}

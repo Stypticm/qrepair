@@ -37,7 +37,7 @@ const SubmitPage = () => {
                     // Ошибка парсинга phoneSelection
                 }
             }
-            
+
             // Загружаем состояния устройства
             const savedDeviceConditions = sessionStorage.getItem('deviceConditions');
             if (savedDeviceConditions) {
@@ -51,7 +51,7 @@ const SubmitPage = () => {
                     // Ошибка парсинга deviceConditions
                 }
             }
-            
+
             // Загружаем дополнительные состояния
             const savedAdditionalConditions = sessionStorage.getItem('additionalConditions');
             if (savedAdditionalConditions) {
@@ -77,8 +77,37 @@ const SubmitPage = () => {
             if (savedSerialNumber) {
                 setSerialNumber(savedSerialNumber);
             }
+
+            // Если нет данных в sessionStorage, загружаем из БД
+            const hasSessionData = savedPhoneSelection || savedDeviceConditions || savedAdditionalConditions || savedImei || savedSerialNumber;
+
+            if (!hasSessionData && telegramId) {
+                // Загружаем данные из БД
+                fetch('/api/request/getDraft', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ telegramId }),
+                })
+                    .then(response => response.ok ? response.json() : null)
+                    .then(data => {
+                        if (data) {
+                            console.log('Загружаем данные из БД в submit:', data);
+
+                            if (data.modelname) setModel(data.modelname);
+                            if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
+                            if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
+                            if (data.imei) setImei(data.imei);
+                            if (data.sn) setSerialNumber(data.sn);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка загрузки данных из БД:', error);
+                    });
+            }
         }
-    }, [setModel, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber]);
+    }, [setModel, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber, telegramId]);
 
     // Принудительно закрываем любые открытые диалоговые окна при загрузке страницы
     useEffect(() => {
@@ -89,7 +118,7 @@ const SubmitPage = () => {
                 dialog.style.display = 'none';
             }
         });
-        
+
         // Также закрываем элементы с классом dialog
         const dialogElements = document.querySelectorAll('.dialog, [class*="dialog"]');
         dialogElements.forEach(element => {
@@ -97,7 +126,7 @@ const SubmitPage = () => {
                 element.style.display = 'none';
             }
         });
-        
+
         // Убираем backdrop (серый фон)
         const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
         backdrops.forEach(backdrop => {
@@ -111,25 +140,25 @@ const SubmitPage = () => {
     useEffect(() => {
         // Если заявка уже отправлена, не проверяем данные
         if (submitted) return;
-        
+
         // Проверяем наличие основных данных
         const hasBasicData = modelname && telegramId;
-        
+
         // Проверяем наличие данных о состояниях устройства
         const hasDeviceData = deviceConditions && (
-            deviceConditions.front || 
-            deviceConditions.back || 
+            deviceConditions.front ||
+            deviceConditions.back ||
             deviceConditions.side
         );
-        
+
         // Проверяем наличие дополнительных данных
         const hasAdditionalData = additionalConditions && (
-            additionalConditions.faceId || 
-            additionalConditions.touchId || 
-            additionalConditions.backCamera || 
+            additionalConditions.faceId ||
+            additionalConditions.touchId ||
+            additionalConditions.backCamera ||
             additionalConditions.battery
         );
-        
+
         // Данные считаются загруженными, если есть основная модель и хотя бы какие-то данные о состояниях
         if (hasBasicData && (hasDeviceData || hasAdditionalData)) {
             setDataLoaded(true);
@@ -138,38 +167,58 @@ const SubmitPage = () => {
 
     const handleReset = async () => {
         try {
+            console.log('Starting reset process, telegramId:', telegramId);
+            
             // Сбрасываем все состояния
             resetAllStates();
-            
+
             // Сбрасываем навигацию
             setCurrentStep(null);
-            
+
+            // Сбрасываем состояние загрузки данных
+            setDataLoaded(false);
+
             // Очищаем sessionStorage
             if (typeof window !== 'undefined') {
                 sessionStorage.clear();
             }
-            
+
             // Очищаем данные в базе данных
             if (telegramId) {
-                const response = await fetch('/api/request/clearDraft', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ telegramId }),
-                });
-                
-                if (!response.ok) {
-                    console.error('Ошибка очистки данных в БД');
+                console.log('Clearing draft for telegramId:', telegramId);
+                try {
+                    const response = await fetch('/api/request/clearDraft', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ telegramId }),
+                    });
+
+                    console.log('Clear draft response status:', response.status);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.text();
+                        console.error('Ошибка очистки данных в БД:', response.status, errorData);
+                    } else {
+                        const result = await response.json();
+                        console.log('Draft cleared successfully:', result);
+                    }
+                } catch (fetchError) {
+                    console.error('Ошибка при запросе к API clearDraft:', fetchError);
                 }
+            } else {
+                console.warn('No telegramId available for clearing draft');
             }
-            
-            // Переходим к форме
-            router.push('/request/form');
+
+            // Переходим к device-info (первая страница в новой структуре)
+            console.log('Redirecting to device-info');
+            // Используем replace вместо push, чтобы избежать возврата к submit странице
+            router.replace('/request/device-info');
         } catch (error) {
             console.error('Ошибка при сбросе данных:', error);
-            // В случае ошибки всё равно переходим к форме
-            router.push('/request/form');
+            // В случае ошибки всё равно переходим к device-info
+            router.replace('/request/device-info');
         }
     };
 
@@ -179,11 +228,11 @@ const SubmitPage = () => {
 
         try {
             const fullModelName = getFullModelName();
-            
+
             // Логируем отправляемую модель для отладки
             console.log('Sending modelname:', fullModelName);
             console.log('Context modelname:', modelname);
-            
+
             const res = await fetch('/api/request/submit', {
                 method: 'POST',
                 headers: {
@@ -200,13 +249,13 @@ const SubmitPage = () => {
 
             if (res.ok) {
                 const result = await res.json();
-                
+
                 // Сразу помечаем как отправленную, чтобы скрыть страницу
                 setSubmitted(true);
-                
+
                 // Сначала переходим на главную страницу
                 router.push('/');
-                
+
                 // Затем очищаем sessionStorage и сбрасываем состояния
                 setTimeout(() => {
                     if (typeof window !== 'undefined') {
@@ -216,7 +265,7 @@ const SubmitPage = () => {
                         // Устанавливаем флаг, что заявка была отправлена
                         sessionStorage.setItem('requestSubmitted', 'true');
                     }
-                    
+
                     // Сбрасываем все состояния ТОЛЬКО после перехода
                     resetAllStates();
                 }, 100); // Небольшая задержка для плавного перехода
@@ -250,36 +299,36 @@ const SubmitPage = () => {
         if (typeof window !== 'undefined') {
             const savedPhoneSelection = sessionStorage.getItem('phoneSelection');
             console.log('phoneSelection from sessionStorage:', savedPhoneSelection);
-            
+
             if (savedPhoneSelection) {
                 try {
                     const parsed = JSON.parse(savedPhoneSelection);
                     console.log('Parsed phoneSelection:', parsed);
-                    
+
                     let fullModel = `iPhone ${parsed.model}`;
-                    
+
                     if (parsed.variant) {
                         fullModel += ` ${parsed.variant}`;
                     }
-                    
+
                     if (parsed.storage) {
                         fullModel += ` ${parsed.storage}`;
                     }
-                    
+
                     if (parsed.color) {
                         // Получаем цвет из функции getColorLabel
                         const colorLabel = getColorLabel(parsed.color);
                         fullModel += ` ${colorLabel}`;
                     }
-                    
+
                     if (parsed.simType) {
                         fullModel += ` ${parsed.simType}`;
                     }
-                    
+
                     if (parsed.country) {
                         fullModel += ` ${parsed.country.split(' ')[0]}`;
                     }
-                    
+
                     console.log('Generated full model:', fullModel);
                     return fullModel;
                 } catch (e) {
@@ -287,10 +336,12 @@ const SubmitPage = () => {
                 }
             }
         }
-        
+
         // Возвращаем базовую модель если не удалось получить полную
         console.log('Using fallback modelname:', modelname);
-        return modelname || 'Модель не найдена';
+        // Убираем "Apple " из начала названия модели
+        const cleanModelName = modelname ? modelname.replace(/^Apple\s+/, '') : 'Модель не найдена';
+        return cleanModelName;
     };
 
     // Функция для отображения состояния с процентом
@@ -333,9 +384,9 @@ const SubmitPage = () => {
     // Функция для расчета общего процента вычета
     const calculateTotalPenalty = (): number => {
         let totalPenalty = 0;
-        
 
-        
+
+
         // Штрафы за основные состояния устройства
         if (deviceConditions.front) {
             if (deviceConditions.front === 'Новый') totalPenalty += 0;
@@ -343,14 +394,14 @@ const SubmitPage = () => {
             else if (deviceConditions.front === 'Заметные царапины') totalPenalty += -8;
             else if (deviceConditions.front === 'Трещины') totalPenalty += -15;
         }
-        
+
         if (deviceConditions.back) {
             if (deviceConditions.back === 'Новый') totalPenalty += 0;
             else if (deviceConditions.back === 'Очень хорошее') totalPenalty += -3;
             else if (deviceConditions.back === 'Заметные царапины') totalPenalty += -8;
             else if (deviceConditions.back === 'Трещины') totalPenalty += -15;
         }
-        
+
         if (deviceConditions.side) {
             if (deviceConditions.side === 'Новый') totalPenalty += 0;
             else if (deviceConditions.side === 'Очень хорошее') totalPenalty += -3;
@@ -362,25 +413,25 @@ const SubmitPage = () => {
         if (additionalConditions) {
             if (additionalConditions.faceId === 'Работает') totalPenalty += 0;
             else if (additionalConditions.faceId === 'Не работает') totalPenalty += -10;
-            
+
             if (additionalConditions.touchId === 'Работает') totalPenalty += 0;
             else if (additionalConditions.touchId === 'Не работает') totalPenalty += -8;
-            
+
             // Штрафы за заднюю камеру
             if (additionalConditions.backCamera === 'Новый') totalPenalty += 0;
             else if (additionalConditions.backCamera === 'Очень хорошее') totalPenalty += -3;
             else if (additionalConditions.backCamera === 'Заметные царапины') totalPenalty += -8;
             else if (additionalConditions.backCamera === 'Трещины') totalPenalty += -15;
-            
+
             // Штрафы за батарею
             if (additionalConditions.battery === '95%') totalPenalty += 0;
             else if (additionalConditions.battery === '90%') totalPenalty += -2;
             else if (additionalConditions.battery === '85%') totalPenalty += -5;
             else if (additionalConditions.battery === '75%') totalPenalty += -10;
         }
-        
 
-        
+
+
         return Math.abs(totalPenalty);
     };
 
@@ -401,7 +452,7 @@ const SubmitPage = () => {
                     ) : !modelname ? (
                         <div className="w-full max-w-md text-center">
                             <p className="text-red-600">Ошибка: данные заявки не найдены</p>
-                            <Button 
+                            <Button
                                 onClick={() => router.push('/request/form')}
                                 className="mt-4 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white"
                             >
@@ -411,96 +462,96 @@ const SubmitPage = () => {
                     ) : (
                         <div className="w-full max-w-md space-y-6">
 
-                        
-                        {/* Summary заявки */}
-                        <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg">
-                            <h3 className="text-xl font-semibold mb-5 text-center text-gray-900">
-                                Заявка
-                            </h3>
-                            
-                            <div className="space-y-4">
-                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                    <span className="font-semibold text-gray-900 break-words text-lg">{getFullModelName()}</span>
-                                </div>
-                                
-                                                                 <div className="border-t border-gray-200 pt-4">
-                                     <h4 className="font-semibold mb-3 text-gray-900 text-center">Состояние устройства:</h4>
-                                    <div className="space-y-3">
-                                        {/* Основные состояния устройства */}
-                                        {deviceConditions && (
-                                            <>
-                                                {deviceConditions.front && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium flex-shrink-0">Передняя панель:</span>
-                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                            {getConditionWithPenalty(deviceConditions.front)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {deviceConditions.back && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium flex-shrink-0">Задняя панель:</span>
-                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                            {getConditionWithPenalty(deviceConditions.back)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {deviceConditions.side && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium flex-shrink-0">Боковая панель:</span>
-                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                            {getConditionWithPenalty(deviceConditions.side)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
 
-                                        {/* Дополнительные состояния устройства */}
-                                        {additionalConditions && (
-                                            <>
-                                                {additionalConditions.backCamera && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium flex-shrink-0">Задняя камера:</span>
-                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                            {getAdditionalConditionWithPenalty(additionalConditions.backCamera, 'backCamera')}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {additionalConditions.battery && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium flex-shrink-0">Батарея:</span>
-                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                            {getAdditionalConditionWithPenalty(additionalConditions.battery, 'battery')}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {additionalConditions.faceId && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium flex-shrink-0">Face ID:</span>
-                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                            {getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId')}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                {additionalConditions.touchId && (
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-gray-600 font-medium flex-shrink-0">Touch ID:</span>
-                                                        <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                            {getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId')}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
+                            {/* Summary заявки */}
+                            <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg">
+                                <h3 className="text-xl font-semibold mb-5 text-center text-gray-900">
+                                    Заявка
+                                </h3>
+
+                                <div className="space-y-4">
+                                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <span className="font-semibold text-gray-900 break-words text-lg">{getFullModelName()}</span>
                                     </div>
-                                </div>
-                                
-                                                                 <div className="border-t border-gray-200 pt-4">
-                                     <h4 className="font-semibold mb-3 text-gray-900 text-center">Итоговая оценка:</h4>
-                                    <div className="space-y-3">
-                                        {/* Общий процент вычета */}
-                                        {((deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) || 
+
+                                    <div className="border-t border-gray-200 pt-4">
+                                        <h4 className="font-semibold mb-3 text-gray-900 text-center">Состояние устройства:</h4>
+                                        <div className="space-y-3">
+                                            {/* Основные состояния устройства */}
+                                            {deviceConditions && (
+                                                <>
+                                                    {deviceConditions.front && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-600 font-medium flex-shrink-0">Передняя панель:</span>
+                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                                {getConditionWithPenalty(deviceConditions.front)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {deviceConditions.back && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-600 font-medium flex-shrink-0">Задняя панель:</span>
+                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                                {getConditionWithPenalty(deviceConditions.back)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {deviceConditions.side && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-600 font-medium flex-shrink-0">Боковая панель:</span>
+                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                                {getConditionWithPenalty(deviceConditions.side)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+
+                                            {/* Дополнительные состояния устройства */}
+                                            {additionalConditions && (
+                                                <>
+                                                    {additionalConditions.backCamera && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-600 font-medium flex-shrink-0">Задняя камера:</span>
+                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                                {getAdditionalConditionWithPenalty(additionalConditions.backCamera, 'backCamera')}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {additionalConditions.battery && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-600 font-medium flex-shrink-0">Батарея:</span>
+                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                                {getAdditionalConditionWithPenalty(additionalConditions.battery, 'battery')}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {additionalConditions.faceId && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-600 font-medium flex-shrink-0">Face ID:</span>
+                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                                {getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId')}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    {additionalConditions.touchId && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-gray-600 font-medium flex-shrink-0">Touch ID:</span>
+                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
+                                                                {getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId')}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="border-t border-gray-200 pt-4">
+                                        <h4 className="font-semibold mb-3 text-gray-900 text-center">Итоговая оценка:</h4>
+                                        <div className="space-y-3">
+                                            {/* Общий процент вычета */}
+                                            {/* {((deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) || 
                                           (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery))) && (
                                             <div className="flex justify-between items-center">
                                                 <span className="font-semibold text-gray-900 flex-shrink-0">Общий вычет:</span>
@@ -508,37 +559,37 @@ const SubmitPage = () => {
                                                     {calculateTotalPenalty() === 0 ? '0%' : `${calculateTotalPenalty()}%`}
                                                 </span>
                                             </div>
-                                        )}
-                                        
-                                        <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
-                                            <span className="font-semibold text-gray-900 flex-shrink-0">Итоговая цена:</span>
-                                            <span className="font-bold text-xl text-green-600 ml-2 flex-1 text-right">{finalPrice.toLocaleString()} ₽</span>
+                                        )} */}
+
+                                            <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+                                                <span className="font-semibold text-gray-900 flex-shrink-0">Предварительная цена:</span>
+                                                <span className="font-bold text-xl text-green-600 ml-2 flex-1 text-right">{finalPrice.toLocaleString()} ₽</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Кнопки */}
-                        <div className="w-full space-y-6">
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={submitting || !modelname}
-                                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-                            >
-                                {submitting ? 'Отправляем...' : 'Отправить заявку'}
-                            </Button>
-                            
-                            <Button
-                                onClick={() => setShowResetDialog(true)}
-                                variant="outline"
-                                className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-                            >
-                                Начать заново
-                            </Button>
+                            {/* Кнопки */}
+                            <div className="w-full flex flex-col gap-2">
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={submitting || !modelname}
+                                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                >
+                                    {submitting ? 'Отправляем...' : 'Отправить заявку'}
+                                </Button>
+
+                                <Button
+                                    onClick={() => setShowResetDialog(true)}
+                                    variant="outline"
+                                    className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                                >
+                                    Начать заново
+                                </Button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
                 </div>
             </div>
 

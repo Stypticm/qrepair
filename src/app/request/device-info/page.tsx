@@ -7,6 +7,7 @@ import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useNavigation } from '@/components/NavigationContext/NavigationContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { WelcomeModal } from '@/components/ui/welcome-modal';
@@ -28,6 +29,9 @@ export default function DeviceInfoPage() {
     
     // Состояние для приветственного экрана
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+    
+    // Состояние диалогового окна
+    const [showDialog, setShowDialog] = useState(false);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -48,14 +52,28 @@ export default function DeviceInfoPage() {
         const hasExistingData = serialNumber || 
             (typeof window !== 'undefined' && sessionStorage.getItem('phoneSelection'));
         
+        // Проверяем, не показывали ли уже приветствие в этой сессии
+        const hasSeenWelcome = typeof window !== 'undefined' && 
+            sessionStorage.getItem('hasSeenWelcome');
+        
+        // Если нет данных, но есть флаг приветствия - значит был сброс, показываем приветствие
         if (!hasExistingData) {
-            // Показываем приветственный экран для новых пользователей
-            setShowWelcomeModal(true);
+            if (!hasSeenWelcome) {
+                // Показываем приветственный экран для новых пользователей
+                setShowWelcomeModal(true);
+                // Отмечаем, что пользователь уже видел приветствие
+                if (typeof window !== 'undefined') {
+                    sessionStorage.setItem('hasSeenWelcome', 'true');
+                }
+            } else {
+                // Если был сброс данных, но флаг остался - показываем приветствие
+                setShowWelcomeModal(true);
+            }
         }
     }, [serialNumber]);
 
     // Шаги для прогресс-бара
-    const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
+    const steps = ['Серийный номер', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
@@ -82,22 +100,42 @@ export default function DeviceInfoPage() {
         setManualSerialNumber(value);
         setError('');
         
-        if (value.length === 0) {
-            setIsValid(false);
-        } else if (validateSerialNumber(value)) {
-            setIsValid(true);
-        } else {
-            setIsValid(false);
-        }
+        // Кнопка всегда активна, если есть хотя бы один символ
+        setIsValid(value.length > 0);
     };
 
     // Обработчик подтверждения
     const handleConfirm = async () => {
-        if (!isValid || !manualSerialNumber) {
-            setError('Пожалуйста, введите корректный серийный номер');
+        if (!manualSerialNumber) {
+            setError('Пожалуйста, введите серийный номер');
             return;
         }
 
+        // Проверяем длину
+        if (manualSerialNumber.length < 10) {
+            setError('Серийный номер должен содержать минимум 10 символов');
+            return;
+        }
+
+        if (manualSerialNumber.length > 12) {
+            setError('Серийный номер должен содержать максимум 12 символов');
+            return;
+        }
+
+        // Проверяем валидность серийного номера
+        if (!validateSerialNumber(manualSerialNumber)) {
+            setError('Серийный номер должен содержать только буквы и цифры');
+            return;
+        }
+
+        // Показываем диалоговое окно
+        setShowDialog(true);
+    };
+
+    // Обработчики диалогового окна
+    const handleContinue = async () => {
+        setShowDialog(false);
+        
         try {
             // Сохраняем в контекст
             setSerialNumber(manualSerialNumber);
@@ -126,6 +164,10 @@ export default function DeviceInfoPage() {
         }
     };
 
+    const handleEdit = () => {
+        setShowDialog(false);
+    };
+
     return (
         <Page back={true}>
             <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
@@ -138,39 +180,24 @@ export default function DeviceInfoPage() {
                     />
                 </div>
 
-                <div className="flex-1 p-4 pt-2 flex flex-col overflow-y-auto">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
-
-                        {/* Заголовок */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-center"
-                        >
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                                Серийный номер
-                            </h2>
-                            <p className="text-sm text-gray-500">
-                                Введите серийный номер устройства
-                            </p>
-                        </motion.div>
+                <div className="flex-1 p-3 pt-1 flex flex-col overflow-y-auto">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-3 pb-2">
 
                         {/* Инструкция */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2, delay: 0.1 }}
+                            transition={{ duration: 0.2 }}
                         >
                             <Card className="bg-blue-50 border-blue-200">
-                                <CardContent className="p-4">
-                                    <div className="flex items-start space-x-3">
-                                        <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <CardContent className="p-3">
+                                    <div className="flex items-start space-x-2">
+                                        <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                                             <span className="text-white text-xs">ℹ️</span>
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-blue-900 mb-2">Где найти серийный номер?</h4>
-                                            <div className="text-sm text-blue-800 space-y-1">
+                                            <h4 className="font-semibold text-blue-900 mb-1 text-sm">Где найти серийный номер?</h4>
+                                            <div className="text-sm text-blue-800 space-y-0.5">
                                                 <p>• Настройки → Основные → Об этом устройстве</p>
                                                 <p>• На коробке устройства</p>
                                                 <p>• На задней панели (для старых моделей)</p>
@@ -186,13 +213,13 @@ export default function DeviceInfoPage() {
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2, delay: 0.2 }}
+                            transition={{ duration: 0.2, delay: 0.1 }}
                         >
                             <Card className="bg-white border-gray-200">
-                                <CardContent className="p-4">
-                                    <div className="space-y-3">
+                                <CardContent className="p-3">
+                                    <div className="space-y-2">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 Серийный номер
                                             </label>
                                             <input
@@ -200,28 +227,18 @@ export default function DeviceInfoPage() {
                                                 value={manualSerialNumber}
                                                 onChange={(e) => handleInputChange(e.target.value.toUpperCase())}
                                                 placeholder="Введите серийный номер"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm"
                                                 maxLength={12}
                                             />
                                         </div>
                                         
                                         {error && (
-                                            <div className="text-red-600 text-sm">
+                                            <div className="text-red-600 text-xs">
                                                 {error}
                                             </div>
                                         )}
                                         
-                                        {manualSerialNumber && !isValid && (
-                                            <div className="text-orange-600 text-sm">
-                                                Серийный номер должен содержать 10-12 символов (буквы и цифры)
-                                            </div>
-                                        )}
-                                        
-                                        {isValid && (
-                                            <div className="text-green-600 text-sm">
-                                                ✓ Серийный номер корректен
-                                            </div>
-                                        )}
+
                                     </div>
                                 </CardContent>
                             </Card>
@@ -235,8 +252,8 @@ export default function DeviceInfoPage() {
                         >
                             <Button
                                 onClick={handleConfirm}
-                                disabled={!isValid}
-                                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!manualSerialNumber}
+                                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                             >
                                 Продолжить
                             </Button>
@@ -250,14 +267,47 @@ export default function DeviceInfoPage() {
                 isOpen={showWelcomeModal}
                 onClose={() => {
                     setShowWelcomeModal(false);
-                    // Если пользователь закрыл модал крестиком, возвращаем на главную
-                    router.push('/');
+                    // Крестика больше нет, поэтому эта функция не будет вызываться
                 }}
                 onStart={() => {
                     setShowWelcomeModal(false);
                     // Если пользователь нажал "Начать оценку", остаемся на странице
                 }}
             />
+
+            {/* Диалоговое окно с подтверждением */}
+            <Dialog open={showDialog} onOpenChange={handleEdit}>
+                <DialogContent
+                    className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    onClick={handleContinue}
+                    showCloseButton={false}
+                >
+                    <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-3">
+                        📱 Подтверждение серийного номера
+                    </DialogTitle>
+
+                    <div className="text-center">
+                        {/* Рамка для серийного номера */}
+                        <div className="bg-[#2dc2c6]/10 rounded-2xl p-4 border border-[#2dc2c6] shadow-lg mb-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 font-medium text-sm">Серийный номер:</span>
+                                    <span className="font-semibold text-gray-900 text-right break-words text-sm">
+                                        {manualSerialNumber}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="text-center text-sm text-gray-600 mt-4">
+                            👆 Нажмите на окно для перехода к следующему шагу
+                        </p>
+                        <p className="text-center text-sm text-gray-600 mt-1">
+                            ✏️ Нажмите вне поля, если хотите отредактировать серийный номер
+                        </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </Page>
     );
 }

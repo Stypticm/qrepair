@@ -74,6 +74,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             sessionStorage.removeItem('serialNumber');
             sessionStorage.removeItem('deviceConditions');
             sessionStorage.removeItem('additionalConditions');
+            sessionStorage.removeItem('hasSeenWelcome'); // Сбрасываем флаг приветствия
             console.log('sessionStorage очищен');
         }
         
