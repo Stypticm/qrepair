@@ -64,7 +64,7 @@ const RequestById = () => {
             setOtpCode(newOtp);
 
             // Отправляем OTP клиенту в Telegram
-            const message = `🔐 **OTP код для проверки устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n🔢 **Ваш OTP код:** \`${newOtp}\`\n\n💡 **Инструкция:**\n1️⃣ Скачайте приложение **QRepair** из App Store/Google Play\n2️⃣ Откройте приложение\n3️⃣ Введите ID заявки: \`${application.id}\`\n4️⃣ Введите имя мастера: \`${(application as any).courierTelegramId}\`\n5️⃣ Введите OTP код: \`${newOtp}\`\n\n⏰ **Код действителен 15 минут**\n\n🔐 **Безопасно:** код отправлен только вам`;
+            const message = `🔐 **OTP код для проверки устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n🔢 **Ваш OTP код:** \`${newOtp}\`\n\n💡 **Инструкция:**\n1️⃣ Скачайте приложение **Qoqos** из App Store/Google Play\n2️⃣ Откройте приложение\n3️⃣ Введите ID заявки: \`${application.id}\`\n4️⃣ Введите имя мастера: \`${(application as any).courierTelegramId}\`\n5️⃣ Введите OTP код: \`${newOtp}\`\n\n⏰ **Код действителен 15 минут**\n\n🔐 **Безопасно:** код отправлен только вам`;
 
             const response = await fetch('/api/telegram/send-message', {
                 method: 'POST',
@@ -171,7 +171,7 @@ const RequestById = () => {
         }
 
         try {
-            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n💡 **Нажмите на ID выше, чтобы скопировать**\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **QRepair** из App Store/Google Play\n2️⃣ Откройте приложение\n3️⃣ Введите ID заявки: \`${application.id}\`\n4️⃣ Введите имя мастера: \`${(application as any).courierTelegramId}\`\n5️⃣ **Дождитесь OTP код** от мастера\n6️⃣ Введите OTP код в приложение\n7️⃣ **Мастер проведет тест** устройства\n8️⃣ Вы наблюдаете и подтверждаете результаты\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** OTP код отправляется только вам\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
+            const message = `🔍 **Полная проверка устройства**\n\n📋 **ID заявки:** \`${application.id}\`\n💡 **Нажмите на ID выше, чтобы скопировать**\n👨‍🔧 **Мастер:** @${(application as any).courierTelegramId}\n\n📱 **Инструкция для клиента:**\n1️⃣ Скачайте приложение **Qoqos** из App Store/Google Play\n2️⃣ Откройте приложение\n3️⃣ Введите ID заявки: \`${application.id}\`\n4️⃣ Введите имя мастера: \`${(application as any).courierTelegramId}\`\n5️⃣ **Дождитесь OTP код** от мастера\n6️⃣ Введите OTP код в приложение\n7️⃣ **Мастер проведет тест** устройства\n8️⃣ Вы наблюдаете и подтверждаете результаты\n\n💡 **Зачем это нужно:**\n• Точная оценка стоимости\n• Профессиональная проверка\n• Справедливая цена\n\n⏰ **Время:** ~5-10 минут\n\n🔐 **Безопасно:** OTP код отправляется только вам\n\nℹ️ **Важно:** Тест проводит мастер, вы только присутствуете при проверке`;
 
             const response = await fetch('/api/telegram/send-message', {
                 method: 'POST',
