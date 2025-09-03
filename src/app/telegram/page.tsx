@@ -34,9 +34,11 @@ export default function TelegramRedirectPage() {
   }, [router]);
 
   const handleOpenTelegram = () => {
-    // Ссылка на вашего бота (замените на реальную)
-    const botUrl = 'https://t.me/t.me/QRepairBot/QRepair';
-    window.open(botUrl, '_blank');
+    // Ссылка на вашего бота
+    const botUrl = 'https://t.me/QRepairBot/QRepair';
+    if (typeof window !== 'undefined') {
+      window.open(botUrl, '_blank');
+    }
   };
 
 
