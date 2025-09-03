@@ -25,6 +25,7 @@ export default function Home() {
   const { forceFullscreen, isFullscreen } = useSafeArea();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -43,23 +44,19 @@ export default function Home() {
 
   // Проверяем сохраненные данные и перенаправляем на нужный шаг
   useEffect(() => {
-    // Небольшая задержка для стабильности
-    const timer = setTimeout(() => {
-      // Проверяем, запущено ли приложение в Telegram
-      const isInTelegram = typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp;
-      
-      // Если пользователь зашел через браузер (не из Telegram), перенаправляем на страницу-редирект
-      if (!isInTelegram) {
-        router.push('/telegram');
-        return;
+    // Проверяем, запущено ли приложение в Telegram
+    const checkTelegram = () => {
+      if (typeof window !== 'undefined') {
+        const inTelegram = !!(window as any).Telegram?.WebApp;
+        setIsInTelegram(inTelegram);
+        setIsLoading(false);
       }
-      
-      // Просто убираем загрузку при инициализации
-      setIsLoading(false);
-    }, 100);
+    };
 
+    // Небольшая задержка для стабильности
+    const timer = setTimeout(checkTelegram, 100);
     return () => clearTimeout(timer);
-  }, [router]);
+  }, []);
 
 
 
@@ -178,7 +175,7 @@ export default function Home() {
 
 
   // Показываем загрузку пока проверяем сохраненные данные
-  if (isLoading) {
+  if (isLoading || isInTelegram === null) {
     return (
       <AdaptiveContainer>
         <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
@@ -212,6 +209,12 @@ export default function Home() {
         </div>
       </AdaptiveContainer>
     );
+  }
+
+  // Если пользователь НЕ в Telegram, показываем страницу-редирект
+  if (isInTelegram === false) {
+    router.push('/telegram');
+    return null;
   }
 
   return (
