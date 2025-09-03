@@ -8,8 +8,14 @@ import { TelegramFullScreen } from '../TelegramFullScreen';
 
 export function ClientLayoutContent({ children }: PropsWithChildren) {
   useEffect(() => {
-    // Инициализируем Telegram SDK
-    init();
+    // Инициализируем Telegram SDK только если мы в Telegram WebApp
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      try {
+        init();
+      } catch (error) {
+        console.log('Telegram SDK init error (ignored):', error);
+      }
+    }
   }, []);
 
   return (

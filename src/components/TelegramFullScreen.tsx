@@ -11,7 +11,7 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    if (miniApp && miniApp.isSupported()) {
+    if (typeof window !== 'undefined' && miniApp && miniApp.isSupported()) {
       // Принудительное fullscreen
       const requestFull = () => {
         try {
