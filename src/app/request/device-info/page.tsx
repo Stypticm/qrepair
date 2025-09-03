@@ -32,6 +32,10 @@ export default function DeviceInfoPage() {
     
     // Состояние диалогового окна
     const [showDialog, setShowDialog] = useState(false);
+    
+    // Состояние диалогового окна с ошибкой
+    const [showErrorDialog, setShowErrorDialog] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -107,24 +111,28 @@ export default function DeviceInfoPage() {
     // Обработчик подтверждения
     const handleConfirm = async () => {
         if (!manualSerialNumber) {
-            setError('Пожалуйста, введите серийный номер');
+            setErrorMessage('Пожалуйста, введите серийный номер');
+            setShowErrorDialog(true);
             return;
         }
 
         // Проверяем длину
         if (manualSerialNumber.length < 10) {
-            setError('Серийный номер должен содержать минимум 10 символов');
+            setErrorMessage('Введён некорректный серийный номер');
+            setShowErrorDialog(true);
             return;
         }
 
         if (manualSerialNumber.length > 12) {
-            setError('Серийный номер должен содержать максимум 12 символов');
+            setErrorMessage('Введён некорректный серийный номер');
+            setShowErrorDialog(true);
             return;
         }
 
         // Проверяем валидность серийного номера
         if (!validateSerialNumber(manualSerialNumber)) {
-            setError('Серийный номер должен содержать только буквы и цифры');
+            setErrorMessage('Введён некорректный серийный номер');
+            setShowErrorDialog(true);
             return;
         }
 
@@ -232,11 +240,7 @@ export default function DeviceInfoPage() {
                                             />
                                         </div>
                                         
-                                        {error && (
-                                            <div className="text-red-600 text-xs">
-                                                {error}
-                                            </div>
-                                        )}
+
                                         
 
                                     </div>
@@ -305,6 +309,31 @@ export default function DeviceInfoPage() {
                         <p className="text-center text-sm text-gray-600 mt-1">
                             ✏️ Нажмите вне поля, если хотите отредактировать серийный номер
                         </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Диалоговое окно с ошибкой */}
+            <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+                <DialogContent
+                    className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    showCloseButton={false}
+                >
+                    <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-3">
+                        ⚠️ Ошибка
+                    </DialogTitle>
+
+                    <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-4">
+                            {errorMessage}
+                        </p>
+
+                        <Button
+                            onClick={() => setShowErrorDialog(false)}
+                            className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-2.5 rounded-lg transition-colors text-sm"
+                        >
+                            Понятно
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>
