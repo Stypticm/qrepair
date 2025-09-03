@@ -85,12 +85,22 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       }
     }
 
-    // Telegram режим - используем полный экран
-    return {
-      container: `min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen`,
-      main: 'flex-1 w-full p-4',
-      wrapper: 'w-full',
-    };
+    // Telegram режим - адаптивный размер
+    if (isDesktop) {
+      // На десктопе - ограниченный размер
+      return {
+        container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
+        main: 'flex-1 w-full max-w-2xl shadow-lg bg-white rounded-2xl',
+        wrapper: 'w-full max-w-2xl mx-auto p-4',
+      };
+    } else {
+      // На мобильных - полный экран
+      return {
+        container: `min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen`,
+        main: 'flex-1 w-full p-4',
+        wrapper: 'w-full',
+      };
+    }
   };
 
   const styles = getContainerStyles();
