@@ -63,7 +63,8 @@ export default function Home() {
         const isWebApp = hasTelegramWebApp && (
           hasUrlParams || 
           window.location.href.includes('mode=fullscreen') ||
-          (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param
+          (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param ||
+          (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id
         );
         
         // В Telegram WebApp должен быть объект Telegram.WebApp И специальные параметры
@@ -73,6 +74,10 @@ export default function Home() {
           'Telegram.WebApp': hasTelegramWebApp,
           'TelegramWebviewProxy': hasTelegramWebviewProxy,
           'URL Parameters': hasUrlParams,
+          'Has mode=fullscreen': window.location.href.includes('mode=fullscreen'),
+          'Has start_param': !!(window as any).Telegram?.WebApp?.initDataUnsafe?.start_param,
+          'Has user.id': !!(window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id,
+          'initDataUnsafe': (window as any).Telegram?.WebApp?.initDataUnsafe,
           'Is WebApp': isWebApp,
           'URL': window.location.href,
           'Final Result': inTelegram,
