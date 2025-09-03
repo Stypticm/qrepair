@@ -50,25 +50,11 @@ export default function Home() {
     // Проверяем, запущено ли приложение в Telegram
     const checkTelegram = () => {
       if (typeof window !== 'undefined') {
-        // Проверяем Telegram WebApp - основная проверка через объект Telegram
+        // Проверяем Telegram WebApp
         const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
-        const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
         
-        // Проверяем URL параметры
-        const hasUrlParams = window.location.href.includes('tgWebAppPlatform') ||
-                            window.location.href.includes('tgWebAppData') ||
-                            window.location.href.includes('tgWebAppVersion');
-        
-        // Проверяем, что это именно WebApp, а не просто ссылка в Telegram
-        const isWebApp = hasTelegramWebApp && (
-          hasUrlParams || 
-          window.location.href.includes('mode=fullscreen') ||
-          (window as any).Telegram?.WebApp?.initDataUnsafe?.start_param ||
-          (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id
-        );
-        
-        // В Telegram WebApp должен быть объект Telegram.WebApp И специальные параметры
-        const inTelegram = isWebApp;
+        // Если есть Telegram.WebApp, то это WebApp
+        const inTelegram = hasTelegramWebApp;
         
         setIsInTelegram(inTelegram);
         setIsLoading(false);
