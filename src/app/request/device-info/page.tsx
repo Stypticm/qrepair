@@ -15,6 +15,7 @@ import { WelcomeModal } from '@/components/ui/welcome-modal';
 export default function DeviceInfoPage() {
     const {
         telegramId,
+        username,
         serialNumber,
         setSerialNumber,
         resetAllStates
@@ -156,6 +157,7 @@ export default function DeviceInfoPage() {
                 },
                 body: JSON.stringify({
                     telegramId,
+                    username: username || 'Unknown',
                     serialNumber: manualSerialNumber,
                 }),
             });

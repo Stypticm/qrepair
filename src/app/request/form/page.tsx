@@ -683,6 +683,7 @@ export default function FormPage() {
                         },
                         body: JSON.stringify({
                             telegramId,
+                            username: username || 'Unknown',
                             currentStep: 'condition',
                         }),
                     });

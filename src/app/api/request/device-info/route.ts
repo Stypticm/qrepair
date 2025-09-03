@@ -4,7 +4,7 @@ import prisma from '@/core/lib/prisma'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { telegramId, serialNumber } = body
+    const { telegramId, username, serialNumber } = body
 
     if (!telegramId || !serialNumber) {
       return NextResponse.json(
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
       const updatedRequest = await prisma.skupka.update({
         where: { id: existingRequest.id },
         data: {
+          username: username || existingRequest.username,
           sn: serialNumber,
           currentStep: 'device-info',
           updatedAt: new Date(),
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
       const newRequest = await prisma.skupka.create({
         data: {
           telegramId: telegramId,
-          username: '', // Будет заполнено позже
+          username: username || 'Unknown',
           sn: serialNumber,
           status: 'draft',
           currentStep: 'device-info',
