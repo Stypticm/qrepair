@@ -55,10 +55,12 @@ export default function Home() {
         const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
         const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
         
-        // Проверяем URL параметры (дополнительная проверка)
+        // Проверяем URL параметры (в query или hash)
         const hasUrlParams = window.location.href.includes('tgWebAppPlatform') ||
                             window.location.href.includes('tgWebAppData') ||
-                            window.location.href.includes('tgWebAppVersion');
+                            window.location.href.includes('tgWebAppVersion') ||
+                            window.location.href.includes('tgWebAppBotInline') ||
+                            window.location.href.includes('tgWebAppFullscreen');
         
         // Проверяем, что это именно WebApp, а не просто ссылка в Telegram
         const isWebApp = hasTelegramWebApp && (
@@ -264,6 +266,8 @@ export default function Home() {
           <div className="font-bold">🔍 DEBUG INFO:</div>
           <div>Telegram.WebApp: {debugInfo['Telegram.WebApp'] ? '✅' : '❌'}</div>
           <div>URL Params: {debugInfo['URL Parameters'] ? '✅' : '❌'}</div>
+          <div>tgWebAppData: {debugInfo['URL']?.includes('tgWebAppData') ? '✅' : '❌'}</div>
+          <div>tgWebAppPlatform: {debugInfo['URL']?.includes('tgWebAppPlatform') ? '✅' : '❌'}</div>
           <div>mode=fullscreen: {debugInfo['Has mode=fullscreen'] ? '✅' : '❌'}</div>
           <div>start_param: {debugInfo['Has start_param'] ? '✅' : '❌'}</div>
           <div>user.id: {debugInfo['Has user.id'] ? '✅' : '❌'}</div>
