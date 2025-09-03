@@ -69,7 +69,7 @@ export default function Home() {
         );
         
         // В Telegram WebApp должен быть объект Telegram.WebApp И специальные параметры
-        const inTelegram = isWebApp || hasTelegramWebviewProxy;
+        const inTelegram = isWebApp;
         
         const debugData = {
           'Telegram.WebApp': hasTelegramWebApp,
