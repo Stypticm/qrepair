@@ -25,7 +25,6 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
   const router = useRouter();
   
   // Условно вызываем useSafeArea только если мы в Telegram
@@ -55,12 +54,10 @@ export default function Home() {
         const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
         const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
         
-        // Проверяем URL параметры (в query или hash)
+        // Проверяем URL параметры
         const hasUrlParams = window.location.href.includes('tgWebAppPlatform') ||
                             window.location.href.includes('tgWebAppData') ||
-                            window.location.href.includes('tgWebAppVersion') ||
-                            window.location.href.includes('tgWebAppBotInline') ||
-                            window.location.href.includes('tgWebAppFullscreen');
+                            window.location.href.includes('tgWebAppVersion');
         
         // Проверяем, что это именно WebApp, а не просто ссылка в Telegram
         const isWebApp = hasTelegramWebApp && (
@@ -72,22 +69,6 @@ export default function Home() {
         
         // В Telegram WebApp должен быть объект Telegram.WebApp И специальные параметры
         const inTelegram = isWebApp;
-        
-        const debugData = {
-          'Telegram.WebApp': hasTelegramWebApp,
-          'TelegramWebviewProxy': hasTelegramWebviewProxy,
-          'URL Parameters': hasUrlParams,
-          'Has mode=fullscreen': window.location.href.includes('mode=fullscreen'),
-          'Has start_param': !!(window as any).Telegram?.WebApp?.initDataUnsafe?.start_param,
-          'Has user.id': !!(window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id,
-          'Is WebApp': isWebApp,
-          'URL': window.location.href,
-          'Final Result': inTelegram,
-          'Action': inTelegram ? '🚀 Show WebApp' : '🌐 Redirect to Telegram page'
-        };
-        
-        console.log('🔍 Telegram WebApp Detection:', debugData);
-        setDebugInfo(debugData);
         
         setIsInTelegram(inTelegram);
         setIsLoading(false);
@@ -260,23 +241,7 @@ export default function Home() {
 
   return (
     <AdaptiveContainer>
-      {/* Отладочная информация */}
-      {debugInfo && (
-        <div className="fixed top-0 left-0 bg-red-500 text-white text-xs p-2 z-50 rounded-br max-w-sm">
-          <div className="font-bold">🔍 DEBUG INFO:</div>
-          <div>Telegram.WebApp: {debugInfo['Telegram.WebApp'] ? '✅' : '❌'}</div>
-          <div>URL Params: {debugInfo['URL Parameters'] ? '✅' : '❌'}</div>
-          <div>tgWebAppData: {debugInfo['URL']?.includes('tgWebAppData') ? '✅' : '❌'}</div>
-          <div>tgWebAppPlatform: {debugInfo['URL']?.includes('tgWebAppPlatform') ? '✅' : '❌'}</div>
-          <div>mode=fullscreen: {debugInfo['Has mode=fullscreen'] ? '✅' : '❌'}</div>
-          <div>start_param: {debugInfo['Has start_param'] ? '✅' : '❌'}</div>
-          <div>user.id: {debugInfo['Has user.id'] ? '✅' : '❌'}</div>
-          <div>Is WebApp: {debugInfo['Is WebApp'] ? '✅' : '❌'}</div>
-          <div>Final Result: {debugInfo['Final Result'] ? '✅' : '❌'}</div>
-          <div>Action: {debugInfo['Action']}</div>
-          <div className="text-xs break-all">URL: {debugInfo['URL']}</div>
-        </div>
-      )}
+
       
       <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50 pt-20">
         <div className="w-full max-w-md mx-auto text-center space-y-8">
