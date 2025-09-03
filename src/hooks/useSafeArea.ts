@@ -27,7 +27,11 @@ export function useSafeArea() {
 
   // Функция для принудительного полноэкранного режима
   const forceFullscreen = useCallback(() => {
-    if (!window.Telegram?.WebApp) {
+    // Проверяем, что мы в Telegram WebApp
+    if (
+      typeof window === 'undefined' ||
+      !window.Telegram?.WebApp
+    ) {
       console.log(
         'No Telegram WebApp context available at',
         new Date().toISOString()
@@ -132,6 +136,9 @@ export function useSafeArea() {
 
   useEffect(() => {
     if (!isMounted) return
+
+    // Проверяем, что мы в браузере
+    if (typeof window === 'undefined') return
 
     // Проверяем, действительно ли мы в Telegram WebApp
     const isInTelegram = !!(

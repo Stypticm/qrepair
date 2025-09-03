@@ -27,7 +27,9 @@ export default function Home() {
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const router = useRouter();
   
-  const { forceFullscreen, isFullscreen } = useSafeArea();
+  // Условно вызываем useSafeArea только если мы в Telegram
+  const safeAreaHook = useSafeArea();
+  const { forceFullscreen, isFullscreen } = safeAreaHook;
 
   useEffect(() => {
     // Принудительно вызываем fullscreen при загрузке страницы только если мы в Telegram
