@@ -26,10 +26,11 @@ export async function PATCH(req: Request) {
 
     const updated = await prisma.skupka.update({
       where: { id: draft.id },
-      data: { modelname: modelname.trim() },
+      data: {
+        modelname: modelname.trim(),
+        currentStep: 'form',
+      },
     })
-
-
 
     return NextResponse.json({ success: true, updated })
   } catch (error) {

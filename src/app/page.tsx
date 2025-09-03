@@ -107,31 +107,6 @@ export default function Home() {
       if (currentStep) {
         switch (currentStep) {
           case 'device-info':
-            if (imei && serialNumber) {
-              router.push('/request/form');
-            } else {
-              router.push('/request/device-info');
-            }
-            return;
-          case 'form':
-            router.push('/request/condition');
-            return;
-          case 'condition':
-            router.push('/request/additional-condition');
-            return;
-          case 'additional-condition':
-            router.push('/request/submit');
-            return;
-          default:
-            break;
-        }
-      }
-
-      // 5. Fallback: определяем шаг на основе сохраненных данных
-      // Если есть currentStep в БД, используем его
-      if (draftData?.currentStep) {
-        switch (draftData.currentStep) {
-          case 'device-info':
             router.push('/request/device-info');
             return;
           case 'form':
@@ -146,8 +121,12 @@ export default function Home() {
           case 'submit':
             router.push('/request/submit');
             return;
+          default:
+            break;
         }
       }
+
+      // 5. Fallback: определяем шаг на основе сохраненных данных
       
       // Если нет currentStep, определяем по заполненным данным
       if (imei && serialNumber && modelname && deviceConditions && additionalConditions) {

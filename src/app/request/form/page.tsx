@@ -671,9 +671,26 @@ export default function FormPage() {
         return colorMap[color] || '#808080';
     };
 
-    const handleContinueToNext = () => {
+    const handleContinueToNext = async () => {
         if (matchingPhone) {
-            // Модель уже сохранена в контексте через useEffect
+            // Обновляем currentStep в БД перед переходом
+            if (telegramId) {
+                try {
+                    await fetch('/api/request/choose', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            telegramId,
+                            currentStep: 'condition',
+                        }),
+                    });
+                } catch (error) {
+                    console.error('Ошибка обновления currentStep:', error);
+                }
+            }
+            
             // Переходим на страницу выбора состояния
             router.push('/request/condition');
         }
