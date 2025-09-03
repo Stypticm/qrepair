@@ -47,14 +47,32 @@ export default function Home() {
     // Проверяем, запущено ли приложение в Telegram
     const checkTelegram = () => {
       if (typeof window !== 'undefined') {
-        const inTelegram = !!(window as any).Telegram?.WebApp;
+        // Более надежная проверка Telegram WebApp
+        const inTelegram = !!(
+          (window as any).Telegram?.WebApp || 
+          (window as any).TelegramWebviewProxy ||
+          window.location.href.includes('tgWebAppPlatform') ||
+          window.location.href.includes('tgWebAppData') ||
+          window.location.href.includes('tgWebAppVersion')
+        );
+        
+        console.log('Telegram detection:', {
+          Telegram: !!(window as any).Telegram?.WebApp,
+          TelegramWebviewProxy: !!(window as any).TelegramWebviewProxy,
+          tgWebAppPlatform: window.location.href.includes('tgWebAppPlatform'),
+          tgWebAppData: window.location.href.includes('tgWebAppData'),
+          tgWebAppVersion: window.location.href.includes('tgWebAppVersion'),
+          url: window.location.href,
+          result: inTelegram
+        });
+        
         setIsInTelegram(inTelegram);
         setIsLoading(false);
       }
     };
 
-    // Небольшая задержка для стабильности
-    const timer = setTimeout(checkTelegram, 100);
+    // Увеличиваем задержку для более надежной проверки
+    const timer = setTimeout(checkTelegram, 500);
     return () => clearTimeout(timer);
   }, []);
 
