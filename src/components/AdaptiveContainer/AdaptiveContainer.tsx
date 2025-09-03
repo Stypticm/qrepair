@@ -37,7 +37,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     checkDevice();
 
     // Проверяем, открыто ли приложение через Menu Button
-    if (window.Telegram?.WebApp) {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp;
       const isMenuButtonContext = !webApp.initDataUnsafe?.start_param;
       setIsMenuButton(isMenuButtonContext);

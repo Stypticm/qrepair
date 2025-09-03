@@ -13,7 +13,7 @@ export function useChatContext() {
   useEffect(() => {
     if (!isMounted) return
 
-    if (window.Telegram?.WebApp) {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp
       
       // Определяем контекст запуска

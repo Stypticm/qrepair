@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.0.67'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.0.68'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -36,7 +36,7 @@ export function useSafeArea() {
 
   // Функция для принудительного полноэкранного режима
   const forceFullscreen = useCallback(() => {
-    if (window.Telegram?.WebApp) {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp
       console.log(
         'Attempting to request fullscreen at',
@@ -84,7 +84,7 @@ export function useSafeArea() {
   useEffect(() => {
     if (!isMounted) return
 
-    if (window.Telegram?.WebApp) {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
