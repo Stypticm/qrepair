@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { WelcomeModal } from '@/components/ui/welcome-modal';
+import { getPictureUrl } from '@/core/lib/assets';
 
 export default function DeviceInfoPage() {
     const {
@@ -206,7 +207,7 @@ export default function DeviceInfoPage() {
                                         <div className="text-center">
                                             <div className="w-full max-w-xs mx-auto mb-3">
                                                 <Image 
-                                                    src="/animation.gif" 
+                                                    src={getPictureUrl('animation.gif') || '/animation.gif'}
                                                     alt="Инструкция по поиску серийного номера"
                                                     width={300}
                                                     height={200}
