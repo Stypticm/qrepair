@@ -46,8 +46,7 @@ export default function FormPage() {
             // Очищаем sessionStorage для новой заявки
             sessionStorage.removeItem('phoneSelection');
 
-            // Показываем приветственный экран для новых пользователей
-            setShowWelcomeModal(true);
+            // Приветственный экран теперь показывается на device-info странице
         } else {
             console.log('Продолжение заявки - оставляем состояния');
         }
@@ -128,8 +127,7 @@ export default function FormPage() {
     // Состояние для диалогового окна
     const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
-    // Состояние для приветственного экрана
-    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
 
     // Шаги для прогресс-бара
     const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
@@ -983,19 +981,7 @@ export default function FormPage() {
                             </DialogContent>
                         </Dialog>
 
-                        {/* Приветственный экран */}
-                        <WelcomeModal
-                            isOpen={showWelcomeModal}
-                            onClose={() => {
-                                setShowWelcomeModal(false);
-                                // Если пользователь закрыл модал крестиком, возвращаем на главную
-                                router.push('/');
-                            }}
-                            onStart={() => {
-                                setShowWelcomeModal(false);
-                                // Если пользователь нажал "Начать оценку", остаемся на странице
-                            }}
-                        />
+
                     </div>
                 </div>
             </div>

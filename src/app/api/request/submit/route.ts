@@ -43,6 +43,7 @@ export async function POST(request: Request) {
         imei: imei || null,
         sn: sn || null,
         status: 'submitted',
+        currentStep: null, // Сбрасываем currentStep после отправки
         submittedAt: new Date(),
         updatedAt: new Date(),
       },

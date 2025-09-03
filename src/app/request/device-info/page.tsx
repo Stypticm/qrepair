@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
+import { WelcomeModal } from '@/components/ui/welcome-modal';
 
 export default function DeviceInfoPage() {
     const {
@@ -24,6 +25,9 @@ export default function DeviceInfoPage() {
     const [manualSerialNumber, setManualSerialNumber] = useState('');
     const [isValid, setIsValid] = useState(false);
     const [error, setError] = useState('');
+    
+    // Состояние для приветственного экрана
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -35,6 +39,18 @@ export default function DeviceInfoPage() {
         if (serialNumber) {
             setManualSerialNumber(serialNumber);
             setIsValid(true);
+        }
+    }, [serialNumber]);
+
+    // Показываем приветственное модальное окно только для новых пользователей
+    useEffect(() => {
+        // Проверяем, есть ли сохраненные данные
+        const hasExistingData = serialNumber || 
+            (typeof window !== 'undefined' && sessionStorage.getItem('phoneSelection'));
+        
+        if (!hasExistingData) {
+            // Показываем приветственный экран для новых пользователей
+            setShowWelcomeModal(true);
         }
     }, [serialNumber]);
 
@@ -228,6 +244,20 @@ export default function DeviceInfoPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Приветственный экран */}
+            <WelcomeModal
+                isOpen={showWelcomeModal}
+                onClose={() => {
+                    setShowWelcomeModal(false);
+                    // Если пользователь закрыл модал крестиком, возвращаем на главную
+                    router.push('/');
+                }}
+                onStart={() => {
+                    setShowWelcomeModal(false);
+                    // Если пользователь нажал "Начать оценку", остаемся на странице
+                }}
+            />
         </Page>
     );
 }

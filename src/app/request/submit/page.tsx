@@ -520,7 +520,7 @@ const SubmitPage = () => {
                         </div>
 
                         {/* Кнопки */}
-                        <div className="w-full space-y-4 gap-2">
+                        <div className="w-full space-y-6">
                             <Button
                                 onClick={handleSubmit}
                                 disabled={submitting || !modelname}
