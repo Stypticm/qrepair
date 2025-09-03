@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { getPictureUrl } from '@/core/lib/assets';
@@ -33,13 +33,7 @@ export default function TelegramRedirectPage() {
     return () => clearTimeout(timer);
   }, [router]);
 
-  const handleOpenTelegram = () => {
-    // Ссылка на вашего бота
-    const botUrl = 'https://t.me/QRepairBot/QRepair';
-    if (typeof window !== 'undefined') {
-      window.open(botUrl, '_blank');
-    }
-  };
+
 
 
 
@@ -77,7 +71,7 @@ export default function TelegramRedirectPage() {
               className="flex justify-center"
             >
               <Image
-                src={getPictureUrl('logo3.png') || '/logo3.png'}
+                src={getPictureUrl('logo_repair.png') || '/logo_repair.png'}
                 alt="Логотип"
                 width={200}
                 height={100}
@@ -93,10 +87,10 @@ export default function TelegramRedirectPage() {
               className="space-y-3"
             >
               <h1 className="text-2xl font-bold text-gray-900">
-                📱 Откройте в Telegram
+                🚧 Приложение в разработке
               </h1>
               <p className="text-gray-600 leading-relaxed">
-                Наше приложение работает только в Telegram боте для максимального удобства и безопасности
+                Наше приложение находится в стадии разработки и будет доступно в Telegram боте для максимального удобства и безопасности
               </p>
             </motion.div>
 
@@ -108,32 +102,20 @@ export default function TelegramRedirectPage() {
               className="space-y-2 text-sm text-gray-500"
             >
               <div className="flex items-center justify-center space-x-2">
-                <span>✅</span>
+                <span>🚀</span>
                 <span>Быстрая работа</span>
               </div>
               <div className="flex items-center justify-center space-x-2">
-                <span>✅</span>
+                <span>🎨</span>
                 <span>Удобный интерфейс</span>
               </div>
               <div className="flex items-center justify-center space-x-2">
-                <span>✅</span>
+                <span>📱</span>
                 <span>Уведомления о статусе</span>
               </div>
             </motion.div>
 
-            {/* Кнопка */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-            >
-              <Button
-                onClick={handleOpenTelegram}
-                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-4 rounded-xl transition-colors text-lg"
-              >
-                🚀 Открыть в Telegram
-              </Button>
-            </motion.div>
+
 
             {/* Дополнительная информация */}
             <motion.div
@@ -143,7 +125,7 @@ export default function TelegramRedirectPage() {
               className="text-xs text-gray-400 pt-2"
             >
               <p>
-                Безопасная и быстрая работа только через Telegram
+                Скоро будет доступно в Telegram боте
               </p>
             </motion.div>
           </CardContent>
