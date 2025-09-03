@@ -52,9 +52,10 @@ export default function Home() {
       if (typeof window !== 'undefined') {
         // Проверяем Telegram WebApp
         const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
+        const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
         
-        // Если есть Telegram.WebApp, то это WebApp
-        const inTelegram = hasTelegramWebApp;
+        // Если есть Telegram.WebApp ИЛИ TelegramWebviewProxy, то это WebApp
+        const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
         
         setIsInTelegram(inTelegram);
         setIsLoading(false);
