@@ -7,7 +7,14 @@ import { FormState } from '@/core/lib/interfaces';
 const StartFormContext = createContext<FormState | null>(null);
 
 export function StartFormProvider({ children }: { children: ReactNode }) {
-    const initDataState = useSignal(_initDataState);
+    // Всегда вызываем хук, но обрабатываем ошибки
+    let initDataState = null;
+    try {
+        initDataState = useSignal(_initDataState);
+    } catch (error) {
+        console.log('Telegram SDK not available, using fallback:', error);
+        initDataState = null;
+    }
 
     const [username, setUsername] = useState<string | null>(null);
     const [telegramId, setTelegramId] = useState<string | null>(null);

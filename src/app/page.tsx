@@ -48,23 +48,25 @@ export default function Home() {
     // Проверяем, запущено ли приложение в Telegram
     const checkTelegram = () => {
       if (typeof window !== 'undefined') {
-        // Более надежная проверка Telegram WebApp
-        const inTelegram = !!(
-          (window as any).Telegram?.WebApp || 
-          (window as any).TelegramWebviewProxy ||
-          window.location.href.includes('tgWebAppPlatform') ||
-          window.location.href.includes('tgWebAppData') ||
-          window.location.href.includes('tgWebAppVersion')
-        );
+        // Проверяем Telegram WebApp - основная проверка через объект Telegram
+        const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
+        const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
         
-        console.log('Telegram detection:', {
-          Telegram: !!(window as any).Telegram?.WebApp,
-          TelegramWebviewProxy: !!(window as any).TelegramWebviewProxy,
-          tgWebAppPlatform: window.location.href.includes('tgWebAppPlatform'),
-          tgWebAppData: window.location.href.includes('tgWebAppData'),
-          tgWebAppVersion: window.location.href.includes('tgWebAppVersion'),
-          url: window.location.href,
-          result: inTelegram
+        // Проверяем URL параметры (дополнительная проверка)
+        const hasUrlParams = window.location.href.includes('tgWebAppPlatform') ||
+                            window.location.href.includes('tgWebAppData') ||
+                            window.location.href.includes('tgWebAppVersion');
+        
+        // В Telegram WebApp должен быть объект Telegram.WebApp
+        const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
+        
+        console.log('🔍 Telegram WebApp Detection:', {
+          'Telegram.WebApp': hasTelegramWebApp,
+          'TelegramWebviewProxy': hasTelegramWebviewProxy,
+          'URL Parameters': hasUrlParams,
+          'URL': window.location.href,
+          'Final Result': inTelegram,
+          'Action': inTelegram ? '🚀 Show WebApp' : '🌐 Redirect to Telegram page'
         });
         
         setIsInTelegram(inTelegram);

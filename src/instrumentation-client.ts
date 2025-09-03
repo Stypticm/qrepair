@@ -7,6 +7,25 @@ import { mockEnv } from './mockEnv'
 
 mockEnv().then(() => {
   try {
+    // Проверяем, находимся ли мы в Telegram WebApp
+    const isInTelegram =
+      typeof window !== 'undefined' &&
+      !!(
+        window.Telegram?.WebApp ||
+        (window as any).TelegramWebviewProxy
+      )
+
+    if (!isInTelegram) {
+      console.log(
+        '🌐 Not in Telegram WebApp, skipping SDK initialization'
+      )
+      return
+    }
+
+    console.log(
+      '🚀 In Telegram WebApp, initializing SDK...'
+    )
+
     const launchParams = retrieveLaunchParams()
     const { tgWebAppPlatform: platform } = launchParams
     const debug =
@@ -21,6 +40,6 @@ mockEnv().then(() => {
       mockForMacOS: platform === 'macos',
     })
   } catch (e) {
-    console.log(e)
+    console.log('Telegram SDK initialization failed:', e)
   }
 })
