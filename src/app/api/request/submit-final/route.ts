@@ -116,8 +116,9 @@ export async function POST(request: NextRequest) {
     )
 
     try {
-      // Отправляем фото по URL используя стандартную функцию
-      const imageUrl = getServerImageUrl('submit.jpg')
+      // Отправляем фото по URL из Supabase Storage (рабочий способ)
+      const imageUrl =
+        'https://aygvejwrrifuhbkbivoa.supabase.co/storage/v1/object/public/pictures/submit.png'
       console.log('Sending photo by URL:', imageUrl)
 
       // Создаем FormData для отправки фото по URL
