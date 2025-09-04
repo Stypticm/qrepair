@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/core/lib/prisma'
-import {
-  sendTelegramMessage,
-  sendTelegramPhoto,
-} from '@/core/lib/sendTelegramMessage'
-import fs from 'fs'
-import path from 'path'
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,39 +62,18 @@ export async function POST(request: NextRequest) {
 
 Статус: Пользователь не согласен с оценкой`
 
-        // Отправляем фото с подписью
-        // Отправляем фото как файл (рабочий способ)
-        const filePath = path.join(
-          process.cwd(),
-          'public',
-          'submit.png'
-        )
+        // Отправляем фото с подписью по URL из Supabase Storage
+        const imageUrl =
+          'https://aygvejwrrifuhbkbivoa.supabase.co/storage/v1/object/public/pictures/submit.png'
         console.log(
-          'Sending feedback photo file from:',
-          filePath
+          'Sending feedback photo by URL:',
+          imageUrl
         )
 
-        // Проверяем, существует ли файл
-        if (!fs.existsSync(filePath)) {
-          throw new Error('File not found: ' + filePath)
-        }
-
-        // Читаем файл
-        const fileBuffer = fs.readFileSync(filePath)
-        console.log(
-          'Feedback file size:',
-          fileBuffer.length,
-          'bytes'
-        )
-
-        // Создаем FormData для отправки файла
+        // Создаем FormData для отправки фото по URL
         const formData = new FormData()
         formData.append('chat_id', telegramId)
-        formData.append(
-          'photo',
-          new Blob([fileBuffer], { type: 'image/png' }),
-          'submit.png'
-        )
+        formData.append('photo', imageUrl)
         formData.append('caption', message)
         // formData.append('parse_mode', 'Markdown') // Убираем Markdown из-за ошибки парсинга
 
@@ -175,39 +148,18 @@ export async function POST(request: NextRequest) {
 
 Статус: Пользователь не согласен с оценкой`
 
-        // Отправляем фото с подписью
-        // Отправляем фото как файл (рабочий способ)
-        const filePath = path.join(
-          process.cwd(),
-          'public',
-          'submit.png'
-        )
+        // Отправляем фото с подписью по URL из Supabase Storage
+        const imageUrl =
+          'https://aygvejwrrifuhbkbivoa.supabase.co/storage/v1/object/public/pictures/submit.png'
         console.log(
-          'Sending feedback photo file from:',
-          filePath
+          'Sending feedback photo by URL:',
+          imageUrl
         )
 
-        // Проверяем, существует ли файл
-        if (!fs.existsSync(filePath)) {
-          throw new Error('File not found: ' + filePath)
-        }
-
-        // Читаем файл
-        const fileBuffer = fs.readFileSync(filePath)
-        console.log(
-          'Feedback file size:',
-          fileBuffer.length,
-          'bytes'
-        )
-
-        // Создаем FormData для отправки файла
+        // Создаем FormData для отправки фото по URL
         const formData = new FormData()
         formData.append('chat_id', telegramId)
-        formData.append(
-          'photo',
-          new Blob([fileBuffer], { type: 'image/png' }),
-          'submit.png'
-        )
+        formData.append('photo', imageUrl)
         formData.append('caption', message)
         // formData.append('parse_mode', 'Markdown') // Убираем Markdown из-за ошибки парсинга
 
