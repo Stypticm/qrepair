@@ -372,9 +372,9 @@ export default function FormPage() {
             phone.country === selectedOptions.country
         );
 
-        console.log('Поиск телефона:', {
+        console.log('🔍 Поиск телефона:', {
             selectedOptions,
-            foundPhone,
+            foundPhone: foundPhone ? `✅ Найден: ${foundPhone.model} ${foundPhone.variant} ${foundPhone.storage} ${foundPhone.color} ${foundPhone.country} ${foundPhone.simType} (${foundPhone.basePrice}₽)` : '❌ Не найден',
             totalPhones: iphones.length
         });
 
@@ -440,6 +440,19 @@ export default function FormPage() {
                     let basePrice = 0; // цена по умолчанию
                     if (matchingPhone) {
                         basePrice = matchingPhone.basePrice;
+                        console.log('✅ Найдена модель:', matchingPhone, 'Цена:', basePrice);
+                    } else {
+                        console.log('❌ Модель не найдена. selectedOptions:', selectedOptions);
+                        // Если модель не найдена, но есть modelname в контексте, попробуем найти по названию
+                        // Проверяем, что modelname содержит полную информацию о модели (не дефолтное значение)
+                        if (modelname && modelname.includes(' ') && modelname.split(' ').length >= 6) {
+                            console.log('🔄 Пытаемся найти модель по названию:', modelname);
+                            const modelByName = findModelByName(modelname);
+                            if (modelByName) {
+                                basePrice = modelByName.basePrice;
+                                console.log('✅ Найдена модель по названию:', modelByName, 'Цена:', basePrice);
+                            }
+                        }
                     }
 
                     await fetch('/api/request/choose', {
@@ -461,7 +474,7 @@ export default function FormPage() {
         };
 
         createRequest();
-    }, [telegramId, username, matchingPhone]);
+    }, [telegramId, username, matchingPhone, modelname]);
 
     // Загружаем прогресс из sessionStorage или CloudStorage при загрузке страницы
     useEffect(() => {
@@ -673,6 +686,96 @@ export default function FormPage() {
         };
         
         return variantMap[variant] || variant;
+    };
+
+    // Функция для поиска модели по полному названию
+    const findModelByName = (modelname: string): IPhone | null => {
+        if (!modelname) return null;
+        
+        // Парсим название модели для извлечения параметров
+        // Примеры: 
+        // "Apple iPhone 16 Pro Max 1TB Золотой США eSIM" (Pro Max модель)
+        // "Apple iPhone 16 128GB Синий Китай 1 SIM" (базовая модель)
+        const parts = modelname.split(' ');
+        
+        if (parts.length < 2) return null;
+        
+        const model = parts[2]; // "16"
+        let variant = ''; // По умолчанию пустая строка для базовых моделей
+        let storageIndex = 3; // Индекс storage в массиве parts
+        
+        // Проверяем, есть ли вариант (R, S, S Max, Pro, Pro Max, Mini, Plus, SE)
+        if (parts[3] === 'R') {
+            variant = 'R';
+            storageIndex = 4; // storage находится на индексе 4
+        } else if (parts[3] === 'S') {
+            if (parts[4] === 'Max') {
+                variant = 'S Max';
+                storageIndex = 5; // storage находится на индексе 5
+            } else {
+                variant = 'S';
+                storageIndex = 4; // storage находится на индексе 4
+            }
+        } else if (parts[3] === 'Pro') {
+            if (parts[4] === 'Max') {
+                variant = 'Pro Max';
+                storageIndex = 5; // storage находится на индексе 5
+            } else {
+                variant = 'Pro';
+                storageIndex = 4; // storage находится на индексе 4
+            }
+        } else if (parts[3] === 'Mini') {
+            variant = 'mini';
+            storageIndex = 4; // storage находится на индексе 4
+        } else if (parts[3] === 'Plus') {
+            variant = 'Plus';
+            storageIndex = 4; // storage находится на индексе 4
+        } else if (parts[3] === 'SE') {
+            variant = 'se';
+            storageIndex = 4; // storage находится на индексе 4
+        }
+        
+        const storage = parts[storageIndex]; // "1TB"
+        const color = parts[storageIndex + 1]; // "Золотой"
+        const country = parts[storageIndex + 2]; // "США"
+        const simType = parts[storageIndex + 3]; // "eSIM"
+        
+        // Маппинг цветов
+        const colorMap: { [key: string]: string } = {
+            'Золотой': 'G',
+            'Красный': 'R', 
+            'Синий': 'Bl',
+            'Белый': 'Wh',
+            'Черный': 'C'
+        };
+        
+        // Маппинг стран
+        const countryMap: { [key: string]: string } = {
+            'Китай': 'Китай 🇨🇳',
+            'США': 'США 🇺🇸',
+            'Япония': 'Япония 🇯🇵'
+        };
+        
+        const mappedColor = colorMap[color] || color;
+        const mappedCountry = countryMap[country] || country;
+        
+        // Ищем модель в массиве с учетом варианта
+        const foundPhone = iphones.find((phone: IPhone) =>
+            phone.model === model &&
+            phone.variant === variant &&
+            phone.storage === storage &&
+            phone.color === mappedColor &&
+            phone.simType === simType &&
+            phone.country === mappedCountry
+        );
+        
+        console.log('🔍 Поиск модели по названию:', {
+            modelname,
+            parsed: { model, variant, storage, color: mappedColor, country: mappedCountry, simType },
+            foundPhone: foundPhone ? `✅ Найден: ${foundPhone.basePrice}₽` : '❌ Не найден'
+        });
+        
+        return foundPhone || null;
     };
 
     const getColorStyle = (color: string) => {
