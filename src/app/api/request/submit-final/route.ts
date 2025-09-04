@@ -115,33 +115,15 @@ export async function POST(request: NextRequest) {
     )
 
     try {
-      // Отправляем фото как файл (рабочий способ)
-      const filePath = path.join(
-        process.cwd(),
-        'public',
-        'submit.jpg'
-      )
-      console.log('Sending photo file from:', filePath)
+      // Отправляем фото по URL из Supabase Storage
+      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/submit.jpg`
+      console.log('Sending photo by URL:', imageUrl)
 
-      // Проверяем, существует ли файл
-      if (!fs.existsSync(filePath)) {
-        throw new Error('File not found: ' + filePath)
-      }
-
-      // Читаем файл
-      const fileBuffer = fs.readFileSync(filePath)
-      console.log('File size:', fileBuffer.length, 'bytes')
-
-      // Создаем FormData для отправки файла
+      // Создаем FormData для отправки фото по URL
       const formData = new FormData()
       formData.append('chat_id', telegramId)
-      formData.append(
-        'photo',
-        new Blob([fileBuffer], { type: 'image/jpeg' }),
-        'submit.jpg'
-      )
+      formData.append('photo', imageUrl)
       formData.append('caption', telegramMessage)
-      // formData.append('parse_mode', 'Markdown') // Убираем Markdown из-за ошибки парсинга
 
       // Отправляем в Telegram
       const url = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendPhoto`
