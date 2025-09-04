@@ -16,6 +16,8 @@ const SubmitPage = () => {
     const [showResetDialog, setShowResetDialog] = useState(false);
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
     const [feedback, setFeedback] = useState('');
+    const [selectedFeedback, setSelectedFeedback] = useState('');
+    const [customFeedback, setCustomFeedback] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [agreeLoading, setAgreeLoading] = useState(false);
     const [buttonsDisabled, setButtonsDisabled] = useState(false);
@@ -139,7 +141,7 @@ const SubmitPage = () => {
     const handleReset = async () => {
         try {
             console.log('Starting reset process, telegramId:', telegramId);
-            
+
             // Сбрасываем все состояния
             resetAllStates();
 
@@ -167,7 +169,7 @@ const SubmitPage = () => {
                     });
 
                     console.log('Clear draft response status:', response.status);
-                    
+
                     if (!response.ok) {
                         const errorData = await response.text();
                         console.error('Ошибка очистки данных в БД:', response.status, errorData);
@@ -196,7 +198,7 @@ const SubmitPage = () => {
         // Блокируем кнопки сразу при нажатии
         setButtonsDisabled(true);
         setAgreeLoading(true);
-        
+
         try {
             // Сохраняем текущий шаг в БД перед переходом
             if (telegramId) {
@@ -211,7 +213,7 @@ const SubmitPage = () => {
                     }),
                 });
             }
-            
+
             // Переходим к выбору способа доставки
             router.push('/request/delivery-options');
         } catch (error) {
@@ -232,7 +234,8 @@ const SubmitPage = () => {
     };
 
     const handleFeedbackSubmit = async () => {
-        if (!feedback.trim()) return;
+        const finalFeedback = selectedFeedback === 'Другое' ? customFeedback.trim() : selectedFeedback;
+        if (!finalFeedback) return;
 
         setSubmitting(true);
         try {
@@ -244,7 +247,7 @@ const SubmitPage = () => {
                 },
                 body: JSON.stringify({
                     telegramId,
-                    feedback: feedback.trim(),
+                    feedback: finalFeedback,
                     modelname: getFullModelName(),
                     price: finalPrice,
                 }),
@@ -343,24 +346,24 @@ const SubmitPage = () => {
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
                         {!dataLoaded ? (
-                        <div className="w-full max-w-md text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
-                            <p className="text-gray-600">Загружаем данные заявки...</p>
-                        </div>
-                    ) : !modelname ? (
-                        <div className="w-full max-w-md text-center">
-                            <p className="text-red-600">Ошибка: данные заявки не найдены</p>
-                            <Button
-                                onClick={() => router.push('/request/form')}
-                                className="mt-4 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white"
-                            >
-                                Вернуться к форме
-                            </Button>
-                        </div>
-                    ) : (
+                            <div className="w-full max-w-md text-center">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
+                                <p className="text-gray-600">Загружаем данные заявки...</p>
+                            </div>
+                        ) : !modelname ? (
+                            <div className="w-full max-w-md text-center">
+                                <p className="text-red-600">Ошибка: данные заявки не найдены</p>
+                                <Button
+                                    onClick={() => router.push('/request/form')}
+                                    className="mt-4 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white"
+                                >
+                                    Вернуться к форме
+                                </Button>
+                            </div>
+                        ) : (
                             <>
-                            {/* Summary заявки */}
-                                <motion.div 
+                                {/* Summary заявки */}
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3 }}
@@ -368,15 +371,15 @@ const SubmitPage = () => {
                                 >
                                     <h3 className="text-xl font-semibold mb-6 text-center text-gray-900">
                                         Предварительная оценка
-                                </h3>
+                                    </h3>
 
-                                <div className="space-y-4">
+                                    <div className="space-y-4">
                                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                        <span className="font-semibold text-gray-900 break-words text-lg">{getFullModelName()}</span>
-                                    </div>
+                                            <span className="font-semibold text-gray-900 break-words text-lg">{getFullModelName()}</span>
+                                        </div>
 
-                                    <div className="border-t border-gray-200 pt-4">
-                                                        <div className="flex justify-between items-center">
+                                        <div className="border-t border-gray-200 pt-4">
+                                            <div className="flex justify-between items-center">
                                                 <span className="font-semibold text-gray-900">Предварительная цена:</span>
                                                 <span className="font-bold text-2xl text-green-600">{finalPrice.toLocaleString()} ₽</span>
                                             </div>
@@ -385,19 +388,19 @@ const SubmitPage = () => {
                                 </motion.div>
 
                                 {/* Кнопки согласия */}
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: 0.1 }}
                                     className="w-full flex flex-col gap-3"
                                 >
-                                <Button
+                                    <Button
                                         onClick={handleAgree}
                                         disabled={agreeLoading || buttonsDisabled}
                                         className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg shadow-md disabled:opacity-50"
-                                >
+                                    >
                                         {agreeLoading ? 'Переходим...' : 'Согласен'}
-                                </Button>
+                                    </Button>
 
                                     <Button
                                         onClick={handleDisagree}
@@ -410,22 +413,22 @@ const SubmitPage = () => {
                                 </motion.div>
 
                                 {/* Кнопка "Начать заново" */}
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: 0.2 }}
                                 >
-                                <Button
-                                    onClick={() => setShowResetDialog(true)}
-                                    variant="outline"
+                                    <Button
+                                        onClick={() => setShowResetDialog(true)}
+                                        variant="outline"
                                         className="w-full bg-white hover:bg-gray-50 text-gray-600 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-                                >
-                                    Начать заново
-                                </Button>
+                                    >
+                                        Начать заново
+                                    </Button>
                                 </motion.div>
 
                                 {/* Подпись о цене */}
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.3, delay: 0.3 }}
@@ -492,38 +495,94 @@ const SubmitPage = () => {
                             <p className="text-sm text-gray-600 mb-4">
                                 Поделитесь своими мыслями, чтобы мы могли улучшить наш сервис
                             </p>
-                            
-                            <textarea
-                                value={feedback}
-                                onChange={(e) => setFeedback(e.target.value)}
-                                placeholder="Введите ваш отзыв..."
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm resize-none"
-                                rows={4}
-                            />
-                            
-                            <div className="flex space-x-3 gap-2 mt-4">
-                                <Button
-                                    onClick={() => {
-                                        setShowFeedbackDialog(false);
-                                        setFeedback('');
-                                        setButtonsDisabled(false); // Разблокируем кнопки при отмене
-                                    }}
-                                    variant="outline"
-                                    className="flex-1 py-2 text-sm"
-                                >
-                                    Отмена
-                                </Button>
-                                <Button
-                                    onClick={handleFeedbackSubmit}
-                                    disabled={!feedback.trim() || submitting}
-                                    className="flex-1 py-2 text-sm bg-[#2dc2c6] hover:bg-[#25a8ac] text-white disabled:opacity-50"
-                                >
-                                    {submitting ? 'Отправляем...' : 'Отправить'}
-                                </Button>
+
+
+                            <div className="flex flex-col gap-2">
+                                <label className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer gap-2">
+                                    <input
+                                        type="radio"
+                                        name="feedback"
+                                        value="Не устроила цена выкупа"
+                                        checked={selectedFeedback === 'Не устроила цена выкупа'}
+                                        onChange={(e) => setSelectedFeedback(e.target.value)}
+                                        className="w-4 h-4 text-[#2dc2c6] focus:ring-[#2dc2c6]"
+                                    />
+                                    <span className="text-sm text-gray-700">Не устроила цена выкупа</span>
+                                </label>
+
+                                <label className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer gap-2">
+                                    <input
+                                        type="radio"
+                                        name="feedback"
+                                        value="Не устроил адрес доставки"
+                                        checked={selectedFeedback === 'Не устроил адрес доставки'}
+                                        onChange={(e) => setSelectedFeedback(e.target.value)}
+                                        className="w-4 h-4 text-[#2dc2c6] focus:ring-[#2dc2c6]"
+                                    />
+                                    <span className="text-sm text-gray-700">Не устроил адрес доставки</span>
+                                </label>
+
+                                <label className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer gap-2">
+                                    <input
+                                        type="radio"
+                                        name="feedback"
+                                        value="Просто хотел узнать цену своего телефона"
+                                        checked={selectedFeedback === 'Просто хотел узнать цену своего телефона'}
+                                        onChange={(e) => setSelectedFeedback(e.target.value)}
+                                        className="w-4 h-4 text-[#2dc2c6] focus:ring-[#2dc2c6]"
+                                    />
+                                    <span className="text-sm text-gray-700">Хотел узнать цену своего телефона</span>
+                                </label>
+
+                                <label className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer gap-2">
+                                    <input
+                                        type="radio"
+                                        name="feedback"
+                                        value="Другое"
+                                        checked={selectedFeedback === 'Другое'}
+                                        onChange={(e) => setSelectedFeedback(e.target.value)}
+                                        className="w-4 h-4 text-[#2dc2c6] focus:ring-[#2dc2c6]"
+                                    />
+                                    <span className="text-sm text-gray-700">Другое</span>
+                                </label>
                             </div>
+
+                            {selectedFeedback === 'Другое' && (
+                                <textarea
+                                    value={customFeedback}
+                                    onChange={(e) => setCustomFeedback(e.target.value)}
+                                    placeholder="Опишите, что вас не устроило..."
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm resize-none"
+                                    rows={3}
+                                />
+                            )}
+                        </div>
+
+                        <div className="flex space-x-3 gap-2 mt-4">
+                                                         <Button
+                                 onClick={() => {
+                                     setShowFeedbackDialog(false);
+                                     setSelectedFeedback('');
+                                     setCustomFeedback('');
+                                     setButtonsDisabled(false); // Разблокируем кнопки при отмене
+                                 }}
+                                 disabled={submitting}
+                                 variant="outline"
+                                 className="flex-1 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                             >
+                                 Отмена
+                             </Button>
+                            <Button
+                                onClick={handleFeedbackSubmit}
+                                disabled={!selectedFeedback || (selectedFeedback === 'Другое' && !customFeedback.trim()) || submitting}
+                                className="flex-1 py-2 text-sm bg-[#2dc2c6] hover:bg-[#25a8ac] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {submitting ? 'Отправляем...' : 'Отправить'}
+                            </Button>
                         </div>
                     </div>
                 </div>
+
             )}
         </Page>
     );

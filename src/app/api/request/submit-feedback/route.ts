@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
       // Отправляем уведомление в Telegram
       try {
-        const message = `📝 Получен отзыв от пользователя
+        const message = `📝 Спасибо за ваш отзыв!
 
 👤 Пользователь: @${existingSkupka.username || telegramId}
 📱 Устройство: ${modelname || 'Не указано'}
