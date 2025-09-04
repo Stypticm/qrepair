@@ -271,9 +271,10 @@ export default function Home() {
               <Image
                 src={getPictureUrl(`animation_logo.gif`) || '/animation_logo.gif'}
                 alt="Логотип"
-                width={300}
-                height={150}
-                className="w-full h-auto object-contain mx-auto rounded-2xl shadow-lg"
+                width={400}
+                height={200}
+                className="w-full max-w-md h-auto object-contain mx-auto rounded-2xl shadow-lg"
+                priority={true}
               />
             </motion.div>
 

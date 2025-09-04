@@ -15,17 +15,28 @@ export function getPictureUrl(fileName: string): string {
     process.env.NEXT_PUBLIC_USE_SUPABASE_IMAGES === 'true'
 
   if (!useSupabase) {
-    // В Telegram WebApp используем абсолютный URL для локальных файлов
+    // В клиентской среде используем window.location.origin
     if (typeof window !== 'undefined' && window.location) {
       return `${window.location.origin}/${fileName}`
     }
-    return `/${fileName}`
+
+    // В серверной среде используем NEXT_PUBLIC_BASE_URL или fallback
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      'http://localhost:3000'
+    return `${baseUrl}/${fileName}`
   }
 
   // Можно переопределить базу через переменную окружения, если нужно
   const override = process.env.NEXT_PUBLIC_PICTURES_BASE
   const base = override || getSupabasePublicBase('pictures')
-  if (!base) return `/${fileName}` // Fallback на локальные файлы
+  if (!base) {
+    // Fallback на локальные файлы с абсолютным URL
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      'http://localhost:3000'
+    return `${baseUrl}/${fileName}`
+  }
 
   return `${base}/${fileName}`
 }
