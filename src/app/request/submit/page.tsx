@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber } = useStartForm();
+    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice } = useStartForm();
     const { setCurrentStep } = useNavigation();
     const [dataLoaded, setDataLoaded] = useState(false);
     const [showResetDialog, setShowResetDialog] = useState(false);
@@ -81,8 +81,21 @@ const SubmitPage = () => {
                 setSerialNumber(savedSerialNumber);
             }
 
+            // Загружаем цену из sessionStorage
+            const savedPrice = sessionStorage.getItem('price');
+            if (savedPrice) {
+                try {
+                    const priceValue = JSON.parse(savedPrice);
+                    if (priceValue && priceValue > 0) {
+                        setPrice(priceValue);
+                    }
+                } catch (e) {
+                    // Ошибка парсинга price
+                }
+            }
+
             // Если нет данных в sessionStorage, загружаем из БД
-            const hasSessionData = savedPhoneSelection || savedDeviceConditions || savedAdditionalConditions || savedImei || savedSerialNumber;
+            const hasSessionData = savedPhoneSelection || savedDeviceConditions || savedAdditionalConditions || savedImei || savedSerialNumber || savedPrice;
 
             if (!hasSessionData && telegramId) {
                 // Загружаем данные из БД
@@ -99,6 +112,7 @@ const SubmitPage = () => {
                             console.log('Загружаем данные из БД в submit:', data);
 
                             if (data.modelname) setModel(data.modelname);
+                            if (data.price) setPrice(data.price);
                             if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
                             if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
                             if (data.imei) setImei(data.imei);
@@ -110,7 +124,7 @@ const SubmitPage = () => {
                     });
             }
         }
-    }, [setModel, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber, telegramId]);
+    }, [setModel, setPrice, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber, telegramId]);
 
     // Проверяем, загружены ли все необходимые данные
     useEffect(() => {

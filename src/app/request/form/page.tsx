@@ -418,7 +418,7 @@ export default function FormPage() {
 
     useEffect(() => {
         if (matchingPhone) {
-            const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${matchingPhone.variant}` : ''} ${matchingPhone.storage} ${getColorLabel(matchingPhone.color)} ${matchingPhone.country.split(' ')[0]} ${matchingPhone.simType}`;
+            const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${getVariantLabel(matchingPhone.variant)}` : ''} ${matchingPhone.storage} ${getColorLabel(matchingPhone.color)} ${matchingPhone.country.split(' ')[0]} ${matchingPhone.simType}`;
 
             setModel(fullName);
             
@@ -656,6 +656,24 @@ export default function FormPage() {
         return colorMap[color] || color;
     };
 
+    // Функция для форматирования вариантов с заглавной буквы
+    const getVariantLabel = (variant: string) => {
+        if (!variant) return '';
+        
+        const variantMap: { [key: string]: string } = {
+            'R': 'R',
+            'S': 'S',
+            'S Max': 'S Max',
+            'Pro': 'Pro',
+            'Pro Max': 'Pro Max',
+            'mini': 'Mini',
+            'Plus': 'Plus',
+            'se': 'SE'
+        };
+        
+        return variantMap[variant] || variant;
+    };
+
     const getColorStyle = (color: string) => {
         const colorMap: { [key: string]: string } = {
             'G': '#F5D76E', // Золотой iPhone (более реалистичный)
@@ -790,7 +808,7 @@ export default function FormPage() {
                                                     <span className="text-white text-xs font-bold">✓</span>
                                                 </div>
                                             )}
-                                            {variant}
+                                            {getVariantLabel(variant)}
                                         </Button>
                                     ))}
                                 </div>
@@ -976,7 +994,7 @@ export default function FormPage() {
                                             <div className="bg-[#2dc2c6]/10 p-4 rounded-xl border border-[#2dc2c6]">
                                                 <p className="text-lg font-semibold text-gray-900 break-words leading-tight">
                                                     iPhone {matchingPhone.model}
-                                                    {matchingPhone.variant ? ` ${matchingPhone.variant}` : ''}
+                                                    {matchingPhone.variant ? ` ${getVariantLabel(matchingPhone.variant)}` : ''}
                                                     {matchingPhone.storage ? ` ${matchingPhone.storage}` : ''}
                                                     {matchingPhone.color ? ` ${getColorLabel(matchingPhone.color)}` : ''}
                                                     {matchingPhone.simType ? ` ${matchingPhone.simType}` : ''}

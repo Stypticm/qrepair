@@ -11,16 +11,55 @@ import { iphones, IPhone } from '@/core/appleModels'
 // Функция для поиска модели по названию
 function findModelByName(modelname: string): IPhone | null {
   // Парсим название модели для извлечения параметров
-  // Пример: "iPhone 13 128GB Синий 1 SIM Китай"
+  // Примеры:
+  // "iPhone 11 128GB Синий 1 SIM Китай" (базовая модель)
+  // "iPhone 11 Pro 128GB Синий 1 SIM Китай" (Pro модель)
+  // "iPhone 11 Pro Max 128GB Синий 1 SIM Китай" (Pro Max модель)
   const parts = modelname.split(' ')
 
   if (parts.length < 2) return null
 
-  const model = parts[1] // "13"
-  const storage = parts[2] // "128GB"
-  const color = parts[3] // "Синий"
-  const simType = parts[4] + ' ' + parts[5] // "1 SIM"
-  const country = parts[6] // "Китай"
+  const model = parts[1] // "11"
+  let variant = '' // По умолчанию пустая строка для базовых моделей
+  let storageIndex = 2 // Индекс storage в массиве parts
+
+  // Проверяем, есть ли вариант (R, S, S Max, Pro, Pro Max, mini)
+  // В названии "Apple iPhone 11 Pro 128GB..." индекс 3 это "Pro"
+  if (parts[3] === 'R') {
+    variant = 'R'
+    storageIndex = 4 // storage находится на индексе 4
+  } else if (parts[3] === 'S') {
+    if (parts[4] === 'Max') {
+      variant = 'S Max'
+      storageIndex = 5 // storage находится на индексе 5
+    } else {
+      variant = 'S'
+      storageIndex = 4 // storage находится на индексе 4
+    }
+  } else if (parts[3] === 'Pro') {
+    if (parts[4] === 'Max') {
+      variant = 'Pro Max'
+      storageIndex = 5 // storage находится на индексе 5
+    } else {
+      variant = 'Pro'
+      storageIndex = 4 // storage находится на индексе 4
+    }
+  } else if (parts[3] === 'Mini') {
+    variant = 'mini'
+    storageIndex = 4 // storage находится на индексе 4
+  } else if (parts[3] === 'Plus') {
+    variant = 'Plus'
+    storageIndex = 4 // storage находится на индексе 4
+  } else if (parts[3] === 'SE') {
+    variant = 'se'
+    storageIndex = 4 // storage находится на индексе 4
+  }
+
+  const storage = parts[storageIndex] // "128GB"
+  const color = parts[storageIndex + 1] // "Синий"
+  const simType =
+    parts[storageIndex + 2] + ' ' + parts[storageIndex + 3] // "1 SIM"
+  const country = parts[storageIndex + 4] // "Китай"
 
   // Маппинг цветов
   const colorMap: { [key: string]: string } = {
@@ -41,10 +80,11 @@ function findModelByName(modelname: string): IPhone | null {
   const mappedColor = colorMap[color] || color
   const mappedCountry = countryMap[country] || country
 
-  // Ищем модель в массиве
+  // Ищем модель в массиве с учетом варианта
   const foundPhone = iphones.find(
     (phone: IPhone) =>
       phone.model === model &&
+      phone.variant === variant &&
       phone.storage === storage &&
       phone.color === mappedColor &&
       phone.simType === simType &&
