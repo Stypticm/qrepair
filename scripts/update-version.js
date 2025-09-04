@@ -1,6 +1,9 @@
 const fs = require('fs')
 const path = require('path')
 
+// Получаем тип обновления из аргументов командной строки
+const updateType = process.argv[2] || 'patch' // patch, minor, major
+
 // Читаем текущий config.ts
 const configPath = path.join(
   __dirname,
@@ -18,10 +21,37 @@ if (!versionMatch) {
 }
 
 const currentVersion = versionMatch[1]
-const parts = currentVersion.split('.')
-const lastPart = parseInt(parts[parts.length - 1]) || 0
-parts[parts.length - 1] = (lastPart + 1).toString()
-const newVersion = parts.join('.')
+const parts = currentVersion
+  .split('.')
+  .map((part) => parseInt(part) || 0)
+
+// Убеждаемся, что у нас есть все три части версии
+while (parts.length < 3) {
+  parts.push(0)
+}
+
+let newVersion
+
+switch (updateType) {
+  case 'major':
+    // 1.0.0 → 2.0.0
+    parts[0] += 1
+    parts[1] = 0
+    parts[2] = 0
+    break
+  case 'minor':
+    // 1.0.0 → 1.1.0
+    parts[1] += 1
+    parts[2] = 0
+    break
+  case 'patch':
+  default:
+    // 1.0.0 → 1.0.1
+    parts[2] += 1
+    break
+}
+
+newVersion = parts.join('.')
 
 // Заменяем версию - учитываем возможный перенос строки
 content = content.replace(
@@ -33,6 +63,16 @@ content = content.replace(
 fs.writeFileSync(configPath, content)
 
 console.log(
-  `✅ Версия обновлена: ${currentVersion} → ${newVersion}`
+  `✅ Версия обновлена: ${currentVersion} → ${newVersion} (${updateType})`
 )
 console.log(`📝 Файл обновлен: ${configPath}`)
+console.log(`\n📋 Использование:`)
+console.log(
+  `  node scripts/update-version.js patch   # 1.0.0 → 1.0.1 (по умолчанию)`
+)
+console.log(
+  `  node scripts/update-version.js minor   # 1.0.0 → 1.1.0`
+)
+console.log(
+  `  node scripts/update-version.js major   # 1.0.0 → 2.0.0`
+)

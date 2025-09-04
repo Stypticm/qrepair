@@ -13,6 +13,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
+import { ImagePreloader } from '@/components/ImagePreloader';
 
 export default function ConditionPage() {
     const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice } = useStartForm();
@@ -520,15 +521,21 @@ export default function ConditionPage() {
                                 )}
                                 <CardContent className="p-1 pb-1 flex flex-col items-center justify-center">
                                     {/* Изображение - разные размеры для разных секций */}
-                                    <div className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}>
+                                    <motion.div 
+                                        className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.3, delay: 0.1 }}
+                                    >
                                         <Image
                                             src={getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}
                                             alt={condition.label}
                                             fill
-                                            className="w-full h-full object-cover"
-                                            priority
+                                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
+                                            loading="eager"
+                                            priority={false}
                                         />
-                                    </div>
+                                    </motion.div>
 
                                     {/* Название условия */}
                                     <h4 className="text-xs font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
@@ -545,8 +552,16 @@ export default function ConditionPage() {
         );
     };
 
+    // Список изображений для предзагрузки
+    const preloadImages = [
+        ...frontConditions.map(c => getPictureUrl(`${c.image}.png`)),
+        ...backConditions.map(c => getPictureUrl(`${c.image}.png`)),
+        ...sideConditions.map(c => getPictureUrl(`${c.image}.png`))
+    ];
+
     return (
         <Page back={true}>
+            <ImagePreloader images={preloadImages} />
             <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
                 {/* Прогресс-бар */}
                 <div className="pt-2 pb-1">

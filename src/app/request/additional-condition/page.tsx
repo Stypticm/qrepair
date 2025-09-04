@@ -20,6 +20,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
+import { ImagePreloader } from '@/components/ImagePreloader';
 
 
 export default function AdditionalConditionPage() {
@@ -339,7 +340,12 @@ export default function AdditionalConditionPage() {
                 console.log('[saveConditionsToDatabase] Дополнительные состояния успешно сохранены в БД:', result);
                 // setHasChanges(true); // Убираем отсюда, так как устанавливаем раньше
             } else {
-                console.error('[saveConditionsToDatabase] Ошибка сохранения дополнительных состояний в БД');
+                const errorData = await response.json();
+                console.error('[saveConditionsToDatabase] Ошибка сохранения дополнительных состояний в БД:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorData
+                });
             }
         } catch (error) {
             console.error('[saveConditionsToDatabase] Ошибка при сохранении дополнительных состояний:', error);
@@ -451,14 +457,21 @@ export default function AdditionalConditionPage() {
                                 )}
                                 <CardContent className="p-0.5">
                                     <div className="flex flex-col items-center space-y-1">
-                                        <div className={`relative ${getImageContainerSize()} rounded-lg overflow-hidden bg-gray-100`}>
+                                        <motion.div 
+                                            className={`relative ${getImageContainerSize()} rounded-lg overflow-hidden bg-gray-100`}
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.3, delay: 0.1 }}
+                                        >
                                             <Image
                                                 src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`}
                                                 alt={condition.label}
                                                 fill
-                                                className="object-cover"
+                                                className="object-cover transition-transform duration-200 hover:scale-105"
+                                                loading="eager"
+                                                priority={false}
                                             />
-                                        </div>
+                                        </motion.div>
                                         {type !== 'battery' && (
                                             <span className="text-xs font-medium text-gray-900 text-center whitespace-pre-line">
                                                 {condition.label}
@@ -474,8 +487,17 @@ export default function AdditionalConditionPage() {
         );
     };
 
+    // Список изображений для предзагрузки
+    const preloadImages = [
+        ...faceIdConditions.map(c => getPictureUrl(`${c.image}.png`)),
+        ...touchIdConditions.map(c => getPictureUrl(`${c.image}.png`)),
+        ...backCameraConditions.map(c => getPictureUrl(`${c.image}.png`)),
+        ...batteryConditions.map(c => getPictureUrl(`${c.image}.png`))
+    ];
+
     return (
         <Page back={true}>
+            <ImagePreloader images={preloadImages} />
             <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
                 {/* Прогресс-бар */}
                 <div className="pt-2 pb-1">
@@ -545,14 +567,21 @@ export default function AdditionalConditionPage() {
                                                 )}
                                                 <CardContent className="p-3">
                                                     <div className="flex flex-col items-center space-y-2">
-                                                        <div className="relative w-16 h-24 rounded-lg overflow-hidden bg-gray-100">
+                                                        <motion.div 
+                                                            className="relative w-16 h-24 rounded-lg overflow-hidden bg-gray-100"
+                                                            initial={{ opacity: 0, scale: 0.8 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ duration: 0.3, delay: 0.1 }}
+                                                        >
                                                             <Image
                                                                 src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`}
                                                                 alt={condition.label}
                                                                 fill
-                                                                className="object-cover"
+                                                                className="object-cover transition-transform duration-200 hover:scale-105"
+                                                                loading="eager"
+                                                                priority={false}
                                                             />
-                                                        </div>
+                                                        </motion.div>
                                                     </div>
                                                 </CardContent>
                                             </Card>
@@ -586,9 +615,21 @@ export default function AdditionalConditionPage() {
                                                         {isSelected && (<div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>)}
                                                         <CardContent className="p-2">
                                                             <div className="flex flex-col items-center space-y-1">
-                                                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                                                                    <Image src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`} alt={condition.label} fill className="object-cover" />
-                                                                </div>
+                                                                <motion.div 
+                                                                    className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100"
+                                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                                    animate={{ opacity: 1, scale: 1 }}
+                                                                    transition={{ duration: 0.3, delay: 0.1 }}
+                                                                >
+                                                                    <Image 
+                                                                        src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`} 
+                                                                        alt={condition.label} 
+                                                                        fill 
+                                                                        className="object-cover transition-transform duration-200 hover:scale-105"
+                                                                        loading="eager"
+                                                                        priority={false}
+                                                                    />
+                                                                </motion.div>
                                                                 <span className="text-xs font-medium text-gray-900 text-center">
                                                                     {condition.label}
                                                                 </span>
@@ -608,9 +649,21 @@ export default function AdditionalConditionPage() {
                                                         {isSelected && (<div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>)}
                                                         <CardContent className="p-2">
                                                             <div className="flex flex-col items-center space-y-1">
-                                                                <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
-                                                                    <Image src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`} alt={condition.label} fill className="object-cover" />
-                                                                </div>
+                                                                <motion.div 
+                                                                    className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100"
+                                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                                    animate={{ opacity: 1, scale: 1 }}
+                                                                    transition={{ duration: 0.3, delay: 0.1 }}
+                                                                >
+                                                                    <Image 
+                                                                        src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`} 
+                                                                        alt={condition.label} 
+                                                                        fill 
+                                                                        className="object-cover transition-transform duration-200 hover:scale-105"
+                                                                        loading="eager"
+                                                                        priority={false}
+                                                                    />
+                                                                </motion.div>
                                                                 <span className="text-xs font-medium text-gray-900 text-center">
                                                                     {condition.label}
                                                                 </span>
@@ -636,10 +689,14 @@ export default function AdditionalConditionPage() {
                     className="bg-white cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
                     onClick={handleContinue}
                     showCloseButton={false}
+                    aria-describedby="dialog-description"
                 >
                     <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
-
+                        Дополнительные условия устройства
                     </DialogTitle>
+                    <div id="dialog-description" className="sr-only">
+                        Диалог с выбранными дополнительными условиями устройства. Нажмите для продолжения или вне диалога для редактирования.
+                    </div>
 
                     <div className="text-center">
                         {/* Рамка для выбранных условий */}

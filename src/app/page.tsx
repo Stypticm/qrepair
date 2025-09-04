@@ -141,6 +141,18 @@ export default function Home() {
           case 'submit':
             router.push('/request/submit');
             return;
+          case 'delivery-options':
+            router.push('/request/delivery-options');
+            return;
+          case 'pickup-points':
+            router.push('/request/pickup-points');
+            return;
+          case 'courier-booking':
+            router.push('/request/courier-booking');
+            return;
+          case 'final':
+            router.push('/request/final');
+            return;
           default:
             break;
         }
@@ -149,7 +161,19 @@ export default function Home() {
       // 5. Fallback: определяем шаг на основе сохраненных данных
       
       // Если нет currentStep, определяем по заполненным данным
-      if (imei && serialNumber && modelname && deviceConditions && additionalConditions) {
+      if (draftData?.deliveryMethod) {
+        // Есть данные о доставке - определяем по deliveryMethod
+        if (draftData.deliveryMethod === 'pickup' && draftData.pickupPoint) {
+          router.push('/request/pickup-points');
+          return;
+        } else if (draftData.deliveryMethod === 'courier' && draftData.courierAddress && draftData.courierDate && draftData.courierTime) {
+          router.push('/request/courier-booking');
+          return;
+        } else {
+          router.push('/request/delivery-options');
+          return;
+        }
+      } else if (imei && serialNumber && modelname && deviceConditions && additionalConditions) {
         // Все данные заполнены - перенаправляем на submit
         router.push('/request/submit');
         return;
@@ -245,7 +269,7 @@ export default function Home() {
               className="w-full"
             >
               <Image
-                src={getPictureUrl(`logo4.png`) || '/logo4.png'}
+                src={getPictureUrl(`animation_logo.gif`) || '/animation_logo.gif'}
                 alt="Логотип"
                 width={300}
                 height={150}

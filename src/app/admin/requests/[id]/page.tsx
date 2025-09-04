@@ -253,6 +253,31 @@ const RequestById = () => {
                                 <CardDescription className="text-gray-600">
                                     <p className="text-gray-900 font-medium">Модель телефона: {application?.modelname}</p>
                                     <p className="text-gray-900 font-medium">Предварительная цена: {application?.price ?? '—'} ₽</p>
+                                    
+                                    {/* Отображение согласия с ценой и feedback */}
+                                    {(application as any)?.priceAgreed !== undefined && (
+                                        <div className="mt-3 p-3 rounded-xl border">
+                                            <p className="text-gray-900 font-medium mb-2">
+                                                Согласие с ценой: 
+                                                <span className={`ml-2 px-2 py-1 rounded-full text-sm font-medium ${
+                                                    (application as any)?.priceAgreed 
+                                                        ? 'bg-green-100 text-green-800' 
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                    {(application as any)?.priceAgreed ? 'Согласен' : 'Не согласен'}
+                                                </span>
+                                            </p>
+                                            
+                                            {(application as any)?.feedback && (
+                                                <div className="mt-2">
+                                                    <p className="text-gray-700 font-medium mb-1">💬 Отзыв пользователя:</p>
+                                                    <div className="bg-gray-50 p-3 rounded-lg border">
+                                                        <p className="text-gray-800 italic">&quot;{((application as any)?.feedback)}&quot;</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="flex flex-col items-center gap-2 mt-2">
                                         {(() => {
                                             const isEditable = application?.status === 'accepted';

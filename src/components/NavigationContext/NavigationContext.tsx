@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface NavigationContextType {
@@ -10,6 +10,7 @@ interface NavigationContextType {
   goToNextStep: () => void;
   canGoBack: boolean;
   canGoForward: boolean;
+  clearCurrentStep: () => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -18,13 +19,36 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const [currentStep, setCurrentStep] = useState<string | null>(null);
   const router = useRouter();
 
+  // Восстанавливаем текущий шаг из sessionStorage при загрузке
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedStep = sessionStorage.getItem('currentStep');
+      if (savedStep) {
+        console.log('Восстанавливаем текущий шаг из sessionStorage:', savedStep);
+        setCurrentStep(savedStep);
+      }
+    }
+  }, []);
+
+  // Сохраняем текущий шаг в sessionStorage при изменениях
+  useEffect(() => {
+    if (typeof window !== 'undefined' && currentStep) {
+      console.log('Сохраняем текущий шаг в sessionStorage:', currentStep);
+      sessionStorage.setItem('currentStep', currentStep);
+    }
+  }, [currentStep]);
+
   // Определяем порядок шагов
   const stepOrder = [
     'device-info',
     'form',
     'condition', 
     'additional-condition',
-    'submit'
+    'submit',
+    'delivery-options',
+    'pickup-points',
+    'courier-booking',
+    'final'
   ];
 
   const goToPreviousStep = () => {
@@ -51,6 +75,18 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
           break;
         case 'submit':
           router.push('/request/submit');
+          break;
+        case 'delivery-options':
+          router.push('/request/delivery-options');
+          break;
+        case 'pickup-points':
+          router.push('/request/pickup-points');
+          break;
+        case 'courier-booking':
+          router.push('/request/courier-booking');
+          break;
+        case 'final':
+          router.push('/request/final');
           break;
         default:
           router.push('/request/device-info');
@@ -86,6 +122,18 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         case 'submit':
           router.push('/request/submit');
           break;
+        case 'delivery-options':
+          router.push('/request/delivery-options');
+          break;
+        case 'pickup-points':
+          router.push('/request/pickup-points');
+          break;
+        case 'courier-booking':
+          router.push('/request/courier-booking');
+          break;
+        case 'final':
+          router.push('/request/final');
+          break;
         default:
           router.push('/request/device-info');
       }
@@ -95,6 +143,15 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const canGoBack = currentStep ? stepOrder.indexOf(currentStep) > 0 : false;
   const canGoForward = currentStep ? stepOrder.indexOf(currentStep) < stepOrder.length - 1 : false;
 
+  // Функция для очистки текущего шага
+  const clearCurrentStep = () => {
+    console.log('Очищаем текущий шаг');
+    setCurrentStep(null);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('currentStep');
+    }
+  };
+
   return (
     <NavigationContext.Provider value={{
       currentStep,
@@ -102,7 +159,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       goToPreviousStep,
       goToNextStep,
       canGoBack,
-      canGoForward
+      canGoForward,
+      clearCurrentStep
     }}>
       {children}
     </NavigationContext.Provider>

@@ -38,6 +38,18 @@ model Skupka {
   deviceConditions     Json?        // Детальное состояние устройства (front, back, side)
   additionalConditions Json?        // Дополнительные условия (faceId, touchId, backCamera, battery)
   submittedAt          DateTime?    // Время отправки заявки
+  
+  // Новые поля для переделанной страницы submit
+  priceAgreed          Boolean?     // Согласен ли пользователь с ценой
+  feedback             String?      // Отзыв пользователя если не согласен
+  deliveryMethod       String?      // 'pickup' или 'courier'
+  pickupPoint          String?      // Выбранная точка самовывоза
+  courierAddress       String?      // Адрес для курьера
+  courierDate          DateTime?    // Дата вызова курьера
+  courierTime          String?      // Время вызова курьера
+  telegramIdConfirmed  Boolean      @default(false) // Подтвердил ли пользователь свой Telegram ID
+  userTelegramId       String?      // Подтвержденный Telegram ID пользователя
+  
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
   

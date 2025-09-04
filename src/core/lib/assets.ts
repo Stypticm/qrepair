@@ -9,10 +9,24 @@ export function getSupabasePublicBase(
 }
 
 export function getPictureUrl(fileName: string): string {
+  // По умолчанию используем локальные файлы для ускорения загрузки
+  // Можно переопределить через переменную окружения, если нужно использовать Supabase
+  const useSupabase =
+    process.env.NEXT_PUBLIC_USE_SUPABASE_IMAGES === 'true'
+
+  if (!useSupabase) {
+    // В Telegram WebApp используем абсолютный URL для локальных файлов
+    if (typeof window !== 'undefined' && window.location) {
+      return `${window.location.origin}/${fileName}`
+    }
+    return `/${fileName}`
+  }
+
   // Можно переопределить базу через переменную окружения, если нужно
   const override = process.env.NEXT_PUBLIC_PICTURES_BASE
   const base = override || getSupabasePublicBase('pictures')
-  if (!base) return ''
+  if (!base) return `/${fileName}` // Fallback на локальные файлы
+
   return `${base}/${fileName}`
 }
 
@@ -27,4 +41,33 @@ export function getImageUrl(fileName: string): string {
 
 export function getStatusImage(name: string): string {
   return getPictureUrl(`status/${name}.png`)
+}
+
+// Функция для получения абсолютного URL изображения для серверной среды (API routes)
+export function getServerImageUrl(
+  fileName: string
+): string {
+  const useSupabase =
+    process.env.NEXT_PUBLIC_USE_SUPABASE_IMAGES === 'true'
+
+  if (!useSupabase) {
+    // Для серверной среды используем NEXT_PUBLIC_BASE_URL или fallback
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      'http://localhost:3000'
+    return `${baseUrl}/${fileName}`
+  }
+
+  // Если используется Supabase
+  const override = process.env.NEXT_PUBLIC_PICTURES_BASE
+  const base = override || getSupabasePublicBase('pictures')
+  if (!base) {
+    // Fallback на локальные файлы с абсолютным URL
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      'http://localhost:3000'
+    return `${baseUrl}/${fileName}`
+  }
+
+  return `${base}/${fileName}`
 }

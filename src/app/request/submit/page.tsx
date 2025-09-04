@@ -6,15 +6,19 @@ import { useNavigation } from '@/components/NavigationContext/NavigationContext'
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
+import { motion } from 'framer-motion';
 
 const SubmitPage = () => {
     const router = useRouter();
     const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber } = useStartForm();
     const { setCurrentStep } = useNavigation();
-    const [submitting, setSubmitting] = useState(false);
     const [dataLoaded, setDataLoaded] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
     const [showResetDialog, setShowResetDialog] = useState(false);
+    const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+    const [feedback, setFeedback] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+    const [agreeLoading, setAgreeLoading] = useState(false);
+    const [buttonsDisabled, setButtonsDisabled] = useState(false);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -30,7 +34,6 @@ const SubmitPage = () => {
                 try {
                     const parsed = JSON.parse(savedPhoneSelection);
                     if (parsed.model) {
-                        // Обновляем модель в контексте
                         setModel(parsed.model);
                     }
                 } catch (e) {
@@ -44,7 +47,6 @@ const SubmitPage = () => {
                 try {
                     const parsed = JSON.parse(savedDeviceConditions);
                     if (parsed && (parsed.front || parsed.back || parsed.side)) {
-                        // Обновляем состояния устройства в контексте
                         setDeviceConditions(parsed);
                     }
                 } catch (e) {
@@ -58,7 +60,6 @@ const SubmitPage = () => {
                 try {
                     const parsed = JSON.parse(savedAdditionalConditions);
                     if (parsed && (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery)) {
-                        // Обновляем дополнительные состояния в контексте
                         setAdditionalConditions(parsed);
                     }
                 } catch (e) {
@@ -109,38 +110,8 @@ const SubmitPage = () => {
         }
     }, [setModel, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber, telegramId]);
 
-    // Принудительно закрываем любые открытые диалоговые окна при загрузке страницы
-    useEffect(() => {
-        // Закрываем все возможные диалоговые окна
-        const dialogs = document.querySelectorAll('[role="dialog"]');
-        dialogs.forEach(dialog => {
-            if (dialog instanceof HTMLElement) {
-                dialog.style.display = 'none';
-            }
-        });
-
-        // Также закрываем элементы с классом dialog
-        const dialogElements = document.querySelectorAll('.dialog, [class*="dialog"]');
-        dialogElements.forEach(element => {
-            if (element instanceof HTMLElement) {
-                element.style.display = 'none';
-            }
-        });
-
-        // Убираем backdrop (серый фон)
-        const backdrops = document.querySelectorAll('[data-radix-dialog-overlay], .fixed.inset-0');
-        backdrops.forEach(backdrop => {
-            if (backdrop instanceof HTMLElement) {
-                backdrop.style.display = 'none';
-            }
-        });
-    }, []);
-
     // Проверяем, загружены ли все необходимые данные
     useEffect(() => {
-        // Если заявка уже отправлена, не проверяем данные
-        if (submitted) return;
-
         // Проверяем наличие основных данных
         const hasBasicData = modelname && telegramId;
 
@@ -163,7 +134,7 @@ const SubmitPage = () => {
         if (hasBasicData && (hasDeviceData || hasAdditionalData)) {
             setDataLoaded(true);
         }
-    }, [modelname, telegramId, deviceConditions, additionalConditions, submitted]);
+    }, [modelname, telegramId, deviceConditions, additionalConditions]);
 
     const handleReset = async () => {
         try {
@@ -213,7 +184,6 @@ const SubmitPage = () => {
 
             // Переходим к device-info (первая страница в новой структуре)
             console.log('Redirecting to device-info');
-            // Используем replace вместо push, чтобы избежать возврата к submit странице
             router.replace('/request/device-info');
         } catch (error) {
             console.error('Ошибка при сбросе данных:', error);
@@ -222,58 +192,88 @@ const SubmitPage = () => {
         }
     };
 
-    const handleSubmit = async () => {
-        if (submitting) return;
-        setSubmitting(true);
-
+    const handleAgree = async () => {
+        // Блокируем кнопки сразу при нажатии
+        setButtonsDisabled(true);
+        setAgreeLoading(true);
+        
         try {
-            const fullModelName = getFullModelName();
+            // Сохраняем текущий шаг в БД перед переходом
+            if (telegramId) {
+                await fetch('/api/request/saveCurrentStep', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        telegramId,
+                        currentStep: 'delivery-options',
+                    }),
+                });
+            }
+            
+            // Переходим к выбору способа доставки
+            router.push('/request/delivery-options');
+        } catch (error) {
+            console.error('Error saving current step:', error);
+            // Переходим даже при ошибке
+            router.push('/request/delivery-options');
+        } finally {
+            // Не сбрасываем состояния, так как происходит переход
+            // setAgreeLoading(false);
+            // setButtonsDisabled(false);
+        }
+    };
 
-            // Логируем отправляемую модель для отладки
-            console.log('Sending modelname:', fullModelName);
-            console.log('Context modelname:', modelname);
+    const handleDisagree = () => {
+        // Блокируем кнопки сразу при нажатии
+        setButtonsDisabled(true);
+        setShowFeedbackDialog(true);
+    };
 
-            const res = await fetch('/api/request/submit', {
+    const handleFeedbackSubmit = async () => {
+        if (!feedback.trim()) return;
+
+        setSubmitting(true);
+        try {
+            // Сохраняем feedback в БД
+            const response = await fetch('/api/request/submit-feedback', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     telegramId,
-                    modelname: fullModelName,
+                    feedback: feedback.trim(),
+                    modelname: getFullModelName(),
                     price: finalPrice,
-                    imei: imei || null,
-                    sn: serialNumber || null,
                 }),
             });
 
-            if (res.ok) {
-                const result = await res.json();
-
-                // Сразу помечаем как отправленную, чтобы скрыть страницу
-                setSubmitted(true);
-
-                // Сначала переходим на главную страницу
+            if (response.ok) {
+                // Переходим на главную страницу
                 router.push('/');
 
-                // Затем очищаем sessionStorage и сбрасываем состояния
+                // Очищаем данные
                 setTimeout(() => {
                     if (typeof window !== 'undefined') {
+                        // Очищаем все данные заявки
                         sessionStorage.removeItem('phoneSelection');
                         sessionStorage.removeItem('deviceConditions');
                         sessionStorage.removeItem('additionalConditions');
-                        // Устанавливаем флаг, что заявка была отправлена
+                        sessionStorage.removeItem('imei');
+                        sessionStorage.removeItem('serialNumber');
+                        sessionStorage.removeItem('deliveryData');
+                        sessionStorage.removeItem('deliveryOptionsData');
+                        sessionStorage.removeItem('pickupPointsData');
+                        sessionStorage.removeItem('courierBookingData');
                         sessionStorage.setItem('requestSubmitted', 'true');
                     }
-
-                    // Сбрасываем все состояния ТОЛЬКО после перехода
                     resetAllStates();
-                }, 100); // Небольшая задержка для плавного перехода
-            } else {
-                // Ошибка при отправке заявки
+                }, 100);
             }
         } catch (error) {
-            // Ошибка при отправке заявки
+            console.error('Ошибка при отправке feedback:', error);
         } finally {
             setSubmitting(false);
         }
@@ -281,18 +281,6 @@ const SubmitPage = () => {
 
     // Используем цену из контекста или фиксированную цену по умолчанию
     const finalPrice = price || 48000;
-
-    // Функция для получения названия цвета
-    const getColorLabel = (color: string) => {
-        const colorMap: { [key: string]: string } = {
-            'G': 'Золотой',
-            'R': 'Красный',
-            'Bl': 'Синий',
-            'Wh': 'Белый',
-            'C': 'Черный'
-        };
-        return colorMap[color] || color;
-    };
 
     // Функция для формирования полной модели из данных sessionStorage
     const getFullModelName = (): string => {
@@ -316,8 +304,14 @@ const SubmitPage = () => {
                     }
 
                     if (parsed.color) {
-                        // Получаем цвет из функции getColorLabel
-                        const colorLabel = getColorLabel(parsed.color);
+                        const colorMap: { [key: string]: string } = {
+                            'G': 'Золотой',
+                            'R': 'Красный',
+                            'Bl': 'Синий',
+                            'Wh': 'Белый',
+                            'C': 'Черный'
+                        };
+                        const colorLabel = colorMap[parsed.color] || parsed.color;
                         fullModel += ` ${colorLabel}`;
                     }
 
@@ -339,112 +333,16 @@ const SubmitPage = () => {
 
         // Возвращаем базовую модель если не удалось получить полную
         console.log('Using fallback modelname:', modelname);
-        // Убираем "Apple " из начала названия модели
         const cleanModelName = modelname ? modelname.replace(/^Apple\s+/, '') : 'Модель не найдена';
         return cleanModelName;
     };
 
-    // Функция для отображения состояния с процентом
-    const getConditionWithPenalty = (conditionText: string): string => {
-        if (conditionText === 'Новый') {
-            return 'Новый (0%)';
-        } else if (conditionText === 'Очень хорошее') {
-            return 'Очень хорошее (-3%)';
-        } else if (conditionText === 'Заметные царапины') {
-            return 'Заметные царапины (-8%)';
-        } else if (conditionText === 'Трещины') {
-            return 'Трещины (-15%)';
-        } else {
-            return conditionText;
-        }
-    };
-
-    // Функция для отображения дополнительного состояния с процентом
-    const getAdditionalConditionWithPenalty = (conditionText: string, type: string): string => {
-        if (type === 'faceId') {
-            return conditionText === 'Не работает' ? 'Не работает (-10%)' : 'Работает (0%)';
-        } else if (type === 'touchId') {
-            return conditionText === 'Не работает' ? 'Не работает (-8%)' : 'Работает (0%)';
-        } else if (type === 'backCamera') {
-            if (conditionText === 'Новый') return 'Новый (0%)';
-            else if (conditionText === 'Очень хорошее') return 'Очень хорошее (-3%)';
-            else if (conditionText === 'Заметные царапины') return 'Заметные царапины (-8%)';
-            else if (conditionText === 'Трещины') return 'Трещины (-15%)';
-            return conditionText;
-        } else if (type === 'battery') {
-            if (conditionText === '95%') return '95% (0%)';
-            else if (conditionText === '90%') return '90% (-2%)';
-            else if (conditionText === '85%') return '85% (-5%)';
-            else if (conditionText === '75%') return '75% (-10%)';
-            return conditionText;
-        }
-        return conditionText;
-    };
-
-    // Функция для расчета общего процента вычета
-    const calculateTotalPenalty = (): number => {
-        let totalPenalty = 0;
-
-
-
-        // Штрафы за основные состояния устройства
-        if (deviceConditions.front) {
-            if (deviceConditions.front === 'Новый') totalPenalty += 0;
-            else if (deviceConditions.front === 'Очень хорошее') totalPenalty += -3;
-            else if (deviceConditions.front === 'Заметные царапины') totalPenalty += -8;
-            else if (deviceConditions.front === 'Трещины') totalPenalty += -15;
-        }
-
-        if (deviceConditions.back) {
-            if (deviceConditions.back === 'Новый') totalPenalty += 0;
-            else if (deviceConditions.back === 'Очень хорошее') totalPenalty += -3;
-            else if (deviceConditions.back === 'Заметные царапины') totalPenalty += -8;
-            else if (deviceConditions.back === 'Трещины') totalPenalty += -15;
-        }
-
-        if (deviceConditions.side) {
-            if (deviceConditions.side === 'Новый') totalPenalty += 0;
-            else if (deviceConditions.side === 'Очень хорошее') totalPenalty += -3;
-            else if (deviceConditions.side === 'Заметные царапины') totalPenalty += -8;
-            else if (deviceConditions.side === 'Трещины') totalPenalty += -15;
-        }
-
-        // Штрафы за дополнительные состояния
-        if (additionalConditions) {
-            if (additionalConditions.faceId === 'Работает') totalPenalty += 0;
-            else if (additionalConditions.faceId === 'Не работает') totalPenalty += -10;
-
-            if (additionalConditions.touchId === 'Работает') totalPenalty += 0;
-            else if (additionalConditions.touchId === 'Не работает') totalPenalty += -8;
-
-            // Штрафы за заднюю камеру
-            if (additionalConditions.backCamera === 'Новый') totalPenalty += 0;
-            else if (additionalConditions.backCamera === 'Очень хорошее') totalPenalty += -3;
-            else if (additionalConditions.backCamera === 'Заметные царапины') totalPenalty += -8;
-            else if (additionalConditions.backCamera === 'Трещины') totalPenalty += -15;
-
-            // Штрафы за батарею
-            if (additionalConditions.battery === '95%') totalPenalty += 0;
-            else if (additionalConditions.battery === '90%') totalPenalty += -2;
-            else if (additionalConditions.battery === '85%') totalPenalty += -5;
-            else if (additionalConditions.battery === '75%') totalPenalty += -10;
-        }
-
-
-
-        return Math.abs(totalPenalty);
-    };
-
     return (
         <Page back={true}>
-            <div className="w-full h-full bg-gray-50 animate-fadeInUp my-auto pt-6">
-                <div className="flex flex-col items-center justify-center w-full h-full px-6">
-                    {submitted ? (
-                        <div className="w-full max-w-md text-center">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
-                            <p className="text-gray-600">Перенаправляем на главную страницу...</p>
-                        </div>
-                    ) : !dataLoaded ? (
+            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
+                        {!dataLoaded ? (
                         <div className="w-full max-w-md text-center">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
                             <p className="text-gray-600">Загружаем данные заявки...</p>
@@ -460,136 +358,86 @@ const SubmitPage = () => {
                             </Button>
                         </div>
                     ) : (
-                        <div className="w-full max-w-md space-y-6">
-
-
+                            <>
                             {/* Summary заявки */}
-                            <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg">
-                                <h3 className="text-xl font-semibold mb-5 text-center text-gray-900">
-                                    Заявка
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+                                >
+                                    <h3 className="text-xl font-semibold mb-6 text-center text-gray-900">
+                                        Предварительная оценка
                                 </h3>
 
                                 <div className="space-y-4">
-                                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                                         <span className="font-semibold text-gray-900 break-words text-lg">{getFullModelName()}</span>
                                     </div>
 
                                     <div className="border-t border-gray-200 pt-4">
-                                        <h4 className="font-semibold mb-3 text-gray-900 text-center">Состояние устройства:</h4>
-                                        <div className="space-y-3">
-                                            {/* Основные состояния устройства */}
-                                            {deviceConditions && (
-                                                <>
-                                                    {deviceConditions.front && (
                                                         <div className="flex justify-between items-center">
-                                                            <span className="text-gray-600 font-medium flex-shrink-0">Передняя панель:</span>
-                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                                {getConditionWithPenalty(deviceConditions.front)}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {deviceConditions.back && (
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-gray-600 font-medium flex-shrink-0">Задняя панель:</span>
-                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                                {getConditionWithPenalty(deviceConditions.back)}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {deviceConditions.side && (
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-gray-600 font-medium flex-shrink-0">Боковая панель:</span>
-                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                                {getConditionWithPenalty(deviceConditions.side)}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
-
-                                            {/* Дополнительные состояния устройства */}
-                                            {additionalConditions && (
-                                                <>
-                                                    {additionalConditions.backCamera && (
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-gray-600 font-medium flex-shrink-0">Задняя камера:</span>
-                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                                {getAdditionalConditionWithPenalty(additionalConditions.backCamera, 'backCamera')}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {additionalConditions.battery && (
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-gray-600 font-medium flex-shrink-0">Батарея:</span>
-                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                                {getAdditionalConditionWithPenalty(additionalConditions.battery, 'battery')}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {additionalConditions.faceId && (
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-gray-600 font-medium flex-shrink-0">Face ID:</span>
-                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                                {getAdditionalConditionWithPenalty(additionalConditions.faceId, 'faceId')}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {additionalConditions.touchId && (
-                                                        <div className="flex justify-between items-center">
-                                                            <span className="text-gray-600 font-medium flex-shrink-0">Touch ID:</span>
-                                                            <span className="font-semibold text-gray-900 break-words text-right ml-2 flex-1">
-                                                                {getAdditionalConditionWithPenalty(additionalConditions.touchId, 'touchId')}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="border-t border-gray-200 pt-4">
-                                        <h4 className="font-semibold mb-3 text-gray-900 text-center">Итоговая оценка:</h4>
-                                        <div className="space-y-3">
-                                            {/* Общий процент вычета */}
-                                            {/* {((deviceConditions && (deviceConditions.front || deviceConditions.back || deviceConditions.side)) || 
-                                          (additionalConditions && (additionalConditions.faceId || additionalConditions.touchId || additionalConditions.backCamera || additionalConditions.battery))) && (
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-semibold text-gray-900 flex-shrink-0">Общий вычет:</span>
-                                                <span className="font-bold text-red-600 ml-2 flex-1 text-right">
-                                                    {calculateTotalPenalty() === 0 ? '0%' : `${calculateTotalPenalty()}%`}
-                                                </span>
-                                            </div>
-                                        )} */}
-
-                                            <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
-                                                <span className="font-semibold text-gray-900 flex-shrink-0">Предварительная цена:</span>
-                                                <span className="font-bold text-xl text-green-600 ml-2 flex-1 text-right">{finalPrice.toLocaleString()} ₽</span>
+                                                <span className="font-semibold text-gray-900">Предварительная цена:</span>
+                                                <span className="font-bold text-2xl text-green-600">{finalPrice.toLocaleString()} ₽</span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </motion.div>
 
-                            {/* Кнопки */}
-                            <div className="w-full flex flex-col gap-2">
-                                <Button
-                                    onClick={handleSubmit}
-                                    disabled={submitting || !modelname}
-                                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                {/* Кнопки согласия */}
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: 0.1 }}
+                                    className="w-full flex flex-col gap-3"
                                 >
-                                    {submitting ? 'Отправляем...' : 'Отправить заявку'}
+                                <Button
+                                        onClick={handleAgree}
+                                        disabled={agreeLoading || buttonsDisabled}
+                                        className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg shadow-md disabled:opacity-50"
+                                >
+                                        {agreeLoading ? 'Переходим...' : 'Согласен'}
                                 </Button>
 
+                                    <Button
+                                        onClick={handleDisagree}
+                                        disabled={buttonsDisabled}
+                                        variant="outline"
+                                        className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-lg py-4 rounded-2xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50"
+                                    >
+                                        Не согласен
+                                    </Button>
+                                </motion.div>
+
+                                {/* Кнопка "Начать заново" */}
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.3, delay: 0.2 }}
+                                >
                                 <Button
                                     onClick={() => setShowResetDialog(true)}
                                     variant="outline"
-                                    className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                                        className="w-full bg-white hover:bg-gray-50 text-gray-600 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
                                 >
                                     Начать заново
                                 </Button>
-                            </div>
-                        </div>
-                    )}
+                                </motion.div>
+
+                                {/* Подпись о цене */}
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.3, delay: 0.3 }}
+                                    className="text-center"
+                                >
+                                    <p className="text-xs text-gray-500 leading-relaxed">
+                                        * Цена может быть изменена при вторичном осмотре устройства нашим специалистом
+                                    </p>
+                                </motion.div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -623,6 +471,54 @@ const SubmitPage = () => {
                                     className="flex-1 py-2 text-sm bg-red-600 hover:bg-red-700 text-white"
                                 >
                                     Да, начать заново
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Диалог для feedback */}
+            {showFeedbackDialog && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span className="text-2xl">💬</span>
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                Что вас не устроило?
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Поделитесь своими мыслями, чтобы мы могли улучшить наш сервис
+                            </p>
+                            
+                            <textarea
+                                value={feedback}
+                                onChange={(e) => setFeedback(e.target.value)}
+                                placeholder="Введите ваш отзыв..."
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm resize-none"
+                                rows={4}
+                            />
+                            
+                            <div className="flex space-x-3 gap-2 mt-4">
+                                <Button
+                                    onClick={() => {
+                                        setShowFeedbackDialog(false);
+                                        setFeedback('');
+                                        setButtonsDisabled(false); // Разблокируем кнопки при отмене
+                                    }}
+                                    variant="outline"
+                                    className="flex-1 py-2 text-sm"
+                                >
+                                    Отмена
+                                </Button>
+                                <Button
+                                    onClick={handleFeedbackSubmit}
+                                    disabled={!feedback.trim() || submitting}
+                                    className="flex-1 py-2 text-sm bg-[#2dc2c6] hover:bg-[#25a8ac] text-white disabled:opacity-50"
+                                >
+                                    {submitting ? 'Отправляем...' : 'Отправить'}
                                 </Button>
                             </div>
                         </div>

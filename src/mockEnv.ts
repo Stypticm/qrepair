@@ -101,6 +101,7 @@ export async function mockEnv(): Promise<void> {
                     JSON.stringify({
                       id: 531360988,
                       first_name: 'Vladislav',
+                      username: 'qoqos_app',
                     }),
                   ],
                 ]).toString(),
