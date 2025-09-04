@@ -564,7 +564,7 @@ export default function ConditionPage() {
             <ImagePreloader images={preloadImages} />
             <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
                 {/* Прогресс-бар */}
-                <div className="pt-2 pb-1">
+                <div className="pt-6 pb-1">
                     <ProgressBar
                         currentStep={getCurrentStep()}
                         totalSteps={5}

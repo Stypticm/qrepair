@@ -4,6 +4,7 @@ import {
   sendTelegramMessage,
   sendTelegramPhoto,
 } from '@/core/lib/sendTelegramMessage'
+import { getServerImageUrl } from '@/core/lib/assets'
 import fs from 'fs'
 import path from 'path'
 
@@ -115,8 +116,8 @@ export async function POST(request: NextRequest) {
     )
 
     try {
-      // Отправляем фото по URL из Supabase Storage
-      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/submit.jpg`
+      // Отправляем фото по URL используя стандартную функцию
+      const imageUrl = getServerImageUrl('submit.jpg')
       console.log('Sending photo by URL:', imageUrl)
 
       // Создаем FormData для отправки фото по URL
