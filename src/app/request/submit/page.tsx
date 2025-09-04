@@ -83,21 +83,45 @@ const SubmitPage = () => {
 
             // Загружаем цену из sessionStorage
             const savedPrice = sessionStorage.getItem('price');
+            console.log('🔍 Submit page - savedPrice из sessionStorage:', savedPrice);
             if (savedPrice) {
                 try {
                     const priceValue = JSON.parse(savedPrice);
+                    console.log('🔍 Submit page - parsed priceValue:', priceValue);
                     if (priceValue && priceValue > 0) {
                         setPrice(priceValue);
+                        console.log('✅ Submit page - установлена цена из sessionStorage:', priceValue);
+                    } else {
+                        console.log('❌ Submit page - цена в sessionStorage невалидна:', priceValue);
                     }
                 } catch (e) {
-                    // Ошибка парсинга price
+                    console.log('❌ Submit page - ошибка парсинга price:', e);
                 }
             }
 
             // Если нет данных в sessionStorage, загружаем из БД
-            const hasSessionData = savedPhoneSelection || savedDeviceConditions || savedAdditionalConditions || savedImei || savedSerialNumber || savedPrice;
+            const hasSessionData = savedPhoneSelection || savedDeviceConditions || savedAdditionalConditions || savedImei || savedSerialNumber;
+            
+            // Проверяем, есть ли валидная цена в sessionStorage
+            let hasValidPrice = false;
+            if (savedPrice) {
+                try {
+                    const priceValue = JSON.parse(savedPrice);
+                    hasValidPrice = priceValue && priceValue > 0;
+                } catch (e) {
+                    hasValidPrice = false;
+                }
+            }
+            
+            console.log('🔍 Submit page - проверка данных:', {
+                hasSessionData,
+                hasValidPrice,
+                savedPrice,
+                telegramId: !!telegramId
+            });
 
-            if (!hasSessionData && telegramId) {
+            if ((!hasSessionData || !hasValidPrice) && telegramId) {
+                console.log('🔄 Submit page - загружаем данные из БД...');
                 // Загружаем данные из БД
                 fetch('/api/request/getDraft', {
                     method: 'POST',

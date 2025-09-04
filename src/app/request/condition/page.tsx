@@ -421,15 +421,23 @@ export default function ConditionPage() {
         try {
             // Получаем базовую цену из найденной модели
             let basePrice = 0; // Базовая цена по умолчанию
+            console.log('🔍 Condition page - modelname:', modelname);
             if (modelname) {
                 const foundModel = findModelByName(modelname);
+                console.log('🔍 Condition page - foundModel:', foundModel);
                 if (foundModel) {
                     basePrice = foundModel.basePrice;
+                    console.log('✅ Condition page - basePrice установлена:', basePrice);
+                } else {
+                    console.log('❌ Condition page - модель не найдена, basePrice = 0');
                 }
+            } else {
+                console.log('❌ Condition page - modelname пустой, basePrice = 0');
             }
 
             // Рассчитываем финальную цену с учетом состояний
             const finalPrice = calculateFinalPrice(basePrice);
+            console.log('🔍 Condition page - finalPrice рассчитана:', finalPrice);
 
             // Устанавливаем цену в контекст
             setPrice(finalPrice);
@@ -437,6 +445,7 @@ export default function ConditionPage() {
             // Сохраняем цену в sessionStorage
             if (typeof window !== 'undefined') {
                 sessionStorage.setItem('price', JSON.stringify(finalPrice));
+                console.log('✅ Condition page - цена сохранена в sessionStorage:', finalPrice);
             }
 
             const requestBody = {
