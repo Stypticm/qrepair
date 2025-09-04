@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const filePath = path.join(
       process.cwd(),
       'public',
-      'submit.png'
+      'submit.jpg'
     )
     console.log('File path:', filePath)
     console.log('File exists:', fs.existsSync(filePath))
@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
     formData.append('chat_id', telegramId)
     formData.append(
       'photo',
-      new Blob([fileBuffer], { type: 'image/png' }),
-      'submit.png'
+      new Blob([fileBuffer], { type: 'image/jpeg' }),
+      'submit.jpg'
     )
     formData.append(
       'caption',

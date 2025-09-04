@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       const filePath = path.join(
         process.cwd(),
         'public',
-        'submit.png'
+        'submit.jpg'
       )
       console.log('Sending photo file from:', filePath)
 
@@ -137,8 +137,8 @@ export async function POST(request: NextRequest) {
       formData.append('chat_id', telegramId)
       formData.append(
         'photo',
-        new Blob([fileBuffer], { type: 'image/png' }),
-        'submit.png'
+        new Blob([fileBuffer], { type: 'image/jpeg' }),
+        'submit.jpg'
       )
       formData.append('caption', telegramMessage)
       // formData.append('parse_mode', 'Markdown') // Убираем Markdown из-за ошибки парсинга
