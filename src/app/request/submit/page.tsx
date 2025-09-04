@@ -282,8 +282,8 @@ const SubmitPage = () => {
         }
     };
 
-    // Используем цену из контекста или фиксированную цену по умолчанию
-    const finalPrice = price || 48000;
+    // Используем цену из контекста или цену по умолчанию
+    const finalPrice = price || 0;
 
     // Функция для формирования полной модели из данных sessionStorage
     const getFullModelName = (): string => {

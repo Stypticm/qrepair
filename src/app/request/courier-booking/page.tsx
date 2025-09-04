@@ -248,7 +248,7 @@ const CourierBookingPage = () => {
         }
     };
 
-    const finalPrice = price || 48000;
+    const finalPrice = price || 0;
 
     // Функция для формирования полной модели
     const getFullModelName = (): string => {

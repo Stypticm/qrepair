@@ -14,6 +14,54 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ImagePreloader } from '@/components/ImagePreloader';
+import { iphones, IPhone } from '@/core/appleModels';
+
+// Функция для поиска модели по названию
+function findModelByName(modelname: string): IPhone | null {
+    if (!modelname) return null;
+    
+    // Парсим название модели для извлечения параметров
+    // Пример: "iPhone 13 128GB Синий 1 SIM Китай"
+    const parts = modelname.split(' ');
+    
+    if (parts.length < 2) return null;
+    
+    const model = parts[1]; // "13"
+    const storage = parts[2]; // "128GB"
+    const color = parts[3]; // "Синий"
+    const simType = parts[4] + ' ' + parts[5]; // "1 SIM"
+    const country = parts[6]; // "Китай"
+    
+    // Маппинг цветов
+    const colorMap: { [key: string]: string } = {
+        'Золотой': 'G',
+        'Красный': 'R', 
+        'Синий': 'Bl',
+        'Белый': 'Wh',
+        'Черный': 'C'
+    };
+    
+    // Маппинг стран
+    const countryMap: { [key: string]: string } = {
+        'Китай': 'Китай 🇨🇳',
+        'США': 'США 🇺🇸',
+        'Япония': 'Япония 🇯🇵'
+    };
+    
+    const mappedColor = colorMap[color] || color;
+    const mappedCountry = countryMap[country] || country;
+    
+    // Ищем модель в массиве
+    const foundPhone = iphones.find((phone: IPhone) =>
+        phone.model === model &&
+        phone.storage === storage &&
+        phone.color === mappedColor &&
+        phone.simType === simType &&
+        phone.country === mappedCountry
+    );
+    
+    return foundPhone || null;
+}
 
 export default function ConditionPage() {
     const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice } = useStartForm();
@@ -332,8 +380,14 @@ export default function ConditionPage() {
     // Сохранение состояний в БД
     const saveConditionsToDatabase = async (newConditions: any) => {
         try {
-            // Получаем базовую цену из контекста или устанавливаем по умолчанию
-            const basePrice = 48000; // Базовая цена по умолчанию
+            // Получаем базовую цену из найденной модели
+            let basePrice = 0; // Базовая цена по умолчанию
+            if (modelname) {
+                const foundModel = findModelByName(modelname);
+                if (foundModel) {
+                    basePrice = foundModel.basePrice;
+                }
+            }
 
             // Рассчитываем финальную цену с учетом состояний
             const finalPrice = calculateFinalPrice(basePrice);

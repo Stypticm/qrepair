@@ -435,14 +435,10 @@ export default function FormPage() {
         const createRequest = async () => {
             if (telegramId) {
                 try {
-                    // Вычисляем базовую цену на основе выбранной модели
-                    let basePrice = 48000; // цена по умолчанию
-                    if (selectedOptions.model) {
-                        const modelNum = parseInt(selectedOptions.model);
-                        if (!isNaN(modelNum)) {
-                            // Базовая цена увеличивается с каждой моделью
-                            basePrice = 48000 + (modelNum - 11) * 8000;
-                        }
+                    // Получаем базовую цену из найденной модели
+                    let basePrice = 0; // цена по умолчанию
+                    if (matchingPhone) {
+                        basePrice = matchingPhone.basePrice;
                     }
 
                     await fetch('/api/request/choose', {
@@ -464,7 +460,7 @@ export default function FormPage() {
         };
 
         createRequest();
-    }, [telegramId, username, selectedOptions.model]);
+    }, [telegramId, username, matchingPhone]);
 
     // Загружаем прогресс из sessionStorage или CloudStorage при загрузке страницы
     useEffect(() => {
