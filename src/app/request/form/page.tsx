@@ -139,9 +139,10 @@ export default function FormPage() {
             const allVariants = iphones.map((phone: IPhone) => phone.variant);
             return [...new Set(allVariants)].sort();
         }
+        // Фильтруем только по выбранной модели
         const filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
         const variants = [...new Set(filteredPhones.map((phone: IPhone) => phone.variant))];
-        return variants.sort(); // Убираем фильтр пустых вариантов
+        return variants.sort();
     };
 
     // Определяем текущий шаг для прогресс-бара
