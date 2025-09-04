@@ -1,4 +1,4 @@
-export interface AppleModel {
+export interface IPhone {
   model: string
   variant: string
   storage: string
@@ -8,7 +8,7 @@ export interface AppleModel {
   basePrice: number
 }
 
-export const appleModels: AppleModel[] = [
+export const iphones: IPhone[] = [
   {
     model: 'X',
     variant: 'R',
