@@ -455,6 +455,13 @@ export default function FormPage() {
                         }
                     }
 
+                    console.log('🚀 Form page - отправляем в API /choose:', {
+                        telegramId,
+                        username: username || 'Unknown',
+                        price: basePrice,
+                        currentStep: 'form'
+                    });
+
                     await fetch('/api/request/choose', {
                         method: 'POST',
                         headers: {

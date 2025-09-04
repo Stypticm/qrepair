@@ -13,6 +13,15 @@ export async function POST(req: Request) {
       currentStep,
     } = body
 
+    console.log('🔍 API /choose - получены данные:', {
+      telegramId,
+      username,
+      price,
+      imei,
+      sn,
+      currentStep,
+    })
+
     if (!username) username = 'local_dev'
     if (!telegramId || !username) {
       return NextResponse.json(
@@ -26,28 +35,45 @@ export async function POST(req: Request) {
     })
 
     if (existing) {
+      const updateData = {
+        price: price !== undefined ? price : existing.price,
+        imei: imei || existing.imei,
+        sn: sn || existing.sn,
+        currentStep: currentStep || existing.currentStep,
+      }
+
+      console.log(
+        '🔄 API /choose - обновляем существующую запись:',
+        {
+          id: existing.id,
+          updateData,
+        }
+      )
+
       const updated = await prisma.skupka.update({
         where: { id: existing.id },
-        data: {
-          price: price || existing.price,
-          imei: imei || existing.imei,
-          sn: sn || existing.sn,
-          currentStep: currentStep || existing.currentStep,
-        },
+        data: updateData,
       })
       return NextResponse.json({ id: updated.id })
     }
 
+    const createData = {
+      telegramId,
+      username,
+      status: 'draft' as const,
+      price: price !== undefined ? price : null,
+      imei: imei || null,
+      sn: sn || null,
+      currentStep: currentStep || null,
+    }
+
+    console.log(
+      '🆕 API /choose - создаем новую запись:',
+      createData
+    )
+
     const created = await prisma.skupka.create({
-      data: {
-        telegramId,
-        username,
-        status: 'draft',
-        price: price || null,
-        imei: imei || null,
-        sn: sn || null,
-        currentStep: currentStep || null,
-      },
+      data: createData,
     })
 
     return NextResponse.json({ id: created.id })
