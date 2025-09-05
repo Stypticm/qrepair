@@ -533,8 +533,8 @@ const CourierBookingPage = () => {
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
                                     {/* Дата */}
-                                    <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-                                        <DialogTrigger asChild>
+                                    <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                                        <PopoverTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 className="w-full justify-start text-left font-medium border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 rounded-xl py-3 px-4 transition-all duration-200 active:scale-95"
@@ -544,32 +544,33 @@ const CourierBookingPage = () => {
                                                     {selectedDate ? format(selectedDate, "dd MMM", { locale: ru }) : "Дата"}
                                                 </span>
                                             </Button>
-                                        </DialogTrigger>
-                                        <DialogContent 
-                                            className="w-[95vw] max-w-md mx-auto p-4 bg-white border-2 border-gray-200 shadow-2xl"
+                                        </PopoverTrigger>
+                                        <PopoverContent 
+                                            align="center" 
+                                            side="top" 
+                                            sideOffset={8}
+                                            alignOffset={0}
+                                            className="w-[95vw] max-w-md mx-auto"
                                         >
-                                            <div className="w-full min-w-0">
-                                                <h3 className="text-lg font-semibold text-center mb-4">Выберите дату</h3>
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={selectedDate}
-                                                    onSelect={(date) => {
-                                                        // Если дата не undefined, обновляем выбранную дату
-                                                        if (date) {
-                                                            setSelectedDate(date);
-                                                        }
-                                                        setShowCalendar(false);
-                                                        // Не сбрасываем время при смене даты - пользователь может изменить дату без потери времени
-                                                    }}
-                                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                                    defaultMonth={new Date()}
-                                                    initialFocus
-                                                    showOutsideDays={false}
-                                                    className="w-full min-w-0"
-                                                />
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                            <Calendar
+                                                mode="single"
+                                                selected={selectedDate}
+                                                onSelect={(date) => {
+                                                    // Если дата не undefined, обновляем выбранную дату
+                                                    if (date) {
+                                                        setSelectedDate(date);
+                                                    }
+                                                    setShowCalendar(false);
+                                                    // Не сбрасываем время при смене даты - пользователь может изменить дату без потери времени
+                                                }}
+                                                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                                defaultMonth={new Date()}
+                                                initialFocus
+                                                showOutsideDays={false}
+                                                className="w-full"
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
 
                                     {/* Время */}
                                     <Dialog open={showTimePicker} onOpenChange={setShowTimePicker}>
