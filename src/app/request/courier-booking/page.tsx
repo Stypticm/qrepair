@@ -73,19 +73,9 @@ const CourierBookingPage = () => {
         return () => clearTimeout(timer);
     }, [locationMethod, isRequestingLocation]);
 
-    // Инициализация и очистка locationManager
+    // Очистка locationManager при размонтировании компонента
     useEffect(() => {
-        // Инициализируем locationManager при загрузке компонента
-        if (locationManager && locationManager.isSupported()) {
-            try {
-                locationManager.mount();
-            } catch (e) {
-                console.log('LocationManager mount error (ignored):', e);
-            }
-        }
-
         return () => {
-            // Очищаем locationManager при размонтировании компонента
             if (locationManager) {
                 try {
                     locationManager.unmount();
@@ -183,41 +173,52 @@ const CourierBookingPage = () => {
 
     // Функция для запроса локации через Telegram
     const handleRequestLocation = async () => {
+        console.log('🔍 Начинаем запрос локации...');
         setIsRequestingLocation(true);
         setLocationError('');
         setLocationSuccess(false);
         
         try {
             // Проверяем поддержку геолокации
+            console.log('🔍 Проверяем поддержку геолокации...');
             if (!locationManager.isSupported()) {
                 throw new Error('Геолокация не поддерживается в данной версии Telegram');
             }
+            console.log('✅ Геолокация поддерживается');
 
-            // Отключаем и снова подключаем locationManager к компоненту
+            // Убеждаемся, что locationManager смонтирован
+            console.log('🔍 Монтируем locationManager...');
             try {
-                locationManager.unmount();
+                locationManager.mount();
+                console.log('✅ LocationManager смонтирован');
             } catch (e) {
-                // Игнорируем ошибки при unmount
+                console.log('⚠️ LocationManager mount error (ignored):', e);
             }
-            locationManager.mount();
 
             // Запрашиваем локацию через Telegram SDK
+            console.log('🔍 Запрашиваем локацию...');
             const location = await locationManager.requestLocation();
+            console.log('📍 Получена локация:', location);
             
             if (location && location.latitude && location.longitude) {
                 const { latitude, longitude } = location;
+                console.log(`📍 Координаты: ${latitude}, ${longitude}`);
                 
                 // Получаем адрес по координатам
+                console.log('🔍 Получаем адрес по координатам...');
                 const addressFromCoords = await getAddressFromCoordinates(latitude, longitude);
+                console.log('📍 Адрес:', addressFromCoords);
+                
                 setAddress(addressFromCoords);
                 setLocationMethod('telegram');
                 setLocationError('');
                 setLocationSuccess(true);
+                console.log('✅ Локация успешно получена и обработана');
             } else {
                 throw new Error('Не удалось получить координаты');
             }
         } catch (error) {
-            console.error('Ошибка при получении локации:', error);
+            console.error('❌ Ошибка при получении локации:', error);
             setLocationError(error instanceof Error ? error.message : 'Ошибка получения локации');
             setLocationMethod('manual');
             setLocationSuccess(false);
