@@ -545,29 +545,31 @@ const CourierBookingPage = () => {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent 
-                                            align="center" 
+                                            align="start" 
                                             side="top" 
                                             sideOffset={8}
-                                            alignOffset={0}
-                                            className="w-[98vw] max-w-none mx-auto overflow-visible"
+                                            alignOffset={-50}
+                                            className="w-[90vw] max-w-none h-auto max-h-[80vh] overflow-y-auto"
                                            >
-                                            <Calendar
-                                                mode="single"
-                                                selected={selectedDate}
-                                                onSelect={(date) => {
-                                                    // Если дата не undefined, обновляем выбранную дату
-                                                    if (date) {
-                                                        setSelectedDate(date);
-                                                    }
-                                                    setShowCalendar(false);
-                                                    // Не сбрасываем время при смене даты - пользователь может изменить дату без потери времени
-                                                }}
-                                                disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                                defaultMonth={new Date()}
-                                                initialFocus
-                                                showOutsideDays={false}
-                                                className="w-full"
-                                            />
+                                            <div className="w-full h-auto">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={selectedDate}
+                                                    onSelect={(date) => {
+                                                        // Если дата не undefined, обновляем выбранную дату
+                                                        if (date) {
+                                                            setSelectedDate(date);
+                                                        }
+                                                        setShowCalendar(false);
+                                                        // Не сбрасываем время при смене даты - пользователь может изменить дату без потери времени
+                                                    }}
+                                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                                                    defaultMonth={new Date()}
+                                                    initialFocus
+                                                    showOutsideDays={false}
+                                                    className="w-full h-auto"
+                                                />
+                                            </div>
                                         </PopoverContent>
                                     </Popover>
 
