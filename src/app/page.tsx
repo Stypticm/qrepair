@@ -220,7 +220,7 @@ export default function Home() {
             className="w-24 h-24 mx-auto mb-6 flex items-center justify-center"
           >
             <Image
-              src={getPictureUrl('coconut-dancing.gif') || '/coconut-dancing.gif'}
+              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
               alt="Танцующий кокос"
               width={96}
               height={96}
