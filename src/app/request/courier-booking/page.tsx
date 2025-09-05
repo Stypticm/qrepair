@@ -174,11 +174,20 @@ const CourierBookingPage = () => {
     // Функция для запроса локации через Telegram
     const handleRequestLocation = async () => {
         console.log('🔍 Начинаем запрос локации...');
+        console.log('🔍 locationManager:', locationManager);
+        console.log('🔍 isRequestingLocation:', isRequestingLocation);
+        
         setIsRequestingLocation(true);
         setLocationError('');
         setLocationSuccess(false);
         
         try {
+            // Проверяем, что приложение запущено в Telegram
+            const isInTelegram = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+            if (!isInTelegram) {
+                throw new Error('Геолокация работает только в Telegram приложении');
+            }
+
             // Проверяем поддержку геолокации
             console.log('🔍 Проверяем поддержку геолокации...');
             if (!locationManager.isSupported()) {
@@ -189,11 +198,14 @@ const CourierBookingPage = () => {
             // Убеждаемся, что locationManager смонтирован
             console.log('🔍 Монтируем locationManager...');
             try {
-                locationManager.mount();
+                await locationManager.mount();
                 console.log('✅ LocationManager смонтирован');
             } catch (e) {
                 console.log('⚠️ LocationManager mount error (ignored):', e);
             }
+
+            // Небольшая задержка для завершения монтирования
+            await new Promise(resolve => setTimeout(resolve, 100));
 
             // Запрашиваем локацию через Telegram SDK
             console.log('🔍 Запрашиваем локацию...');
@@ -401,7 +413,11 @@ const CourierBookingPage = () => {
                                     </label>
                                     <div className="space-y-3">
                                         <Button
-                                            onClick={handleRequestLocation}
+                                            onClick={() => {
+                                                console.log('🔍 Кнопка нажата!');
+                                                console.log('🔍 isRequestingLocation:', isRequestingLocation);
+                                                handleRequestLocation();
+                                            }}
                                             disabled={isRequestingLocation}
                                             className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-medium py-4 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-3 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
