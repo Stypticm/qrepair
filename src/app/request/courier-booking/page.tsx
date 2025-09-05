@@ -19,13 +19,7 @@ const CourierBookingPage = () => {
     const { telegramId, modelname, price } = useStartForm();
     const { setCurrentStep } = useNavigation();
     
-    // Получаем Telegram WebApp API
-    const getTelegramWebApp = () => {
-        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-            return (window as any).Telegram.WebApp;
-        }
-        return null;
-    };
+    // locationManager импортирован из @telegram-apps/sdk
     
     const [address, setAddress] = useState('');
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -79,15 +73,6 @@ const CourierBookingPage = () => {
         return () => clearTimeout(timer);
     }, [locationMethod, isRequestingLocation]);
 
-    // Очистка LocationManager при размонтировании компонента
-    useEffect(() => {
-        return () => {
-            const webApp = getTelegramWebApp();
-            if (webApp && webApp.LocationManager) {
-                webApp.LocationManager.unmount();
-            }
-        };
-    }, []);
 
     // Восстанавливаем состояние из sessionStorage при загрузке
     useEffect(() => {
@@ -179,53 +164,26 @@ const CourierBookingPage = () => {
         setLocationError('');
         
         try {
-            const webApp = getTelegramWebApp();
-            if (!webApp) {
-                throw new Error('Telegram WebApp недоступен');
-            }
-
-            // Проверяем наличие LocationManager
-            if (!webApp.LocationManager) {
+            // Проверяем поддержку геолокации
+            if (!locationManager.isSupported()) {
                 throw new Error('Геолокация не поддерживается в данной версии Telegram');
             }
 
-            // Подключаем LocationManager к компоненту
-            webApp.LocationManager.mount();
-
-            // Запрашиваем локацию через Telegram WebApp API
-            webApp.LocationManager.requestLocation();
+            // Запрашиваем локацию через Telegram SDK
+            const location = await locationManager.requestLocation();
             
-            // Слушаем событие получения локации
-            const handleLocationResult = (location: any) => {
-                if (location && location.latitude && location.longitude) {
-                    const { latitude, longitude } = location;
-                    
-                    // Получаем адрес по координатам
-                    getAddressFromCoordinates(latitude, longitude)
-                        .then(addressFromCoords => {
-                            setAddress(addressFromCoords);
-                            setLocationMethod('telegram');
-                            setLocationError('');
-                            setLocationSuccess(true);
-                        })
-                        .catch(error => {
-                            console.error('Ошибка геокодинга:', error);
-                            setLocationError('Ошибка преобразования координат в адрес');
-                            setLocationMethod('manual');
-                            setLocationSuccess(false);
-                        });
-                } else {
-                    setLocationError('Не удалось получить координаты');
-                    setLocationMethod('manual');
-                    setLocationSuccess(false);
-                }
+            if (location && location.latitude && location.longitude) {
+                const { latitude, longitude } = location;
                 
-                // Отписываемся от события
-                webApp.offEvent('locationRequested', handleLocationResult);
-            };
-            
-            // Подписываемся на событие получения локации
-            webApp.onEvent('locationRequested', handleLocationResult);
+                // Получаем адрес по координатам
+                const addressFromCoords = await getAddressFromCoordinates(latitude, longitude);
+                setAddress(addressFromCoords);
+                setLocationMethod('telegram');
+                setLocationError('');
+                setLocationSuccess(true);
+            } else {
+                throw new Error('Не удалось получить координаты');
+            }
         } catch (error) {
             console.error('Ошибка при получении локации:', error);
             setLocationError(error instanceof Error ? error.message : 'Ошибка получения локации');
