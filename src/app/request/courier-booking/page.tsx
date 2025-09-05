@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
 import { motion } from 'framer-motion';
 import { Calendar } from '@/components/ui/calendar';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, MapPinIcon, ClockIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -532,8 +533,8 @@ const CourierBookingPage = () => {
                                 </label>
                                 <div className="grid grid-cols-2 gap-3">
                                     {/* Дата */}
-                                    <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                                        <PopoverTrigger asChild>
+                                    <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
+                                        <DialogTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 className="w-full justify-start text-left font-medium border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 rounded-xl py-3 px-4 transition-all duration-200 active:scale-95"
@@ -543,15 +544,12 @@ const CourierBookingPage = () => {
                                                     {selectedDate ? format(selectedDate, "dd MMM", { locale: ru }) : "Дата"}
                                                 </span>
                                             </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent 
-                                            align="center" 
-                                            side="top" 
-                                            sideOffset={8}
-                                            alignOffset={0}
-                                            className="w-[95vw] max-w-none h-auto min-w-[320px] sm:w-auto sm:min-w-0"
-                                           >
-                                            <div className="w-full h-auto">
+                                        </DialogTrigger>
+                                        <DialogContent 
+                                            className="w-[95vw] max-w-md mx-auto p-4 bg-white border-2 border-gray-200 shadow-2xl"
+                                        >
+                                            <div className="w-full">
+                                                <h3 className="text-lg font-semibold text-center mb-4">Выберите дату</h3>
                                                 <Calendar
                                                     mode="single"
                                                     selected={selectedDate}
@@ -567,15 +565,15 @@ const CourierBookingPage = () => {
                                                     defaultMonth={new Date()}
                                                     initialFocus
                                                     showOutsideDays={false}
-                                                    className="w-full h-auto"
+                                                    className="w-full"
                                                 />
                                             </div>
-                                        </PopoverContent>
-                                    </Popover>
+                                        </DialogContent>
+                                    </Dialog>
 
                                     {/* Время */}
-                                    <Popover open={showTimePicker} onOpenChange={setShowTimePicker}>
-                                        <PopoverTrigger asChild>
+                                    <Dialog open={showTimePicker} onOpenChange={setShowTimePicker}>
+                                        <DialogTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 className="w-full justify-start text-left font-medium border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 rounded-xl py-3 px-4 transition-all duration-200 active:scale-95"
@@ -586,17 +584,13 @@ const CourierBookingPage = () => {
                                                     {selectedTime || "Время"}
                                                 </span>
                                             </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent 
-                                            align="center" 
-                                            side="top" 
-                                            sideOffset={8}
-                                            alignOffset={0}
-                                            className="w-[98vw] max-w-sm mx-auto"
+                                        </DialogTrigger>
+                                        <DialogContent 
+                                            className="w-[95vw] max-w-md mx-auto p-4 bg-white border-2 border-gray-200 shadow-2xl"
                                         >
-                                            <div className="p-4">
-                                                <h4 className="font-medium text-gray-900 mb-2 text-center">Выберите время</h4>
-                                                <p className="text-xs text-gray-500 mb-4 text-center">
+                                            <div className="w-full">
+                                                <h3 className="text-lg font-semibold text-center mb-2">Выберите время</h3>
+                                                <p className="text-sm text-gray-500 mb-6 text-center">
                                                     ⏰ Учитывается время на дорогу и работу мастера (минимум 2 часа между заявками)
                                                 </p>
                                                 <div className="grid grid-cols-3 gap-3">
@@ -619,8 +613,8 @@ const CourierBookingPage = () => {
                                                     ))}
                                                 </div>
                                             </div>
-                                        </PopoverContent>
-                                    </Popover>
+                                        </DialogContent>
+                                    </Dialog>
                                 </div>
                             </div>
 
