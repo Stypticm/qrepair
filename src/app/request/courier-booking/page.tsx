@@ -546,9 +546,9 @@ const CourierBookingPage = () => {
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent 
-                                            className="w-[95vw] max-w-lg mx-auto p-4 bg-white border-2 border-gray-200 shadow-2xl"
+                                            className="w-auto max-w-none p-2 bg-white border-2 border-gray-200 shadow-2xl"
                                         >
-                                            <div className="w-full">
+                                            <div className="w-full min-w-0">
                                                 <h3 className="text-lg font-semibold text-center mb-4">Выберите дату</h3>
                                                 <Calendar
                                                     mode="single"
@@ -565,7 +565,7 @@ const CourierBookingPage = () => {
                                                     defaultMonth={new Date()}
                                                     initialFocus
                                                     showOutsideDays={false}
-                                                    className="w-full"
+                                                    className="w-full min-w-0"
                                                 />
                                             </div>
                                         </DialogContent>
