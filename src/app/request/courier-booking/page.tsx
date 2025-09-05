@@ -549,10 +549,9 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-[95vw] max-w-md mx-auto"
+                                            className="w-[98vw] max-w-none mx-auto overflow-visible"
                                            >
                                             <Calendar
-
                                                 mode="single"
                                                 selected={selectedDate}
                                                 onSelect={(date) => {
@@ -567,6 +566,7 @@ const CourierBookingPage = () => {
                                                 defaultMonth={new Date()}
                                                 initialFocus
                                                 showOutsideDays={false}
+                                                className="w-full"
                                             />
                                         </PopoverContent>
                                     </Popover>
@@ -590,7 +590,7 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-[95vw] max-w-md mx-auto"
+                                            className="w-[98vw] max-w-sm mx-auto"
                                         >
                                             <div className="p-4">
                                                 <h4 className="font-medium text-gray-900 mb-2 text-center">Выберите время</h4>
