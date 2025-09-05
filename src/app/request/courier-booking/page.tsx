@@ -171,6 +171,7 @@ const CourierBookingPage = () => {
     const handleRequestLocation = async () => {
         setIsRequestingLocation(true);
         setLocationError('');
+        setLocationSuccess(false);
         
         try {
             // Проверяем поддержку геолокации
