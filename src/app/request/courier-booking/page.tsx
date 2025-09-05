@@ -465,6 +465,14 @@ const CourierBookingPage = () => {
                                             onClick={() => {
                                                 setLocationMethod(null);
                                                 setAddress('');
+                                                setLocationError('');
+                                                setLocationSuccess(false);
+                                                // Отключаем locationManager при сбросе
+                                                try {
+                                                    locationManager.unmount();
+                                                } catch (e) {
+                                                    console.log('LocationManager unmount error (ignored):', e);
+                                                }
                                             }}
                                             variant="ghost"
                                             size="sm"
