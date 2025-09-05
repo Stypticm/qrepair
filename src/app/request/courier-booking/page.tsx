@@ -550,7 +550,7 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-[350px] sm:w-[500px] max-w-[90vw] p-4 sm:p-6"
+                                            className="w-[320px] sm:w-[450px] max-w-[95vw] p-2 sm:p-4"
                                         >
                                             <Calendar
                                                 mode="single"
