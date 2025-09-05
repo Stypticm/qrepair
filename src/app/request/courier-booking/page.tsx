@@ -549,7 +549,7 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-[100vw]"
+                                            className="w-[95vw] max-w-md mx-auto"
                                            >
                                             <Calendar
 
@@ -590,7 +590,7 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-[100vw]"
+                                            className="w-[95vw] max-w-md mx-auto"
                                         >
                                             <div className="p-4">
                                                 <h4 className="font-medium text-gray-900 mb-2 text-center">Выберите время</h4>
