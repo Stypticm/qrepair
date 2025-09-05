@@ -549,9 +549,10 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-auto p-0"
-                                        >
+                                            className="w-[100vw]"
+                                           >
                                             <Calendar
+
                                                 mode="single"
                                                 selected={selectedDate}
                                                 onSelect={(date) => {
@@ -589,7 +590,7 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-[90vw] max-w-md"
+                                            className="w-[100vw]"
                                         >
                                             <div className="p-4">
                                                 <h4 className="font-medium text-gray-900 mb-2 text-center">Выберите время</h4>
