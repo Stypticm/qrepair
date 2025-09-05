@@ -270,7 +270,7 @@ const PickupPointsPage = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="space-y-3"
+                            className="space-y-3 flex flex-col gap-2"
                         >
                             {/* Кнопка изменения способа доставки */}
                             <Button
