@@ -12,19 +12,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, MapPinIcon, ClockIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-// Telegram SDK will be accessed via window.Telegram.WebApp
+import { LocationManager } from '@telegram-apps/sdk-react';
 
 const CourierBookingPage = () => {
     const router = useRouter();
     const { telegramId, modelname, price } = useStartForm();
     const { setCurrentStep } = useNavigation();
-    // Access Telegram WebApp API
-    const getTelegramWebApp = () => {
-        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-            return (window as any).Telegram.WebApp;
-        }
-        return null;
-    };
+    
+    // Инициализируем LocationManager
+    const locationManager = new LocationManager();
+    
     const [address, setAddress] = useState('');
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
     const [selectedTime, setSelectedTime] = useState<string>('');
@@ -34,6 +31,8 @@ const CourierBookingPage = () => {
     const [navigating, setNavigating] = useState(false);
     const [locationMethod, setLocationMethod] = useState<'telegram' | 'manual' | null>(null);
     const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+    const [locationError, setLocationError] = useState<string>('');
+    const [locationSuccess, setLocationSuccess] = useState<boolean>(false);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -61,6 +60,19 @@ const CourierBookingPage = () => {
             saveCurrentStep();
         }
     }, [setCurrentStep, telegramId]);
+
+    // Автоматически предлагаем получить локацию при загрузке страницы
+    useEffect(() => {
+        // Небольшая задержка, чтобы пользователь увидел интерфейс
+        const timer = setTimeout(() => {
+            if (!locationMethod && !isRequestingLocation) {
+                // Показываем уведомление о возможности автоматического получения локации
+                console.log('Предлагаем пользователю получить локацию автоматически');
+            }
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [locationMethod, isRequestingLocation]);
 
     // Восстанавливаем состояние из sessionStorage при загрузке
     useEffect(() => {
@@ -149,32 +161,45 @@ const CourierBookingPage = () => {
     // Функция для запроса локации через Telegram
     const handleRequestLocation = async () => {
         setIsRequestingLocation(true);
+        setLocationError('');
+        
         try {
-            const webApp = getTelegramWebApp();
-            if (webApp && webApp.requestLocation) {
-                // Запрашиваем локацию через Telegram WebApp API
-                webApp.requestLocation();
+            // Проверяем доступность LocationManager
+            if (!locationManager) {
+                throw new Error('LocationManager недоступен');
+            }
+
+            // Запрашиваем разрешение на геолокацию
+            const hasPermission = await locationManager.requestPermission();
+            
+            if (!hasPermission) {
+                throw new Error('Разрешение на геолокацию не предоставлено');
+            }
+
+            // Получаем текущую позицию
+            const position = await locationManager.getCurrentPosition({
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 // 5 минут
+            });
+
+            if (position && position.coords) {
+                const { latitude, longitude } = position.coords;
                 
-                // Listen for location result
-                const handleLocationResult = (location: any) => {
-                    if (location) {
-                        getAddressFromCoordinates(location.latitude, location.longitude)
-                            .then(addressFromCoords => {
-                                setAddress(addressFromCoords);
-                                setLocationMethod('telegram');
-                            });
-                    }
-                    webApp.offEvent('location_changed', handleLocationResult);
-                };
-                
-                webApp.onEvent('location_changed', handleLocationResult);
+                // Получаем адрес по координатам
+                const addressFromCoords = await getAddressFromCoordinates(latitude, longitude);
+                setAddress(addressFromCoords);
+                setLocationMethod('telegram');
+                setLocationError('');
+                setLocationSuccess(true);
             } else {
-                // Fallback на ручной ввод если Telegram API недоступен
-                setLocationMethod('manual');
+                throw new Error('Не удалось получить координаты');
             }
         } catch (error) {
             console.error('Ошибка при получении локации:', error);
+            setLocationError(error instanceof Error ? error.message : 'Ошибка получения локации');
             setLocationMethod('manual');
+            setLocationSuccess(false);
         } finally {
             setIsRequestingLocation(false);
         }
@@ -361,12 +386,37 @@ const CourierBookingPage = () => {
                                             <MapPinIcon className="w-5 h-5" />
                                             <span>{isRequestingLocation ? 'Получаем локацию...' : 'Указать текущее местоположение'}</span>
                                         </Button>
+                                        
+                                        {locationSuccess && locationMethod === 'telegram' && (
+                                            <div className="text-xs text-green-600 text-center bg-green-50 p-2 rounded-lg">
+                                                ✅ Локация успешно получена
+                                            </div>
+                                        )}
+                                        
+                                        {locationError && (
+                                            <div className="text-xs text-red-500 text-center bg-red-50 p-2 rounded-lg">
+                                                <div className="mb-2">{locationError}</div>
+                                                <Button
+                                                    onClick={handleRequestLocation}
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="text-xs"
+                                                >
+                                                    Попробовать снова
+                                                </Button>
+                                            </div>
+                                        )}
+                                        
                                         <p className="text-xs text-gray-500 text-center">
                                             * Работает только в Telegram приложении
                                         </p>
                                         
                                         <Button
-                                            onClick={() => setLocationMethod('manual')}
+                                            onClick={() => {
+                                                setLocationMethod('manual');
+                                                setLocationError('');
+                                                setLocationSuccess(false);
+                                            }}
                                             variant="outline"
                                             className="w-full border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-gray-700 font-medium py-4 rounded-2xl transition-all duration-200 flex items-center justify-center space-x-3 active:scale-95"
                                         >
