@@ -492,7 +492,13 @@ const CourierBookingPage = () => {
                                                 </span>
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent align="center" side="top">
+                                        <PopoverContent 
+                                            align="center" 
+                                            side="top" 
+                                            sideOffset={8}
+                                            alignOffset={0}
+                                            className="w-auto p-0"
+                                        >
                                             <Calendar
                                                 mode="single"
                                                 selected={selectedDate}
@@ -526,7 +532,13 @@ const CourierBookingPage = () => {
                                                 </span>
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent align="center" side="top" className="w-[90vw] max-w-md">
+                                        <PopoverContent 
+                                            align="center" 
+                                            side="top" 
+                                            sideOffset={8}
+                                            alignOffset={0}
+                                            className="w-[90vw] max-w-md"
+                                        >
                                             <div className="p-4">
                                                 <h4 className="font-medium text-gray-900 mb-2 text-center">Выберите время</h4>
                                                 <p className="text-xs text-gray-500 mb-4 text-center">
@@ -597,7 +609,13 @@ const CourierBookingPage = () => {
                             className="space-y-3 flex flex-col gap-2"
                         >
                             <Button
-                                onClick={() => router.push('/request/delivery-options')}
+                                onClick={() => {
+                                    // Очищаем данные курьера при смене способа доставки
+                                    if (typeof window !== 'undefined') {
+                                        sessionStorage.removeItem('courierBookingData');
+                                    }
+                                    router.push('/request/delivery-options');
+                                }}
                                 variant="outline"
                                 className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
                             >

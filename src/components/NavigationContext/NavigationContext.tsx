@@ -59,6 +59,12 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       const previousStep = stepOrder[currentIndex - 1];
       setCurrentStep(previousStep);
       
+      // Очищаем данные доставки при возврате к выбору способа доставки
+      if (previousStep === 'delivery-options' && typeof window !== 'undefined') {
+        sessionStorage.removeItem('pickupPointsData');
+        sessionStorage.removeItem('courierBookingData');
+      }
+      
       // Перенаправляем на предыдущий шаг
       switch (previousStep) {
         case 'device-info':

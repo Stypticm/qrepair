@@ -46,12 +46,20 @@ const DeliveryOptionsPage = () => {
 
     const handlePickup = () => {
         setSelectedOption('pickup');
+        // Очищаем данные курьера при выборе самовывоза
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('courierBookingData');
+        }
         // Переходим к выбору точки самовывоза
         router.push('/request/pickup-points');
     };
 
     const handleCourier = () => {
         setSelectedOption('courier');
+        // Очищаем данные самовывоза при выборе курьера
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('pickupPointsData');
+        }
         // Переходим к выбору адреса и времени для мастера
         router.push('/request/courier-booking');
     };

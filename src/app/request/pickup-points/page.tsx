@@ -274,7 +274,13 @@ const PickupPointsPage = () => {
                         >
                             {/* Кнопка изменения способа доставки */}
                             <Button
-                                onClick={() => router.push('/request/delivery-options')}
+                                onClick={() => {
+                                    // Очищаем данные самовывоза при смене способа доставки
+                                    if (typeof window !== 'undefined') {
+                                        sessionStorage.removeItem('pickupPointsData');
+                                    }
+                                    router.push('/request/delivery-options');
+                                }}
                                 variant="outline"
                                 className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
                             >
