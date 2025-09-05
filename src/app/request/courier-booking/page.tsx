@@ -189,11 +189,8 @@ const CourierBookingPage = () => {
         setLocationSuccess(false);
         
         try {
-            // Проверяем, что приложение запущено в Telegram
-            const isInTelegram = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
-            if (!isInTelegram) {
-                throw new Error('Геолокация работает только в Telegram приложении');
-            }
+            // Убираем проверку Telegram - полагаемся на locationManager.isSupported()
+            console.log('🔍 Пропускаем проверку Telegram, полагаемся на locationManager.isSupported()');
 
             // Проверяем поддержку геолокации
             console.log('🔍 Проверяем поддержку геолокации...');
