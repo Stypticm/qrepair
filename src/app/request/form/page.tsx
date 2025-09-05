@@ -9,7 +9,7 @@ import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useNavigation } from '@/components/NavigationContext/NavigationContext';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { iphones, IPhone } from '@/core/appleModels';
+import { useDevices, Device } from '@/hooks/useDevices';
 import { Button } from '@/components/ui/button';
 import { WelcomeModal } from '@/components/ui/welcome-modal';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -17,9 +17,10 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { motion, LazyMotion, domAnimation } from 'framer-motion';
 
 export default function FormPage() {
-    const { modelname, setModel, telegramId, username } = useStartForm();
+    const { modelname, setModel, telegramId, username, setPrice } = useStartForm();
     const { setCurrentStep } = useNavigation();
     const router = useRouter();
+    const devices = useDevices();
 
     // Проверяем, доступен ли Telegram WebApp API
     const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
@@ -62,6 +63,55 @@ export default function FormPage() {
         simType: ''
     });
 
+    // Загружаем данные при изменении фильтров
+    useEffect(() => {
+        if (selectedOptions.model) {
+            devices.loadVariants(selectedOptions.model);
+        }
+    }, [selectedOptions.model, devices.loadVariants]);
+
+    useEffect(() => {
+        if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined) {
+            devices.loadStorages({
+                model: selectedOptions.model,
+                variant: selectedOptions.variant
+            });
+        }
+    }, [selectedOptions.model, selectedOptions.variant, devices.loadStorages]);
+
+    useEffect(() => {
+        if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined && selectedOptions.storage) {
+            devices.loadColors({
+                model: selectedOptions.model,
+                variant: selectedOptions.variant || '',
+                storage: selectedOptions.storage
+            });
+        }
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices.loadColors]);
+
+    useEffect(() => {
+        if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined && selectedOptions.storage && selectedOptions.color) {
+            devices.loadSimTypes({
+                model: selectedOptions.model,
+                variant: selectedOptions.variant || '',
+                storage: selectedOptions.storage,
+                color: selectedOptions.color
+            });
+        }
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, devices.loadSimTypes]);
+
+    useEffect(() => {
+        if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined && selectedOptions.storage && selectedOptions.color && selectedOptions.simType) {
+            devices.loadCountries({
+                model: selectedOptions.model,
+                variant: selectedOptions.variant || '',
+                storage: selectedOptions.storage,
+                color: selectedOptions.color,
+                simType: selectedOptions.simType
+            } as any);
+        }
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.simType, devices.loadCountries]);
+
     // Состояние для отображения текущего выбора в центре
     const [currentSelection, setCurrentSelection] = useState<string>('');
 
@@ -73,7 +123,7 @@ export default function FormPage() {
 
     // Функция для проверки, все ли выбрано
     const checkIfAllSelected = useCallback((options: typeof selectedOptions) => {
-        return options.model && options.storage && options.color && options.simType && options.country;
+        return options.model && options.variant !== null && options.variant !== undefined && options.storage && options.color && options.simType && options.country;
     }, []);
 
     // Функция для обновления текущего выбора
@@ -84,8 +134,9 @@ export default function FormPage() {
             selection = `iPhone ${options.model}`;
         }
         
-        if (options.variant) {
-            selection += ` ${options.variant}`;
+        if (options.variant !== null && options.variant !== undefined && options.variant !== '') {
+            // Показываем вариант только если он не пустой
+            selection += ` ${getVariantLabel(options.variant)}`;
         }
         
         if (options.storage) {
@@ -132,18 +183,6 @@ export default function FormPage() {
     // Шаги для прогресс-бара
     const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
-    // Функции для умной фильтрации
-    const getAvailableVariants = (): string[] => {
-        if (!selectedOptions.model) {
-            // Если модель не выбрана, показываем все варианты, включая пустые
-            const allVariants = iphones.map((phone: IPhone) => phone.variant);
-            return [...new Set(allVariants)].sort();
-        }
-        // Фильтруем только по выбранной модели
-        const filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        const variants = [...new Set(filteredPhones.map((phone: IPhone) => phone.variant))];
-        return variants.sort();
-    };
 
     // Определяем текущий шаг для прогресс-бара
     const getCurrentStep = (): number => {
@@ -151,117 +190,8 @@ export default function FormPage() {
         return 2;
     };
 
-    const getAvailableStorages = (): string[] => {
-        if (!selectedOptions.variant) {
-            // Если вариант не выбран, показываем все объемы памяти для выбранной модели
-            return [...new Set(iphones.map((phone: IPhone) => phone.storage))].sort((a: string, b: string) => {
-                const aNum = parseInt(a.replace(/[^\d]/g, ''));
-                const bNum = parseInt(b.replace(/[^\d]/g, ''));
-                if (a.includes('TB') && !b.includes('TB')) return 1;
-                if (!a.includes('TB') && b.includes('TB')) return -1;
-                return aNum - bNum;
-            });
-        }
-        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        if (selectedOptions.variant) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
-        }
-        return [...new Set(filteredPhones.map((phone: IPhone) => phone.storage))].sort((a: string, b: string) => {
-            const aNum = parseInt(a.replace(/[^\d]/g, ''));
-            const bNum = parseInt(b.replace(/[^\d]/g, ''));
-            if (a.includes('TB') && !b.includes('TB')) return 1;
-            if (!a.includes('TB') && b.includes('TB')) return -1;
-            return aNum - bNum;
-        });
-    };
 
-    const getAvailableColors = (): string[] => {
-        // Фиксированный список из 5 основных цветов iPhone
-        const validColors = ['G', 'R', 'Bl', 'Wh', 'C'];
 
-        if (!selectedOptions.storage) {
-            // Если объем памяти не выбран, показываем все 5 цветов
-            return validColors;
-        }
-        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        if (selectedOptions.variant) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
-        }
-        if (selectedOptions.storage) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.storage === selectedOptions.storage);
-        }
-
-        // Если после фильтрации нет телефонов, показываем все цвета для выбранной модели
-        if (filteredPhones.length === 0) {
-            filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        }
-
-        // Фильтруем только валидные цвета
-        const availableColors = [...new Set(filteredPhones.map((phone: IPhone) => phone.color))];
-        return availableColors.filter(color => validColors.includes(color));
-    };
-
-    const getAvailableCountries = (): string[] => {
-        // Фиксированный список из 4 стран
-        const validCountries = [
-            'Китай 🇨🇳',
-            'США 🇺🇸',
-            'Европа 🇪🇺',
-            'ОАЭ 🇦🇪'
-        ];
-
-        if (!selectedOptions.simType) {
-            // Если тип SIM не выбран, показываем все 4 страны
-            return validCountries;
-        }
-
-        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        if (selectedOptions.variant) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
-        }
-        if (selectedOptions.storage) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.storage === selectedOptions.storage);
-        }
-        if (selectedOptions.color) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.color === selectedOptions.color);
-        }
-        if (selectedOptions.simType) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.simType === selectedOptions.simType);
-        }
-
-        // Если после фильтрации нет телефонов, показываем все страны для выбранной модели
-        if (filteredPhones.length === 0) {
-            filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        }
-
-        // Фильтруем только валидные страны
-        const availableCountries = [...new Set(filteredPhones.map((phone: IPhone) => phone.country))];
-        return availableCountries.filter(country => validCountries.includes(country));
-    };
-
-    const getAvailableSimTypes = (): string[] => {
-        if (!selectedOptions.color) {
-            // Если цвет не выбран, показываем все типы SIM
-            return [...new Set(iphones.map((phone: IPhone) => phone.simType))].sort();
-        }
-        let filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        if (selectedOptions.variant) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.variant === selectedOptions.variant);
-        }
-        if (selectedOptions.storage) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.storage === selectedOptions.storage);
-        }
-        if (selectedOptions.color) {
-            filteredPhones = filteredPhones.filter((phone: IPhone) => phone.color === selectedOptions.color);
-        }
-
-        // Если после фильтрации нет телефонов, показываем все SIM типы для выбранной модели
-        if (filteredPhones.length === 0) {
-            filteredPhones = iphones.filter((phone: IPhone) => phone.model === selectedOptions.model);
-        }
-
-        return [...new Set(filteredPhones.map((phone: IPhone) => phone.simType))];
-    };
 
     const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
         console.log('Выбор опции:', { type, value, currentOptions: selectedOptions });
@@ -271,9 +201,11 @@ export default function FormPage() {
             navigator.vibrate(50);
         }
 
+        // Обрабатываем пустую строку как пустой вариант
+        const processedValue = value;
         const newOptions = {
             ...selectedOptions,
-            [type]: selectedOptions[type] === value ? '' : value
+            [type]: selectedOptions[type] === processedValue ? '' : processedValue
         };
 
         console.log('Новые опции:', newOptions);
@@ -285,6 +217,7 @@ export default function FormPage() {
             newOptions.color = '';
             newOptions.country = '';
             newOptions.simType = '';
+            devices.clearFilters();
         } else if (type === 'variant') {
             newOptions.storage = '';
             newOptions.color = '';
@@ -349,47 +282,33 @@ export default function FormPage() {
         // MainButton больше не используется, так как есть желтая кнопка
     };
 
-    // Находим подходящий iPhone
-    const findMatchingPhone = (): IPhone | null => {
-        if (!selectedOptions.model || !selectedOptions.storage || !selectedOptions.color || !selectedOptions.simType || !selectedOptions.country) {
-            console.log('Не все опции выбраны:', {
+    // Функция для проверки, все ли выбрано (без проверки selectedDevice)
+    const isAllOptionsSelected = useCallback(() => {
+        const allSelected = selectedOptions.model !== '' &&
+            selectedOptions.variant !== null && selectedOptions.variant !== undefined &&
+            selectedOptions.storage !== '' &&
+            selectedOptions.color !== '' &&
+            selectedOptions.simType !== '' &&
+            selectedOptions.country !== '';
+        
+        return allSelected;
+    }, [selectedOptions]);
+
+    // Загружаем устройство и цену когда все выбрано
+    useEffect(() => {
+        const allSelected = isAllOptionsSelected();
+        
+        if (allSelected) {
+            devices.loadDevice({
                 model: selectedOptions.model,
+                variant: selectedOptions.variant || '',
                 storage: selectedOptions.storage,
                 color: selectedOptions.color,
-                simType: selectedOptions.simType,
-                country: selectedOptions.country
+                country: selectedOptions.country,
+                simType: selectedOptions.simType
             });
-            return null;
         }
-
-        // Ищем телефон с учетом того, что variant может быть пустым
-        const foundPhone = iphones.find((phone: IPhone) =>
-            phone.model === selectedOptions.model &&
-            (selectedOptions.variant ? phone.variant === selectedOptions.variant : phone.variant === '') &&
-            phone.storage === selectedOptions.storage &&
-            phone.color === selectedOptions.color &&
-            phone.simType === selectedOptions.simType &&
-            phone.country === selectedOptions.country
-        );
-
-        console.log('🔍 Поиск телефона:', {
-            selectedOptions,
-            foundPhone: foundPhone ? `✅ Найден: ${foundPhone.model} ${foundPhone.variant} ${foundPhone.storage} ${foundPhone.color} ${foundPhone.country} ${foundPhone.simType} (${foundPhone.basePrice}₽)` : '❌ Не найден',
-            totalPhones: iphones.length
-        });
-
-        return foundPhone || null;
-    };
-
-    const matchingPhone = findMatchingPhone();
-
-    // Логика проверки: все поля должны быть выбраны в правильном порядке
-    const isAllOptionsSelected = selectedOptions.model !== '' &&
-        selectedOptions.storage !== '' &&
-        selectedOptions.color !== '' &&
-        selectedOptions.simType !== '' &&
-        selectedOptions.country !== '' &&
-        matchingPhone;
+    }, [selectedOptions, devices.loadDevice, isAllOptionsSelected]);
 
     // Функция для сохранения модели в БД
     const saveModelToDB = async (modelName: string) => {
@@ -418,10 +337,15 @@ export default function FormPage() {
     };
 
     useEffect(() => {
-        if (matchingPhone) {
-            const fullName = `Apple iPhone ${matchingPhone.model}${matchingPhone.variant ? ` ${getVariantLabel(matchingPhone.variant)}` : ''} ${matchingPhone.storage} ${getColorLabel(matchingPhone.color)} ${matchingPhone.country.split(' ')[0]} ${matchingPhone.simType}`;
+        if (devices.selectedDevice) {
+            const device = devices.selectedDevice;
+            const fullName = `Apple iPhone ${device.model}${device.variant ? ` ${getVariantLabel(device.variant)}` : ''} ${device.storage} ${getColorLabel(device.color)} ${device.country.split(' ')[0]} ${device.simType}`;
 
             setModel(fullName);
+            setPrice(device.basePrice);
+            
+            // Сохраняем basePrice в sessionStorage для condition страницы
+            sessionStorage.setItem('basePrice', device.basePrice.toString());
             
             // Сохраняем модель в БД
             saveModelToDB(fullName);
@@ -429,7 +353,7 @@ export default function FormPage() {
             // Показываем диалог с итоговой информацией когда все выбрано
             setShowSummaryDialog(true);
         }
-    }, [matchingPhone, setModel, telegramId]);
+    }, [devices.selectedDevice, setModel, setPrice, telegramId]);
 
     // Создаем заявку при загрузке страницы
     useEffect(() => {
@@ -438,21 +362,11 @@ export default function FormPage() {
                 try {
                     // Получаем базовую цену из найденной модели
                     let basePrice = 0; // цена по умолчанию
-                    if (matchingPhone) {
-                        basePrice = matchingPhone.basePrice;
-                        console.log('✅ Найдена модель:', matchingPhone, 'Цена:', basePrice);
+                    if (devices.selectedDevice) {
+                        basePrice = devices.selectedDevice.basePrice;
+                        console.log('✅ Найдена модель:', devices.selectedDevice, 'Цена:', basePrice);
                     } else {
                         console.log('❌ Модель не найдена. selectedOptions:', selectedOptions);
-                        // Если модель не найдена, но есть modelname в контексте, попробуем найти по названию
-                        // Проверяем, что modelname содержит полную информацию о модели (не дефолтное значение)
-                        if (modelname && modelname.includes(' ') && modelname.split(' ').length >= 6) {
-                            console.log('🔄 Пытаемся найти модель по названию:', modelname);
-                            const modelByName = findModelByName(modelname);
-                            if (modelByName) {
-                                basePrice = modelByName.basePrice;
-                                console.log('✅ Найдена модель по названию:', modelByName, 'Цена:', basePrice);
-                            }
-                        }
                     }
 
                     console.log('🚀 Form page - отправляем в API /choose:', {
@@ -462,6 +376,8 @@ export default function FormPage() {
                         currentStep: 'form'
                     });
 
+                    // На form page всегда сохраняем базовую цену (без поломок)
+                    // Это будет перезаписано на condition page с учетом поломок
                     await fetch('/api/request/choose', {
                         method: 'POST',
                         headers: {
@@ -470,7 +386,8 @@ export default function FormPage() {
                         body: JSON.stringify({
                             telegramId,
                             username: username || 'Unknown',
-                            price: basePrice,
+                            price: basePrice, // Базовая цена без поломок
+                            modelname: modelname, // Название модели
                             currentStep: 'form',
                         }),
                     });
@@ -481,7 +398,7 @@ export default function FormPage() {
         };
 
         createRequest();
-    }, [telegramId, username, matchingPhone, modelname]);
+    }, [telegramId, username, devices.selectedDevice, modelname]);
 
     // Загружаем прогресс из sessionStorage или CloudStorage при загрузке страницы
     useEffect(() => {
@@ -566,17 +483,19 @@ export default function FormPage() {
 
     // Автоматически открываем диалог когда все поля заполнены
     useEffect(() => {
-        if (isAllOptionsSelected && matchingPhone) {
+        const allSelected = isAllOptionsSelected();
+        
+        if (allSelected && devices.selectedDevice) {
             // Небольшая задержка для лучшего UX
             setTimeout(() => {
                 setShowSummaryDialog(true);
             }, 300);
         }
-    }, [isAllOptionsSelected, matchingPhone]);
+    }, [isAllOptionsSelected, devices.selectedDevice]);
 
     // Скрываем диалог если не все поля заполнены
     useEffect(() => {
-        if (!isAllOptionsSelected) {
+        if (!isAllOptionsSelected()) {
             setShowSummaryDialog(false);
         }
     }, [isAllOptionsSelected]);
@@ -695,95 +614,6 @@ export default function FormPage() {
         return variantMap[variant] || variant;
     };
 
-    // Функция для поиска модели по полному названию
-    const findModelByName = (modelname: string): IPhone | null => {
-        if (!modelname) return null;
-        
-        // Парсим название модели для извлечения параметров
-        // Примеры: 
-        // "Apple iPhone 16 Pro Max 1TB Золотой США eSIM" (Pro Max модель)
-        // "Apple iPhone 16 128GB Синий Китай 1 SIM" (базовая модель)
-        const parts = modelname.split(' ');
-        
-        if (parts.length < 2) return null;
-        
-        const model = parts[2]; // "16"
-        let variant = ''; // По умолчанию пустая строка для базовых моделей
-        let storageIndex = 3; // Индекс storage в массиве parts
-        
-        // Проверяем, есть ли вариант (R, S, S Max, Pro, Pro Max, Mini, Plus, SE)
-        if (parts[3] === 'R') {
-            variant = 'R';
-            storageIndex = 4; // storage находится на индексе 4
-        } else if (parts[3] === 'S') {
-            if (parts[4] === 'Max') {
-                variant = 'S Max';
-                storageIndex = 5; // storage находится на индексе 5
-            } else {
-                variant = 'S';
-                storageIndex = 4; // storage находится на индексе 4
-            }
-        } else if (parts[3] === 'Pro') {
-            if (parts[4] === 'Max') {
-                variant = 'Pro Max';
-                storageIndex = 5; // storage находится на индексе 5
-            } else {
-                variant = 'Pro';
-                storageIndex = 4; // storage находится на индексе 4
-            }
-        } else if (parts[3] === 'Mini') {
-            variant = 'mini';
-            storageIndex = 4; // storage находится на индексе 4
-        } else if (parts[3] === 'Plus') {
-            variant = 'Plus';
-            storageIndex = 4; // storage находится на индексе 4
-        } else if (parts[3] === 'SE') {
-            variant = 'se';
-            storageIndex = 4; // storage находится на индексе 4
-        }
-        
-        const storage = parts[storageIndex]; // "1TB"
-        const color = parts[storageIndex + 1]; // "Золотой"
-        const country = parts[storageIndex + 2]; // "США"
-        const simType = parts[storageIndex + 3]; // "eSIM"
-        
-        // Маппинг цветов
-        const colorMap: { [key: string]: string } = {
-            'Золотой': 'G',
-            'Красный': 'R', 
-            'Синий': 'Bl',
-            'Белый': 'Wh',
-            'Черный': 'C'
-        };
-        
-        // Маппинг стран
-        const countryMap: { [key: string]: string } = {
-            'Китай': 'Китай 🇨🇳',
-            'США': 'США 🇺🇸',
-            'Япония': 'Япония 🇯🇵'
-        };
-        
-        const mappedColor = colorMap[color] || color;
-        const mappedCountry = countryMap[country] || country;
-        
-        // Ищем модель в массиве с учетом варианта
-        const foundPhone = iphones.find((phone: IPhone) =>
-            phone.model === model &&
-            phone.variant === variant &&
-            phone.storage === storage &&
-            phone.color === mappedColor &&
-            phone.simType === simType &&
-            phone.country === mappedCountry
-        );
-        
-        console.log('🔍 Поиск модели по названию:', {
-            modelname,
-            parsed: { model, variant, storage, color: mappedColor, country: mappedCountry, simType },
-            foundPhone: foundPhone ? `✅ Найден: ${foundPhone.basePrice}₽` : '❌ Не найден'
-        });
-        
-        return foundPhone || null;
-    };
 
     const getColorStyle = (color: string) => {
         const colorMap: { [key: string]: string } = {
@@ -797,7 +627,7 @@ export default function FormPage() {
     };
 
     const handleContinueToNext = async () => {
-        if (matchingPhone) {
+        if (devices.selectedDevice) {
             // Обновляем currentStep в БД перед переходом
             if (telegramId) {
                 try {
@@ -851,21 +681,7 @@ export default function FormPage() {
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Модель</h3>
                                 <div className="grid grid-cols-4 gap-1">
-                                    {[...new Set(iphones.map((phone: IPhone) => phone.model))].sort((a: string, b: string) => {
-                                        // Сначала X, затем числовые модели, затем остальные буквенные
-                                        if (a === 'X') return -1;
-                                        if (b === 'X') return 1;
-
-                                        const aNum = parseInt(a);
-                                        const bNum = parseInt(b);
-                                        if (!isNaN(aNum) && !isNaN(bNum)) {
-                                            return aNum - bNum;
-                                        }
-                                        if (isNaN(aNum) && isNaN(bNum)) {
-                                            return a.localeCompare(b);
-                                        }
-                                        return isNaN(aNum) ? 1 : -1;
-                                    }).map((model: string) => (
+                                    {devices.models.map((model: string) => (
                                         <motion.div
                                             key={model}
                                             whileHover={{ scale: 1.01 }}
@@ -894,7 +710,7 @@ export default function FormPage() {
                         )}
 
                         {/* Секция выбора варианта */}
-                        {selectedOptions.model && (
+                        {selectedOptions.model && devices.variants.length > 0 && (
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -904,7 +720,7 @@ export default function FormPage() {
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Вариант</h3>
                                 <div className="grid grid-cols-3 gap-1">
-                                    {getAvailableVariants().map((variant: string) => (
+                                    {devices.variants.map((variant: string) => (
                                         <Button
                                             key={variant}
                                             onClick={() => handleOptionSelect('variant', variant)}
@@ -919,7 +735,7 @@ export default function FormPage() {
                                                     <span className="text-white text-xs font-bold">✓</span>
                                                 </div>
                                             )}
-                                            {getVariantLabel(variant)}
+                                            {variant === '' ? '' : getVariantLabel(variant)}
                                         </Button>
                                     ))}
                                 </div>
@@ -927,7 +743,7 @@ export default function FormPage() {
                         )}
 
                         {/* Секция выбора объема памяти */}
-                        {selectedOptions.variant && (
+                        {selectedOptions.model && devices.storages.length > 0 && (
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -937,7 +753,7 @@ export default function FormPage() {
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Объем памяти</h3>
                                 <div className="grid grid-cols-3 gap-1 max-w-xs mx-auto">
-                                    {getAvailableStorages().slice(0, 3).map((storage: string) => (
+                                    {devices.storages.slice(0, 3).map((storage: string) => (
                                         <Button
                                             key={storage}
                                             onClick={() => handleOptionSelect('storage', storage)}
@@ -957,7 +773,7 @@ export default function FormPage() {
                                     ))}
                                 </div>
                                 <div className="grid grid-cols-2 gap-1 max-w-xs mx-auto mt-1">
-                                    {getAvailableStorages().slice(3).map((storage: string) => (
+                                    {devices.storages.slice(3).map((storage: string) => (
                                         <Button
                                             key={storage}
                                             onClick={() => handleOptionSelect('storage', storage)}
@@ -980,7 +796,7 @@ export default function FormPage() {
                         )}
 
                         {/* Секция выбора цвета */}
-                        {selectedOptions.storage && (
+                        {selectedOptions.model && devices.colors.length > 0 && (
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -990,7 +806,7 @@ export default function FormPage() {
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Цвет</h3>
                                 <div className="flex flex-row justify-around gap-2">
-                                    {getAvailableColors().map((color: string) => (
+                                    {devices.colors.map((color: string) => (
                                         <Button
                                             key={color}
                                             onClick={() => handleOptionSelect('color', color)}
@@ -1001,7 +817,7 @@ export default function FormPage() {
                                             }`}
                                             style={{
                                                 backgroundColor: getColorStyle(color),
-                                                opacity: !getAvailableColors().includes(color) ? 0.3 : 1
+                                                opacity: !devices.colors.includes(color) ? 0.3 : 1
                                             }}
                                             title={getColorLabel(color)}
                                         >
@@ -1021,7 +837,7 @@ export default function FormPage() {
                         )}
 
                         {/* Секция выбора типа SIM */}
-                        {selectedOptions.color && (
+                        {selectedOptions.model && devices.simTypes.length > 0 && (
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1031,7 +847,7 @@ export default function FormPage() {
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Тип SIM</h3>
                                 <div className="grid grid-cols-2 gap-1">
-                                    {getAvailableSimTypes().map((simType: string) => (
+                                    {devices.simTypes.map((simType: string) => (
                                         <Button
                                             key={simType}
                                             onClick={() => handleOptionSelect('simType', simType)}
@@ -1054,7 +870,7 @@ export default function FormPage() {
                         )}
 
                         {/* Секция выбора страны производителя */}
-                        {selectedOptions.simType && (
+                        {selectedOptions.model && devices.countries.length > 0 && (
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1064,7 +880,7 @@ export default function FormPage() {
                             >
                                 <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Страна производитель</h3>
                                 <div className="grid grid-cols-2 gap-1">
-                                    {getAvailableCountries().map((country: string) => (
+                                    {devices.countries.map((country: string) => (
                                         <Button
                                             key={country}
                                             onClick={() => handleOptionSelect('country', country)}
@@ -1098,18 +914,18 @@ export default function FormPage() {
                                 <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
                                     📱 Ваша полная конфигурация
                                 </DialogTitle>
-                                {matchingPhone && (
+                                {devices.selectedDevice && (
                                     <>
                                         <div className="text-center space-y-4">
                                             {/* Полная модель */}
                                             <div className="bg-[#2dc2c6]/10 p-4 rounded-xl border border-[#2dc2c6]">
                                                 <p className="text-lg font-semibold text-gray-900 break-words leading-tight">
-                                                    iPhone {matchingPhone.model}
-                                                    {matchingPhone.variant ? ` ${getVariantLabel(matchingPhone.variant)}` : ''}
-                                                    {matchingPhone.storage ? ` ${matchingPhone.storage}` : ''}
-                                                    {matchingPhone.color ? ` ${getColorLabel(matchingPhone.color)}` : ''}
-                                                    {matchingPhone.simType ? ` ${matchingPhone.simType}` : ''}
-                                                    {matchingPhone.country ? ` ${matchingPhone.country.split(' ')[0]}` : ''}
+                                                    iPhone {devices.selectedDevice.model}
+                                                    {devices.selectedDevice.variant ? ` ${getVariantLabel(devices.selectedDevice.variant)}` : ''}
+                                                    {devices.selectedDevice.storage ? ` ${devices.selectedDevice.storage}` : ''}
+                                                    {devices.selectedDevice.color ? ` ${getColorLabel(devices.selectedDevice.color)}` : ''}
+                                                    {devices.selectedDevice.simType ? ` ${devices.selectedDevice.simType}` : ''}
+                                                    {devices.selectedDevice.country ? ` ${devices.selectedDevice.country.split(' ')[0]}` : ''}
                                                 </p>
                                             </div>
                                         </div>

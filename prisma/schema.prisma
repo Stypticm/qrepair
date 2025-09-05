@@ -91,6 +91,29 @@ model DeviceInspection {
   @@index([inspectionToken])
 }
 
+model Device {
+  id        String   @id @default(cuid())
+  model     String   // "iPhone 15 Pro"
+  variant   String   // "Max" или ""
+  storage   String   // "128GB", "256GB", etc.
+  color     String   // "Bl", "Wh", "Gold", etc.
+  country   String   // "Китай 🇨🇳", "США 🇺🇸", etc.
+  simType   String   // "1 SIM", "2 SIM"
+  basePrice Float    // Базовая цена в рублях
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Индексы для быстрой фильтрации
+  @@index([model])
+  @@index([model, variant])
+  @@index([model, variant, storage])
+  @@index([model, variant, storage, color])
+  @@index([country])
+  @@index([simType])
+  @@index([basePrice])
+}
+
 enum SkupkaStatus {
   draft
   submitted

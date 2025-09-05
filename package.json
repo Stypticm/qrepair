@@ -15,7 +15,8 @@
     "version:major": "node scripts/update-version.js major",
     "prepare": "npm run update-version && git add . && git config --global core.autocrlf true",
     "precommit": "npm run update-version && git add . && git config --global core.autocrlf true && git add .",
-    "deploy": "npm run update-version && git add . && git commit -m \"Update version for deployment\" && git push origin dev"
+    "deploy": "npm run update-version && git add . && git commit -m \"Update version for deployment\" && git push origin dev",
+    "migrate-devices": "tsx scripts/migrate-devices-to-db.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -69,6 +70,7 @@
     "postcss": "^8.5.6",
     "prisma": "^6.12.0",
     "tailwindcss": "^4.1.11",
+    "tsx": "^4.20.5",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   }

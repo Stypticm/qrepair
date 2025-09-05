@@ -14,27 +14,29 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ImagePreloader } from '@/components/ImagePreloader';
-import { iphones, IPhone } from '@/core/appleModels';
+import { useDevices, Device } from '@/hooks/useDevices';
 
 // Функция для поиска модели по названию
-function findModelByName(modelname: string): IPhone | null {
-    if (!modelname) return null;
+function findModelByName(modelname: string) {
+    console.log('🔍 Condition page - findModelByName вызвана с modelname:', modelname);
     
     // Парсим название модели для извлечения параметров
     // Примеры: 
-    // "iPhone 11 128GB Синий 1 SIM Китай" (базовая модель)
-    // "iPhone 11 Pro 128GB Синий 1 SIM Китай" (Pro модель)
-    // "iPhone 11 Pro Max 128GB Синий 1 SIM Китай" (Pro Max модель)
+    // "iPhone 16 Pro 256GB Синий 2 SIM Китай" (Pro модель)
+    // "iPhone 16 Pro Max 256GB Синий 2 SIM Китай" (Pro Max модель)
+    // "iPhone 16 256GB Синий 2 SIM Китай" (базовая модель)
     const parts = modelname.split(' ');
+    
+    console.log('🔍 Condition page - parts после split:', parts);
     
     if (parts.length < 2) return null;
     
-    const model = parts[1]; // "11"
+    const model = parts[2]; // "16" - модель находится на индексе 2
     let variant = ''; // По умолчанию пустая строка для базовых моделей
-    let storageIndex = 2; // Индекс storage в массиве parts
+    let storageIndex = 3; // Индекс storage в массиве parts (по умолчанию для базовой модели)
     
-    // Проверяем, есть ли вариант (R, S, S Max, Pro, Pro Max, mini)
-    // В названии "Apple iPhone 11 Pro 128GB..." индекс 3 это "Pro"
+    // Проверяем, есть ли вариант (R, S, S Max, Pro, Pro Max, mini, Plus, SE)
+    // В названии "Apple iPhone 16 Pro 256GB..." индекс 3 это "Pro"
     if (parts[3] === 'R') {
         variant = 'R';
         storageIndex = 4; // storage находится на индексе 4
@@ -54,7 +56,7 @@ function findModelByName(modelname: string): IPhone | null {
             variant = 'Pro';
             storageIndex = 4; // storage находится на индексе 4
         }
-    } else if (parts[3] === 'Mini') {
+    } else if (parts[3] === 'mini') {
         variant = 'mini';
         storageIndex = 4; // storage находится на индексе 4
     } else if (parts[3] === 'Plus') {
@@ -65,10 +67,19 @@ function findModelByName(modelname: string): IPhone | null {
         storageIndex = 4; // storage находится на индексе 4
     }
     
-    const storage = parts[storageIndex]; // "128GB"
+    const storage = parts[storageIndex]; // "256GB"
     const color = parts[storageIndex + 1]; // "Синий"
-    const simType = parts[storageIndex + 2] + ' ' + parts[storageIndex + 3]; // "1 SIM"
+    const simType = parts[storageIndex + 2] + ' ' + parts[storageIndex + 3]; // "2 SIM"
     const country = parts[storageIndex + 4]; // "Китай"
+    
+    console.log('🔍 Condition page - извлеченные параметры:', {
+        model,
+        variant,
+        storage,
+        color,
+        simType,
+        country
+    });
     
     // Маппинг цветов
     const colorMap: { [key: string]: string } = {
@@ -89,23 +100,33 @@ function findModelByName(modelname: string): IPhone | null {
     const mappedColor = colorMap[color] || color;
     const mappedCountry = countryMap[country] || country;
     
-    // Ищем модель в массиве с учетом варианта
-    const foundPhone = iphones.find((phone: IPhone) =>
-        phone.model === model &&
-        phone.variant === variant &&
-        phone.storage === storage &&
-        phone.color === mappedColor &&
-        phone.simType === simType &&
-        phone.country === mappedCountry
-    );
+    console.log('🔍 Condition page - маппированные параметры:', {
+        model,
+        variant,
+        storage,
+        color: mappedColor,
+        simType,
+        country: mappedCountry
+    });
     
-    return foundPhone || null;
+    // Получаем данные устройства из sessionStorage
+    const phoneSelection = sessionStorage.getItem('phoneSelection');
+    const deviceData = phoneSelection ? JSON.parse(phoneSelection) : null;
+    
+    if (deviceData) {
+        console.log('✅ Condition page - найдены данные устройства:', deviceData);
+        return deviceData;
+    }
+    
+    console.log('❌ Condition page - данные устройства не найдены');
+    return null;
 }
 
 export default function ConditionPage() {
     const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice } = useStartForm();
     const { setCurrentStep } = useNavigation();
     const router = useRouter();
+    const devices = useDevices();
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -363,6 +384,14 @@ export default function ConditionPage() {
 
     // Обработчики диалогового окна
     const handleContinue = () => {
+        // Сохраняем basePrice в sessionStorage для additional-condition страницы
+        const savedBasePrice = sessionStorage.getItem('basePrice');
+        if (savedBasePrice) {
+            console.log('💾 Condition page - basePrice уже сохранена:', savedBasePrice);
+        } else {
+            console.log('❌ Condition page - basePrice не найдена в sessionStorage');
+        }
+        
         setShowDialog(false);
         router.push('/request/additional-condition');
     };
@@ -393,6 +422,14 @@ export default function ConditionPage() {
                 [type]: conditionText
             };
 
+            console.log('🔄 Condition page - handleConditionSelect:', {
+                type,
+                conditionId,
+                conditionText,
+                oldConditions: deviceConditions,
+                newConditions
+            });
+
             // Сначала обновляем контекст
             setDeviceConditions(newConditions);
 
@@ -418,12 +455,16 @@ export default function ConditionPage() {
 
     // Сохранение состояний в БД
     const saveConditionsToDatabase = async (newConditions: any) => {
+        console.log('🚀 Condition page - saveConditionsToDatabase вызвана с:', newConditions);
+        console.log('🔍 Condition page - текущий modelname из контекста:', modelname);
         try {
             // Получаем базовую цену из найденной модели
             let basePrice = 0; // Базовая цена по умолчанию
             console.log('🔍 Condition page - modelname:', modelname);
             if (modelname) {
-                const foundModel = findModelByName(modelname);
+                // Получаем данные устройства из sessionStorage
+                const phoneSelection = sessionStorage.getItem('phoneSelection');
+                const foundModel = phoneSelection ? JSON.parse(phoneSelection) : null;
                 console.log('🔍 Condition page - foundModel:', foundModel);
                 if (foundModel) {
                     basePrice = foundModel.basePrice;
@@ -436,8 +477,13 @@ export default function ConditionPage() {
             }
 
             // Рассчитываем финальную цену с учетом состояний
-            const finalPrice = calculateFinalPrice(basePrice);
+            const finalPrice = calculateFinalPrice(basePrice, newConditions);
+            const discountAmount = basePrice - finalPrice;
+            const discountPercent = basePrice > 0 ? (discountAmount / basePrice * 100) : 0;
+            
             console.log('🔍 Condition page - finalPrice рассчитана:', finalPrice);
+            console.log('💰 Condition page - разница в цене:', discountAmount, '₽');
+            console.log('📊 Condition page - процент скидки:', discountPercent.toFixed(1) + '%');
 
             // Устанавливаем цену в контекст
             setPrice(finalPrice);
@@ -450,10 +496,20 @@ export default function ConditionPage() {
 
             const requestBody = {
                 deviceConditions: newConditions,
-                price: finalPrice,
+                price: finalPrice, // Финальная цена (для совместимости)
+                basePrice: basePrice, // Базовая цена без поломок
+                discountPercent: discountPercent, // Процент скидки
                 currentStep: 'condition',
                 telegramId: telegramId || 'test-user'
             };
+
+            console.log('🚀 Condition page - отправляем в API /saveConditions:', {
+                basePrice,
+                finalPrice,
+                discountPercent: discountPercent.toFixed(1) + '%',
+                deviceConditions: newConditions,
+                priceDifference: discountAmount
+            });
 
             const response = await fetch('/api/request/saveConditions', {
                 method: 'POST',
@@ -476,11 +532,11 @@ export default function ConditionPage() {
         if (conditionId.includes('_new')) {
             return 'Новый';
         } else if (conditionId.includes('_have_scratches')) {
-            return 'Заметные царапины';
+            return 'Заметные\nцарапины';
         } else if (conditionId.includes('_scratches')) {
             return 'Трещины';
-        } else if (conditionId.includes('display_front') || conditionId.includes('display_back') || conditionId.includes('display_side')) {
-            return 'Очень хорошее';
+        } else if (conditionId === 'display_front' || conditionId === 'display_back' || conditionId === 'display_side') {
+            return 'Очень\nхорошее';
         } else {
             return conditionId; // fallback
         }
@@ -509,21 +565,67 @@ export default function ConditionPage() {
     };
 
     // Функция для расчета финальной цены с учетом состояний
-    const calculateFinalPrice = (basePrice: number): number => {
+    const calculateFinalPrice = (basePrice: number, conditions: any = deviceConditions): number => {
         let totalPenalty = 0;
 
+        console.log('🔍 Condition page - calculateFinalPrice начальные данные:', {
+            basePrice,
+            conditions
+        });
+
         // Суммируем проценты по всем выбранным состояниям
-        if (deviceConditions.front) {
-            const frontCondition = frontConditions.find(c => getConditionText(c.id) === deviceConditions.front);
-            if (frontCondition) totalPenalty += frontCondition.penalty;
+        if (conditions.front) {
+            console.log('🔍 Condition page - ищем front condition:', {
+                lookingFor: conditions.front,
+                allFrontConditions: frontConditions.map(c => ({ id: c.id, label: c.label, penalty: c.penalty }))
+            });
+            
+            const frontCondition = frontConditions.find(c => getConditionText(c.id) === conditions.front);
+            if (frontCondition) {
+                totalPenalty += frontCondition.penalty;
+                console.log('✅ Condition page - front condition найдено:', {
+                    condition: conditions.front,
+                    penalty: frontCondition.penalty,
+                    totalPenalty
+                });
+            } else {
+                console.log('❌ Condition page - front condition не найдено:', {
+                    condition: conditions.front,
+                    availableConditions: frontConditions.map(c => getConditionText(c.id))
+                });
+            }
         }
-        if (deviceConditions.back) {
-            const backCondition = backConditions.find(c => getConditionText(c.id) === deviceConditions.back);
-            if (backCondition) totalPenalty += backCondition.penalty;
+        if (conditions.back) {
+            const backCondition = backConditions.find(c => getConditionText(c.id) === conditions.back);
+            if (backCondition) {
+                totalPenalty += backCondition.penalty;
+                console.log('🔍 Condition page - back condition:', {
+                    condition: conditions.back,
+                    penalty: backCondition.penalty,
+                    totalPenalty
+                });
+            } else {
+                console.log('❌ Condition page - back condition не найдено:', {
+                    condition: conditions.back,
+                    availableConditions: backConditions.map(c => getConditionText(c.id))
+                });
+            }
         }
-        if (deviceConditions.side) {
-            const sideCondition = sideConditions.find(c => getConditionText(c.id) === deviceConditions.side);
-            if (sideCondition) totalPenalty += sideCondition.penalty;
+        if (conditions.side) {
+            const sideCondition = sideConditions.find(c => getConditionText(c.id) === conditions.side);
+            if (sideCondition) {
+                totalPenalty += sideCondition.penalty;
+                console.log('🔍 Condition page - side condition:', {
+                    condition: conditions.side,
+                    penalty: sideCondition.penalty,
+                    totalPenalty
+                });
+            } else {
+                console.log('❌ Condition page - side condition не найдено:', {
+                    condition: conditions.side,
+                    availableConditions: sideConditions.map(c => getConditionText(c.id))
+                });
+            }
         }
 
         // Ограничиваем максимальный вычет 50%
@@ -534,7 +636,17 @@ export default function ConditionPage() {
 
         // Ограничиваем минимальную цену 50% от базовой
         const minPrice = basePrice * 0.5;
-        return Math.max(finalPrice, minPrice);
+        const result = Math.max(finalPrice, minPrice);
+
+        console.log('🔍 Condition page - calculateFinalPrice результат:', {
+            basePrice,
+            totalPenalty,
+            calculation: `${basePrice} * (1 + ${totalPenalty}/100) = ${basePrice} * ${(1 + totalPenalty / 100)} = ${finalPrice}`,
+            minPrice,
+            finalPrice: result
+        });
+
+        return result;
     };
 
     // Функция для расчета общего процента вычета (для диалога)

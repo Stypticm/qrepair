@@ -13,6 +13,8 @@ const SubmitPage = () => {
     const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice } = useStartForm();
     const { setCurrentStep } = useNavigation();
     const [dataLoaded, setDataLoaded] = useState(false);
+    const [priceLoaded, setPriceLoaded] = useState(false);
+    const [dbData, setDbData] = useState<any>(null);
     const [showResetDialog, setShowResetDialog] = useState(false);
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
     const [feedback, setFeedback] = useState('');
@@ -90,6 +92,7 @@ const SubmitPage = () => {
                     console.log('🔍 Submit page - parsed priceValue:', priceValue);
                     if (priceValue && priceValue > 0) {
                         setPrice(priceValue);
+                        setPriceLoaded(true);
                         console.log('✅ Submit page - установлена цена из sessionStorage:', priceValue);
                     } else {
                         console.log('❌ Submit page - цена в sessionStorage невалидна:', priceValue);
@@ -134,9 +137,26 @@ const SubmitPage = () => {
                     .then(data => {
                         if (data) {
                             console.log('Загружаем данные из БД в submit:', data);
+                            console.log('💰 Submit page - цены из БД:', {
+                                basePrice: data.basePrice,
+                                damagePercent: data.damagePercent,
+                                finalPrice: data.price,
+                                calculatedPrice: data.basePrice * (1 - (data.damagePercent || 0) / 100)
+                            });
+
+                            // Сохраняем данные для отображения
+                            setDbData(data);
 
                             if (data.modelname) setModel(data.modelname);
-                            if (data.price) setPrice(data.price);
+                            if (data.price) {
+                                setPrice(data.price);
+                                setPriceLoaded(true);
+                                // Обновляем цену в sessionStorage
+                                if (typeof window !== 'undefined') {
+                                    sessionStorage.setItem('price', JSON.stringify(data.price));
+                                    console.log('✅ Submit page - цена обновлена в sessionStorage:', data.price);
+                                }
+                            }
                             if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
                             if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
                             if (data.imei) setImei(data.imei);
@@ -419,8 +439,25 @@ const SubmitPage = () => {
                                         <div className="border-t border-gray-200 pt-4">
                                             <div className="flex justify-between items-center">
                                                 <span className="font-semibold text-gray-900">Предварительная цена:</span>
-                                                <span className="font-bold text-2xl text-green-600">{finalPrice.toLocaleString()} ₽</span>
+                                                {priceLoaded ? (
+                                                    <span className="font-bold text-2xl text-green-600">{finalPrice.toLocaleString()} ₽</span>
+                                                ) : (
+                                                    <div className="flex items-center space-x-2">
+                                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
+                                                        <span className="text-gray-500">Загрузка...</span>
+                                                    </div>
+                                                )}
                                             </div>
+                                            {priceLoaded && finalPrice > 0 && (
+                                                <div className="mt-2 text-sm text-gray-600">
+                                                    <span>Цена с учетом состояния устройства</span>
+                                                    {dbData && dbData.damagePercent > 0 && (
+                                                        <div className="mt-1 text-xs text-orange-600">
+                                                            Скидка: {dbData.damagePercent.toFixed(1)}% (базовая цена: {dbData.basePrice?.toLocaleString()} ₽)
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>

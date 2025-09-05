@@ -11,6 +11,7 @@ export async function POST(req: Request) {
       imei,
       sn,
       currentStep,
+      modelname,
     } = body
 
     console.log('🔍 API /choose - получены данные:', {
@@ -20,6 +21,7 @@ export async function POST(req: Request) {
       imei,
       sn,
       currentStep,
+      modelname,
     })
 
     if (!username) username = 'local_dev'
@@ -40,6 +42,7 @@ export async function POST(req: Request) {
         imei: imei || existing.imei,
         sn: sn || existing.sn,
         currentStep: currentStep || existing.currentStep,
+        modelname: modelname || existing.modelname,
       }
 
       console.log(
@@ -65,6 +68,7 @@ export async function POST(req: Request) {
       imei: imei || null,
       sn: sn || null,
       currentStep: currentStep || null,
+      modelname: modelname || null,
     }
 
     console.log(

@@ -269,7 +269,7 @@ export default function Home() {
               className="w-full"
             >
               <Image
-                src={getPictureUrl(`animation_logo.gif`) || '/animation_logo.gif'}
+                src={getPictureUrl(`animation_logo2.gif`) || '/animation_logo2.gif'}
                 alt="Логотип"
                 width={400}
                 height={200}

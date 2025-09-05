@@ -34,18 +34,26 @@ export async function POST(req: Request) {
     console.log('Found draft in DB:', {
       id: draftRequest.id,
       modelname: draftRequest.modelname,
-      price: draftRequest.price,
+      price: draftRequest.price, // Базовая цена
+      damagePercent: draftRequest.damagePercent, // Процент скидки
       imei: draftRequest.imei,
       sn: draftRequest.sn,
       currentStep: draftRequest.currentStep,
       status: draftRequest.status,
     })
 
+    // Вычисляем финальную цену на основе базовой цены и процента скидки
+    const basePrice = draftRequest.price || 0
+    const damagePercent = draftRequest.damagePercent || 0
+    const finalPrice = basePrice * (1 - damagePercent / 100)
+
     // Возвращаем данные заявки
     return NextResponse.json({
       id: draftRequest.id,
       modelname: draftRequest.modelname,
-      price: draftRequest.price,
+      price: finalPrice, // Финальная цена (рассчитанная)
+      basePrice: basePrice, // Базовая цена
+      damagePercent: damagePercent, // Процент скидки
       imei: draftRequest.imei,
       sn: draftRequest.sn,
       deviceConditions: draftRequest.deviceConditions,

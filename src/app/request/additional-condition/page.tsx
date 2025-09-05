@@ -266,16 +266,132 @@ export default function AdditionalConditionPage() {
             additionalConditions.battery;
     }, [additionalConditions]);
 
+    // Функция расчета цены с учетом дополнительных условий
+    const calculatePriceWithAdditionalConditions = useCallback(async () => {
+        try {
+            // Получаем базовую цену из sessionStorage
+            const savedBasePrice = sessionStorage.getItem('basePrice');
+            if (!savedBasePrice) {
+                console.error('Не найдена базовая цена в sessionStorage');
+                return;
+            }
+
+            const basePrice = parseFloat(savedBasePrice);
+            if (!basePrice || basePrice <= 0) {
+                console.error('Невалидная базовая цена:', basePrice);
+                return;
+            }
+
+            // Получаем deviceConditions из sessionStorage
+            const deviceConditions = sessionStorage.getItem('deviceConditions');
+            let deviceConditionsData: {
+                front?: string;
+                back?: string;
+                side?: string;
+            } = {};
+            if (deviceConditions) {
+                deviceConditionsData = JSON.parse(deviceConditions);
+            }
+
+            // Рассчитываем штрафы за состояние устройства
+            let totalPenalty = 0;
+
+            // Штрафы за состояние экрана (из condition page)
+            if (deviceConditionsData.front) {
+                const frontCondition = getAdditionalConditionText(deviceConditionsData.front);
+                if (frontCondition === 'Новый') totalPenalty += 0;
+                else if (frontCondition === 'Очень хорошее') totalPenalty += -3;
+                else if (frontCondition === 'Заметные царапины') totalPenalty += -8;
+                else if (frontCondition === 'Трещины') totalPenalty += -15;
+            }
+
+            if (deviceConditionsData.back) {
+                const backCondition = getAdditionalConditionText(deviceConditionsData.back);
+                if (backCondition === 'Новый') totalPenalty += 0;
+                else if (backCondition === 'Очень хорошее') totalPenalty += -3;
+                else if (backCondition === 'Заметные царапины') totalPenalty += -8;
+                else if (backCondition === 'Трещины') totalPenalty += -15;
+            }
+
+            if (deviceConditionsData.side) {
+                const sideCondition = getAdditionalConditionText(deviceConditionsData.side);
+                if (sideCondition === 'Новый') totalPenalty += 0;
+                else if (sideCondition === 'Очень хорошее') totalPenalty += -3;
+                else if (sideCondition === 'Заметные царапины') totalPenalty += -8;
+                else if (sideCondition === 'Трещины') totalPenalty += -15;
+            }
+
+            // Штрафы за дополнительные условия
+            if (additionalConditions.faceId) {
+                if (additionalConditions.faceId === 'Работает') totalPenalty += 0;
+                else if (additionalConditions.faceId === 'Не работает') totalPenalty += -10;
+            }
+
+            if (additionalConditions.touchId) {
+                if (additionalConditions.touchId === 'Работает') totalPenalty += 0;
+                else if (additionalConditions.touchId === 'Не работает') totalPenalty += -8;
+            }
+
+            if (additionalConditions.backCamera) {
+                if (additionalConditions.backCamera === 'Новый') totalPenalty += 0;
+                else if (additionalConditions.backCamera === 'Очень хорошее') totalPenalty += -3;
+                else if (additionalConditions.backCamera === 'Заметные царапины') totalPenalty += -8;
+                else if (additionalConditions.backCamera === 'Трещины') totalPenalty += -15;
+            }
+
+            if (additionalConditions.battery) {
+                if (additionalConditions.battery === '95%') totalPenalty += 0;
+                else if (additionalConditions.battery === '90%') totalPenalty += -2;
+                else if (additionalConditions.battery === '85%') totalPenalty += -5;
+                else if (additionalConditions.battery === '75%') totalPenalty += -10;
+            }
+
+            // Ограничиваем максимальный вычет 50%
+            if (totalPenalty < -50) totalPenalty = -50;
+
+            // Рассчитываем финальную цену
+            const finalPrice = basePrice * (1 + totalPenalty / 100);
+
+            // Ограничиваем минимальную цену 50% от базовой
+            const minPrice = basePrice * 0.5;
+            const result = Math.max(finalPrice, minPrice);
+
+            console.log('💰 Расчет цены с дополнительными условиями:', {
+                basePrice,
+                totalPenalty,
+                finalPrice: result,
+                deviceConditions: deviceConditionsData,
+                additionalConditions
+            });
+
+            console.log('💾 Сохраняем цену в sessionStorage:', result);
+
+            // Обновляем цену в контексте
+            setPrice(result);
+
+            // Сохраняем в sessionStorage
+            sessionStorage.setItem('price', JSON.stringify(result));
+            sessionStorage.setItem('calculatedPrice', JSON.stringify(result));
+
+        } catch (error) {
+            console.error('Ошибка при расчете цены:', error);
+        }
+    }, [additionalConditions, setPrice]);
+
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {
         if (areAllConditionsSelected() && hasChanges) {
             console.log('[useEffect] Показываем диалог - все условия выбраны и есть изменения');
+            
+            // Рассчитываем цену перед показом диалога
+            calculatePriceWithAdditionalConditions();
+            
             setShowDialog(true);
             
             // Устанавливаем флаг "все выбрано"
             setIsAllSelected(true);
         }
-    }, [additionalConditions, areAllConditionsSelected, hasChanges]);
+    }, [additionalConditions, areAllConditionsSelected, hasChanges, calculatePriceWithAdditionalConditions]);
 
     // Обработчики диалогового окна
     const handleContinue = () => {
@@ -738,7 +854,6 @@ export default function AdditionalConditionPage() {
                             </div>
                         </div>
 
-                        {/* Показываем выбранные условия */}
 
                         <p className="text-center text-sm text-gray-600 mt-3">
                             👆 Нажмите на окно для перехода к следующему шагу

@@ -10,21 +10,28 @@ import { iphones, IPhone } from '@/core/appleModels'
 
 // Функция для поиска модели по названию
 function findModelByName(modelname: string): IPhone | null {
+  console.log(
+    '🔍 Submit API - findModelByName вызвана с modelname:',
+    modelname
+  )
+
   // Парсим название модели для извлечения параметров
   // Примеры:
-  // "iPhone 11 128GB Синий 1 SIM Китай" (базовая модель)
-  // "iPhone 11 Pro 128GB Синий 1 SIM Китай" (Pro модель)
-  // "iPhone 11 Pro Max 128GB Синий 1 SIM Китай" (Pro Max модель)
+  // "iPhone 16 Pro 256GB Синий 2 SIM Китай" (Pro модель)
+  // "iPhone 16 Pro Max 256GB Синий 2 SIM Китай" (Pro Max модель)
+  // "iPhone 16 256GB Синий 2 SIM Китай" (базовая модель)
   const parts = modelname.split(' ')
+
+  console.log('🔍 Submit API - parts после split:', parts)
 
   if (parts.length < 2) return null
 
-  const model = parts[1] // "11"
+  const model = parts[2] // "16" - модель находится на индексе 2
   let variant = '' // По умолчанию пустая строка для базовых моделей
-  let storageIndex = 2 // Индекс storage в массиве parts
+  let storageIndex = 3 // Индекс storage в массиве parts (по умолчанию для базовой модели)
 
-  // Проверяем, есть ли вариант (R, S, S Max, Pro, Pro Max, mini)
-  // В названии "Apple iPhone 11 Pro 128GB..." индекс 3 это "Pro"
+  // Проверяем, есть ли вариант (R, S, S Max, Pro, Pro Max, mini, Plus, SE)
+  // В названии "Apple iPhone 16 Pro 256GB..." индекс 3 это "Pro"
   if (parts[3] === 'R') {
     variant = 'R'
     storageIndex = 4 // storage находится на индексе 4
@@ -44,7 +51,7 @@ function findModelByName(modelname: string): IPhone | null {
       variant = 'Pro'
       storageIndex = 4 // storage находится на индексе 4
     }
-  } else if (parts[3] === 'Mini') {
+  } else if (parts[3] === 'mini') {
     variant = 'mini'
     storageIndex = 4 // storage находится на индексе 4
   } else if (parts[3] === 'Plus') {
@@ -55,11 +62,20 @@ function findModelByName(modelname: string): IPhone | null {
     storageIndex = 4 // storage находится на индексе 4
   }
 
-  const storage = parts[storageIndex] // "128GB"
+  const storage = parts[storageIndex] // "256GB"
   const color = parts[storageIndex + 1] // "Синий"
   const simType =
-    parts[storageIndex + 2] + ' ' + parts[storageIndex + 3] // "1 SIM"
+    parts[storageIndex + 2] + ' ' + parts[storageIndex + 3] // "2 SIM"
   const country = parts[storageIndex + 4] // "Китай"
+
+  console.log('🔍 Submit API - извлеченные параметры:', {
+    model,
+    variant,
+    storage,
+    color,
+    simType,
+    country,
+  })
 
   // Маппинг цветов
   const colorMap: { [key: string]: string } = {
@@ -80,8 +96,17 @@ function findModelByName(modelname: string): IPhone | null {
   const mappedColor = colorMap[color] || color
   const mappedCountry = countryMap[country] || country
 
+  console.log('🔍 Submit API - маппированные параметры:', {
+    model,
+    variant,
+    storage,
+    color: mappedColor,
+    simType,
+    country: mappedCountry,
+  })
+
   // Ищем модель в массиве с учетом варианта
-  const foundPhone = iphones.find(
+  let foundPhone = iphones.find(
     (phone: IPhone) =>
       phone.model === model &&
       phone.variant === variant &&
@@ -90,6 +115,47 @@ function findModelByName(modelname: string): IPhone | null {
       phone.simType === simType &&
       phone.country === mappedCountry
   )
+
+  console.log(
+    '🔍 Submit API - результат поиска модели с вариантом:',
+    foundPhone
+  )
+
+  // Если модель с вариантом не найдена, пробуем найти базовую модель (с пустым вариантом)
+  if (!foundPhone && variant !== '') {
+    console.log(
+      '🔍 Submit API - модель с вариантом не найдена, ищем базовую модель:',
+      {
+        model,
+        variant,
+        storage,
+        color: mappedColor,
+        simType,
+        country: mappedCountry,
+      }
+    )
+
+    foundPhone = iphones.find(
+      (phone: IPhone) =>
+        phone.model === model &&
+        phone.variant === '' && // Ищем базовую модель
+        phone.storage === storage &&
+        phone.color === mappedColor &&
+        phone.simType === simType &&
+        phone.country === mappedCountry
+    )
+
+    if (foundPhone) {
+      console.log(
+        '✅ Submit API - найдена базовая модель:',
+        foundPhone
+      )
+    } else {
+      console.log(
+        '❌ Submit API - базовая модель тоже не найдена'
+      )
+    }
+  }
 
   return foundPhone || null
 }

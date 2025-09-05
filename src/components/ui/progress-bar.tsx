@@ -8,8 +8,13 @@ interface ProgressBarProps {
   steps: string[]
 }
 
-export function ProgressBar({ currentStep, totalSteps, steps }: ProgressBarProps) {
+export function ProgressBar({ currentStep, totalSteps, steps = [] }: ProgressBarProps) {
   const progress = (currentStep / totalSteps) * 100
+  
+  // Проверяем, что steps существует и содержит достаточно элементов
+  const currentStepName = steps && steps.length > 0 && currentStep > 0 && currentStep <= steps.length 
+    ? steps[currentStep - 1] 
+    : `Шаг ${currentStep}`
 
   return (
     <div className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border-b border-gray-100">
@@ -42,7 +47,7 @@ export function ProgressBar({ currentStep, totalSteps, steps }: ProgressBarProps
           className="text-center mt-2"
         >
           <span className="text-sm font-semibold text-[#2dc2c6]">
-            {steps[currentStep - 1]}
+            {currentStepName}
           </span>
         </motion.div>
       </div>

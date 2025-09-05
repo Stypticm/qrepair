@@ -2,101 +2,88 @@ const fs = require('fs')
 const path = require('path')
 
 // Читаем файл appleModels.ts
-const tsFilePath = path.join(
+const appleModelsPath = path.join(
   __dirname,
-  '..',
-  'src',
-  'core',
-  'appleModels.ts'
+  '../src/core/appleModels.ts'
 )
-const tsContent = fs.readFileSync(tsFilePath, 'utf8')
+const content = fs.readFileSync(appleModelsPath, 'utf8')
 
-// Парсим данные из TypeScript файла
-const phones = []
-const lines = tsContent.split('\n')
+console.log('Начинаем экспорт в CSV...')
 
-let currentPhone = {}
+// Извлекаем массив iphones из файла
+const arrayStart = content.indexOf(
+  'export const iphones: IPhone[] = ['
+)
+const arrayEnd = content.lastIndexOf(']')
 
-for (let i = 0; i < lines.length; i++) {
-  const line = lines[i].trim()
-
-  if (line.includes('model:') && line.includes("'")) {
-    const match = line.match(/'([^']+)'/)
-    if (match) currentPhone.model = match[1]
-  } else if (
-    line.includes('variant:') &&
-    line.includes("'")
-  ) {
-    const match = line.match(/'([^']+)'/)
-    if (match) currentPhone.variant = match[1]
-  } else if (
-    line.includes('storage:') &&
-    line.includes("'")
-  ) {
-    const match = line.match(/'([^']+)'/)
-    if (match) currentPhone.storage = match[1]
-  } else if (
-    line.includes('color:') &&
-    line.includes("'")
-  ) {
-    const match = line.match(/'([^']+)'/)
-    if (match) currentPhone.color = match[1]
-  } else if (
-    line.includes('country:') &&
-    line.includes("'")
-  ) {
-    const match = line.match(/'([^']+)'/)
-    if (match) currentPhone.country = match[1]
-  } else if (
-    line.includes('simType:') &&
-    line.includes("'")
-  ) {
-    const match = line.match(/'([^']+)'/)
-    if (match) currentPhone.simType = match[1]
-  } else if (line.includes('basePrice:')) {
-    const match = line.match(/basePrice:\s*(\d+)/)
-    if (match) {
-      currentPhone.basePrice = parseInt(match[1])
-    }
-  } else if (
-    line.includes('},') &&
-    Object.keys(currentPhone).length === 7
-  ) {
-    phones.push({ ...currentPhone })
-    currentPhone = {}
-  }
+if (arrayStart === -1 || arrayEnd === -1) {
+  console.error('Не удалось найти массив iphones в файле')
+  process.exit(1)
 }
 
-// Создаем CSV заголовки
-const headers = [
-  'model',
-  'variant',
-  'storage',
-  'color',
-  'country',
-  'simType',
-  'basePrice',
-]
+const arrayContent = content.substring(
+  arrayStart,
+  arrayEnd + 1
+)
 
-// Конвертируем данные в CSV формат
-const csvContent = [
-  headers.join(','),
-  ...phones.map((phone) =>
-    [
-      phone.model,
-      phone.variant,
-      phone.storage,
-      phone.color,
-      `"${phone.country}"`, // Оборачиваем в кавычки, так как содержит запятые
-      phone.simType,
-      phone.basePrice,
-    ].join(',')
-  ),
-].join('\n')
+// Парсим объекты из массива
+const phones = []
+const phoneRegex =
+  /\{\s*model:\s*['"`]([^'"`]+)['"`],\s*variant:\s*['"`]([^'"`]*)['"`],\s*storage:\s*['"`]([^'"`]+)['"`],\s*color:\s*['"`]([^'"`]+)['"`],\s*country:\s*['"`]([^'"`]+)['"`],\s*simType:\s*['"`]([^'"`]+)['"`],\s*basePrice:\s*(\d+)/g
 
-// Сохраняем CSV файл с правильной кодировкой
-const outputPath = path.join(__dirname, 'appleModels.csv')
-fs.writeFileSync(outputPath, '\uFEFF' + csvContent, 'utf8') // Добавляем BOM для правильного отображения в Excel
+let match
+while ((match = phoneRegex.exec(arrayContent)) !== null) {
+  phones.push({
+    model: match[1],
+    variant: match[2],
+    storage: match[3],
+    color: match[4],
+    country: match[5],
+    simType: match[6],
+    basePrice: parseInt(match[7]),
+  })
+}
 
-console.log(`CSV файл создан: ${outputPath}`)
-console.log(`Всего записей: ${phones.length}`)
+console.log(`Найдено ${phones.length} моделей iPhone`)
+
+// Создаем CSV контент
+const csvHeader =
+  '№,Модель,Вариант,Объем памяти,Цвет,Страна,Тип SIM,Базовая цена (₽)\n'
+const csvRows = phones
+  .map(
+    (phone, index) =>
+      `${index + 1},"${phone.model}","${phone.variant}","${
+        phone.storage
+      }","${phone.color}","${phone.country}","${
+        phone.simType
+      }",${phone.basePrice}`
+  )
+  .join('\n')
+
+const csvContent = csvHeader + csvRows
+
+// Сохраняем CSV файл
+const outputPath = path.join(__dirname, 'iphone-models.csv')
+fs.writeFileSync(outputPath, csvContent, 'utf8')
+
+console.log(`✅ CSV файл создан: ${outputPath}`)
+console.log(`📊 Экспортировано ${phones.length} записей`)
+
+// Статистика по моделям
+const modelStats = {}
+phones.forEach((phone) => {
+  const key = `${phone.model} ${phone.variant}`.trim()
+  modelStats[key] = (modelStats[key] || 0) + 1
+})
+
+console.log('\n📈 Статистика по моделям:')
+Object.entries(modelStats)
+  .sort(([, a], [, b]) => b - a)
+  .slice(0, 10)
+  .forEach(([model, count]) => {
+    console.log(`  ${model}: ${count} вариантов`)
+  })
+
+console.log(
+  '\n💡 CSV файл можно открыть в Excel или Google Sheets'
+)

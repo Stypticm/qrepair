@@ -4,7 +4,26 @@ import prisma from '@/core/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     // Получаем данные из запроса
-    const { deviceConditions, price, currentStep, telegramId } = await request.json()
+    const {
+      deviceConditions,
+      price,
+      basePrice,
+      discountPercent,
+      currentStep,
+      telegramId,
+    } = await request.json()
+
+    console.log(
+      '🔍 API /saveConditions - получены данные:',
+      {
+        deviceConditions,
+        price,
+        basePrice,
+        discountPercent,
+        currentStep,
+        telegramId,
+      }
+    )
 
     if (!telegramId) {
       return NextResponse.json(
@@ -52,16 +71,45 @@ export async function POST(request: NextRequest) {
       ...deviceConditions,
     }
 
+    const updateData = {
+      deviceConditions: mergedConditions,
+      price: basePrice || undefined, // Базовая цена без поломок
+      damagePercent: discountPercent || 0, // Процент скидки за поломки
+      currentStep: currentStep || undefined, // Сохраняем текущий шаг
+    }
+
+    console.log(
+      '🔄 API /saveConditions - обновляем запись:',
+      {
+        id: activeRequest.id,
+        updateData,
+        receivedData: {
+          deviceConditions,
+          price,
+          basePrice,
+          discountPercent,
+          currentStep,
+          telegramId,
+        },
+      }
+    )
+
     const updatedRequest = await prisma.skupka.update({
       where: {
         id: activeRequest.id,
       },
-      data: {
-        deviceConditions: mergedConditions,
-        price: price || undefined, // Сохраняем цену если она передана
-        currentStep: currentStep || undefined, // Сохраняем текущий шаг
-      },
+      data: updateData,
     })
+
+    console.log(
+      '✅ API /saveConditions - запись обновлена:',
+      {
+        id: updatedRequest.id,
+        price: updatedRequest.price,
+        damagePercent: updatedRequest.damagePercent,
+        deviceConditions: updatedRequest.deviceConditions,
+      }
+    )
 
     return NextResponse.json({
       success: true,
