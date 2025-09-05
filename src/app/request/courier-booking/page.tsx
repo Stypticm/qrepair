@@ -73,11 +73,25 @@ const CourierBookingPage = () => {
         return () => clearTimeout(timer);
     }, [locationMethod, isRequestingLocation]);
 
-    // Очистка locationManager при размонтировании компонента
+    // Инициализация и очистка locationManager
     useEffect(() => {
+        // Инициализируем locationManager при загрузке компонента
+        if (locationManager && locationManager.isSupported()) {
+            try {
+                locationManager.mount();
+            } catch (e) {
+                console.log('LocationManager mount error (ignored):', e);
+            }
+        }
+
         return () => {
+            // Очищаем locationManager при размонтировании компонента
             if (locationManager) {
-                locationManager.unmount();
+                try {
+                    locationManager.unmount();
+                } catch (e) {
+                    console.log('LocationManager unmount error (ignored):', e);
+                }
             }
         };
     }, []);
@@ -179,7 +193,12 @@ const CourierBookingPage = () => {
                 throw new Error('Геолокация не поддерживается в данной версии Telegram');
             }
 
-            // Подключаем locationManager к компоненту
+            // Отключаем и снова подключаем locationManager к компоненту
+            try {
+                locationManager.unmount();
+            } catch (e) {
+                // Игнорируем ошибки при unmount
+            }
             locationManager.mount();
 
             // Запрашиваем локацию через Telegram SDK
