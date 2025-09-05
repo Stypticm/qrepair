@@ -545,11 +545,11 @@ const CourierBookingPage = () => {
                                             </Button>
                                         </PopoverTrigger>
                                         <PopoverContent 
-                                            align="start" 
-                                            side="top" 
+                                            align="center" 
+                                            side="bottom" 
                                             sideOffset={8}
-                                            alignOffset={-50}
-                                            className="w-[95vw] max-w-none h-auto"
+                                            alignOffset={0}
+                                            className="w-[95vw] max-w-none h-auto min-w-[320px] sm:w-auto sm:min-w-0"
                                            >
                                             <div className="w-full h-auto">
                                                 <Calendar
