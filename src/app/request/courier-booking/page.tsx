@@ -86,6 +86,13 @@ const CourierBookingPage = () => {
         };
     }, []);
 
+    // Логирование изменений locationMethod
+    useEffect(() => {
+        console.log('🔍 locationMethod изменился:', locationMethod);
+        console.log('🔍 Блок выбора способа должен показываться:', !locationMethod);
+        console.log('🔍 Блок адреса должен показываться:', !!locationMethod);
+    }, [locationMethod]);
+
 
     // Восстанавливаем состояние из sessionStorage при загрузке
     useEffect(() => {
@@ -232,7 +239,8 @@ const CourierBookingPage = () => {
         } catch (error) {
             console.error('❌ Ошибка при получении локации:', error);
             setLocationError(error instanceof Error ? error.message : 'Ошибка получения локации');
-            setLocationMethod('manual');
+            // НЕ переключаемся на manual - оставляем возможность попробовать снова
+            setLocationMethod(null);
             setLocationSuccess(false);
         } finally {
             setIsRequestingLocation(false);
@@ -479,10 +487,13 @@ const CourierBookingPage = () => {
                                         </label>
                                         <Button
                                             onClick={() => {
+                                                console.log('🔍 Кнопка "Изменить" нажата');
+                                                console.log('🔍 Текущий locationMethod:', locationMethod);
                                                 setLocationMethod(null);
                                                 setAddress('');
                                                 setLocationError('');
                                                 setLocationSuccess(false);
+                                                console.log('🔍 locationMethod сброшен в null');
                                                 // Отключаем locationManager при сбросе
                                                 try {
                                                     locationManager.unmount();
