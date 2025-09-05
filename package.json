@@ -32,6 +32,7 @@
     "@radix-ui/react-switch": "^1.2.5",
     "@supabase/supabase-js": "^2.51.0",
     "@tailwindcss/postcss": "^4.1.11",
+    "@telegram-apps/sdk": "^3.11.5",
     "@telegram-apps/sdk-react": "^3.3.6",
     "@telegram-apps/telegram-ui": "^2.1.9",
     "@tonconnect/ui-react": "^2.1.0",

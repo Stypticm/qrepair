@@ -12,15 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, MapPinIcon, ClockIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { LocationManager } from '@telegram-apps/sdk-react';
+import { locationManager } from '@telegram-apps/sdk';
 
 const CourierBookingPage = () => {
     const router = useRouter();
     const { telegramId, modelname, price } = useStartForm();
     const { setCurrentStep } = useNavigation();
     
-    // Инициализируем LocationManager
-    const locationManager = new LocationManager();
+    // locationManager импортирован из @telegram-apps/sdk
     
     const [address, setAddress] = useState('');
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -164,27 +163,16 @@ const CourierBookingPage = () => {
         setLocationError('');
         
         try {
-            // Проверяем доступность LocationManager
-            if (!locationManager) {
-                throw new Error('LocationManager недоступен');
+            // Проверяем поддержку геолокации
+            if (!locationManager.isSupported()) {
+                throw new Error('Геолокация не поддерживается в данной версии Telegram');
             }
 
-            // Запрашиваем разрешение на геолокацию
-            const hasPermission = await locationManager.requestPermission();
+            // Запрашиваем локацию через Telegram
+            const location = await locationManager.requestLocation();
             
-            if (!hasPermission) {
-                throw new Error('Разрешение на геолокацию не предоставлено');
-            }
-
-            // Получаем текущую позицию
-            const position = await locationManager.getCurrentPosition({
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000 // 5 минут
-            });
-
-            if (position && position.coords) {
-                const { latitude, longitude } = position.coords;
+            if (location && location.latitude && location.longitude) {
+                const { latitude, longitude } = location;
                 
                 // Получаем адрес по координатам
                 const addressFromCoords = await getAddressFromCoordinates(latitude, longitude);
