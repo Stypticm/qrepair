@@ -546,7 +546,7 @@ const CourierBookingPage = () => {
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent 
-                                            className="w-[98vw] max-w-lg mx-auto p-2 bg-white border-2 border-gray-200 shadow-2xl !top-2 !left-1/2 !transform !-translate-x-1/2 !translate-y-0 !max-h-[90vh] !overflow-y-auto"
+                                            className="w-[95vw] max-w-lg mx-auto p-4 bg-white border-2 border-gray-200 shadow-2xl"
                                         >
                                             <div className="w-full">
                                                 <h3 className="text-lg font-semibold text-center mb-4">Выберите дату</h3>
