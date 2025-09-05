@@ -550,7 +550,7 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-[95vw] max-w-md mx-auto"
+                                            className="w-auto max-w-none p-2"
                                         >
                                             <Calendar
                                                 mode="single"
@@ -573,8 +573,8 @@ const CourierBookingPage = () => {
                                     </Popover>
 
                                     {/* Время */}
-                                    <Dialog open={showTimePicker} onOpenChange={setShowTimePicker}>
-                                        <DialogTrigger asChild>
+                                    <Popover open={showTimePicker} onOpenChange={setShowTimePicker}>
+                                        <PopoverTrigger asChild>
                                             <Button
                                                 variant="outline"
                                                 className="w-full justify-start text-left font-medium border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 rounded-xl py-3 px-4 transition-all duration-200 active:scale-95"
@@ -585,13 +585,17 @@ const CourierBookingPage = () => {
                                                     {selectedTime || "Время"}
                                                 </span>
                                             </Button>
-                                        </DialogTrigger>
-                                        <DialogContent 
-                                            className="w-[95vw] max-w-md mx-auto p-4 bg-white border-2 border-gray-200 shadow-2xl"
+                                        </PopoverTrigger>
+                                        <PopoverContent 
+                                            align="center" 
+                                            side="top" 
+                                            sideOffset={8}
+                                            alignOffset={0}
+                                            className="w-auto max-w-none p-4"
                                         >
                                             <div className="w-full">
-                                                <h3 className="text-lg font-semibold text-center mb-2">Выберите время</h3>
-                                                <p className="text-sm text-gray-500 mb-6 text-center">
+                                                <h4 className="font-medium text-gray-900 mb-2 text-center">Выберите время</h4>
+                                                <p className="text-xs text-gray-500 mb-4 text-center">
                                                     ⏰ Учитывается время на дорогу и работу мастера (минимум 2 часа между заявками)
                                                 </p>
                                                 <div className="grid grid-cols-3 gap-3">
@@ -614,8 +618,8 @@ const CourierBookingPage = () => {
                                                     ))}
                                                 </div>
                                             </div>
-                                        </DialogContent>
-                                    </Dialog>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
 
