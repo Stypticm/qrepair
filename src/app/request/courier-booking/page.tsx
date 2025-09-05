@@ -550,7 +550,7 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-auto max-w-none p-2"
+                                            className="w-[500px] max-w-[90vw] p-6"
                                         >
                                             <Calendar
                                                 mode="single"
@@ -591,7 +591,9 @@ const CourierBookingPage = () => {
                                             side="top" 
                                             sideOffset={8}
                                             alignOffset={0}
-                                            className="w-auto max-w-none p-4"
+                                            className="w-auto max-w-[280px] p-4"
+                                            avoidCollisions={true}
+                                            collisionPadding={10}
                                         >
                                             <div className="w-full">
                                                 <h4 className="font-medium text-gray-900 mb-2 text-center">Выберите время</h4>
