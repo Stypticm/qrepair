@@ -217,13 +217,13 @@ export default function Home() {
             initial={{ y: -20 }}
             animate={{ y: 0 }}
             transition={{ delay: 0.1 }}
-            className="w-24 h-24 mx-auto mb-6 flex items-center justify-center"
+            className="w-48 h-48 mx-auto mb-6 flex items-center justify-center"
           >
             <Image
               src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
               alt="Танцующий кокос"
-              width={96}
-              height={96}
+              width={192}
+              height={192}
               className="object-contain rounded-2xl"
             />
           </motion.div>
