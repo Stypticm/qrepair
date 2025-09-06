@@ -110,7 +110,7 @@ export default function FormPage() {
                 simType: selectedOptions.simType
             } as any);
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.simType, devices.loadCountries, devices]);
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.simType, devices.loadCountries]);
 
     // Состояние для отображения текущего выбора в центре
     const [currentSelection, setCurrentSelection] = useState<string>('');
@@ -500,11 +500,7 @@ export default function FormPage() {
         }
     }, [isAllOptionsSelected]);
 
-    // Отслеживаем изменение пути и скрываем диалог при возврате с display_scratches
-    useEffect(() => {
-        // Упрощенная логика - просто скрываем диалог при загрузке страницы
-        setShowSummaryDialog(false);
-    }, []);
+    // Убираем принудительное скрытие диалога - пусть логика выше управляет показом
 
 
     // Универсальная функция для вызова методов Telegram WebApp
