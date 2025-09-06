@@ -1,7 +1,6 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { ProgressBar } from '@/components/ui/progress-bar';
 
 interface LoadingIndicatorProps {
   progress: number;
@@ -28,10 +27,14 @@ export function LoadingIndicator({
               <p className="text-sm font-medium text-gray-900 mb-2">
                 {message}
               </p>
-              <ProgressBar 
-                value={progress} 
-                className="h-2"
-              />
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                />
+              </div>
               <p className="text-xs text-gray-500 mt-1">
                 {progress}%
               </p>

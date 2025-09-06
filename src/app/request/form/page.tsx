@@ -110,7 +110,7 @@ export default function FormPage() {
                 simType: selectedOptions.simType
             } as any);
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.simType, devices.loadCountries]);
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.simType, devices.loadCountries, devices]);
 
     // Состояние для отображения текущего выбора в центре
     const [currentSelection, setCurrentSelection] = useState<string>('');
