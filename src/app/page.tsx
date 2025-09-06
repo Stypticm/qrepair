@@ -31,24 +31,13 @@ export default function Home() {
   const [showImagePreload, setShowImagePreload] = useState(false);
   const router = useRouter();
 
-  // Предзагрузка изображений
-  const { progress, isComplete, ImagePreloader } = useImagePreloader(
-    getHomePagePreloadImages(),
-    true // приоритетная загрузка
-  );
+  // Временно отключаем предзагрузку изображений для диагностики
+  // const { progress, isComplete, ImagePreloader } = useImagePreloader(
+  //   getHomePagePreloadImages(),
+  //   true // приоритетная загрузка
+  // );
 
-  // Показываем индикатор загрузки изображений при первом запуске
-  useEffect(() => {
-    if (isInTelegram && !isComplete && progress > 0) {
-      setShowImagePreload(true);
-    } else if (isComplete) {
-      // Скрываем индикатор через небольшую задержку после завершения
-      const timer = setTimeout(() => {
-        setShowImagePreload(false);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isInTelegram, isComplete, progress]);
+  // const [showImagePreload, setShowImagePreload] = useState(false);
   
   // Условно вызываем useSafeArea только если мы в Telegram
   const safeAreaHook = useSafeArea();
@@ -349,15 +338,14 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Предзагрузка изображений */}
-      {ImagePreloader}
+      {/* Временно отключено для диагностики */}
+      {/* {ImagePreloader} */}
       
-      {/* Индикатор загрузки изображений */}
-      <LoadingIndicator 
+      {/* <LoadingIndicator 
         progress={progress}
         isVisible={showImagePreload && !isComplete}
         message="Подготовка изображений..."
-      />
+      /> */}
 
     </AdaptiveContainer>
   );
