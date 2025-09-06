@@ -31,13 +31,8 @@ export default function Home() {
   const [showImagePreload, setShowImagePreload] = useState(false);
   const router = useRouter();
 
-  // Временно отключаем предзагрузку изображений для диагностики
-  // const { progress, isComplete, ImagePreloader } = useImagePreloader(
-  //   getHomePagePreloadImages(),
-  //   true // приоритетная загрузка
-  // );
-
-  // const [showImagePreload, setShowImagePreload] = useState(false);
+  // Предзагрузка изображений отключена на главной странице для стабильности
+  // Оптимизация работает на страницах condition и additional-condition
   
   // Условно вызываем useSafeArea только если мы в Telegram
   const safeAreaHook = useSafeArea();
@@ -338,14 +333,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Временно отключено для диагностики */}
-      {/* {ImagePreloader} */}
-      
-      {/* <LoadingIndicator 
-        progress={progress}
-        isVisible={showImagePreload && !isComplete}
-        message="Подготовка изображений..."
-      /> */}
+      {/* Оптимизация загрузки изображений работает на страницах condition и additional-condition */}
 
     </AdaptiveContainer>
   );
