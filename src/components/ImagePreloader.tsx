@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { getPictureUrl } from '@/core/lib/assets';
 
 interface ImagePreloaderProps {
   images: string[];
@@ -9,7 +10,8 @@ interface ImagePreloaderProps {
 export function ImagePreloader({ images }: ImagePreloaderProps) {
   useEffect(() => {
     // Предзагружаем изображения
-    images.forEach((src) => {
+    images.forEach((imageName) => {
+      const src = getPictureUrl(`${imageName}.png`);
       const img = new Image();
       img.src = src;
     });

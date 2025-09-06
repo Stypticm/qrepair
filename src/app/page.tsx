@@ -19,13 +19,36 @@ import { ExpandButton } from '@/components/ExpandButton';
 import { tailwindColors } from '@/core/colors';
 import { ChatContext } from '@/components/ChatContext';
 import { useSafeArea } from '@/hooks/useSafeArea';
+import { useImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
+import { LoadingIndicator } from '@/components/ImagePreloader/LoadingIndicator';
+import { getHomePagePreloadImages } from '@/core/lib/imageUtils';
 
 export default function Home() {
   const { telegramId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber } = useStartForm();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
+  const [showImagePreload, setShowImagePreload] = useState(false);
   const router = useRouter();
+
+  // Предзагрузка изображений
+  const { progress, isComplete, ImagePreloader } = useImagePreloader(
+    getHomePagePreloadImages(),
+    true // приоритетная загрузка
+  );
+
+  // Показываем индикатор загрузки изображений при первом запуске
+  useEffect(() => {
+    if (isInTelegram && !isComplete && progress > 0) {
+      setShowImagePreload(true);
+    } else if (isComplete) {
+      // Скрываем индикатор через небольшую задержку после завершения
+      const timer = setTimeout(() => {
+        setShowImagePreload(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isInTelegram, isComplete, progress]);
   
   // Условно вызываем useSafeArea только если мы в Telegram
   const safeAreaHook = useSafeArea();
@@ -326,6 +349,15 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Предзагрузка изображений */}
+      {ImagePreloader}
+      
+      {/* Индикатор загрузки изображений */}
+      <LoadingIndicator 
+        progress={progress}
+        isVisible={showImagePreload && !isComplete}
+        message="Подготовка изображений..."
+      />
 
     </AdaptiveContainer>
   );

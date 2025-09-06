@@ -13,8 +13,9 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import { ImagePreloader } from '@/components/ImagePreloader';
+import { ImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
 import { useDevices, Device } from '@/hooks/useDevices';
+import { getConditionImages } from '@/core/lib/imageUtils';
 
 // Функция для поиска модели по названию
 function findModelByName(modelname: string) {
@@ -771,12 +772,8 @@ export default function ConditionPage() {
         );
     };
 
-    // Список изображений для предзагрузки
-    const preloadImages = [
-        ...frontConditions.map(c => getPictureUrl(`${c.image}.png`)),
-        ...backConditions.map(c => getPictureUrl(`${c.image}.png`)),
-        ...sideConditions.map(c => getPictureUrl(`${c.image}.png`))
-    ];
+    // Список изображений для предзагрузки (только те, что не были предзагружены на главной)
+    const preloadImages = getConditionImages();
 
     return (
         <Page back={true}>

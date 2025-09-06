@@ -20,7 +20,8 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import { ImagePreloader } from '@/components/ImagePreloader';
+import { ImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
+import { getAdditionalConditionImages } from '@/core/lib/imageUtils';
 
 
 export default function AdditionalConditionPage() {
@@ -603,13 +604,8 @@ export default function AdditionalConditionPage() {
         );
     };
 
-    // Список изображений для предзагрузки
-    const preloadImages = [
-        ...faceIdConditions.map(c => getPictureUrl(`${c.image}.png`)),
-        ...touchIdConditions.map(c => getPictureUrl(`${c.image}.png`)),
-        ...backCameraConditions.map(c => getPictureUrl(`${c.image}.png`)),
-        ...batteryConditions.map(c => getPictureUrl(`${c.image}.png`))
-    ];
+    // Список изображений для предзагрузки (только те, что не были предзагружены на главной)
+    const preloadImages = getAdditionalConditionImages();
 
     return (
         <Page back={true}>
