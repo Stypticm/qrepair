@@ -223,6 +223,23 @@ export default function AgentsAdminPage() {
             {voiceListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             {voiceListening ? 'Остановить' : 'Голос'}
           </Button>
+          <Button 
+            onClick={async () => {
+              try {
+                const response = await fetch('/api/agents/generate-recommendations', { method: 'POST' })
+                if (response.ok) {
+                  await loadData() // Перезагружаем данные
+                }
+              } catch (error) {
+                console.error('Ошибка генерации рекомендаций:', error)
+              }
+            }}
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+            size="sm"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Генерировать рекомендации
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

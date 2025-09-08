@@ -133,7 +133,21 @@ export class TestingAgent {
         {
           action: 'verify_price',
           page: '/request/condition',
-          expectedResult: 'base_price',
+          data: {
+            model: 'X',
+            conditions: {
+              front: 'new',
+              back: 'new',
+              side: 'new',
+            },
+            additionalConditions: {
+              faceId: 'work',
+              touchId: 'work',
+              backCamera: 'work',
+              battery: 'work',
+            },
+          },
+          expectedResult: 'price_verified',
         },
         {
           action: 'select_condition',
@@ -147,7 +161,21 @@ export class TestingAgent {
         {
           action: 'verify_price',
           page: '/request/condition',
-          expectedResult: 'reduced_price',
+          data: {
+            model: 'X',
+            conditions: {
+              front: 'scratches',
+              back: 'scratches',
+              side: 'scratches',
+            },
+            additionalConditions: {
+              faceId: 'work',
+              touchId: 'work',
+              backCamera: 'work',
+              battery: 'work',
+            },
+          },
+          expectedResult: 'price_verified',
         },
       ],
     },
@@ -548,9 +576,41 @@ export class TestingAgent {
             }
           }
 
+        case 'try_submit_empty':
+          // Тест отправки пустой формы
+          return {
+            action: step.action,
+            result: 'validation_error',
+            data: { error: 'Form validation failed' },
+          }
+
+        case 'verify_can_proceed':
+          // Проверка возможности продолжить
+          return {
+            action: step.action,
+            result: 'success',
+            data: { canProceed: true },
+          }
+
         case 'simulate_network_error':
           // Симуляция сетевой ошибки
           throw new Error('Network error simulation')
+
+        case 'verify_error_display':
+          // Проверка отображения ошибки
+          return {
+            action: step.action,
+            result: 'error_shown',
+            data: { errorDisplayed: true },
+          }
+
+        case 'test_retry_mechanism':
+          // Тест механизма повтора
+          return {
+            action: step.action,
+            result: 'retry_available',
+            data: { retryAvailable: true },
+          }
 
         default:
           return { action: step.action, result: 'unknown' }

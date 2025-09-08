@@ -32,6 +32,11 @@ export default function VoiceAgentWidget() {
         recognition.interimResults = false
         recognition.lang = 'ru-RU'
         setRecognition(recognition)
+        
+        // Запрашиваем разрешение на уведомления
+        if ('Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission()
+        }
       }
     }
   }, [])
@@ -39,10 +44,17 @@ export default function VoiceAgentWidget() {
   const startListening = () => {
     if (!recognition) return
 
-    recognition.onstart = () => {
-      setIsListening(true)
-      console.log('🎤 Начато прослушивание...')
-    }
+      recognition.onstart = () => {
+        setIsListening(true)
+        console.log('🎤 Начато прослушивание...')
+        // Показываем уведомление
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Голосовой агент', {
+            body: 'Начал прослушивание команд',
+            icon: '/logo.png'
+          })
+        }
+      }
 
     recognition.onresult = async (event: any) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim()
@@ -56,14 +68,31 @@ export default function VoiceAgentWidget() {
 
     recognition.onerror = (event: any) => {
       console.error('Ошибка распознавания речи:', event.error)
-      setIsListening(false)
-      setIsProcessing(false)
+      // Не останавливаем при временных ошибках
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        console.log('🎤 Перезапуск после ошибки...')
+        setTimeout(() => {
+          if (isListening) {
+            recognition.start()
+          }
+        }, 1000)
+      } else {
+        setIsListening(false)
+        setIsProcessing(false)
+      }
     }
 
-    recognition.onend = () => {
-      setIsListening(false)
-      console.log('🎤 Прослушивание остановлено')
-    }
+      recognition.onend = () => {
+        // Не останавливаем автоматически, продолжаем слушать
+        if (isListening) {
+          console.log('🎤 Перезапуск прослушивания...')
+          setTimeout(() => {
+            if (isListening) {
+              recognition.start()
+            }
+          }, 100)
+        }
+      }
 
     recognition.start()
   }
@@ -87,7 +116,11 @@ export default function VoiceAgentWidget() {
       // Обрабатываем команду
       if (command.includes('показать статистику')) {
         await speak('Загружаю статистику...')
-        // Здесь можно добавить логику показа статистики
+        const response = await fetch('/api/agents/testing/stats')
+        const data = await response.json()
+        if (data.success) {
+          await speak(`Статистика: ${data.stats.total} тестов, ${data.stats.passed} успешных`)
+        }
       } else if (command.includes('запустить тесты')) {
         await speak('Запускаю тесты...')
         const response = await fetch('/api/agents/testing/run', { method: 'POST' })
@@ -98,7 +131,13 @@ export default function VoiceAgentWidget() {
         }
       } else if (command.includes('показать рекомендации')) {
         await speak('Загружаю рекомендации...')
-        // Здесь можно добавить логику показа рекомендаций
+        const response = await fetch('/api/agents/recommendations')
+        const data = await response.json()
+        if (data.success && data.recommendations.length > 0) {
+          await speak(`Найдено ${data.recommendations.length} рекомендаций`)
+        } else {
+          await speak('Рекомендаций пока нет')
+        }
       } else if (command.includes('обновить данные')) {
         await speak('Обновляю данные...')
         window.location.reload()
@@ -157,9 +196,9 @@ export default function VoiceAgentWidget() {
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Volume2 className="w-4 h-4" />
+              <Volume2 className={`w-4 h-4 ${isListening ? 'text-green-500 animate-pulse' : 'text-gray-500'}`} />
               <span className="text-sm">
-                {lastCommand ? `Последняя команда: &quot;${lastCommand}&quot;` : 'Готов к работе'}
+                {isListening ? 'Слушаю команды...' : lastCommand ? `Последняя команда: &quot;${lastCommand}&quot;` : 'Готов к работе'}
               </span>
             </div>
             <Button 

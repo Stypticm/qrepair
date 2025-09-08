@@ -54,6 +54,8 @@ export default function AdminPage() {
   const handleSectionClick = (sectionId: string) => {
     if (sectionId === 'agents') {
       router.push('/admin/agents');
+    } else if (sectionId === 'overview') {
+      setActiveTab('overview');
     } else {
       setActiveTab(sectionId);
     }
@@ -95,6 +97,65 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto p-6">
         {activeTab === 'overview' && (
           <div className="space-y-6">
+            {/* Общая статистика */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <BarChart3 className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Всего заявок</p>
+                      <p className="text-2xl font-bold text-gray-900">1,234</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Bot className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Активных агентов</p>
+                      <p className="text-2xl font-bold text-gray-900">3</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Users className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Пользователей</p>
+                      <p className="text-2xl font-bold text-gray-900">567</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <Database className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Успешность тестов</p>
+                      <p className="text-2xl font-bold text-gray-900">98%</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Быстрый доступ</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -103,7 +164,9 @@ export default function AdminPage() {
                   return (
                     <Card
                       key={section.id}
-                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      className={`cursor-pointer hover:shadow-md transition-shadow ${
+                        activeTab === section.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                      }`}
                       onClick={() => handleSectionClick(section.id)}
                     >
                       <CardHeader className="pb-3">

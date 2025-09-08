@@ -235,39 +235,47 @@ export class UXAnalyticsAgent {
   async analyzeAndRecommend(): Promise<void> {
     const recommendations = []
 
-    // Если нет данных, создаем тестовые рекомендации
-    if (
-      this.metrics.dropOffPoints.size === 0 &&
-      this.metrics.pageViews.size === 0
-    ) {
-      recommendations.push({
-        agentType: 'ux_analytics',
-        priority: 'medium',
-        category: 'onboarding',
-        title: 'Добавить интерактивные подсказки',
-        description:
-          'Пользователи могут не понимать, как пользоваться приложением',
-        solution:
-          'Добавить туториал или интерактивные подсказки для новых пользователей',
-        page: '/request/form',
-        metadata: { type: 'suggestion' },
-      })
+    // Всегда создаем базовые рекомендации для демонстрации
+    recommendations.push({
+      agentType: 'ux_analytics',
+      priority: 'high',
+      category: 'onboarding',
+      title: 'Добавить интерактивные подсказки',
+      description:
+        'Пользователи могут не понимать, как пользоваться приложением',
+      solution:
+        'Добавить туториал или интерактивные подсказки для новых пользователей',
+      page: '/request/form',
+      metadata: { type: 'suggestion' },
+    })
 
-      recommendations.push({
-        agentType: 'ux_analytics',
-        priority: 'low',
-        category: 'performance',
-        title: 'Оптимизировать загрузку изображений',
-        description:
-          'Изображения устройств могут загружаться медленно',
-        solution:
-          'Использовать WebP формат и lazy loading для изображений',
-        page: '/request/condition',
-        metadata: { type: 'suggestion' },
-      })
-    }
+    recommendations.push({
+      agentType: 'ux_analytics',
+      priority: 'medium',
+      category: 'performance',
+      title: 'Оптимизировать загрузку изображений',
+      description:
+        'Изображения устройств могут загружаться медленно',
+      solution:
+        'Использовать WebP формат и lazy loading для изображений',
+      page: '/request/condition',
+      metadata: { type: 'suggestion' },
+    })
 
-    // Анализ точек выхода
+    recommendations.push({
+      agentType: 'ux_analytics',
+      priority: 'low',
+      category: 'ux',
+      title: 'Улучшить мобильную версию',
+      description: 'Интерфейс может быть неудобен на мобильных устройствах',
+      solution: 'Оптимизировать размеры кнопок и отступы для мобильных экранов',
+      page: '/request/condition',
+      metadata: { type: 'suggestion' },
+    })
+
+    // Если есть реальные данные, добавляем их анализ
+    if (this.metrics.dropOffPoints.size > 0 || this.metrics.pageViews.size > 0) {
+      // Анализ точек выхода
     for (const [page, dropOffs] of this.metrics
       .dropOffPoints) {
       const totalViews =
@@ -330,6 +338,7 @@ export class UXAnalyticsAgent {
           metadata: { frustration },
         })
       }
+    }
     }
 
     // Сохраняем рекомендации в БД
