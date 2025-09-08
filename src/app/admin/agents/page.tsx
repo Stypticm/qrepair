@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Bot, BarChart3, RefreshCw } from 'lucide-react';
+import { Bot, BarChart3, RefreshCw } from 'lucide-react';
 
 interface TestStats {
   total: number;
@@ -133,27 +133,16 @@ export default function AgentsAdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Заголовок с навигацией */}
+      {/* Заголовок */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={() => router.push('/admin')}
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Назад к админке
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <Bot className="w-6 h-6 text-green-500" />
-                  ИИ Агенты
-                </h1>
-                <p className="text-gray-600">Мониторинг тестировщика, UX аналитики и других агентов</p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Bot className="w-6 h-6 text-green-500" />
+                ИИ Агенты
+              </h1>
+              <p className="text-gray-600">Мониторинг тестировщика, UX аналитики и других агентов</p>
             </div>
             <Badge variant="outline" className="bg-green-100 text-green-800">
               Активен
@@ -165,22 +154,24 @@ export default function AgentsAdminPage() {
       <div className="max-w-7xl mx-auto p-6">
 
         {/* Кнопки управления */}
-        <div className="mb-8 flex gap-4">
+        <div className="mb-8 flex flex-wrap gap-2">
           <Button 
             onClick={runAllTests} 
             disabled={runningTests}
             className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+            size="sm"
           >
             <Bot className="w-4 h-4" />
-            {runningTests ? 'Запуск тестов...' : 'Запустить все тесты'}
+            {runningTests ? 'Запуск...' : 'Запустить тесты'}
           </Button>
           <Button 
             onClick={loadData} 
             variant="outline"
             className="flex items-center gap-2"
+            size="sm"
           >
             <RefreshCw className="w-4 h-4" />
-            Обновить данные
+            Обновить
           </Button>
         </div>
 
