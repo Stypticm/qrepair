@@ -45,6 +45,7 @@ export class UXAnalyticsAgent {
       startTime: new Date(),
       pages: [],
       actions: [],
+      completed: false,
     })
   }
 
@@ -325,7 +326,11 @@ export class UXAnalyticsAgent {
       (s) => s.metric === 'session_duration'
     )
     const completedSessions = sessionData.filter(
-      (s) => s.metadata?.completed
+      (s) =>
+        s.metadata &&
+        typeof s.metadata === 'object' &&
+        'completed' in s.metadata &&
+        s.metadata.completed === true
     )
     const totalSessions = sessionData.length
     const completionRate =
