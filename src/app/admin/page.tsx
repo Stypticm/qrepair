@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Bot, BarChart3, Settings, Users, Database } from 'lucide-react';
 import { AdminAgentsWidget } from '@/components/AdminAgentsWidget';
+import VoiceAgentWidget from '@/components/VoiceAgentWidget';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -127,7 +128,10 @@ export default function AdminPage() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">ИИ Агенты</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <AdminAgentsWidget />
-                
+                <VoiceAgentWidget />
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                 {/* Дополнительная статистика */}
                 <Card>
                   <CardHeader>
@@ -149,6 +153,34 @@ export default function AdminPage() {
                       <span className="text-sm font-medium">Последнее обновление</span>
                       <span className="text-sm text-gray-600">Только что</span>
                     </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Быстрые действия */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-green-500" />
+                      Быстрые действия
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Button 
+                      onClick={() => router.push('/admin/agents')}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <Bot className="w-4 h-4 mr-2" />
+                      Управление агентами
+                    </Button>
+                    <Button 
+                      onClick={() => window.location.reload()}
+                      className="w-full justify-start"
+                      variant="outline"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2" />
+                      Обновить данные
+                    </Button>
                   </CardContent>
                 </Card>
               </div>

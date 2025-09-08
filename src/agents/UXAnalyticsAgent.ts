@@ -235,6 +235,38 @@ export class UXAnalyticsAgent {
   async analyzeAndRecommend(): Promise<void> {
     const recommendations = []
 
+    // Если нет данных, создаем тестовые рекомендации
+    if (
+      this.metrics.dropOffPoints.size === 0 &&
+      this.metrics.pageViews.size === 0
+    ) {
+      recommendations.push({
+        agentType: 'ux_analytics',
+        priority: 'medium',
+        category: 'onboarding',
+        title: 'Добавить интерактивные подсказки',
+        description:
+          'Пользователи могут не понимать, как пользоваться приложением',
+        solution:
+          'Добавить туториал или интерактивные подсказки для новых пользователей',
+        page: '/request/form',
+        metadata: { type: 'suggestion' },
+      })
+
+      recommendations.push({
+        agentType: 'ux_analytics',
+        priority: 'low',
+        category: 'performance',
+        title: 'Оптимизировать загрузку изображений',
+        description:
+          'Изображения устройств могут загружаться медленно',
+        solution:
+          'Использовать WebP формат и lazy loading для изображений',
+        page: '/request/condition',
+        metadata: { type: 'suggestion' },
+      })
+    }
+
     // Анализ точек выхода
     for (const [page, dropOffs] of this.metrics
       .dropOffPoints) {

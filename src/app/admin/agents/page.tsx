@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Bot, BarChart3, RefreshCw } from 'lucide-react';
+import { Bot, BarChart3, RefreshCw, Mic, MicOff, Volume2, ArrowLeft } from 'lucide-react';
 
 interface TestStats {
   total: number;
@@ -44,6 +44,8 @@ export default function AgentsAdminPage() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [runningTests, setRunningTests] = useState(false);
+  const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceHistory, setVoiceHistory] = useState<any[]>([]);
 
   useEffect(() => {
     loadData();
@@ -72,6 +74,13 @@ export default function AgentsAdminPage() {
       if (recData.success) {
         setRecommendations(recData.recommendations);
       }
+
+      // Загружаем историю голосовых команд
+      const voiceResponse = await fetch('/api/agents/voice/history');
+      const voiceData = await voiceResponse.json();
+      if (voiceData.success) {
+        setVoiceHistory(voiceData.history);
+      }
     } catch (error) {
       console.error('Ошибка загрузки данных:', error);
     } finally {
@@ -95,6 +104,28 @@ export default function AgentsAdminPage() {
       console.error('Ошибка запуска тестов:', error);
     } finally {
       setRunningTests(false);
+    }
+  };
+
+  const toggleVoiceAgent = async () => {
+    try {
+      if (voiceListening) {
+        const response = await fetch('/api/agents/voice/stop', {
+          method: 'POST',
+        });
+        if (response.ok) {
+          setVoiceListening(false);
+        }
+      } else {
+        const response = await fetch('/api/agents/voice/start', {
+          method: 'POST',
+        });
+        if (response.ok) {
+          setVoiceListening(true);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка управления голосовым агентом:', error);
     }
   };
 
@@ -133,16 +164,27 @@ export default function AgentsAdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Заголовок */}
+      {/* Заголовок с навигацией */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <Bot className="w-6 h-6 text-green-500" />
-                ИИ Агенты
-              </h1>
-              <p className="text-gray-600">Мониторинг тестировщика, UX аналитики и других агентов</p>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => router.push('/admin')}
+                variant="ghost"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Назад к админке
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Bot className="w-6 h-6 text-green-500" />
+                  ИИ Агенты
+                </h1>
+                <p className="text-gray-600">Мониторинг тестировщика, UX аналитики и других агентов</p>
+              </div>
             </div>
             <Badge variant="outline" className="bg-green-100 text-green-800">
               Активен
@@ -172,6 +214,14 @@ export default function AgentsAdminPage() {
           >
             <RefreshCw className="w-4 h-4" />
             Обновить
+          </Button>
+          <Button 
+            onClick={toggleVoiceAgent}
+            className={`flex items-center gap-2 ${voiceListening ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`}
+            size="sm"
+          >
+            {voiceListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {voiceListening ? 'Остановить' : 'Голос'}
           </Button>
         </div>
 
@@ -282,6 +332,64 @@ export default function AgentsAdminPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Голосовой агент */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              🎤 Голосовой Агент
+              <Badge variant="outline" className={voiceListening ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                {voiceListening ? 'Слушает' : 'Остановлен'}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Volume2 className="w-4 h-4" />
+                  <span className="text-sm">Команд выполнено: {voiceHistory.length}</span>
+                </div>
+                <Button 
+                  onClick={toggleVoiceAgent}
+                  size="sm"
+                  className={voiceListening ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}
+                >
+                  {voiceListening ? <MicOff className="w-4 h-4 mr-2" /> : <Mic className="w-4 h-4 mr-2" />}
+                  {voiceListening ? 'Остановить' : 'Начать слушать'}
+                </Button>
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Доступные команды:</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <span>• &quot;показать статистику&quot;</span>
+                  <span>• &quot;запустить тесты&quot;</span>
+                  <span>• &quot;показать рекомендации&quot;</span>
+                  <span>• &quot;обновить данные&quot;</span>
+                  <span>• &quot;показать ошибки&quot;</span>
+                  <span>• &quot;помощь&quot;</span>
+                </div>
+              </div>
+
+              {voiceHistory.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">Последние команды:</p>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {voiceHistory.slice(0, 5).map((cmd, index) => (
+                      <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded text-xs">
+                        <span>{cmd.command}</span>
+                        <span className="text-gray-500">
+                          {new Date(cmd.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Рекомендации */}
         <Card className="mt-6">

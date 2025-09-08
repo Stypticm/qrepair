@@ -49,7 +49,7 @@ export class TestingAgent {
         {
           action: 'select_model',
           page: '/request/form',
-          data: 'iPhone 15 Pro',
+          data: 'X',
         },
         { action: 'navigate', page: '/request/condition' },
         {
@@ -122,7 +122,7 @@ export class TestingAgent {
         {
           action: 'select_model',
           page: '/request/form',
-          data: 'iPhone 15 Pro',
+          data: 'X',
         },
         { action: 'navigate', page: '/request/condition' },
         {
@@ -164,7 +164,7 @@ export class TestingAgent {
         {
           action: 'select_model',
           page: '/request/form',
-          data: 'iPhone 15 Pro',
+          data: 'X',
         },
         {
           action: 'verify_can_proceed',
@@ -305,88 +305,267 @@ export class TestingAgent {
   }
 
   // Выполнение отдельного шага
-  private async executeStep(
-    step: TestStep
-  ): Promise<{
+  private async executeStep(step: TestStep): Promise<{
     action: string
     result: string
     data?: any
   }> {
-    // Здесь будет реальная логика выполнения шагов
-    // Пока что симуляция
-
-    switch (step.action) {
-      case 'navigate':
-        return { action: step.action, result: 'navigated' }
-
-      case 'enter_imei':
-        // Симуляция валидации IMEI
-        if (step.data && step.data.length === 15) {
+    try {
+      switch (step.action) {
+        case 'navigate':
           return {
             action: step.action,
-            result: 'success',
-            data: step.data,
+            result: 'navigated',
           }
-        } else {
+
+        case 'enter_imei':
+          // Реальная валидация IMEI
+          if (
+            step.data &&
+            step.data.length === 15 &&
+            /^\d{15}$/.test(step.data)
+          ) {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          }
+
+        case 'enter_serial':
+          // Реальная валидация серийного номера
+          if (
+            step.data &&
+            step.data.length > 10 &&
+            /^[A-Z0-9]+$/.test(step.data)
+          ) {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          }
+
+        case 'select_model':
+          // Проверяем, что модель существует в БД
+          try {
+            const device = await prisma.device.findFirst({
+              where: { model: step.data },
+            })
+            if (device) {
+              return {
+                action: step.action,
+                result: 'success',
+                data: step.data,
+              }
+            } else {
+              return {
+                action: step.action,
+                result: 'error',
+                data: step.data,
+              }
+            }
+          } catch (error) {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          }
+
+        case 'select_condition':
+          // Проверяем валидность условий
+          if (step.data && typeof step.data === 'object') {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          }
+
+        case 'select_additional':
+          // Проверяем валидность дополнительных условий
+          if (step.data && typeof step.data === 'object') {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          }
+
+        case 'verify_price':
+          // Проверяем расчет цены
+          try {
+            const response = await fetch(
+              '/api/request/price',
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(step.data),
+              }
+            )
+
+            if (response.ok) {
+              const priceData = await response.json()
+              if (
+                priceData.success &&
+                priceData.price > 0
+              ) {
+                return {
+                  action: step.action,
+                  result: 'price_verified',
+                  data: priceData,
+                }
+              } else {
+                return {
+                  action: step.action,
+                  result: 'error',
+                  data: priceData,
+                }
+              }
+            } else {
+              return {
+                action: step.action,
+                result: 'error',
+                data: { status: response.status },
+              }
+            }
+          } catch (error) {
+            return {
+              action: step.action,
+              result: 'error',
+              data: {
+                error:
+                  error instanceof Error
+                    ? error.message
+                    : 'Unknown error',
+              },
+            }
+          }
+
+        case 'submit_form':
+          // Симуляция отправки формы
           return {
             action: step.action,
-            result: 'error',
-            data: step.data,
+            result: 'submitted',
           }
-        }
 
-      case 'enter_serial':
-        // Симуляция валидации серийного номера
-        if (step.data && step.data.length > 10) {
-          return {
-            action: step.action,
-            result: 'success',
-            data: step.data,
+        case 'enter_invalid_imei':
+          // Тест с невалидным IMEI
+          if (step.data && step.data.length !== 15) {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
           }
-        } else {
-          return {
-            action: step.action,
-            result: 'error',
-            data: step.data,
+
+        case 'enter_valid_imei':
+          // Тест с валидным IMEI
+          if (
+            step.data &&
+            step.data.length === 15 &&
+            /^\d{15}$/.test(step.data)
+          ) {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
           }
-        }
 
-      case 'select_model':
-        return {
-          action: step.action,
-          result: 'success',
-          data: step.data,
-        }
+        case 'enter_invalid_serial':
+          // Тест с невалидным серийным номером
+          if (step.data && step.data.length <= 10) {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
+          }
 
-      case 'select_condition':
-        return {
-          action: step.action,
-          result: 'success',
-          data: step.data,
-        }
+        case 'enter_valid_serial':
+          // Тест с валидным серийным номером
+          if (
+            step.data &&
+            step.data.length > 10 &&
+            /^[A-Z0-9]+$/.test(step.data)
+          ) {
+            return {
+              action: step.action,
+              result: 'success',
+              data: step.data,
+            }
+          } else {
+            return {
+              action: step.action,
+              result: 'error',
+              data: step.data,
+            }
+          }
 
-      case 'select_additional':
-        return {
-          action: step.action,
-          result: 'success',
-          data: step.data,
-        }
+        case 'simulate_network_error':
+          // Симуляция сетевой ошибки
+          throw new Error('Network error simulation')
 
-      case 'verify_price':
-        return {
-          action: step.action,
-          result: 'price_verified',
-        }
-
-      case 'submit_form':
-        return { action: step.action, result: 'submitted' }
-
-      case 'simulate_network_error':
-        // Симуляция сетевой ошибки
-        throw new Error('Network error simulation')
-
-      default:
-        return { action: step.action, result: 'unknown' }
+        default:
+          return { action: step.action, result: 'unknown' }
+      }
+    } catch (error) {
+      return {
+        action: step.action,
+        result: 'error',
+        data: {
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Unknown error',
+        },
+      }
     }
   }
 
