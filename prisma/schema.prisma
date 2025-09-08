@@ -17,7 +17,7 @@ model Skupka {
   status               SkupkaStatus @default(draft)
   comment              String?
   imei                 String?
-  sn                   String?        // Серийный номер устройства
+  sn                   String? // Серийный номер устройства
   contractUrl          String?
   price                Float?
   damagePercent        Float        @default(0)
@@ -25,85 +25,85 @@ model Skupka {
   inspection           Json?
   inspectionCompleted  Boolean      @default(false)
   inspectionToken      String?
-  deviceData           Json?        // Данные устройства, получаемые через серийный номер
-  phoneData            Json?        // Данные выбранного телефона
-  currentStep          String?      // Текущий шаг в процессе
+  deviceData           Json? // Данные устройства, получаемые через серийный номер
+  phoneData            Json? // Данные выбранного телефона
+  currentStep          String? // Текущий шаг в процессе
   courierTelegramId    String?
   courierScheduledAt   DateTime?
   courierTimeSlot      String?
   courierUserConfirmed Boolean      @default(false)
   courierReminderSent  Boolean      @default(false)
   courierTimeSlotSent  Boolean      @default(false)
-  finalPrice           Float?       // Окончательная цена после проверки
-  deviceConditions     Json?        // Детальное состояние устройства (front, back, side)
-  additionalConditions Json?        // Дополнительные условия (faceId, touchId, backCamera, battery)
-  submittedAt          DateTime?    // Время отправки заявки
-  
+  finalPrice           Float? // Окончательная цена после проверки
+  deviceConditions     Json? // Детальное состояние устройства (front, back, side)
+  additionalConditions Json? // Дополнительные условия (faceId, touchId, backCamera, battery)
+  submittedAt          DateTime? // Время отправки заявки
+
   // Новые поля для переделанной страницы submit
-  priceAgreed          Boolean?     // Согласен ли пользователь с ценой
-  feedback             String?      // Отзыв пользователя если не согласен
-  deliveryMethod       String?      // 'pickup' или 'courier'
-  pickupPoint          String?      // Выбранная точка самовывоза
-  courierAddress       String?      // Адрес для курьера
-  courierDate          DateTime?    // Дата вызова курьера
-  courierTime          String?      // Время вызова курьера
-  telegramIdConfirmed  Boolean      @default(false) // Подтвердил ли пользователь свой Telegram ID
-  userTelegramId       String?      // Подтвержденный Telegram ID пользователя
-  
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
-  
+  priceAgreed         Boolean? // Согласен ли пользователь с ценой
+  feedback            String? // Отзыв пользователя если не согласен
+  deliveryMethod      String? // 'pickup' или 'courier'
+  pickupPoint         String? // Выбранная точка самовывоза
+  courierAddress      String? // Адрес для курьера
+  courierDate         DateTime? // Дата вызова курьера
+  courierTime         String? // Время вызова курьера
+  telegramIdConfirmed Boolean   @default(false) // Подтвердил ли пользователь свой Telegram ID
+  userTelegramId      String? // Подтвержденный Telegram ID пользователя
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Связи
-  inspections         DeviceInspection[]
+  inspections DeviceInspection[]
 }
 
 model Master {
-  id          String   @id @default(cuid())
-  telegramId  String   @unique
-  username    String   @unique
-  name        String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id         String   @id @default(cuid())
+  telegramId String   @unique
+  username   String   @unique
+  name       String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
   // Связи
   inspections DeviceInspection[]
 }
 
 model DeviceInspection {
-  id                  String   @id @default(cuid())
-  skupkaId            String   // Связь с заявкой
-  masterUsername      String   // Username мастера
-  inspectionToken     String   // OTP токен для проверки
-  tokenExpiresAt      DateTime // Время истечения токена
-  testsResults        Json     // Результаты всех тестов
-  finalPrice          Float?   // Окончательная цена
-  inspectionNotes     String?  // Заметки мастера
-  completedAt         DateTime? // Время завершения
-  createdAt           DateTime @default(now())
-  
+  id              String    @id @default(cuid())
+  skupkaId        String // Связь с заявкой
+  masterUsername  String // Username мастера
+  inspectionToken String // OTP токен для проверки
+  tokenExpiresAt  DateTime // Время истечения токена
+  testsResults    Json // Результаты всех тестов
+  finalPrice      Float? // Окончательная цена
+  inspectionNotes String? // Заметки мастера
+  completedAt     DateTime? // Время завершения
+  createdAt       DateTime  @default(now())
+
   // Связи
-  skupka              Skupka   @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
-  master              Master?  @relation(fields: [masterUsername], references: [username], onDelete: Cascade)
-  
+  skupka Skupka  @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
+  master Master? @relation(fields: [masterUsername], references: [username], onDelete: Cascade)
+
   @@index([skupkaId])
   @@index([masterUsername])
   @@index([inspectionToken])
 }
 
 model Device {
-  id        String   @id @default(cuid())
-  model     String   // "iPhone 15 Pro"
-  variant   String   // "Max" или ""
-  storage   String   // "128GB", "256GB", etc.
-  color     String   // "Bl", "Wh", "Gold", etc.
-  country   String   // "Китай 🇨🇳", "США 🇺🇸", etc.
-  simType   String   // "1 SIM", "2 SIM"
-  basePrice Float    // Базовая цена в рублях
-  
+  id        String @id @default(cuid())
+  model     String // "iPhone 15 Pro"
+  variant   String // "Max" или ""
+  storage   String // "128GB", "256GB", etc.
+  color     String // "Bl", "Wh", "Gold", etc.
+  country   String // "Китай 🇨🇳", "США 🇺🇸", etc.
+  simType   String // "1 SIM", "2 SIM"
+  basePrice Float // Базовая цена в рублях
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Индексы для быстрой фильтрации
   @@index([model])
   @@index([model, variant])
@@ -122,4 +122,65 @@ enum SkupkaStatus {
   accepted
   paid
   completed
+}
+
+enum AgentTestResultStatus {
+  passed
+  failed
+  running
+}
+
+enum AgentRecommendationStatus {
+  pending
+  completed
+  rejected
+}
+
+model AgentTestResult {
+  id        String                @id @default(cuid())
+  agentType String // 'testing', 'ux_analytics', 'performance', 'error_monitoring'
+  testName  String // Название теста
+  status    AgentTestResultStatus // 'passed', 'failed', 'running'
+  result    Json? // Результаты теста
+  error     String? // Ошибка если есть
+  duration  Int? // Время выполнения в мс
+  createdAt DateTime              @default(now())
+
+  @@index([agentType])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AgentAnalytics {
+  id        String   @id @default(cuid())
+  agentType String // 'ux_analytics', 'performance'
+  metric    String // 'page_load_time', 'user_drop_off', 'error_rate'
+  value     Float // Значение метрики
+  page      String? // Страница если применимо
+  metadata  Json? // Дополнительные данные
+  createdAt DateTime @default(now())
+
+  @@index([agentType])
+  @@index([metric])
+  @@index([createdAt])
+}
+
+model AgentRecommendation {
+  id          String                    @id @default(cuid())
+  agentType   String
+  priority    String
+  category    String
+  title       String
+  description String
+  solution    String
+  status      AgentRecommendationStatus @default(pending)
+  page        String?
+  metadata    Json?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+
+  @@index([agentType])
+  @@index([priority])
+  @@index([status])
+  @@index([createdAt])
 }

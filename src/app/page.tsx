@@ -20,11 +20,13 @@ import { tailwindColors } from '@/core/colors';
 import { ChatContext } from '@/components/ChatContext';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
+import { UXAnalyticsProvider, useUXAnalyticsContext } from '@/components/UXAnalyticsProvider';
 import { LoadingIndicator } from '@/components/ImagePreloader/LoadingIndicator';
 import { getHomePagePreloadImages } from '@/core/lib/imageUtils';
 
-export default function Home() {
+function HomeContent() {
   const { telegramId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber } = useStartForm();
+  const { trackButtonClick, trackError } = useUXAnalyticsContext();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
@@ -78,6 +80,13 @@ export default function Home() {
 
   // Функция для начала формы с проверкой существующей заявки
   const handleStartForm = async () => {
+    try {
+      // Отслеживаем клик по кнопке "Начать заявку"
+      trackButtonClick('start_form', '/');
+    } catch (error) {
+      trackError(error instanceof Error ? error.message : 'Unknown error', '/');
+    }
+    
     try {
       // Показываем загрузку
       setIsLoading(true);
@@ -336,5 +345,13 @@ export default function Home() {
       {/* Оптимизация загрузки изображений работает на страницах condition и additional-condition */}
 
     </AdaptiveContainer>
+  );
+}
+
+export default function Home() {
+  return (
+    <UXAnalyticsProvider>
+      <HomeContent />
+    </UXAnalyticsProvider>
   );
 }
