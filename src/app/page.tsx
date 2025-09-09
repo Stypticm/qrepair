@@ -39,16 +39,15 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
-  const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const { hasFeature, getActiveFeatures, isTester } = useFeatureFlags();
   const router = useRouter();
 
   // ID админов для тестирования в браузере
   const testAdminIds = ['1', '296925626', '531360988'];
 
-  // Функция для добавления отладочной информации
+  // Заглушка для отладочной информации (отключена)
   const addDebugInfo = (message: string) => {
-    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    // Отладочная информация отключена
   };
 
 
@@ -780,21 +779,6 @@ function HomeContent() {
               )}
 
               {/* Отладочная информация */}
-              {debugInfo.length > 0 && (
-                <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Отладочная информация:</h3>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {debugInfo.map((info, index) => (
-                      <div key={index} className="text-xs text-gray-600 font-mono">
-                        {info}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500">
-                    Текущий telegramId: {telegramId}
-                  </div>
-                </div>
-              )}
 
               {/* Feature Flags информация */}
               {isTester() && (
