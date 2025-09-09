@@ -688,17 +688,7 @@ export default function FormPage() {
                                     className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
                                 >
                                     <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Модель</h3>
-                                    {devices.loading.models ? (
-                                        <div className="flex justify-center items-center h-20">
-                                            <Image
-                                                src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-                                                alt="Загрузка моделей"
-                                                width={48}
-                                                height={48}
-                                                className="object-contain"
-                                            />
-                                        </div>
-                                    ) : devices.models.length === 0 ? (
+                                    {devices.models.length === 0 ? (
                                         <div className="text-center text-gray-500 py-4">
                                             Модели не загружены
                                         </div>

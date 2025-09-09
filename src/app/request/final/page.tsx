@@ -75,10 +75,11 @@ const FinalPage = () => {
             }
 
             // Если нет в store, пытаемся получить из sessionStorage
+            // НО ТОЛЬКО если мы не в Telegram WebApp (для fallback в браузере)
             const savedTelegramId = sessionStorage.getItem('telegramId');
             console.log('🔍 Loading telegramId from sessionStorage (fallback):', savedTelegramId);
 
-            if (savedTelegramId) {
+            if (savedTelegramId && typeof window !== 'undefined' && !window.Telegram?.WebApp) {
                 console.log('✅ Set telegramId from sessionStorage (fallback):', savedTelegramId);
                 setUserTelegramId(savedTelegramId);
                 setTelegramUsername(savedTelegramId);
@@ -177,6 +178,7 @@ const FinalPage = () => {
             const requestData = {
                 telegramId: effectiveTelegramId,
                 userTelegramId: userTelegramId.trim(),
+                username: telegramUsername,
                 modelname: getFullModelName(),
                 price: finalPrice,
                 deliveryData,

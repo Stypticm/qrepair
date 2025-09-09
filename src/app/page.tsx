@@ -29,8 +29,11 @@ function HomeContent() {
     setAdditionalConditions, 
     resetAllStates, 
     setTelegramId,
+    setUsername,
     setCurrentStep,
+    clearSessionStorage,
     telegramId,
+    username,
     modelname,
     imei,
     serialNumber,
@@ -94,10 +97,12 @@ function HomeContent() {
   }, [isInTelegram, setTelegramId, setRole, testAdminIndex]);
 
   // Дополнительный useEffect для восстановления telegramId и currentStep из sessionStorage
+  // ТОЛЬКО если мы НЕ в Telegram WebApp (для fallback в браузере)
   useEffect(() => {
-    if (typeof window !== 'undefined' && !telegramId) {
+    if (typeof window !== 'undefined' && !telegramId && !isInTelegram) {
       const savedTelegramId = sessionStorage.getItem('telegramId');
       if (savedTelegramId) {
+        addDebugInfo(`🔄 Fallback: используем telegramId из sessionStorage: ${savedTelegramId}`);
         setTelegramId(savedTelegramId);
         // Проверяем, является ли пользователь мастером по ID
         const isMasterUser = testAdminIds.includes(savedTelegramId);
@@ -123,6 +128,9 @@ function HomeContent() {
     addDebugInfo(`🚀 Начинаем проверку Telegram WebApp...`);
     
     if (typeof window !== 'undefined') {
+      // Очищаем старые данные из sessionStorage для предотвращения использования чужих ID
+      clearSessionStorage();
+      addDebugInfo(`🧹 Очистили sessionStorage от старых данных`);
       addDebugInfo(`✅ window доступен`);
       // Простая проверка - если есть Telegram.WebApp, то это WebApp
       const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
@@ -397,6 +405,15 @@ function HomeContent() {
             addDebugInfo(`✅ Получен telegramId из Telegram WebApp: ${telegramUserId}`);
             setTelegramId(telegramUserId);
             
+            // Устанавливаем username в store
+            if (telegramUsername) {
+              addDebugInfo(`✅ Устанавливаем username: ${telegramUsername}`);
+              setUsername(telegramUsername);
+            } else if (firstName) {
+              addDebugInfo(`✅ Устанавливаем firstName как username: ${firstName}`);
+              setUsername(firstName);
+            }
+            
             // Проверяем, является ли пользователь мастером
             const isMasterUser = testAdminIds.includes(telegramUserId);
             if (isMasterUser) {
@@ -433,6 +450,12 @@ function HomeContent() {
                 if (data.success && data.telegramId) {
                   addDebugInfo(`✅ Получен telegramId через API: ${data.telegramId}`);
                   setTelegramId(data.telegramId);
+                  
+                  // Устанавливаем username в store
+                  if (telegramUsername) {
+                    addDebugInfo(`✅ Устанавливаем username через API: ${telegramUsername}`);
+                    setUsername(telegramUsername);
+                  }
                   
                   // Проверяем, является ли пользователь мастером
                   const isMasterUser = testAdminIds.includes(data.telegramId.toString());

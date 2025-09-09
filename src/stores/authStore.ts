@@ -95,6 +95,9 @@ interface AppState {
 
   // Reset
   resetAllStates: () => void
+
+  // Clear session storage
+  clearSessionStorage: () => void
 }
 
 // ID админов из кода
@@ -177,7 +180,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   setUsername: (username) => set({ username }),
   setTelegramId: (telegramId) => {
     set({ telegramId })
-    if (typeof window !== 'undefined' && telegramId) {
+    // Сохраняем в sessionStorage только если мы в Telegram WebApp
+    // Это предотвращает перезапись ID при переключении между пользователями
+    if (
+      typeof window !== 'undefined' &&
+      telegramId &&
+      window.Telegram?.WebApp
+    ) {
       sessionStorage.setItem('telegramId', telegramId)
     }
   },
@@ -297,6 +306,15 @@ export const useAppStore = create<AppState>((set, get) => ({
         requestId: '',
       },
     }),
+
+  // Clear session storage
+  clearSessionStorage: () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('telegramId')
+      sessionStorage.removeItem('telegramUsername')
+      sessionStorage.removeItem('currentStep')
+    }
+  },
 }))
 
 // Функция для проверки роли мастера
