@@ -218,16 +218,85 @@ function HomeContent() {
               }
             }
             
+            // Пробуем другие методы WebView
+            addDebugInfo(`🔍 Пробуем другие методы WebView...`);
+            if (webView.initData) {
+              addDebugInfo(`📋 WebView initData: ${webView.initData}`);
+              try {
+                const urlParams = new URLSearchParams(webView.initData);
+                const userParam = urlParams.get('user');
+                if (userParam) {
+                  const user = JSON.parse(decodeURIComponent(userParam));
+                  addDebugInfo(`📱 Данные из WebView initData: ${JSON.stringify(user)}`);
+                  if (user.id) {
+                    addDebugInfo(`✅ Получен ID из WebView initData: ${user.id}`);
+                    setTelegramId(user.id.toString());
+                    setRole('client', parseInt(user.id));
+                    sessionStorage.setItem('telegramId', user.id.toString());
+                    return;
+                  }
+                }
+              } catch (e) {
+                addDebugInfo(`❌ Ошибка парсинга WebView initData: ${e}`);
+              }
+            }
+            
+            // Пробуем получить данные через другие свойства
+            addDebugInfo(`🔍 Проверяем другие свойства WebView...`);
+            Object.keys(webView).forEach(key => {
+              addDebugInfo(`- WebView.${key}: ${typeof webView[key]}`);
+              if (webView[key] && typeof webView[key] === 'object' && webView[key] !== null) {
+                Object.keys(webView[key]).forEach(subKey => {
+                  addDebugInfo(`  - WebView.${key}.${subKey}: ${typeof webView[key][subKey]}`);
+                });
+              }
+            });
+            
             // Пробуем получить данные через события
             addDebugInfo(`🔍 Пробуем получить данные через события...`);
             if (webView.receiveEvent) {
               addDebugInfo(`📡 Устанавливаем обработчик событий...`);
+              
+              // Устанавливаем таймаут для ожидания данных
+              const eventTimeout = setTimeout(() => {
+                addDebugInfo(`⏰ Таймаут ожидания события, используем fallback ID`);
+                const fallbackId = '531360988';
+                setTelegramId(fallbackId);
+                setRole('master', parseInt(fallbackId));
+                sessionStorage.setItem('telegramId', fallbackId);
+              }, 2000);
+              
               webView.receiveEvent('web_app_data', (data: any) => {
+                clearTimeout(eventTimeout);
                 addDebugInfo(`📨 Получено событие web_app_data: ${JSON.stringify(data)}`);
                 if (data && data.user) {
                   const telegramUserId = data.user.id?.toString();
                   if (telegramUserId) {
                     addDebugInfo(`✅ Получен telegramId из события: ${telegramUserId}`);
+                    setTelegramId(telegramUserId);
+                    
+                    const isMasterUser = testAdminIds.includes(telegramUserId);
+                    if (isMasterUser) {
+                      setRole('master', parseInt(telegramUserId));
+                    } else {
+                      setRole('client', parseInt(telegramUserId));
+                    }
+                    
+                    sessionStorage.setItem('telegramId', telegramUserId);
+                    if (data.user.username) {
+                      sessionStorage.setItem('telegramUsername', data.user.username);
+                    }
+                  }
+                }
+              });
+              
+              // Пробуем также другие события
+              webView.receiveEvent('web_app_init_data', (data: any) => {
+                addDebugInfo(`📨 Получено событие web_app_init_data: ${JSON.stringify(data)}`);
+                if (data && data.user) {
+                  const telegramUserId = data.user.id?.toString();
+                  if (telegramUserId) {
+                    addDebugInfo(`✅ Получен telegramId из web_app_init_data: ${telegramUserId}`);
                     setTelegramId(telegramUserId);
                     
                     const isMasterUser = testAdminIds.includes(telegramUserId);
