@@ -255,28 +255,6 @@ const MyDevices = () => {
                                   </div>
                                 )}
 
-                                {device.deviceConditions && (
-                                  <div>
-                                    <span className="font-semibold text-gray-600">Состояние устройства:</span>
-                                    <div className="space-y-2">
-                                      {device.deviceConditions.front && (
-                                        <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
-                                          <span className="font-medium">Передняя панель:</span> {device.deviceConditions.front}
-                                        </div>
-                                      )}
-                                      {device.deviceConditions.back && (
-                                        <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
-                                          <span className="font-medium">Задняя панель:</span> {device.deviceConditions.back}
-                                        </div>
-                                      )}
-                                      {device.deviceConditions.side && (
-                                        <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
-                                          <span className="font-medium">Боковая панель:</span> {device.deviceConditions.side}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
 
                                 {device.courierTelegramId && (
                                   <div>
@@ -298,7 +276,7 @@ const MyDevices = () => {
                                 )}
 
                                 {/* QR-код для мастера */}
-                                {device.status === 'accepted' && (
+                                {device.status === 'submitted' && (
                                   <div className="border-t pt-4">
                                     <div className="text-center">
                                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center justify-center gap-2">
@@ -315,14 +293,6 @@ const MyDevices = () => {
                               </div>
 
                               <div className="flex flex-wrap gap-2 pt-2 border-t">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 rounded-lg"
-                                  onClick={() => router.push(`/my-devices/status?status=${device.status}`)}>
-                                  Проверить статус
-                                </Button>
-
                                 {device.status === 'on_the_way' && device.courierUserConfirmed && !device.inspectionCompleted && (
                                   <Button
                                     size="sm"

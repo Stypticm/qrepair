@@ -86,27 +86,46 @@ function HomeContent() {
     }
   }, [isInTelegram, setTelegramId, setRole, testAdminIndex]);
 
-  // Проверяем сохраненные данные и перенаправляем на нужный шаг
+  // Дополнительный useEffect для восстановления telegramId из sessionStorage
   useEffect(() => {
-    // Проверяем, запущено ли приложение в Telegram
-    const checkTelegram = () => {
-      if (typeof window !== 'undefined') {
-        // Простая проверка - если есть Telegram.WebApp, то это WebApp
-        const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
-        const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
-        
-        // Если есть Telegram.WebApp ИЛИ TelegramWebviewProxy, то это WebApp
-        const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
-        
-        setIsInTelegram(inTelegram);
-        setIsLoading(false);
-        
-        // Если мы не в Telegram, принудительно устанавливаем false
-        if (!inTelegram) {
-          setIsInTelegram(false);
+    if (typeof window !== 'undefined' && !telegramId) {
+      const savedTelegramId = sessionStorage.getItem('telegramId');
+      if (savedTelegramId) {
+        setTelegramId(savedTelegramId);
+        if (savedTelegramId === '1' || savedTelegramId === '296925626' || savedTelegramId === '531360988') {
+          setRole('master', parseInt(savedTelegramId));
+        } else {
+          setRole('client', parseInt(savedTelegramId));
         }
       }
-    };
+    }
+  }, [telegramId, setTelegramId, setRole]);
+
+  // Проверяем сохраненные данные и перенаправляем на нужный шаг
+  useEffect(() => {
+  // Проверяем, запущено ли приложение в Telegram
+  const checkTelegram = () => {
+    if (typeof window !== 'undefined') {
+      // Простая проверка - если есть Telegram.WebApp, то это WebApp
+      const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
+      const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
+      
+      // Если есть Telegram.WebApp ИЛИ TelegramWebviewProxy, то это WebApp
+      const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
+      
+      setIsInTelegram(inTelegram);
+      setIsLoading(false);
+      
+      // Если мы не в Telegram, принудительно устанавливаем false
+      if (!inTelegram) {
+        setIsInTelegram(false);
+        // Устанавливаем тестовый ID для браузера
+        const testId = testAdminIds[testAdminIndex];
+        setTelegramId(testId);
+        setRole('master', parseInt(testId));
+      }
+    }
+  };
 
     // Увеличиваем задержку для более надежной проверки
     const timer = setTimeout(checkTelegram, 500);

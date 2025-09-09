@@ -38,7 +38,8 @@ export function Page({ children, back = true }: PropsWithChildren<{
         goToPreviousStep();
       } else {
         // Если не можем идти назад по шагам, используем обычную навигацию
-        router.back();
+        // Для страниц без навигации по шагам (например, "Мои устройства") всегда идем на главную
+        router.push('/');
       }
     };
 

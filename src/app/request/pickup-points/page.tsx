@@ -256,12 +256,7 @@ const PickupPointsPage = () => {
                         </motion.div>
 
                         {/* Точки самовывоза */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: 0.2 }}
-                            className="space-y-4"
-                        >
+                        <div className="space-y-4">
                             {loading ? (
                                 <div className="flex justify-center items-center py-8">
                                     <Image
@@ -278,11 +273,8 @@ const PickupPointsPage = () => {
                                 </div>
                             ) : (
                                 pickupPoints.map((point, index) => (
-                                    <motion.div
+                                    <div
                                         key={point.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
                                         onClick={() => handlePointSelect(point.id)}
                                         className={`p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${selectedPoint === point.id
                                                 ? 'border-teal-500 bg-teal-50'
@@ -311,10 +303,10 @@ const PickupPointsPage = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 ))
                             )}
-                        </motion.div>
+                        </div>
 
                         {/* Кнопка подтверждения */}
                         <motion.div
