@@ -106,7 +106,7 @@ function HomeContent() {
   // Проверяем сохраненные данные и перенаправляем на нужный шаг
   useEffect(() => {
   // Проверяем, запущено ли приложение в Telegram
-  const checkTelegram = () => {
+  const checkTelegram = async () => {
     if (typeof window !== 'undefined') {
       // Простая проверка - если есть Telegram.WebApp, то это WebApp
       const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
@@ -125,6 +125,10 @@ function HomeContent() {
           const telegramUserId = userData.id?.toString();
           const telegramUsername = userData.username;
           
+          console.log('🔍 Telegram WebApp userData:', userData);
+          console.log('🔍 telegramUserId:', telegramUserId);
+          console.log('🔍 telegramUsername:', telegramUsername);
+          
           if (telegramUserId) {
             console.log('✅ Получен telegramId из Telegram WebApp:', telegramUserId);
             setTelegramId(telegramUserId);
@@ -142,6 +146,38 @@ function HomeContent() {
             if (telegramUsername) {
               sessionStorage.setItem('telegramUsername', telegramUsername);
             }
+          } else if (telegramUsername) {
+            // Если нет ID, но есть username, пытаемся получить ID через API
+            console.log('🔍 Нет telegramId, но есть username, получаем ID через API:', telegramUsername);
+            try {
+              const response = await fetch('/api/admin/get-telegram-id', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: telegramUsername })
+              });
+              
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.telegramId) {
+                  console.log('✅ Получен telegramId через API:', data.telegramId);
+                  setTelegramId(data.telegramId);
+                  
+                  // Проверяем, является ли пользователь мастером
+                  const isMasterUser = testAdminIds.includes(data.telegramId.toString());
+                  if (isMasterUser) {
+                    setRole('master', parseInt(data.telegramId));
+                  } else {
+                    setRole('client', parseInt(data.telegramId));
+                  }
+                  
+                  // Сохраняем в sessionStorage
+                  sessionStorage.setItem('telegramId', data.telegramId.toString());
+                  sessionStorage.setItem('telegramUsername', telegramUsername);
+                }
+              }
+            } catch (error) {
+              console.error('❌ Ошибка при получении telegramId через API:', error);
+            }
           }
         }
       } else {
@@ -156,7 +192,9 @@ function HomeContent() {
   };
 
     // Увеличиваем задержку для более надежной проверки
-    const timer = setTimeout(checkTelegram, 500);
+    const timer = setTimeout(() => {
+      checkTelegram().catch(console.error);
+    }, 500);
     return () => clearTimeout(timer);
   }, []);
 
