@@ -187,6 +187,107 @@ function HomeContent() {
           }
         }
         
+        // Пробуем получить данные через WebView API
+        const webView = (window as any).Telegram?.WebView;
+        if (webView && !userData) {
+          addDebugInfo(`🔍 Пробуем получить данные через WebView API...`);
+          try {
+            // Пробуем разные способы получения данных
+            const webViewData = webView.initDataUnsafe?.user;
+            if (webViewData) {
+              addDebugInfo(`📱 Данные из WebView: ${JSON.stringify(webViewData)}`);
+              const telegramUserId = webViewData.id?.toString();
+              const telegramUsername = webViewData.username;
+              
+              if (telegramUserId) {
+                addDebugInfo(`✅ Получен telegramId из WebView: ${telegramUserId}`);
+                setTelegramId(telegramUserId);
+                
+                const isMasterUser = testAdminIds.includes(telegramUserId);
+                if (isMasterUser) {
+                  setRole('master', parseInt(telegramUserId));
+                } else {
+                  setRole('client', parseInt(telegramUserId));
+                }
+                
+                sessionStorage.setItem('telegramId', telegramUserId);
+                if (telegramUsername) {
+                  sessionStorage.setItem('telegramUsername', telegramUsername);
+                }
+                return; // Выходим, если успешно получили данные
+              }
+            }
+            
+            // Пробуем получить данные через события
+            addDebugInfo(`🔍 Пробуем получить данные через события...`);
+            if (webView.receiveEvent) {
+              addDebugInfo(`📡 Устанавливаем обработчик событий...`);
+              webView.receiveEvent('web_app_data', (data: any) => {
+                addDebugInfo(`📨 Получено событие web_app_data: ${JSON.stringify(data)}`);
+                if (data && data.user) {
+                  const telegramUserId = data.user.id?.toString();
+                  if (telegramUserId) {
+                    addDebugInfo(`✅ Получен telegramId из события: ${telegramUserId}`);
+                    setTelegramId(telegramUserId);
+                    
+                    const isMasterUser = testAdminIds.includes(telegramUserId);
+                    if (isMasterUser) {
+                      setRole('master', parseInt(telegramUserId));
+                    } else {
+                      setRole('client', parseInt(telegramUserId));
+                    }
+                    
+                    sessionStorage.setItem('telegramId', telegramUserId);
+                    if (data.user.username) {
+                      sessionStorage.setItem('telegramUsername', data.user.username);
+                    }
+                  }
+                }
+              });
+            }
+          } catch (e) {
+            addDebugInfo(`❌ Ошибка получения данных через WebView: ${e}`);
+          }
+        }
+        
+        // Пробуем получить данные из URL параметров
+        addDebugInfo(`🔍 Проверяем URL параметры...`);
+        const urlParams = new URLSearchParams(window.location.search);
+        const tgWebAppData = urlParams.get('tgWebAppData');
+        const tgWebAppStartParam = urlParams.get('tgWebAppStartParam');
+        const user = urlParams.get('user');
+        
+        addDebugInfo(`- tgWebAppData: ${tgWebAppData ? 'есть' : 'нет'}`);
+        addDebugInfo(`- tgWebAppStartParam: ${tgWebAppStartParam ? 'есть' : 'нет'}`);
+        addDebugInfo(`- user: ${user ? 'есть' : 'нет'}`);
+        
+        if (user) {
+          try {
+            const userData = JSON.parse(decodeURIComponent(user));
+            addDebugInfo(`📱 Данные из URL user: ${JSON.stringify(userData)}`);
+            const telegramUserId = userData.id?.toString();
+            if (telegramUserId) {
+              addDebugInfo(`✅ Получен telegramId из URL: ${telegramUserId}`);
+              setTelegramId(telegramUserId);
+              
+              const isMasterUser = testAdminIds.includes(telegramUserId);
+              if (isMasterUser) {
+                setRole('master', parseInt(telegramUserId));
+              } else {
+                setRole('client', parseInt(telegramUserId));
+              }
+              
+              sessionStorage.setItem('telegramId', telegramUserId);
+              if (userData.username) {
+                sessionStorage.setItem('telegramUsername', userData.username);
+              }
+              return;
+            }
+          } catch (e) {
+            addDebugInfo(`❌ Ошибка парсинга user из URL: ${e}`);
+          }
+        }
+        
         // Пробуем другие возможные источники данных
         addDebugInfo(`🔍 Проверяем другие источники данных...`);
         addDebugInfo(`- window.Telegram: ${JSON.stringify((window as any).Telegram)}`);
