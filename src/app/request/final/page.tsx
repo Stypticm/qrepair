@@ -56,38 +56,32 @@ const FinalPage = () => {
                 userData: window.Telegram?.WebApp?.initDataUnsafe?.user
             });
 
-            // Сначала пытаемся получить из Zustand store
+            // Сначала проверяем username в sessionStorage (приоритет)
+            const savedUsername = sessionStorage.getItem('telegramUsername');
+            console.log('🔍 Checking sessionStorage for telegramUsername first:', savedUsername);
+            if (savedUsername) {
+                console.log('✅ Found username in sessionStorage, using it:', savedUsername);
+                setUserTelegramId(`@${savedUsername}`);
+                setTelegramUsername(savedUsername);
+                return;
+            }
+
+            // Если нет username, пытаемся получить из Zustand store
             if (telegramId) {
-                console.log('✅ Loading telegramId from store:', telegramId);
-                // Проверяем, есть ли username в sessionStorage
-                const savedUsername = sessionStorage.getItem('telegramUsername');
-                if (savedUsername) {
-                    console.log('✅ Found username in sessionStorage:', savedUsername);
-                    setUserTelegramId(`@${savedUsername}`);
-                    setTelegramUsername(savedUsername);
-                } else {
-                    setUserTelegramId(telegramId);
-                    setTelegramUsername(telegramId);
-                }
+                console.log('✅ Loading telegramId from store (fallback):', telegramId);
+                setUserTelegramId(telegramId);
+                setTelegramUsername(telegramId);
                 return;
             }
 
             // Если нет в store, пытаемся получить из sessionStorage
             const savedTelegramId = sessionStorage.getItem('telegramId');
-            console.log('🔍 Loading telegramId from sessionStorage:', savedTelegramId);
+            console.log('🔍 Loading telegramId from sessionStorage (fallback):', savedTelegramId);
 
             if (savedTelegramId) {
-                console.log('✅ Set telegramId from sessionStorage:', savedTelegramId);
-                // Проверяем, есть ли username в sessionStorage
-                const savedUsername = sessionStorage.getItem('telegramUsername');
-                if (savedUsername) {
-                    console.log('✅ Found username in sessionStorage:', savedUsername);
-                    setUserTelegramId(`@${savedUsername}`);
-                    setTelegramUsername(savedUsername);
-                } else {
-                    setUserTelegramId(savedTelegramId);
-                    setTelegramUsername(savedTelegramId);
-                }
+                console.log('✅ Set telegramId from sessionStorage (fallback):', savedTelegramId);
+                setUserTelegramId(savedTelegramId);
+                setTelegramUsername(savedTelegramId);
             } else {
                 console.log('❌ No telegramId found in sessionStorage');
 
