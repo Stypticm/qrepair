@@ -46,33 +46,49 @@ const FinalPage = () => {
         }
     }, [setCurrentStep, telegramId]);
 
-    // Загружаем username из Telegram при инициализации
+    // Загружаем telegramId из store или sessionStorage при инициализации
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            const savedUsername = sessionStorage.getItem('telegramUsername');
-            console.log('Loading telegram username from sessionStorage:', savedUsername);
+            console.log('🔍 Final page - загружаем telegramId:', {
+                telegramIdFromStore: telegramId,
+                sessionStorageKeys: Object.keys(sessionStorage),
+                telegramWebApp: !!window.Telegram?.WebApp,
+                userData: window.Telegram?.WebApp?.initDataUnsafe?.user
+            });
 
-            if (savedUsername) {
-                setTelegramUsername(savedUsername);
-                setUserTelegramId(`@${savedUsername}`);
-                console.log('Set telegram username:', savedUsername);
+            // Сначала пытаемся получить из Zustand store
+            if (telegramId) {
+                console.log('✅ Loading telegramId from store:', telegramId);
+                setUserTelegramId(telegramId);
+                setTelegramUsername(telegramId);
+                return;
+            }
+
+            // Если нет в store, пытаемся получить из sessionStorage
+            const savedTelegramId = sessionStorage.getItem('telegramId');
+            console.log('🔍 Loading telegramId from sessionStorage:', savedTelegramId);
+
+            if (savedTelegramId) {
+                console.log('✅ Set telegramId from sessionStorage:', savedTelegramId);
+                setUserTelegramId(savedTelegramId);
+                setTelegramUsername(savedTelegramId);
             } else {
-                console.log('No telegram username found in sessionStorage');
+                console.log('❌ No telegramId found in sessionStorage');
 
                 // Пытаемся получить username напрямую из Telegram WebApp
                 if (window.Telegram?.WebApp?.initDataUnsafe?.user?.username) {
                     const telegramUsername = window.Telegram.WebApp.initDataUnsafe.user.username;
-                    console.log('Found telegram username from WebApp:', telegramUsername);
+                    console.log('✅ Found telegram username from WebApp:', telegramUsername);
                     setTelegramUsername(telegramUsername);
                     setUserTelegramId(`@${telegramUsername}`);
                     // Сохраняем для будущего использования
                     sessionStorage.setItem('telegramUsername', telegramUsername);
                 } else {
-                    console.log('No telegram username found in WebApp either');
+                    console.log('❌ No telegram username found in WebApp either');
 
                     // Fallback для тестирования в браузере
                     if (process.env.NODE_ENV === 'development') {
-                        console.log('Using fallback username for development');
+                        console.log('🔄 Using fallback telegramId for development');
                         setTelegramUsername('qoqos_app');
                         setUserTelegramId('@qoqos_app');
                         sessionStorage.setItem('telegramUsername', 'qoqos_app');
@@ -80,7 +96,7 @@ const FinalPage = () => {
                 }
             }
         }
-    }, []);
+    }, [telegramId]);
 
     // Загружаем данные о выборе доставки из sessionStorage или БД
     const [deliveryData, setDeliveryData] = useState<any>(null);
@@ -286,7 +302,7 @@ const FinalPage = () => {
     if (submitted) {
         return (
             <Page back={false}>
-                <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
                     <div className="flex-1 flex items-center justify-center p-6">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -333,7 +349,7 @@ const FinalPage = () => {
     if (showThankYou) {
         return (
             <Page back={false}>
-                <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
                     <div className="flex-1 flex items-center justify-center p-6">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -378,8 +394,8 @@ const FinalPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
+            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="flex-1 p-3 pt-2 flex flex-col">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4">
                         {/* Заголовок */}
                         <motion.div
@@ -436,8 +452,8 @@ const FinalPage = () => {
                                     <h3 className="font-semibold text-gray-900 mb-2">Ваш Telegram:</h3>
                                     <p className="text-sm text-gray-600 mb-3">
                                         {telegramUsername
-                                            ? `Мы получили ваш username из Telegram: @${telegramUsername}. Вы можете изменить его при необходимости.`
-                                            : 'Введите ваш Telegram username для связи'
+                                            ? `Мы получили ваш Telegram ID: ${telegramUsername}. Вы можете изменить его при необходимости.`
+                                            : 'Введите ваш Telegram ID для связи'
                                         }
                                     </p>
 
@@ -445,13 +461,13 @@ const FinalPage = () => {
                                         type="text"
                                         value={userTelegramId}
                                         onChange={(e) => setUserTelegramId(e.target.value)}
-                                        placeholder="@username"
+                                        placeholder="Telegram ID (например: 123456789)"
                                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm"
                                     />
 
-                                    {telegramUsername && userTelegramId !== `@${telegramUsername}` && (
+                                    {telegramUsername && userTelegramId !== telegramUsername && (
                                         <Button
-                                            onClick={() => setUserTelegramId(`@${telegramUsername}`)}
+                                            onClick={() => setUserTelegramId(telegramUsername)}
                                             variant="outline"
                                             className="w-full mt-3 text-sm py-2 border-[#2dc2c6] text-[#2dc2c6] hover:bg-[#2dc2c6] hover:text-white"
                                         >

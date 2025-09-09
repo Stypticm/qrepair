@@ -218,6 +218,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ currentStep: previousStep })
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('currentStep', previousStep)
+        // Выполняем навигацию через history API
+        window.history.pushState(
+          null,
+          '',
+          `/request/${previousStep}`
+        )
+        // Диспатчим событие для обновления компонентов
+        window.dispatchEvent(new PopStateEvent('popstate'))
       }
     }
   },
