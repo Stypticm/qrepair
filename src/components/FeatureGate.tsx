@@ -1,5 +1,6 @@
 import React from 'react';
-import { useFeatureFlags, type FeatureFlag } from '@/lib/featureFlags';
+import { type FeatureFlag } from '@/lib/featureFlags';
+import { useFeatureFlags } from '@/stores/authStore';
 
 interface FeatureGateProps {
   feature: FeatureFlag;
@@ -17,13 +18,13 @@ export const FeatureGate: React.FC<FeatureGateProps> = ({
   const { hasFeature } = useFeatureFlags();
   
   // Если передан telegramId, используем его, иначе берем из store
-  const shouldShow = telegramId ? hasFeature(feature, telegramId) : hasFeature(feature);
+  const shouldShow = hasFeature(feature);
   
   return shouldShow ? <>{children}</> : <>{fallback}</>;
 };
 
 // Хук для проверки флага
-export const useFeature = (feature: FeatureFlag, telegramId?: string) => {
+export const useFeature = (feature: FeatureFlag) => {
   const { hasFeature } = useFeatureFlags();
-  return telegramId ? hasFeature(feature, telegramId) : hasFeature(feature);
+  return hasFeature(feature);
 };
