@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppStore, isMaster } from '@/stores/authStore';
-import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { AIEvaluationModal } from '@/components/AIEvaluationModal';
 import { QRCodeGenerator } from '@/components/QRCodeGenerator';
-import { ArrowLeft, QrCode, Camera, Smartphone } from 'lucide-react';
+import { QrCode, Camera, Smartphone } from 'lucide-react';
+import { Page } from '@/components/Page';
 
 export default function MasterPage() {
   const router = useRouter();
@@ -76,21 +76,12 @@ export default function MasterPage() {
   }
 
   return (
-    <AdaptiveContainer>
+    <Page back={true}>
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
         {/* Заголовок */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-md mx-auto px-6 py-4">
             <div className="flex items-center gap-4">
-              <Button
-                onClick={() => router.push('/')}
-                variant="ghost"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Назад
-              </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 font-sf-pro">Для мастеров</h1>
                 <p className="text-gray-600 font-sf-pro">ИИ-оценка устройств</p>
@@ -193,6 +184,6 @@ export default function MasterPage() {
           onClose={() => setModalOpen(false)}
         />
       </div>
-    </AdaptiveContainer>
+    </Page>
   );
 }

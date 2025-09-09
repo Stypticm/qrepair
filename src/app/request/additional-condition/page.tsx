@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
-import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useAppStore } from '@/stores/authStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';

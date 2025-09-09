@@ -4,17 +4,16 @@
 export const dynamic = 'force-dynamic';
 
 import { Page } from '@/components/Page'
-import { useStartForm } from '@/components/StartFormContext/StartFormContext';
+import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SkupkaRequest } from '@/core/lib/interfaces';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 
 const MyDevices = () => {
-  const { telegramId } = useStartForm();
+  const { telegramId } = useAppStore();
   const router = useRouter();
   const [myDevices, setMyDevices] = useState<SkupkaRequest[]>([]);
   const [loading, setLoading] = useState(true);

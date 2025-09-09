@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
-import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useAppStore } from '@/stores/authStore';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useDevices, Device } from '@/hooks/useDevices';
@@ -28,6 +27,11 @@ export default function FormPage() {
     useEffect(() => {
         setCurrentStep('form');
     }, [setCurrentStep]);
+
+    // Загружаем модели при инициализации
+    useEffect(() => {
+        devices.loadModels();
+    }, [devices.loadModels]);
 
     // Сбрасываем все состояния при загрузке страницы (только если это новая заявка)
     useEffect(() => {

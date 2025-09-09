@@ -3,12 +3,12 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react'
 import { Page } from '@/components/Page';
-import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useDevices, Device } from '@/hooks/useDevices';
 import { Button } from '@/components/ui/button';
+import { useAppStore } from '@/stores/authStore';
 
 export default function DeviceConditionPage() {
-    const { modelname, setModel, telegramId, username, setPrice } = useStartForm();
+    const { modelname, setModel, telegramId, username, setPrice } = useAppStore();
     const router = useRouter();
     const devices = useDevices();
 
