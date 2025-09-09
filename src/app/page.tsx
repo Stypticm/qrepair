@@ -39,10 +39,16 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const router = useRouter();
 
   // ID админов для тестирования в браузере
   const testAdminIds = ['1', '296925626', '531360988'];
+
+  // Функция для добавления отладочной информации
+  const addDebugInfo = (message: string) => {
+    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
 
   // Предзагрузка изображений отключена на главной странице для стабильности
@@ -125,12 +131,12 @@ function HomeContent() {
           const telegramUserId = userData.id?.toString();
           const telegramUsername = userData.username;
           
-          console.log('🔍 Telegram WebApp userData:', userData);
-          console.log('🔍 telegramUserId:', telegramUserId);
-          console.log('🔍 telegramUsername:', telegramUsername);
+          addDebugInfo(`Telegram WebApp userData: ${JSON.stringify(userData)}`);
+          addDebugInfo(`telegramUserId: ${telegramUserId}`);
+          addDebugInfo(`telegramUsername: ${telegramUsername}`);
           
           if (telegramUserId) {
-            console.log('✅ Получен telegramId из Telegram WebApp:', telegramUserId);
+            addDebugInfo(`✅ Получен telegramId из Telegram WebApp: ${telegramUserId}`);
             setTelegramId(telegramUserId);
             
             // Проверяем, является ли пользователь мастером
@@ -148,18 +154,23 @@ function HomeContent() {
             }
           } else if (telegramUsername) {
             // Если нет ID, но есть username, пытаемся получить ID через API
-            console.log('🔍 Нет telegramId, но есть username, получаем ID через API:', telegramUsername);
+            addDebugInfo(`🔍 Нет telegramId, но есть username, получаем ID через API: ${telegramUsername}`);
             try {
+              addDebugInfo('🚀 Отправляем запрос к API для получения telegramId...');
               const response = await fetch('/api/admin/get-telegram-id', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: telegramUsername })
               });
               
+              addDebugInfo(`📡 Ответ от API: ${response.status} ${response.statusText}`);
+              
               if (response.ok) {
                 const data = await response.json();
+                addDebugInfo(`📦 Данные от API: ${JSON.stringify(data)}`);
+                
                 if (data.success && data.telegramId) {
-                  console.log('✅ Получен telegramId через API:', data.telegramId);
+                  addDebugInfo(`✅ Получен telegramId через API: ${data.telegramId}`);
                   setTelegramId(data.telegramId);
                   
                   // Проверяем, является ли пользователь мастером
@@ -173,11 +184,41 @@ function HomeContent() {
                   // Сохраняем в sessionStorage
                   sessionStorage.setItem('telegramId', data.telegramId.toString());
                   sessionStorage.setItem('telegramUsername', telegramUsername);
+                } else {
+                  addDebugInfo(`❌ API вернул неуспешный ответ: ${JSON.stringify(data)}`);
+                  // Fallback - используем username как ID
+                  addDebugInfo('🔄 Используем username как fallback ID');
+                  setTelegramId(telegramUsername);
+                  setRole('client', 0);
+                  sessionStorage.setItem('telegramId', telegramUsername);
+                  sessionStorage.setItem('telegramUsername', telegramUsername);
                 }
+              } else {
+                addDebugInfo(`❌ API вернул ошибку: ${response.status} ${response.statusText}`);
+                // Fallback - используем username как ID
+                addDebugInfo('🔄 Используем username как fallback ID');
+                setTelegramId(telegramUsername);
+                setRole('client', 0);
+                sessionStorage.setItem('telegramId', telegramUsername);
+                sessionStorage.setItem('telegramUsername', telegramUsername);
               }
             } catch (error) {
-              console.error('❌ Ошибка при получении telegramId через API:', error);
+              addDebugInfo(`❌ Ошибка при получении telegramId через API: ${error}`);
+              // Fallback - используем username как ID
+              addDebugInfo('🔄 Используем username как fallback ID после ошибки');
+              setTelegramId(telegramUsername);
+              setRole('client', 0);
+              sessionStorage.setItem('telegramId', telegramUsername);
+              sessionStorage.setItem('telegramUsername', telegramUsername);
             }
+          } else {
+            // Если нет ни ID, ни username, используем fallback
+            addDebugInfo('❌ Нет ни telegramId, ни username в Telegram WebApp');
+            addDebugInfo('🔄 Используем fallback ID для тестирования');
+            const fallbackId = '531360988'; // Ваш реальный ID
+            setTelegramId(fallbackId);
+            setRole('master', parseInt(fallbackId));
+            sessionStorage.setItem('telegramId', fallbackId);
           }
         }
       } else {
@@ -452,6 +493,23 @@ function HomeContent() {
                 >
                   Переключить ID админа: {testAdminIds[testAdminIndex]} (нажмите для смены)
                 </Button>
+              )}
+
+              {/* Отладочная информация */}
+              {debugInfo.length > 0 && (
+                <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Отладочная информация:</h3>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {debugInfo.map((info, index) => (
+                      <div key={index} className="text-xs text-gray-600 font-mono">
+                        {info}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    Текущий telegramId: {telegramId}
+                  </div>
+                </div>
               )}
               
               <Button

@@ -57,6 +57,58 @@ export default function DeviceInfoPage() {
         }
     }, []);
 
+    // Обработчик для прокрутки к полю ввода при появлении клавиатуры
+    useEffect(() => {
+        const handleFocus = () => {
+            if (inputRef.current) {
+                // Небольшая задержка для появления клавиатуры
+                setTimeout(() => {
+                    inputRef.current?.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 300);
+            }
+        };
+
+        const handleBlur = () => {
+            // Прокрутка вверх при скрытии клавиатуры
+            setTimeout(() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        };
+
+        // Обработчик изменения размера окна (для мобильных устройств)
+        const handleResize = () => {
+            if (inputRef.current && document.activeElement === inputRef.current) {
+                // Если поле в фокусе и изменился размер окна (клавиатура появилась/скрылась)
+                setTimeout(() => {
+                    inputRef.current?.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }, 100);
+            }
+        };
+
+        const input = inputRef.current;
+        if (input) {
+            input.addEventListener('focus', handleFocus);
+            input.addEventListener('blur', handleBlur);
+        }
+
+        // Добавляем обработчик изменения размера окна
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            if (input) {
+                input.removeEventListener('focus', handleFocus);
+                input.removeEventListener('blur', handleBlur);
+            }
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
     // Загружаем сохраненный серийный номер
     useEffect(() => {
         if (serialNumber) {
@@ -194,7 +246,7 @@ export default function DeviceInfoPage() {
 
     return (
         <Page back={true}>
-            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+            <div className="w-full min-h-[100dvh] bg-gradient-to-b from-white to-gray-50 flex flex-col">
                 {/* Прогресс-бар */}
                 <div className="pt-6 pb-0">
                     <ProgressBar
@@ -255,8 +307,9 @@ export default function DeviceInfoPage() {
                                                 value={manualSerialNumber}
                                                 onChange={(e) => handleInputChange(e.target.value.toUpperCase())}
                                                 placeholder="Введите серийный номер"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm scroll-to-input"
                                                 maxLength={12}
+                                                style={{ scrollMarginTop: '100px' }}
                                             />
                                         </div>
                                         

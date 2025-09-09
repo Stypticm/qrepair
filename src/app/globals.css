@@ -42,6 +42,7 @@
   html {
     height: 100%;
     overflow-x: hidden;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -127,6 +128,36 @@
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       background: var(--background);
+    }
+  }
+
+  /* Улучшения для мобильных устройств и клавиатуры */
+  @media (max-width: 768px) {
+    /* Плавная прокрутка для мобильных */
+    html {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Улучшение для полей ввода */
+    input:focus {
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+
+    /* Предотвращение зума при фокусе на iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="password"],
+    textarea {
+      font-size: 16px;
+    }
+
+    /* Улучшение прокрутки для полей ввода */
+    .scroll-to-input {
+      scroll-margin-top: 100px;
+      scroll-padding-top: 100px;
     }
   }
 

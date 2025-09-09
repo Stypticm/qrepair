@@ -410,7 +410,7 @@ const SubmitPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+            <div className="w-full min-h-[100dvh] bg-gradient-to-b from-white to-gray-50 flex flex-col">
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
                         {!dataLoaded ? (
