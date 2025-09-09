@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 
 import { motion } from 'framer-motion';
 import { getPictureUrl } from '@/core/lib/assets';
-import { useStartForm } from '@/components/StartFormContext/StartFormContext';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -23,10 +22,14 @@ import { useImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
 import { UXAnalyticsProvider, useUXAnalyticsContext } from '@/components/UXAnalyticsProvider';
 import { LoadingIndicator } from '@/components/ImagePreloader/LoadingIndicator';
 import { getHomePagePreloadImages } from '@/core/lib/imageUtils';
+import { useAppStore, isMaster, useUserData, useDeviceData, useConditions } from '@/stores/authStore';
 
 function HomeContent() {
-  const { telegramId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates, loadSavedData, modelname, deviceConditions, additionalConditions, imei, serialNumber } = useStartForm();
   const { trackButtonClick, trackError } = useUXAnalyticsContext();
+  const { setRole, userId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates } = useAppStore();
+  const { telegramId } = useUserData();
+  const { modelname, imei, serialNumber } = useDeviceData();
+  const { deviceConditions, additionalConditions } = useConditions();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
@@ -51,6 +54,9 @@ function HomeContent() {
 
     if (telegramId === '1' || telegramId === '296925626' || telegramId === '531360988') {
       setIsAdmin(true);
+      setRole('master', parseInt(telegramId));
+    } else {
+      setRole('client', parseInt(telegramId || '0'));
     }
   }, [telegramId, isFullscreen, forceFullscreen, isInTelegram]);
 
@@ -304,6 +310,17 @@ function HomeContent() {
               >
                 Оценить смартфон
               </Button>
+              
+              {isMaster(userId) && (
+                <Button
+                  variant="outline"
+                  className="w-full h-14 bg-teal-500 hover:bg-teal-600 text-white font-medium text-base rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-200"
+                  onClick={() => router.push('/master')}
+                >
+                  Для мастеров
+                </Button>
+              )}
+              
               <Button
                 variant="outline"
                 className="w-full h-14 bg-white hover:bg-gray-50 text-gray-700 font-medium text-base rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"

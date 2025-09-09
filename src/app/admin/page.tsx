@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Bot, BarChart3, Settings, Users, Database } from 'lucide-react';
-import { AdminAgentsWidget } from '@/components/AdminAgentsWidget';
-import VoiceAgentWidget from '@/components/VoiceAgentWidget';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -20,13 +18,6 @@ export default function AdminPage() {
       description: 'Общая статистика и быстрый доступ',
       icon: BarChart3,
       color: 'bg-blue-500'
-    },
-    {
-      id: 'agents',
-      title: 'ИИ Агенты',
-      description: 'Тестировщик, UX аналитика, мониторинг',
-      icon: Bot,
-      color: 'bg-green-500'
     },
     {
       id: 'users',
@@ -52,9 +43,7 @@ export default function AdminPage() {
   ];
 
   const handleSectionClick = (sectionId: string) => {
-    if (sectionId === 'agents') {
-      router.push('/admin/agents');
-    } else if (sectionId === 'overview') {
+    if (sectionId === 'overview') {
       setActiveTab('overview');
     } else {
       setActiveTab(sectionId);
@@ -190,8 +179,6 @@ export default function AdminPage() {
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">ИИ Агенты</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <AdminAgentsWidget />
-                <VoiceAgentWidget />
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -228,14 +215,6 @@ export default function AdminPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <Button 
-                      onClick={() => router.push('/admin/agents')}
-                      className="w-full justify-start"
-                      variant="outline"
-                    >
-                      <Bot className="w-4 h-4 mr-2" />
-                      Управление агентами
-                    </Button>
                     <Button 
                       onClick={() => window.location.reload()}
                       className="w-full justify-start"

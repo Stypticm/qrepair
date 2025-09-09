@@ -55,9 +55,10 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    let skupkaId = null
     if (updatedSkupka.count === 0) {
       // Если запись не найдена, создаем новую
-      await prisma.skupka.create({
+      const newSkupka = await prisma.skupka.create({
         data: {
           telegramId: telegramId,
           username: telegramId,
@@ -78,10 +79,27 @@ export async function POST(request: NextRequest) {
           photoUrls: [],
         },
       })
+      skupkaId = newSkupka.id
+    } else {
+      // Получаем ID обновленной записи
+      const updatedRecord = await prisma.skupka.findFirst({
+        where: {
+          telegramId: telegramId,
+          status: 'submitted',
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      })
+      skupkaId = updatedRecord?.id
     }
 
     // Формируем сообщение для Telegram
+    const requestId = skupkaId
+      ? `#${skupkaId.slice(-4)}`
+      : '#0000'
     let telegramMessage = `📱 Новая заявка на выкуп устройства\n\n`
+    telegramMessage += `🆔 ID заявки: ${requestId}\n`
     telegramMessage += `👤 Пользователь: ${userTelegramId}\n`
     telegramMessage += `📱 Устройство: ${modelname}\n`
     telegramMessage += `💰 Предварительная цена: ${price?.toLocaleString()} ₽\n\n`

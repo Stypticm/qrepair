@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+import { useAppStore, useUserData, useDeviceData, useNavigation } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
@@ -10,7 +9,8 @@ import { motion } from 'framer-motion';
 
 const PickupPointsPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, price } = useStartForm();
+    const { telegramId } = useUserData();
+    const { modelname, price } = useDeviceData();
     const { setCurrentStep } = useNavigation();
     const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
@@ -197,10 +197,10 @@ const PickupPointsPage = () => {
                             transition={{ duration: 0.3 }}
                             className="text-center"
                         >
-                                                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                                                    <h2 className="text-apple-title text-gray-900 mb-2 font-sf-pro">
                             Наши точки приема
                         </h2>
-                        <p className="text-gray-600">
+                        <p className="text-apple-body text-gray-600 font-sf-pro">
                             Выберите удобную для вас точку или измените способ доставки
                         </p>
                         </motion.div>
@@ -210,12 +210,12 @@ const PickupPointsPage = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.1 }}
-                            className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
+                            className="bg-white rounded-apple-xl p-4 border border-gray-200 shadow-sm backdrop-blur-apple"
                         >
                             <div className="text-center space-y-2">
-                                <p className="text-sm text-gray-600">Ваше устройство:</p>
-                                <p className="font-semibold text-gray-900">{getFullModelName()}</p>
-                                <p className="text-sm text-gray-600">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
+                                <p className="text-apple-body text-gray-600 font-sf-pro">Ваше устройство:</p>
+                                <p className="font-semibold text-gray-900 font-sf-pro">{getFullModelName()}</p>
+                                <p className="text-apple-body text-gray-600 font-sf-pro">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
                             </div>
                         </motion.div>
 
@@ -233,9 +233,9 @@ const PickupPointsPage = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3, delay: 0.3 + index * 0.1 }}
                                     onClick={() => handlePointSelect(point.id)}
-                                    className={`p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
+                                    className={`p-4 rounded-apple-xl border-2 transition-all duration-200 cursor-pointer ${
                                         selectedPoint === point.id 
-                                            ? 'border-[#2dc2c6] bg-[#2dc2c6]/5' 
+                                            ? 'border-teal-500 bg-teal-50' 
                                             : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
                                     }`}
                                 >
@@ -245,19 +245,19 @@ const PickupPointsPage = () => {
                                                 <span className="text-lg">📍</span>
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="font-semibold text-gray-900 text-lg">{point.name}</h3>
-                                                <p className="text-sm text-gray-600">{point.address}</p>
+                                                <h3 className="font-semibold text-gray-900 text-apple-title font-sf-pro">{point.name}</h3>
+                                                <p className="text-apple-body text-gray-600 font-sf-pro">{point.address}</p>
                                             </div>
                                         </div>
                                         
                                         <div className="space-y-1">
                                             <div className="flex items-center space-x-2">
                                                 <span className="text-sm">🕒</span>
-                                                <span className="text-sm text-gray-600">Режим работы: {point.workingHours}</span>
+                                                <span className="text-apple-body text-gray-600 font-sf-pro">Режим работы: {point.workingHours}</span>
                                             </div>
                                             <div className="flex items-center space-x-2">
                                                 <span className="text-sm">ℹ️</span>
-                                                <span className="text-sm text-gray-600">{point.description}</span>
+                                                <span className="text-apple-body text-gray-600 font-sf-pro">{point.description}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -282,7 +282,7 @@ const PickupPointsPage = () => {
                                     router.push('/request/courier-booking');
                                 }}
                                 variant="outline"
-                                className="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
+                                className="w-full bg-white hover:bg-gray-50 text-gray-700 font-sf-pro text-apple-button py-3 rounded-apple-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
                             >
                                 Вызвать мастера
                             </Button>
@@ -292,7 +292,7 @@ const PickupPointsPage = () => {
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={submitting || buttonsDisabled}
-                                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg shadow-md disabled:opacity-50"
+                                    className="w-full bg-teal-500 hover:bg-teal-600 text-white font-sf-pro text-apple-button py-4 rounded-apple-xl transition-all duration-200 hover:shadow-lg shadow-md disabled:opacity-50"
                                 >
                                     {submitting ? 'Сохраняем...' : 'Выбрать эту точку'}
                                 </Button>

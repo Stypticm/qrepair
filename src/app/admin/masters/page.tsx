@@ -17,21 +17,33 @@ interface Master {
   username: string
   name: string
   isActive: boolean
+  pointId?: number
+  point?: {
+    id: number
+    address: string
+  }
   createdAt: string
+}
+
+interface Point {
+  id: number
+  address: string
 }
 
 export default function MastersPage() {
   const router = useRouter()
   const [masters, setMasters] = useState<Master[]>([])
+  const [points, setPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [newMaster, setNewMaster] = useState({
     telegramId: '',
     username: '',
-    name: ''
+    name: '',
+    pointId: ''
   })
 
-  // Загрузка мастеров
+  // Загрузка мастеров и точек
   const loadMasters = async () => {
     try {
       const response = await fetch('/api/admin/masters')
@@ -47,8 +59,22 @@ export default function MastersPage() {
     }
   }
 
+  const loadPoints = async () => {
+    try {
+      const response = await fetch('/api/admin/points')
+      if (response.ok) {
+        const data = await response.json()
+        setPoints(data.points)
+      }
+    } catch (error) {
+      console.error('Error loading points:', error)
+      toast.error('Ошибка загрузки точек')
+    }
+  }
+
   useEffect(() => {
     loadMasters()
+    loadPoints()
   }, [])
 
   // Добавление мастера
@@ -64,12 +90,15 @@ export default function MastersPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newMaster),
+        body: JSON.stringify({
+          ...newMaster,
+          pointId: newMaster.pointId ? parseInt(newMaster.pointId) : null
+        }),
       })
 
       if (response.ok) {
         toast.success('Мастер добавлен')
-        setNewMaster({ telegramId: '', username: '', name: '' })
+        setNewMaster({ telegramId: '', username: '', name: '', pointId: '' })
         setIsAddDialogOpen(false)
         loadMasters()
       } else {
@@ -178,6 +207,22 @@ export default function MastersPage() {
                           className="text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-lg"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="pointId" className="text-gray-700">Точка привязки</Label>
+                        <select
+                          id="pointId"
+                          value={newMaster.pointId}
+                          onChange={(e) => setNewMaster({ ...newMaster, pointId: e.target.value })}
+                          className="w-full mt-1 px-3 py-2 text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        >
+                          <option value="">Выберите точку</option>
+                          {points.map((point) => (
+                            <option key={point.id} value={point.id}>
+                              {point.address}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="flex justify-end space-x-2">
                         <Button
                           variant="outline"
@@ -223,6 +268,12 @@ export default function MastersPage() {
                         <div>
                           <Label className="text-sm font-medium text-gray-600">Telegram ID:</Label>
                           <div className="text-gray-900 font-mono">{master.telegramId}</div>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Точка:</Label>
+                          <div className="text-gray-900">
+                            {master.point ? master.point.address : 'Не привязан'}
+                          </div>
                         </div>
                         <div>
                           <Label className="text-sm font-medium text-gray-600">Добавлен:</Label>

@@ -63,11 +63,19 @@ model Master {
   username   String   @unique
   name       String?
   isActive   Boolean  @default(true)
+  pointId    Int?     // Привязка к точке
+  point      Point?   @relation(fields: [pointId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   // Связи
   inspections DeviceInspection[]
+}
+
+model Point {
+  id        Int      @id @default(autoincrement())
+  address   String   @unique
+  masters   Master[]
 }
 
 model DeviceInspection {
@@ -124,63 +132,3 @@ enum SkupkaStatus {
   completed
 }
 
-enum AgentTestResultStatus {
-  passed
-  failed
-  running
-}
-
-enum AgentRecommendationStatus {
-  pending
-  completed
-  rejected
-}
-
-model AgentTestResult {
-  id        String                @id @default(cuid())
-  agentType String // 'testing', 'ux_analytics', 'performance', 'error_monitoring'
-  testName  String // Название теста
-  status    AgentTestResultStatus // 'passed', 'failed', 'running'
-  result    Json? // Результаты теста
-  error     String? // Ошибка если есть
-  duration  Int? // Время выполнения в мс
-  createdAt DateTime              @default(now())
-
-  @@index([agentType])
-  @@index([status])
-  @@index([createdAt])
-}
-
-model AgentAnalytics {
-  id        String   @id @default(cuid())
-  agentType String // 'ux_analytics', 'performance'
-  metric    String // 'page_load_time', 'user_drop_off', 'error_rate'
-  value     Float // Значение метрики
-  page      String? // Страница если применимо
-  metadata  Json? // Дополнительные данные
-  createdAt DateTime @default(now())
-
-  @@index([agentType])
-  @@index([metric])
-  @@index([createdAt])
-}
-
-model AgentRecommendation {
-  id          String                    @id @default(cuid())
-  agentType   String
-  priority    String
-  category    String
-  title       String
-  description String
-  solution    String
-  status      AgentRecommendationStatus @default(pending)
-  page        String?
-  metadata    Json?
-  createdAt   DateTime                  @default(now())
-  updatedAt   DateTime                  @updatedAt
-
-  @@index([agentType])
-  @@index([priority])
-  @@index([status])
-  @@index([createdAt])
-}

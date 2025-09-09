@@ -4,7 +4,7 @@ import prisma from '@/core/lib/prisma'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { telegramId, username, name } = body
+    const { telegramId, username, name, pointId } = body
 
     if (!telegramId || !username) {
       return NextResponse.json(
@@ -37,6 +37,7 @@ export async function POST(req: Request) {
         username,
         name: name || username,
         isActive: true,
+        pointId: pointId ? parseInt(pointId) : null,
       },
     })
 
