@@ -118,8 +118,34 @@ function HomeContent() {
       setIsInTelegram(inTelegram);
       setIsLoading(false);
       
-      // Если мы не в Telegram, принудительно устанавливаем false
-      if (!inTelegram) {
+      if (inTelegram) {
+        // Если мы в Telegram, получаем данные пользователя
+        const userData = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+        if (userData) {
+          const telegramUserId = userData.id?.toString();
+          const telegramUsername = userData.username;
+          
+          if (telegramUserId) {
+            console.log('✅ Получен telegramId из Telegram WebApp:', telegramUserId);
+            setTelegramId(telegramUserId);
+            
+            // Проверяем, является ли пользователь мастером
+            const isMasterUser = testAdminIds.includes(telegramUserId);
+            if (isMasterUser) {
+              setRole('master', parseInt(telegramUserId));
+            } else {
+              setRole('client', parseInt(telegramUserId));
+            }
+            
+            // Сохраняем в sessionStorage
+            sessionStorage.setItem('telegramId', telegramUserId);
+            if (telegramUsername) {
+              sessionStorage.setItem('telegramUsername', telegramUsername);
+            }
+          }
+        }
+      } else {
+        // Если мы не в Telegram, принудительно устанавливаем false
         setIsInTelegram(false);
         // Устанавливаем тестовый ID для браузера
         const testId = testAdminIds[testAdminIndex];

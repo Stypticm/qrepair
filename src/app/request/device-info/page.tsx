@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image';
 import { Page } from '@/components/Page';
 import { useAppStore } from '@/stores/authStore';
@@ -29,6 +29,9 @@ export default function DeviceInfoPage() {
     const [isValid, setIsValid] = useState(false);
     const [error, setError] = useState('');
     
+    // Ref для автофокуса
+    const inputRef = useRef<HTMLInputElement>(null);
+    
     // Состояние для приветственного экрана
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     
@@ -43,6 +46,16 @@ export default function DeviceInfoPage() {
     useEffect(() => {
         setCurrentStep('device-info');
     }, [setCurrentStep]);
+
+    // Автофокус на поле ввода
+    useEffect(() => {
+        if (inputRef.current) {
+            const timer = setTimeout(() => {
+                inputRef.current?.focus();
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, []);
 
     // Загружаем сохраненный серийный номер
     useEffect(() => {
@@ -237,11 +250,7 @@ export default function DeviceInfoPage() {
                                                 Серийный номер
                                             </label>
                                             <input
-                                                ref={(input) => {
-                                                    if (input) {
-                                                        setTimeout(() => input.focus(), 100);
-                                                    }
-                                                }}
+                                                ref={inputRef}
                                                 type="text"
                                                 value={manualSerialNumber}
                                                 onChange={(e) => handleInputChange(e.target.value.toUpperCase())}
