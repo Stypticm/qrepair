@@ -395,7 +395,7 @@ const FinalPage = () => {
     return (
         <Page back={true}>
             <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                <div className="flex-1 p-3 pt-2 flex flex-col">
+                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4">
                         {/* Заголовок */}
                         <motion.div
@@ -457,13 +457,16 @@ const FinalPage = () => {
                                         }
                                     </p>
 
-                                    <input
-                                        type="text"
-                                        value={userTelegramId}
-                                        onChange={(e) => setUserTelegramId(e.target.value)}
-                                        placeholder="Telegram ID (например: 123456789)"
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm"
-                                    />
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">@</span>
+                                        <input
+                                            type="text"
+                                            value={userTelegramId}
+                                            onChange={(e) => setUserTelegramId(e.target.value)}
+                                            placeholder="username или 123456789"
+                                            className="w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm"
+                                        />
+                                    </div>
 
                                     {telegramUsername && userTelegramId !== telegramUsername && (
                                         <Button

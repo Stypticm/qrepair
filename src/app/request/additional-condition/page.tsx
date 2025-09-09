@@ -619,7 +619,7 @@ export default function AdditionalConditionPage() {
                     />
                 </div>
 
-                <div className="flex-1 p-3 pt-2 flex flex-col">
+                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
 
 

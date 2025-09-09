@@ -237,6 +237,11 @@ export default function DeviceInfoPage() {
                                                 Серийный номер
                                             </label>
                                             <input
+                                                ref={(input) => {
+                                                    if (input) {
+                                                        setTimeout(() => input.focus(), 100);
+                                                    }
+                                                }}
                                                 type="text"
                                                 value={manualSerialNumber}
                                                 onChange={(e) => handleInputChange(e.target.value.toUpperCase())}

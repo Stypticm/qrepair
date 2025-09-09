@@ -92,7 +92,9 @@ function HomeContent() {
       const savedTelegramId = sessionStorage.getItem('telegramId');
       if (savedTelegramId) {
         setTelegramId(savedTelegramId);
-        if (savedTelegramId === '1' || savedTelegramId === '296925626' || savedTelegramId === '531360988') {
+        // Проверяем, является ли пользователь мастером по ID
+        const isMasterUser = testAdminIds.includes(savedTelegramId);
+        if (isMasterUser) {
           setRole('master', parseInt(savedTelegramId));
         } else {
           setRole('client', parseInt(savedTelegramId));
