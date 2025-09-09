@@ -17,6 +17,9 @@ export function Page({ children, back = true }: PropsWithChildren<{
   const { safeAreaInsets, cssVars } = useSafeArea();
   const { goToPreviousStep, currentStep } = useAppStore();
   const canGoBack = currentStep !== null;
+  
+  // Отладочная информация
+  console.log('Page component - currentStep:', currentStep, 'canGoBack:', canGoBack);
 
   useEffect(() => {
     try {

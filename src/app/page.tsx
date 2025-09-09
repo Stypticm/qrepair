@@ -29,6 +29,7 @@ function HomeContent() {
     setAdditionalConditions, 
     resetAllStates, 
     setTelegramId,
+    setCurrentStep,
     telegramId,
     modelname,
     imei,
@@ -92,7 +93,7 @@ function HomeContent() {
     }
   }, [isInTelegram, setTelegramId, setRole, testAdminIndex]);
 
-  // Дополнительный useEffect для восстановления telegramId из sessionStorage
+  // Дополнительный useEffect для восстановления telegramId и currentStep из sessionStorage
   useEffect(() => {
     if (typeof window !== 'undefined' && !telegramId) {
       const savedTelegramId = sessionStorage.getItem('telegramId');
@@ -107,7 +108,13 @@ function HomeContent() {
         }
       }
     }
-  }, [telegramId, setTelegramId, setRole]);
+    
+    // Восстанавливаем текущий шаг из sessionStorage
+    const savedStep = sessionStorage.getItem('currentStep');
+    if (savedStep) {
+      setCurrentStep(savedStep);
+    }
+  }, [telegramId, setTelegramId, setRole, setCurrentStep]);
 
   // Проверяем сохраненные данные и перенаправляем на нужный шаг
   useEffect(() => {

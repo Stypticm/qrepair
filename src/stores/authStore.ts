@@ -217,22 +217,35 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   goToPreviousStep: () => {
     const { currentStep } = get()
-    if (!currentStep) return
+    console.log(
+      'goToPreviousStep called - currentStep:',
+      currentStep
+    )
+    if (!currentStep) {
+      console.log('No currentStep, cannot go back')
+      return
+    }
 
     const currentIndex = stepOrder.indexOf(currentStep)
+    console.log(
+      'Current index:',
+      currentIndex,
+      'Step order:',
+      stepOrder
+    )
     if (currentIndex > 0) {
       const previousStep = stepOrder[currentIndex - 1]
+      console.log('Going to previous step:', previousStep)
       set({ currentStep: previousStep })
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('currentStep', previousStep)
-        // Выполняем навигацию через history API
-        window.history.pushState(
-          null,
-          '',
-          `/request/${previousStep}`
-        )
-        // Диспатчим событие для обновления компонентов
-        window.dispatchEvent(new PopStateEvent('popstate'))
+        // Используем window.location для навигации
+        window.location.href = `/request/${previousStep}`
+      }
+    } else {
+      console.log('Already at first step, going to home')
+      if (typeof window !== 'undefined') {
+        window.location.href = '/'
       }
     }
   },
