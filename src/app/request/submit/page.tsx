@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 
 const SubmitPage = () => {
     const router = useRouter();
@@ -192,7 +194,17 @@ const SubmitPage = () => {
         if (hasBasicData && (hasDeviceData || hasAdditionalData)) {
             setDataLoaded(true);
         }
-    }, [modelname, telegramId, deviceConditions, additionalConditions]);
+
+        // Добавляем таймаут для предотвращения зависания
+        const timeout = setTimeout(() => {
+            if (!dataLoaded) {
+                console.log('⚠️ Submit page - таймаут загрузки данных, принудительно показываем форму');
+                setDataLoaded(true);
+            }
+        }, 5000); // 5 секунд
+
+        return () => clearTimeout(timeout);
+    }, [modelname, telegramId, deviceConditions, additionalConditions, dataLoaded]);
 
     const handleReset = async () => {
         try {
@@ -403,7 +415,13 @@ const SubmitPage = () => {
                     <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
                         {!dataLoaded ? (
                             <div className="w-full max-w-md text-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
+                                <Image
+                                    src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+                                    alt="Загрузка данных"
+                                    width={48}
+                                    height={48}
+                                    className="object-contain mx-auto mb-4"
+                                />
                                 <p className="text-gray-600">Загружаем данные заявки...</p>
                             </div>
                         ) : !modelname ? (

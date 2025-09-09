@@ -13,7 +13,9 @@ import { Button } from '@/components/ui/button';
 import { WelcomeModal } from '@/components/ui/welcome-modal';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { Tooltip } from '@/components/ui/tooltip';
+import { getPictureUrl } from '@/core/lib/assets';
 import { motion, LazyMotion, domAnimation } from 'framer-motion';
+import Image from 'next/image';
 
 export default function FormPage() {
     const { modelname, setModel, telegramId, username, setPrice, setCurrentStep } = useAppStore();
@@ -30,8 +32,15 @@ export default function FormPage() {
 
     // Загружаем модели при инициализации
     useEffect(() => {
+        console.log('FormPage: Загружаем модели...');
         devices.loadModels();
     }, [devices.loadModels]);
+
+    // Отладочная информация о загруженных моделях
+    useEffect(() => {
+        console.log('FormPage: Модели загружены:', devices.models);
+        console.log('FormPage: Состояние загрузки:', devices.loading);
+    }, [devices.models, devices.loading]);
 
     // Сбрасываем все состояния при загрузке страницы (только если это новая заявка)
     useEffect(() => {
@@ -120,7 +129,7 @@ export default function FormPage() {
 
     // Состояние для режима редактирования
     const [isEditing, setIsEditing] = useState(false);
-    
+
     // Состояние для определения, все ли выбрано
     const [isAllSelected, setIsAllSelected] = useState(false);
 
@@ -132,34 +141,34 @@ export default function FormPage() {
     // Функция для обновления текущего выбора
     const updateCurrentSelection = useCallback((options: typeof selectedOptions) => {
         let selection = '';
-        
+
         if (options.model) {
             selection = `iPhone ${options.model}`;
         }
-        
+
         if (options.variant !== null && options.variant !== undefined && options.variant !== '') {
             // Показываем вариант только если он не пустой
             selection += ` ${getVariantLabel(options.variant)}`;
         }
-        
+
         if (options.storage) {
             selection += ` ${options.storage}`;
         }
-        
+
         if (options.color) {
             selection += ` ${getColorLabel(options.color)}`;
         }
-        
+
         if (options.simType) {
             selection += ` ${options.simType}`;
         }
-        
+
         if (options.country) {
             selection += ` ${options.country.split(' ')[0]}`;
         }
-        
+
         setCurrentSelection(selection);
-        
+
         // Проверяем, все ли выбрано
         const allSelected = checkIfAllSelected(options);
         setIsAllSelected(!!allSelected);
@@ -242,7 +251,7 @@ export default function FormPage() {
 
         // Сбрасываем режим редактирования при новом выборе
         setIsEditing(false);
-        
+
         // Сбрасываем флаг "все выбрано" при изменении
         setIsAllSelected(false);
 
@@ -293,14 +302,14 @@ export default function FormPage() {
             selectedOptions.color !== '' &&
             selectedOptions.simType !== '' &&
             selectedOptions.country !== '';
-        
+
         return allSelected;
     }, [selectedOptions]);
 
     // Загружаем устройство и цену когда все выбрано
     useEffect(() => {
         const allSelected = isAllOptionsSelected();
-        
+
         if (allSelected) {
             devices.loadDevice({
                 model: selectedOptions.model,
@@ -346,13 +355,13 @@ export default function FormPage() {
 
             setModel(fullName);
             setPrice(device.basePrice);
-            
+
             // Сохраняем basePrice в sessionStorage для condition страницы
             sessionStorage.setItem('basePrice', device.basePrice.toString());
-            
+
             // Сохраняем модель в БД
             saveModelToDB(fullName);
-            
+
             // Показываем диалог с итоговой информацией когда все выбрано
             setShowSummaryDialog(true);
         }
@@ -409,25 +418,25 @@ export default function FormPage() {
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('phoneSelection');
 
-                                if (savedInSession) {
-                        try {
-                            const parsed = JSON.parse(savedInSession);
-                            // Обрабатываем случай, когда variant был пустой строкой
-                            if (parsed.variant === '') {
-                                parsed.variant = null;
-                            }
-                            setSelectedOptions(parsed);
-                            // Обновляем текущий выбор
-                            updateCurrentSelection(parsed);
-                            // Проверяем, есть ли уже выбранные элементы (режим редактирования)
-                            const hasSelectedItems = parsed.model || parsed.variant || parsed.storage || parsed.color || parsed.simType || parsed.country;
-                            if (hasSelectedItems) {
-                                setIsEditing(true);
-                                // Проверяем, все ли выбрано
-                                const allSelected = checkIfAllSelected(parsed);
-                                setIsAllSelected(!!allSelected);
-                            }
-                            return; // Не загружаем из CloudStorage, если есть в sessionStorage
+            if (savedInSession) {
+                try {
+                    const parsed = JSON.parse(savedInSession);
+                    // Обрабатываем случай, когда variant был пустой строкой
+                    if (parsed.variant === '') {
+                        parsed.variant = null;
+                    }
+                    setSelectedOptions(parsed);
+                    // Обновляем текущий выбор
+                    updateCurrentSelection(parsed);
+                    // Проверяем, есть ли уже выбранные элементы (режим редактирования)
+                    const hasSelectedItems = parsed.model || parsed.variant || parsed.storage || parsed.color || parsed.simType || parsed.country;
+                    if (hasSelectedItems) {
+                        setIsEditing(true);
+                        // Проверяем, все ли выбрано
+                        const allSelected = checkIfAllSelected(parsed);
+                        setIsAllSelected(!!allSelected);
+                    }
+                    return; // Не загружаем из CloudStorage, если есть в sessionStorage
                 } catch (e) {
                     sessionStorage.removeItem('phoneSelection'); // Очищаем поврежденные данные
                 }
@@ -487,7 +496,7 @@ export default function FormPage() {
     // Автоматически открываем диалог когда все поля заполнены
     useEffect(() => {
         const allSelected = isAllOptionsSelected();
-        
+
         if (allSelected && devices.selectedDevice) {
             // Небольшая задержка для лучшего UX
             setTimeout(() => {
@@ -598,7 +607,7 @@ export default function FormPage() {
     // Функция для форматирования вариантов с заглавной буквы
     const getVariantLabel = (variant: string) => {
         if (!variant) return '';
-        
+
         const variantMap: { [key: string]: string } = {
             'R': 'R',
             'S': 'S',
@@ -609,7 +618,7 @@ export default function FormPage() {
             'Plus': 'Plus',
             'se': 'SE'
         };
-        
+
         return variantMap[variant] || variant;
     };
 
@@ -645,7 +654,7 @@ export default function FormPage() {
                     console.error('Ошибка обновления currentStep:', error);
                 }
             }
-            
+
             // Переходим на страницу выбора состояния
             router.push('/request/condition');
         }
@@ -654,296 +663,305 @@ export default function FormPage() {
     return (
         <LazyMotion features={domAnimation}>
             <Page back={true}>
-            <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                {/* Прогресс-бар */}
-                <div className="pt-6 pb-1">
-                    <ProgressBar
-                        currentStep={getCurrentStep()}
-                        totalSteps={5}
-                        steps={steps}
-                    />
-                </div>
+                <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                    {/* Прогресс-бар */}
+                    <div className="pt-6 pb-1">
+                        <ProgressBar
+                            currentStep={getCurrentStep()}
+                            totalSteps={5}
+                            steps={steps}
+                        />
+                    </div>
 
-                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
+                    <div className="flex-1 p-3 pt-2 flex items-center justify-center">
+                        <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
 
 
 
-                        {/* Секция выбора модели */}
-                        {true && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
-                            >
-                                <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Модель</h3>
-                                <div className="grid grid-cols-4 gap-1">
-                                    {devices.models.map((model: string) => (
-                                        <motion.div
-                                            key={model}
-                                            whileHover={{ scale: 1.01 }}
-                                            whileTap={{ scale: 0.99 }}
-                                            transition={{ duration: 0.15 }}
-                                        >
-                                                                                    <Button
-                                            onClick={() => handleOptionSelect('model', model)}
-                                            className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${
-                                                selectedOptions.model === model
-                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                            }`}
-                                        >
-                                            {selectedOptions.model === model && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                            {model}
-                                        </Button>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Секция выбора варианта */}
-                        {selectedOptions.model && devices.variants.length > 0 && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
-                            >
-                                <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Вариант</h3>
-                                <div className="grid grid-cols-3 gap-1">
-                                    {devices.variants.map((variant: string) => (
-                                        <Button
-                                            key={variant}
-                                            onClick={() => handleOptionSelect('variant', variant)}
-                                            className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${
-                                                selectedOptions.variant === variant
-                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                            }`}
-                                        >
-                                            {selectedOptions.variant === variant && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                            {variant === '' ? '' : getVariantLabel(variant)}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Секция выбора объема памяти */}
-                        {selectedOptions.model && devices.storages.length > 0 && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
-                            >
-                                <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Объем памяти</h3>
-                                <div className="grid grid-cols-3 gap-1 max-w-xs mx-auto">
-                                    {devices.storages.slice(0, 3).map((storage: string) => (
-                                        <Button
-                                            key={storage}
-                                            onClick={() => handleOptionSelect('storage', storage)}
-                                            className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${
-                                                selectedOptions.storage === storage
-                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                            }`}
-                                        >
-                                            {selectedOptions.storage === storage && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                            {storage}
-                                        </Button>
-                                    ))}
-                                </div>
-                                <div className="grid grid-cols-2 gap-1 max-w-xs mx-auto mt-1">
-                                    {devices.storages.slice(3).map((storage: string) => (
-                                        <Button
-                                            key={storage}
-                                            onClick={() => handleOptionSelect('storage', storage)}
-                                            className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${
-                                                selectedOptions.storage === storage
-                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                            }`}
-                                        >
-                                            {selectedOptions.storage === storage && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                            {storage}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Секция выбора цвета */}
-                        {selectedOptions.model && devices.colors.length > 0 && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
-                            >
-                                <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Цвет</h3>
-                                <div className="flex flex-row justify-around gap-2">
-                                    {devices.colors.map((color: string) => (
-                                        <Button
-                                            key={color}
-                                            onClick={() => handleOptionSelect('color', color)}
-                                            className={`h-8 w-8 rounded-full border-2 transition-all duration-200 relative group flex items-center justify-between p-0 ${
-                                                selectedOptions.color === color
-                                                    ? 'border-[#2dc2c6] ring-2 ring-[#2dc2c6]/30 shadow-lg'
-                                                    : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                            style={{
-                                                backgroundColor: getColorStyle(color),
-                                                opacity: !devices.colors.includes(color) ? 0.3 : 1
-                                            }}
-                                            title={getColorLabel(color)}
-                                        >
-                                            {selectedOptions.color === color && (
-                                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                                                {getColorLabel(color)}
-                                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-                                            </div>
-                                        </Button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Секция выбора типа SIM */}
-                        {selectedOptions.model && devices.simTypes.length > 0 && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
-                            >
-                                <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Тип SIM</h3>
-                                <div className="grid grid-cols-2 gap-1">
-                                    {devices.simTypes.map((simType: string) => (
-                                        <Button
-                                            key={simType}
-                                            onClick={() => handleOptionSelect('simType', simType)}
-                                            className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center relative ${
-                                                selectedOptions.simType === simType
-                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm'
-                                            }`}
-                                        >
-                                            {selectedOptions.simType === simType && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                            {simType}
-                                        </Button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Секция выбора страны производителя */}
-                        {selectedOptions.model && devices.countries.length > 0 && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
-                            >
-                                <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Страна производитель</h3>
-                                <div className="grid grid-cols-2 gap-1">
-                                    {devices.countries.map((country: string) => (
-                                        <Button
-                                            key={country}
-                                            onClick={() => handleOptionSelect('country', country)}
-                                            className={`w-full h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center relative ${
-                                                selectedOptions.country === country
-                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                            }`}
-                                        >
-                                            {selectedOptions.country === country && (
-                                                <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                    <span className="text-white text-xs font-bold">✓</span>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center justify-center">
-                                                <span className="text-lg">{country.split(' ')[1]}</span>
-                                            </div>
-                                        </Button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {/* Диалоговое окно с итоговой информацией */}
-                        <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
-                            <DialogContent
-                                className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
-                                onClick={handleContinueToNext}
-                                showCloseButton={false}
-                            >
-                                <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
-                                    📱 Ваша полная конфигурация
-                                </DialogTitle>
-                                {devices.selectedDevice && (
-                                    <>
-                                        <div className="text-center space-y-4">
-                                            {/* Полная модель */}
-                                            <div className="bg-[#2dc2c6]/10 p-4 rounded-xl border border-[#2dc2c6]">
-                                                <p className="text-lg font-semibold text-gray-900 break-words leading-tight">
-                                                    iPhone {devices.selectedDevice.model}
-                                                    {devices.selectedDevice.variant ? ` ${getVariantLabel(devices.selectedDevice.variant)}` : ''}
-                                                    {devices.selectedDevice.storage ? ` ${devices.selectedDevice.storage}` : ''}
-                                                    {devices.selectedDevice.color ? ` ${getColorLabel(devices.selectedDevice.color)}` : ''}
-                                                    {devices.selectedDevice.simType ? ` ${devices.selectedDevice.simType}` : ''}
-                                                    {devices.selectedDevice.country ? ` ${devices.selectedDevice.country.split(' ')[0]}` : ''}
-                                                </p>
-                                            </div>
+                            {/* Секция выбора модели */}
+                            {true && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
+                                >
+                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Модель</h3>
+                                    {devices.loading.models ? (
+                                        <div className="flex justify-center items-center h-20">
+                                            <Image
+                                                src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+                                                alt="Загрузка моделей"
+                                                width={48}
+                                                height={48}
+                                                className="object-contain"
+                                            />
                                         </div>
-                                        <p className="text-center text-sm text-gray-600 mt-4">
-                                            👆 Нажмите на окно для перехода к следующему шагу
-                                        </p>
-                                        <p className="text-center text-sm text-gray-600 mt-1">
-                                            ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
-                                        </p>
-                                    </>
-                                )}
-                            </DialogContent>
-                        </Dialog>
+                                    ) : devices.models.length === 0 ? (
+                                        <div className="text-center text-gray-500 py-4">
+                                            Модели не загружены
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-4 gap-1">
+                                            {devices.models.map((model: string) => (
+                                                <motion.div
+                                                    key={model}
+                                                    whileHover={{ scale: 1.01 }}
+                                                    whileTap={{ scale: 0.99 }}
+                                                    transition={{ duration: 0.15 }}
+                                                >
+                                                    <Button
+                                                        onClick={() => handleOptionSelect('model', model)}
+                                                        className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.model === model
+                                                                ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                            }`}
+                                                    >
+                                                        {selectedOptions.model === model && (
+                                                            <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                                <span className="text-white text-xs font-bold">✓</span>
+                                                            </div>
+                                                        )}
+                                                        {model}
+                                                    </Button>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {/* Секция выбора варианта */}
+                            {selectedOptions.model && devices.variants.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="p-2 rounded-xl shadow-sm bg-white"
+                                >
+                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Вариант</h3>
+                                    <div className="grid grid-cols-3 gap-1">
+                                        {devices.variants.map((variant: string) => (
+                                            <Button
+                                                key={variant}
+                                                onClick={() => handleOptionSelect('variant', variant)}
+                                                className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.variant === variant
+                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                {selectedOptions.variant === variant && (
+                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <span className="text-white text-xs font-bold">✓</span>
+                                                    </div>
+                                                )}
+                                                {variant === '' ? '' : getVariantLabel(variant)}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Секция выбора объема памяти */}
+                            {selectedOptions.model && devices.storages.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="p-2 rounded-xl shadow-sm bg-white"
+                                >
+                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Объем памяти</h3>
+                                    <div className="grid grid-cols-3 gap-1 max-w-xs mx-auto">
+                                        {devices.storages.slice(0, 3).map((storage: string) => (
+                                            <Button
+                                                key={storage}
+                                                onClick={() => handleOptionSelect('storage', storage)}
+                                                className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.storage === storage
+                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                {selectedOptions.storage === storage && (
+                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <span className="text-white text-xs font-bold">✓</span>
+                                                    </div>
+                                                )}
+                                                {storage}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-1 max-w-xs mx-auto mt-1">
+                                        {devices.storages.slice(3).map((storage: string) => (
+                                            <Button
+                                                key={storage}
+                                                onClick={() => handleOptionSelect('storage', storage)}
+                                                className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.storage === storage
+                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                {selectedOptions.storage === storage && (
+                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <span className="text-white text-xs font-bold">✓</span>
+                                                    </div>
+                                                )}
+                                                {storage}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Секция выбора цвета */}
+                            {selectedOptions.model && devices.colors.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="p-2 rounded-xl shadow-sm bg-white"
+                                >
+                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Цвет</h3>
+                                    <div className="flex flex-row justify-around gap-2">
+                                        {devices.colors.map((color: string) => (
+                                            <Button
+                                                key={color}
+                                                onClick={() => handleOptionSelect('color', color)}
+                                                className={`h-8 w-8 rounded-full border-2 transition-all duration-200 relative group flex items-center justify-between p-0 ${selectedOptions.color === color
+                                                        ? 'border-[#2dc2c6] ring-2 ring-[#2dc2c6]/30 shadow-lg'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                                style={{
+                                                    backgroundColor: getColorStyle(color),
+                                                    opacity: !devices.colors.includes(color) ? 0.3 : 1
+                                                }}
+                                                title={getColorLabel(color)}
+                                            >
+                                                {selectedOptions.color === color && (
+                                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <span className="text-white text-xs font-bold">✓</span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                                                    {getColorLabel(color)}
+                                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                                                </div>
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Секция выбора типа SIM */}
+                            {selectedOptions.model && devices.simTypes.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="p-2 rounded-xl shadow-sm bg-white"
+                                >
+                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Тип SIM</h3>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        {devices.simTypes.map((simType: string) => (
+                                            <Button
+                                                key={simType}
+                                                onClick={() => handleOptionSelect('simType', simType)}
+                                                className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center relative ${selectedOptions.simType === simType
+                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                {selectedOptions.simType === simType && (
+                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <span className="text-white text-xs font-bold">✓</span>
+                                                    </div>
+                                                )}
+                                                {simType}
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Секция выбора страны производителя */}
+                            {selectedOptions.model && devices.countries.length > 0 && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    transition={{ duration: 0.2, ease: "easeOut" }}
+                                    className="p-2 rounded-xl shadow-sm bg-white"
+                                >
+                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Страна производитель</h3>
+                                    <div className="grid grid-cols-2 gap-1">
+                                        {devices.countries.map((country: string) => (
+                                            <Button
+                                                key={country}
+                                                onClick={() => handleOptionSelect('country', country)}
+                                                className={`w-full h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center relative ${selectedOptions.country === country
+                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                    }`}
+                                            >
+                                                {selectedOptions.country === country && (
+                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <span className="text-white text-xs font-bold">✓</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-center">
+                                                    <span className="text-lg">{country.split(' ')[1]}</span>
+                                                </div>
+                                            </Button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Диалоговое окно с итоговой информацией */}
+                            <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
+                                <DialogContent
+                                    className="bg-white border border-gray-200 cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                                    onClick={handleContinueToNext}
+                                    showCloseButton={false}
+                                >
+                                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+                                        📱 Ваша полная конфигурация
+                                    </DialogTitle>
+                                    {devices.selectedDevice && (
+                                        <>
+                                            <div className="text-center space-y-4">
+                                                {/* Полная модель */}
+                                                <div className="bg-[#2dc2c6]/10 p-4 rounded-xl border border-[#2dc2c6]">
+                                                    <p className="text-lg font-semibold text-gray-900 break-words leading-tight">
+                                                        iPhone {devices.selectedDevice.model}
+                                                        {devices.selectedDevice.variant ? ` ${getVariantLabel(devices.selectedDevice.variant)}` : ''}
+                                                        {devices.selectedDevice.storage ? ` ${devices.selectedDevice.storage}` : ''}
+                                                        {devices.selectedDevice.color ? ` ${getColorLabel(devices.selectedDevice.color)}` : ''}
+                                                        {devices.selectedDevice.simType ? ` ${devices.selectedDevice.simType}` : ''}
+                                                        {devices.selectedDevice.country ? ` ${devices.selectedDevice.country.split(' ')[0]}` : ''}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <p className="text-center text-sm text-gray-600 mt-4">
+                                                👆 Нажмите на окно для перехода к следующему шагу
+                                            </p>
+                                            <p className="text-center text-sm text-gray-600 mt-1">
+                                                ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
+                                            </p>
+                                        </>
+                                    )}
+                                </DialogContent>
+                            </Dialog>
 
 
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Page>
+            </Page>
         </LazyMotion>
     );
 }

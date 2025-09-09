@@ -10,6 +10,7 @@ async function main() {
       update: {},
       create: {
         address: 'ул. Тверская, 15',
+        workingHours: '10:00 - 22:00',
       },
     }),
     prisma.point.upsert({
@@ -17,6 +18,7 @@ async function main() {
       update: {},
       create: {
         address: 'Ходынский бул., 4',
+        workingHours: '10:00 - 22:00',
       },
     }),
     prisma.point.upsert({
@@ -24,6 +26,7 @@ async function main() {
       update: {},
       create: {
         address: 'пр. Мира, 100',
+        workingHours: '09:00 - 21:00',
       },
     }),
   ])

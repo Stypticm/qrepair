@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 const DeliveryOptionsPage = () => {
     const router = useRouter();
     const { telegramId, modelname, price, setCurrentStep } = useAppStore();
-    const [selectedOption, setSelectedOption] = useState<'pickup' | 'courier' | null>(null);
+    const [selectedOption, setSelectedOption] = useState<'pickup' | null>(null);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -44,22 +44,8 @@ const DeliveryOptionsPage = () => {
 
     const handlePickup = () => {
         setSelectedOption('pickup');
-        // Очищаем данные курьера при выборе самовывоза
-        if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('courierBookingData');
-        }
         // Переходим к выбору точки самовывоза
         router.push('/request/pickup-points');
-    };
-
-    const handleCourier = () => {
-        setSelectedOption('courier');
-        // Очищаем данные самовывоза при выборе курьера
-        if (typeof window !== 'undefined') {
-            sessionStorage.removeItem('pickupPointsData');
-        }
-        // Переходим к выбору адреса и времени для мастера
-        router.push('/request/courier-booking');
     };
 
     const finalPrice = price || 48000;
@@ -125,10 +111,10 @@ const DeliveryOptionsPage = () => {
                             className="text-center"
                         >
                             <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                                Как вы хотите передать устройство?
+                                Передача устройства
                             </h2>
                             <p className="text-gray-600">
-                                Выберите удобный для вас способ
+                                Привезите устройство в одну из наших точек
                             </p>
                         </motion.div>
 
@@ -142,56 +128,25 @@ const DeliveryOptionsPage = () => {
                             <div className="text-center space-y-2">
                                 <p className="text-sm text-gray-600">Ваше устройство:</p>
                                 <p className="font-semibold text-gray-900">{getFullModelName()}</p>
-                                <p className="text-sm text-gray-600">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
+                                <p className="text-base text-gray-600">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
                             </div>
                         </motion.div>
 
-                        {/* Варианты доставки */}
+                        {/* Кнопка перехода к выбору точки */}
                         <motion.div 
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.2 }}
-                            className="space-y-4"
                         >
-                            {/* Личная доставка */}
-                            <div 
+                            <Button
                                 onClick={handlePickup}
-                                className={`p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
-                                    selectedOption === 'pickup' 
-                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/5' 
-                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                                }`}
+                                className="w-full bg-[#2dc2c6] hover:bg-[#2dc2c6]/90 text-white py-4 rounded-2xl text-lg font-medium shadow-sm"
                             >
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <span className="text-2xl">🏪</span>
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-gray-900 text-lg">Привезу сам</h3>
-                                        <p className="text-sm text-gray-600">Привезите устройство в одну из наших точек</p>
-                                    </div>
+                                <div className="flex items-center justify-center space-x-3">
+                                    <span className="text-2xl">🏪</span>
+                                    <span>Выбрать точку самовывоза</span>
                                 </div>
-                            </div>
-
-                            {/* Курьер */}
-                            <div 
-                                onClick={handleCourier}
-                                className={`p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${
-                                    selectedOption === 'courier' 
-                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/5' 
-                                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                                }`}
-                            >
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                        <span className="text-2xl">🚚</span>
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-gray-900 text-lg">Вызвать мастера</h3>
-                                        <p className="text-sm text-gray-600">Мастер заберет устройство по вашему адресу</p>
-                                    </div>
-                                </div>
-                            </div>
+                            </Button>
                         </motion.div>
                     </div>
                 </div>

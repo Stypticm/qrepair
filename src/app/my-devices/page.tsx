@@ -11,12 +11,41 @@ import { Badge } from '@/components/ui/badge';
 import { SkupkaRequest } from '@/core/lib/interfaces';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { QRCodeGenerator } from '@/components/QRCodeGenerator';
+import { ChevronDown, ChevronUp, QrCode, Calendar, User, Smartphone } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 
 const MyDevices = () => {
-  const { telegramId } = useAppStore();
+  const { telegramId, setTelegramId } = useAppStore();
   const router = useRouter();
   const [myDevices, setMyDevices] = useState<SkupkaRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
+  // Функция для переключения раскрытия карточки
+  const toggleCard = (deviceId: string) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(deviceId)) {
+        newSet.delete(deviceId);
+      } else {
+        newSet.add(deviceId);
+      }
+      return newSet;
+    });
+  };
+
+  // Восстанавливаем telegramId из sessionStorage при загрузке страницы
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !telegramId) {
+      const savedTelegramId = sessionStorage.getItem('telegramId');
+      if (savedTelegramId) {
+        setTelegramId(savedTelegramId);
+      }
+    }
+  }, [telegramId, setTelegramId]);
 
   useEffect(() => {
     if (telegramId) {
@@ -25,10 +54,9 @@ const MyDevices = () => {
           setLoading(true);
           const res = await fetch(`/api/my-devices?telegramId=${telegramId}`)
           const data = await res.json()
-
           setMyDevices(data)
         } catch (e) {
-          console.error(e)
+          console.error('Ошибка при загрузке данных:', e)
         } finally {
           setLoading(false);
         }
@@ -120,7 +148,13 @@ const MyDevices = () => {
 
             {loading ? (
               <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <Image
+                  src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+                  alt="Загрузка"
+                  width={96}
+                  height={96}
+                  className="object-contain"
+                />
               </div>
             ) : myDevices.length === 0 ? (
               <div className="text-center py-8">
@@ -128,154 +162,191 @@ const MyDevices = () => {
                 <div className="text-gray-500">Создайте заявку на выкуп, чтобы начать</div>
               </div>
             ) : (
-              <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-                {myDevices.map((device: SkupkaRequest) => (
-                  <Card key={device.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg font-semibold text-gray-900 pr-4">
-                          {device.modelname ? 
-                            (device.modelname.length > 50 ? 
-                              device.modelname.substring(0, 50) + '...' : 
-                              device.modelname
-                            ) : 
-                            'Неизвестная модель'
-                          }
-                        </CardTitle>
-                        <Badge className={`${getStatusColor(device.status)} text-white px-3 py-1 text-sm font-medium`}>
-                          {getStatusText(device.status)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 gap-3 text-sm">
-                        <div>
-                          <span className="font-semibold text-gray-600">ID заявки:</span>
-                          <div className="text-gray-800 font-mono text-xs bg-gray-100 p-2 rounded-lg">{device.id}</div>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-gray-600">Пользователь:</span>
-                          <div className="text-gray-800 bg-gray-50 p-2 rounded-lg">{device.username || '—'}</div>
-                        </div>
-                        <div>
-                          <span className="font-semibold text-gray-600">Модель:</span>
-                          <div className="text-gray-800 break-words bg-gray-50 p-2 rounded-lg">{device.modelname ? device.modelname : '—'}</div>
-                        </div>
-                        {device.comment && (
-                          <div>
-                            <span className="font-semibold text-gray-600">Комментарий:</span>
-                            <div className="text-gray-800 bg-gray-50 p-2 rounded-lg">{device.comment}</div>
+              <div className="space-y-4">
+                {myDevices.map((device: SkupkaRequest) => {
+                  const isExpanded = expandedCards.has(device.id);
+                  return (
+                    <Card key={device.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+                      {/* Заголовок карточки - всегда видимый */}
+                      <CardHeader 
+                        className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                        onClick={() => toggleCard(device.id)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 pr-4">
+                            <CardTitle className="text-lg font-semibold text-gray-900">
+                              {device.modelname ? 
+                                (device.modelname.length > 50 ? 
+                                  device.modelname.substring(0, 50) + '...' : 
+                                  device.modelname
+                                ) : 
+                                'Неизвестная модель'
+                              }
+                            </CardTitle>
                           </div>
-                        )}
-                        {device.price && (
-                          <div>
-                            <span className="font-semibold text-gray-600">Цена:</span>
-                            <div className="text-green-600 font-semibold bg-green-50 p-2 rounded-lg">{device.price} ₽</div>
-                          </div>
-                        )}
-                        {device.finalPrice && (
-                          <div>
-                            <span className="font-semibold text-gray-600">Итоговая цена:</span>
-                            <div className="text-emerald-600 font-semibold bg-emerald-50 p-2 rounded-lg">{device.finalPrice} ₽</div>
-                          </div>
-                        )}
-                        <div>
-                          <span className="font-semibold text-gray-600">Дата создания:</span>
-                          <div className="text-gray-800 bg-gray-50 p-2 rounded-lg">
-                            {new Date(device.createdAt).toLocaleDateString('ru-RU', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge className={`${getStatusColor(device.status)} text-white px-3 py-1 text-sm font-medium`}>
+                              {getStatusText(device.status)}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="p-1 h-8 w-8"
+                            >
+                              {isExpanded ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                            </Button>
                           </div>
                         </div>
-                        {device.submittedAt && (
-                          <div>
-                            <span className="font-semibold text-gray-600">Дата отправки:</span>
-                            <div className="text-gray-800 bg-gray-50 p-2 rounded-lg">
-                              {new Date(device.submittedAt).toLocaleDateString('ru-RU', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          </div>
-                        )}
-                        {device.deviceConditions && (
-                          <div>
-                            <span className="font-semibold text-gray-600">Состояние устройства:</span>
-                            <div className="space-y-2">
-                              {device.deviceConditions.front && (
-                                <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
-                                  <span className="font-medium">Передняя панель:</span> {device.deviceConditions.front}
-                                </div>
-                              )}
-                              {device.deviceConditions.back && (
-                                <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
-                                  <span className="font-medium">Задняя панель:</span> {device.deviceConditions.back}
-                                </div>
-                              )}
-                              {device.deviceConditions.side && (
-                                <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
-                                  <span className="font-medium">Боковая панель:</span> {device.deviceConditions.side}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        {device.courierTelegramId && (
-                          <div>
-                            <span className="font-semibold text-gray-600">Курьер:</span>
-                            <div className="text-gray-800 bg-orange-50 p-2 rounded-lg">
-                              ID: {device.courierTelegramId}
-                              {device.courierTimeSlot && (
-                                <div className="text-sm text-orange-700 mt-1">
-                                  Время: {device.courierTimeSlot}
-                                </div>
-                              )}
-                              {device.courierScheduledAt && (
-                                <div className="text-sm text-orange-700">
-                                  Дата: {new Date(device.courierScheduledAt).toLocaleDateString('ru-RU')}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      </CardHeader>
 
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 rounded-lg"
-                          onClick={() => router.push(`/my-devices/status?status=${device.status}`)}>
-                          Проверить статус
-                        </Button>
+                      {/* Раскрывающийся контент */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <CardContent className="pt-0 space-y-4">
+                              <div className="grid grid-cols-1 gap-3 text-sm">
+                                {/* Основная информация */}
+                                <div className="space-y-3 mb-4">
+                                  <div className="flex items-center gap-2">
+                                    <Smartphone className="w-4 h-4 text-gray-500" />
+                                    <span className="font-semibold text-gray-600">ID заявки:</span>
+                                    <span className="font-mono text-gray-800">#{device.id}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-gray-500" />
+                                    <span className="font-semibold text-gray-600">Дата:</span>
+                                    <span className="text-gray-800">{new Date(device.createdAt).toLocaleDateString('ru-RU')}</span>
+                                  </div>
+                                </div>
 
-                        {device.status === 'on_the_way' && device.courierUserConfirmed && !device.inspectionCompleted && (
-                          <Button
-                            size="sm"
-                            className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-lg shadow-sm"
-                            onClick={() => router.push(`/my-devices/inspection?id=${device.id}`)}>
-                            Проверить устройство
-                          </Button>
-                        )}
+                                {device.price && (
+                                  <div className="bg-green-50 p-3 rounded-lg">
+                                    <span className="font-semibold text-gray-600">Цена:</span>
+                                    <div className="text-green-600 font-semibold text-lg">{device.price} ₽</div>
+                                  </div>
+                                )}
 
-                        {device.status === 'accepted' && (
-                          <Button
-                            size="sm"
-                            className="bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm">
-                            Подтвердить цену
-                          </Button>
+                                <div>
+                                  <span className="font-semibold text-gray-600">Полная модель:</span>
+                                  <div className="text-gray-800 break-words bg-gray-50 p-2 rounded-lg">{device.modelname || '—'}</div>
+                                </div>
+                                
+                                {device.comment && (
+                                  <div>
+                                    <span className="font-semibold text-gray-600">Комментарий:</span>
+                                    <div className="text-gray-800 bg-gray-50 p-2 rounded-lg">{device.comment}</div>
+                                  </div>
+                                )}
+
+                                {device.finalPrice && (
+                                  <div>
+                                    <span className="font-semibold text-gray-600">Итоговая цена:</span>
+                                    <div className="text-emerald-600 font-semibold bg-emerald-50 p-2 rounded-lg">{device.finalPrice} ₽</div>
+                                  </div>
+                                )}
+
+                                {device.deviceConditions && (
+                                  <div>
+                                    <span className="font-semibold text-gray-600">Состояние устройства:</span>
+                                    <div className="space-y-2">
+                                      {device.deviceConditions.front && (
+                                        <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
+                                          <span className="font-medium">Передняя панель:</span> {device.deviceConditions.front}
+                                        </div>
+                                      )}
+                                      {device.deviceConditions.back && (
+                                        <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
+                                          <span className="font-medium">Задняя панель:</span> {device.deviceConditions.back}
+                                        </div>
+                                      )}
+                                      {device.deviceConditions.side && (
+                                        <div className="text-gray-800 bg-blue-50 p-2 rounded-lg">
+                                          <span className="font-medium">Боковая панель:</span> {device.deviceConditions.side}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {device.courierTelegramId && (
+                                  <div>
+                                    <span className="font-semibold text-gray-600">Курьер:</span>
+                                    <div className="text-gray-800 bg-orange-50 p-2 rounded-lg">
+                                      ID: {device.courierTelegramId}
+                                      {device.courierTimeSlot && (
+                                        <div className="text-sm text-orange-700 mt-1">
+                                          Время: {device.courierTimeSlot}
+                                        </div>
+                                      )}
+                                      {device.courierScheduledAt && (
+                                        <div className="text-sm text-orange-700">
+                                          Дата: {new Date(device.courierScheduledAt).toLocaleDateString('ru-RU')}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* QR-код для мастера */}
+                                {device.status === 'accepted' && (
+                                  <div className="border-t pt-4">
+                                    <div className="text-center">
+                                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center justify-center gap-2">
+                                        <QrCode className="w-5 h-5 text-teal-500" />
+                                        QR-код для мастера
+                                      </h4>
+                                      <p className="text-sm text-gray-600 mb-4">
+                                        Покажите этот QR-код мастеру при сдаче устройства
+                                      </p>
+                                      <QRCodeGenerator skupkaId={parseInt(device.id) || 0} pointId={1} />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 pt-2 border-t">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 rounded-lg"
+                                  onClick={() => router.push(`/my-devices/status?status=${device.status}`)}>
+                                  Проверить статус
+                                </Button>
+
+                                {device.status === 'on_the_way' && device.courierUserConfirmed && !device.inspectionCompleted && (
+                                  <Button
+                                    size="sm"
+                                    className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-lg shadow-sm"
+                                    onClick={() => router.push(`/my-devices/inspection?id=${device.id}`)}>
+                                    Проверить устройство
+                                  </Button>
+                                )}
+
+                                {device.status === 'accepted' && (
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm">
+                                    Подтвердить цену
+                                  </Button>
+                                )}
+                              </div>
+                            </CardContent>
+                          </motion.div>
                         )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </AnimatePresence>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>

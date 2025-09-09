@@ -82,21 +82,60 @@ const FinalPage = () => {
         }
     }, []);
 
-    // Загружаем данные о выборе доставки из sessionStorage
+    // Загружаем данные о выборе доставки из sessionStorage или БД
     const [deliveryData, setDeliveryData] = useState<any>(null);
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const savedDeliveryData = sessionStorage.getItem('deliveryData');
-            if (savedDeliveryData) {
-                try {
-                    setDeliveryData(JSON.parse(savedDeliveryData));
-                } catch (e) {
-                    console.error('Error parsing delivery data:', e);
+        const loadDeliveryData = async () => {
+            if (typeof window !== 'undefined') {
+                const savedDeliveryData = sessionStorage.getItem('deliveryData');
+                console.log('🔍 Loading delivery data from sessionStorage:', savedDeliveryData);
+                
+                if (savedDeliveryData) {
+                    try {
+                        const parsed = JSON.parse(savedDeliveryData);
+                        setDeliveryData(parsed);
+                        console.log('✅ Delivery data loaded from sessionStorage:', parsed);
+                    } catch (e) {
+                        console.error('Error parsing delivery data:', e);
+                    }
+                } else {
+                    // Если нет данных в sessionStorage, пытаемся получить из БД
+                    console.log('⚠️ No delivery data in sessionStorage, trying to load from DB');
+                    try {
+                        const effectiveTelegramId = telegramId || 'browser_test_user';
+                        const response = await fetch('/api/request/getDraft', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                telegramId: effectiveTelegramId,
+                            }),
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('📦 Draft data from DB:', data);
+                            
+                            if (data.draft) {
+                                const draftDeliveryData = {
+                                    deliveryMethod: 'pickup',
+                                    pickupPoint: data.draft.pickupPoint || 'Адрес не указан',
+                                };
+                                setDeliveryData(draftDeliveryData);
+                                console.log('✅ Delivery data loaded from DB:', draftDeliveryData);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error loading delivery data from DB:', error);
+                    }
                 }
             }
-        }
-    }, []);
+        };
+
+        loadDeliveryData();
+    }, [telegramId]);
 
 
     const handleFinalSubmit = async () => {
@@ -106,21 +145,37 @@ const FinalPage = () => {
 
         setSubmitting(true);
         try {
+            // Используем fallback для браузера, если telegramId не установлен
+            const effectiveTelegramId = telegramId || 'browser_test_user';
+            
+            const requestData = {
+                telegramId: effectiveTelegramId,
+                userTelegramId: userTelegramId.trim(),
+                modelname: getFullModelName(),
+                price: finalPrice,
+                deliveryData,
+            };
+            
+            console.log('📤 Final submit - отправляемые данные:', requestData);
+            console.log('🔍 Final submit - проверка полей:', {
+                telegramId: !!requestData.telegramId,
+                userTelegramId: !!requestData.userTelegramId,
+                modelname: !!requestData.modelname,
+                price: !!requestData.price,
+                deliveryData: !!requestData.deliveryData,
+            });
+            
             const response = await fetch('/api/request/submit-final', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    telegramId,
-                    userTelegramId: userTelegramId.trim(),
-                    modelname: getFullModelName(),
-                    price: finalPrice,
-                    deliveryData,
-                }),
+                body: JSON.stringify(requestData),
             });
 
             if (response.ok) {
+                const result = await response.json();
+                console.log('✅ Final submit - ответ от API:', result);
                 setTelegramIdConfirmed(true);
                 setShowThankYou(true);
 
@@ -146,6 +201,10 @@ const FinalPage = () => {
                         resetAllStates();
                     }, 100);
                 }, 3000);
+            } else {
+                console.error('❌ Final submit - ошибка API:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Final submit - текст ошибки:', errorText);
             }
         } catch (error) {
             console.error('Ошибка при отправке заявки:', error);

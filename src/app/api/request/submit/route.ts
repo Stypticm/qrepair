@@ -320,10 +320,10 @@ export async function POST(request: Request) {
         }
       }
 
-      const requestId = `#${updatedRequest.id.slice(-4)}`
+      const requestId = updatedRequest.id
       const caption = `✅ *Заявка принята!*
 
-🆔 *ID заявки:* ${requestId}
+🆔 *ID заявки:* **${requestId}**
 📱 *Модель:* ${modelname}
 💵 *Итоговая цена:* ${finalPrice.toLocaleString()} ₽
 

@@ -1,6 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { getPictureUrl } from '@/core/lib/assets';
 
 interface LoadingIndicatorProps {
   progress: number;
@@ -8,10 +10,10 @@ interface LoadingIndicatorProps {
   message?: string;
 }
 
-export function LoadingIndicator({ 
-  progress, 
-  isVisible, 
-  message = 'Загрузка изображений...' 
+export function LoadingIndicator({
+  progress,
+  isVisible,
+  message = 'Загрузка изображений...'
 }: LoadingIndicatorProps) {
   return (
     <AnimatePresence>
@@ -39,10 +41,12 @@ export function LoadingIndicator({
                 {progress}%
               </p>
             </div>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full"
+            <Image
+              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+              alt="Загрузка"
+              width={48}
+              height={48}
+              className="object-contain"
             />
           </div>
         </motion.div>

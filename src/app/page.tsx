@@ -194,9 +194,6 @@ function HomeContent() {
           case 'pickup-points':
             router.push('/request/pickup-points');
             return;
-          case 'courier-booking':
-            router.push('/request/courier-booking');
-            return;
           case 'final':
             router.push('/request/final');
             return;
@@ -268,7 +265,7 @@ function HomeContent() {
           >
             <Image
               src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-              alt="Танцующий кокос"
+              alt="Загрузка"
               width={192}
               height={192}
               className="object-contain rounded-2xl"

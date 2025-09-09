@@ -168,7 +168,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // User actions
   setUsername: (username) => set({ username }),
-  setTelegramId: (telegramId) => set({ telegramId }),
+  setTelegramId: (telegramId) => {
+    set({ telegramId })
+    if (typeof window !== 'undefined' && telegramId) {
+      sessionStorage.setItem('telegramId', telegramId)
+    }
+  },
   setUserPhotoUrl: (userPhotoUrl) => set({ userPhotoUrl }),
 
   // Device actions

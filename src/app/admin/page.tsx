@@ -38,26 +38,18 @@ export default function AdminPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
         {/* Заголовок */}
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Админ-панель</h1>
-                  <p className="text-gray-600">Управление системой</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-green-100 text-green-800">
-                Админ
-              </Badge>
+        <div className="bg-white shadow-sm border-b pt-12">
+          <div className="max-w-4xl mx-auto px-6 py-4">
+            <div className="flex flex-col items-center justify-center text-center">
+              <h1 className="text-2xl font-bold text-gray-900 font-sf-pro">Админ-панель</h1>
             </div>
           </div>
         </div>
 
         {/* Основной контент */}
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-4xl mx-auto p-6 pt-8">
           <div className="space-y-6">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Управление системой</h2>

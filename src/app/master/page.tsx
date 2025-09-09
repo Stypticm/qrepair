@@ -77,21 +77,19 @@ export default function MasterPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      <div className="h-screen bg-gradient-to-b from-white to-gray-50 overflow-y-auto">
         {/* Заголовок */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-md mx-auto px-6 py-4">
-            <div className="flex items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 font-sf-pro">Для мастеров</h1>
-                <p className="text-gray-600 font-sf-pro">ИИ-оценка устройств</p>
-              </div>
+            <div className="flex flex-col items-center justify-center text-center">
+              <h1 className="text-2xl font-bold text-gray-900 font-sf-pro">Для мастеров</h1>
+              <p className="text-gray-600 font-sf-pro">ИИ-оценка устройств</p>
             </div>
           </div>
         </div>
 
         {/* Основной контент */}
-        <div className="max-w-md mx-auto p-6">
+        <div className="max-w-md mx-auto p-6 pt-32">
           <div className="space-y-6">
             {/* Форма ввода ID заявки */}
             <Card className="bg-white border border-gray-200 rounded-apple-lg shadow-sm">
