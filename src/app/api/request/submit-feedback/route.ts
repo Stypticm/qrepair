@@ -3,8 +3,13 @@ import prisma from '@/core/lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const { telegramId, feedback, modelname, price } =
-      await request.json()
+    const {
+      telegramId,
+      username,
+      feedback,
+      modelname,
+      price,
+    } = await request.json()
 
     if (!telegramId || !feedback) {
       return NextResponse.json(
@@ -49,7 +54,7 @@ export async function POST(request: NextRequest) {
       try {
         const message = `📝 Спасибо за ваш отзыв!
 
-👤 Пользователь: @${existingSkupka.username || telegramId}
+👤 Пользователь: @${username || existingSkupka.username}
 📱 Устройство: ${modelname || 'Не указано'}
 💰 Предложенная цена: ${
           price
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
       try {
         const message = `📝 Получен отзыв от пользователя
 
-👤 Пользователь: @${telegramId}
+👤 Пользователь: @${username}
 📱 Устройство: ${modelname || 'Не указано'}
 💰 Предложенная цена: ${
           price

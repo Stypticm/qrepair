@@ -11,7 +11,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice, setCurrentStep } = useAppStore();
+    const { telegramId, username, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice, setCurrentStep } = useAppStore();
     const [dataLoaded, setDataLoaded] = useState(false);
     const [priceLoaded, setPriceLoaded] = useState(false);
     const [dbData, setDbData] = useState<any>(null);
@@ -315,6 +315,7 @@ const SubmitPage = () => {
                 },
                 body: JSON.stringify({
                     telegramId,
+                    username,
                     feedback: finalFeedback,
                     modelname: getFullModelName(),
                     price: finalPrice,

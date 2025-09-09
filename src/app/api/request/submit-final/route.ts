@@ -129,9 +129,7 @@ export async function POST(request: NextRequest) {
     const requestId = skupkaId || 'UNKNOWN'
     let telegramMessage = `📱 Новая заявка на выкуп устройства\n\n`
     telegramMessage += `🆔 ID заявки: **${requestId}**\n`
-    telegramMessage += `👤 Пользователь: @${
-      username || userTelegramId
-    }\n`
+    telegramMessage += `👤 Пользователь: @${username}\n`
     telegramMessage += `📱 Устройство: ${modelname}\n`
     telegramMessage += `💰 Предварительная цена: ${price?.toLocaleString()} ₽\n\n`
 
