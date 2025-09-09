@@ -37,15 +37,15 @@ const MyDevices = () => {
     });
   };
 
-  // Восстанавливаем telegramId из sessionStorage при загрузке страницы
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !telegramId) {
-      const savedTelegramId = sessionStorage.getItem('telegramId');
-      if (savedTelegramId) {
-        setTelegramId(savedTelegramId);
-      }
-    }
-  }, [telegramId, setTelegramId]);
+  // НЕ восстанавливаем telegramId из sessionStorage, чтобы не перезаписывать данные других пользователей
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined' && !telegramId) {
+  //     const savedTelegramId = sessionStorage.getItem('telegramId');
+  //     if (savedTelegramId) {
+  //       setTelegramId(savedTelegramId);
+  //     }
+  //   }
+  // }, [telegramId, setTelegramId]);
 
   useEffect(() => {
     if (telegramId) {

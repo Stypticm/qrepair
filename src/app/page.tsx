@@ -273,11 +273,8 @@ function HomeContent() {
               
               // Устанавливаем таймаут для ожидания данных
               const eventTimeout = setTimeout(() => {
-                addDebugInfo(`⏰ Таймаут ожидания события, используем fallback ID`);
-                const fallbackId = '531360988';
-                setTelegramId(fallbackId);
-                setRole('master', parseInt(fallbackId));
-                sessionStorage.setItem('telegramId', fallbackId);
+                addDebugInfo(`⏰ Таймаут ожидания события, не используем fallback ID`);
+                // Не устанавливаем fallback ID, чтобы не перезаписывать данные других пользователей
               }, 2000);
               
               webView.receiveEvent('web_app_data', (data: any) => {
@@ -522,12 +519,8 @@ function HomeContent() {
               }
             }
             
-            // Если ничего не сработало, используем fallback
-            addDebugInfo('🔄 Используем fallback ID для тестирования');
-            const fallbackId = '531360988'; // Ваш реальный ID
-            setTelegramId(fallbackId);
-            setRole('master', parseInt(fallbackId));
-            sessionStorage.setItem('telegramId', fallbackId);
+            // Если ничего не сработало, не используем fallback
+            addDebugInfo('🔄 Не используем fallback ID, чтобы не перезаписывать данные других пользователей');
           }
         }
       } else {
@@ -535,12 +528,8 @@ function HomeContent() {
         setIsInTelegram(false);
         addDebugInfo(`🖥️ Не в Telegram WebApp, используем браузерный режим`);
         
-        // В браузере используем ваш реальный ID для тестирования
-        const realTestId = '531360988'; // Ваш реальный ID
-        addDebugInfo(`🖥️ Браузер: используем реальный ID ${realTestId}`);
-        setTelegramId(realTestId);
-        setRole('master', parseInt(realTestId));
-        sessionStorage.setItem('telegramId', realTestId);
+        // В браузере не устанавливаем ID, чтобы не перезаписывать данные других пользователей
+        addDebugInfo(`🖥️ Браузер: не устанавливаем ID, чтобы не перезаписывать данные других пользователей`);
       }
     }
   };
