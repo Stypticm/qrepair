@@ -19,13 +19,11 @@ import { tailwindColors } from '@/core/colors';
 import { ChatContext } from '@/components/ChatContext';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
-import { UXAnalyticsProvider, useUXAnalyticsContext } from '@/components/UXAnalyticsProvider';
 import { LoadingIndicator } from '@/components/ImagePreloader/LoadingIndicator';
 import { getHomePagePreloadImages } from '@/core/lib/imageUtils';
 import { useAppStore, isMaster, useUserData, useDeviceData, useConditions } from '@/stores/authStore';
 
 function HomeContent() {
-  const { trackButtonClick, trackError } = useUXAnalyticsContext();
   const { setRole, userId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates } = useAppStore();
   const { telegramId } = useUserData();
   const { modelname, imei, serialNumber } = useDeviceData();
@@ -86,12 +84,6 @@ function HomeContent() {
 
   // Функция для начала формы с проверкой существующей заявки
   const handleStartForm = async () => {
-    try {
-      // Отслеживаем клик по кнопке "Начать заявку"
-      trackButtonClick('start_form', '/');
-    } catch (error) {
-      trackError(error instanceof Error ? error.message : 'Unknown error', '/');
-    }
     
     try {
       // Показываем загрузку
@@ -366,9 +358,5 @@ function HomeContent() {
 }
 
 export default function Home() {
-  return (
-    <UXAnalyticsProvider>
-      <HomeContent />
-    </UXAnalyticsProvider>
-  );
+  return <HomeContent />;
 }
