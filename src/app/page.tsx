@@ -114,13 +114,24 @@ function HomeContent() {
   useEffect(() => {
   // Проверяем, запущено ли приложение в Telegram
   const checkTelegram = async () => {
+    addDebugInfo(`🚀 Начинаем проверку Telegram WebApp...`);
+    
     if (typeof window !== 'undefined') {
+      addDebugInfo(`✅ window доступен`);
       // Простая проверка - если есть Telegram.WebApp, то это WebApp
       const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
       const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
       
+      addDebugInfo(`🔍 Проверка Telegram WebApp:`);
+      addDebugInfo(`- hasTelegramWebApp: ${hasTelegramWebApp}`);
+      addDebugInfo(`- hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`);
+      addDebugInfo(`- window.Telegram: ${!!(window as any).Telegram}`);
+      addDebugInfo(`- window.Telegram.WebApp: ${!!(window as any).Telegram?.WebApp}`);
+      
       // Если есть Telegram.WebApp ИЛИ TelegramWebviewProxy, то это WebApp
       const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
+      
+      addDebugInfo(`- inTelegram: ${inTelegram}`);
       
       setIsInTelegram(inTelegram);
       setIsLoading(false);
@@ -225,6 +236,8 @@ function HomeContent() {
       } else {
         // Если мы не в Telegram, принудительно устанавливаем false
         setIsInTelegram(false);
+        addDebugInfo(`🖥️ Не в Telegram WebApp, используем браузерный режим`);
+        
         // В браузере используем ваш реальный ID для тестирования
         const realTestId = '531360988'; // Ваш реальный ID
         addDebugInfo(`🖥️ Браузер: используем реальный ID ${realTestId}`);

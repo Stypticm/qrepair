@@ -302,7 +302,7 @@ const FinalPage = () => {
     if (submitted) {
         return (
             <Page back={false}>
-                <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col request-page">
+                <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center p-6">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -349,7 +349,7 @@ const FinalPage = () => {
     if (showThankYou) {
         return (
             <Page back={false}>
-                <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col request-page">
+                <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
                     <div className="flex-1 flex items-center justify-center p-6">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -394,7 +394,7 @@ const FinalPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col request-page">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4">
                         {/* Заголовок */}

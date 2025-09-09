@@ -227,7 +227,7 @@ export default function DeviceConditionPage() {
 
     return (
         <Page back={true}>
-            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col request-page">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                     <div className="w-full max-w-md mx-auto space-y-4">
                         {/* Модель */}
