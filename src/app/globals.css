@@ -139,6 +139,12 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    /* Исправление проблемы с клавиатурой на мобильных */
+    body {
+      height: 100vh;
+      height: -webkit-fill-available;
+    }
+
     /* Улучшение для полей ввода */
     input:focus {
       transform: translateZ(0);
@@ -158,6 +164,29 @@
     .scroll-to-input {
       scroll-margin-top: 100px;
       scroll-padding-top: 100px;
+    }
+
+    /* Исправление для контейнеров с min-h-screen */
+    .min-h-screen {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
+
+    /* Специальный класс для исправления проблемы с клавиатурой */
+    .keyboard-safe {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      height: auto;
+      overflow-y: auto;
+    }
+
+    /* Исправление для страниц request */
+    .request-page {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      height: auto;
+      overflow-y: auto;
+      position: relative;
     }
   }
 

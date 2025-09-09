@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { ExpandButton } from '@/components/ExpandButton';
 import { useSafeArea } from '@/hooks/useSafeArea';
-import { useAppStore, isMaster } from '@/stores/authStore';
+import { useAppStore, isMaster, useFeatureFlags } from '@/stores/authStore';
 
 function HomeContent() {
   const { 
@@ -40,6 +40,7 @@ function HomeContent() {
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const { hasFeature, getActiveFeatures, isTester } = useFeatureFlags();
   const router = useRouter();
 
   // ID админов для тестирования в браузере
@@ -224,10 +225,12 @@ function HomeContent() {
       } else {
         // Если мы не в Telegram, принудительно устанавливаем false
         setIsInTelegram(false);
-        // Устанавливаем тестовый ID для браузера
-        const testId = testAdminIds[testAdminIndex];
-        setTelegramId(testId);
-        setRole('master', parseInt(testId));
+        // В браузере используем ваш реальный ID для тестирования
+        const realTestId = '531360988'; // Ваш реальный ID
+        addDebugInfo(`🖥️ Браузер: используем реальный ID ${realTestId}`);
+        setTelegramId(realTestId);
+        setRole('master', parseInt(realTestId));
+        sessionStorage.setItem('telegramId', realTestId);
       }
     }
   };
@@ -508,6 +511,23 @@ function HomeContent() {
                   </div>
                   <div className="mt-2 text-xs text-gray-500">
                     Текущий telegramId: {telegramId}
+                  </div>
+                </div>
+              )}
+
+              {/* Feature Flags информация */}
+              {isTester() && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <h3 className="text-sm font-semibold text-blue-700 mb-2">🎯 Активные функции (Feature Flags):</h3>
+                  <div className="space-y-1">
+                    {getActiveFeatures().map((feature, index) => (
+                      <div key={index} className="text-xs text-blue-600">
+                        ✅ {feature}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 text-xs text-blue-500">
+                    Вы тестер! Видите новые функции.
                   </div>
                 </div>
               )}

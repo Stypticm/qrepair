@@ -777,7 +777,7 @@ export default function ConditionPage() {
     return (
         <Page back={true}>
             <ImagePreloader images={preloadImages} />
-            <div className="w-full min-h-[100dvh] bg-gradient-to-b from-white to-gray-50 flex flex-col">
+            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col request-page">
                 {/* Прогресс-бар */}
                 <div className="pt-6 pb-1">
                     <ProgressBar

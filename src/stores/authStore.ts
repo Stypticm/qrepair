@@ -1,5 +1,12 @@
 import { create } from 'zustand'
 import { shallow } from 'zustand/shallow'
+import {
+  hasFeature,
+  isTester,
+  isAdmin,
+  getActiveFeatures,
+  type FeatureFlag,
+} from '@/lib/featureFlags'
 
 interface FormData {
   sn: string
@@ -296,6 +303,20 @@ export const useConditions = () =>
   useAppStore((state) => state.deviceConditions)
 export const useNavigation = () =>
   useAppStore((state) => state.currentStep)
+
+// Feature Flags функции
+export const useFeatureFlags = () => {
+  const { telegramId } = useAppStore()
+
+  return {
+    hasFeature: (feature: FeatureFlag) =>
+      hasFeature(feature, telegramId || ''),
+    isTester: () => isTester(telegramId || ''),
+    isAdmin: () => isAdmin(telegramId || ''),
+    getActiveFeatures: () =>
+      getActiveFeatures(telegramId || ''),
+  }
+}
 
 // Обратная совместимость
 export const useAuthStore = useAppStore
