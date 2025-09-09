@@ -138,14 +138,30 @@ function HomeContent() {
       
       if (inTelegram) {
         // Если мы в Telegram, получаем данные пользователя
-        const userData = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+        const webApp = (window as any).Telegram?.WebApp;
+        const userData = webApp?.initDataUnsafe?.user;
+        const initData = webApp?.initData;
+        
+        addDebugInfo(`🔍 Telegram WebApp данные:`);
+        addDebugInfo(`- initData: ${initData ? 'есть' : 'нет'}`);
+        addDebugInfo(`- initDataUnsafe: ${webApp?.initDataUnsafe ? 'есть' : 'нет'}`);
+        addDebugInfo(`- userData: ${userData ? JSON.stringify(userData) : 'нет'}`);
+        
+        // Проверяем также initData для дополнительной диагностики
+        if (initData) {
+          addDebugInfo(`📋 initData содержимое: ${initData.substring(0, 100)}...`);
+        }
+        
         if (userData) {
           const telegramUserId = userData.id?.toString();
           const telegramUsername = userData.username;
+          const firstName = userData.first_name;
+          const lastName = userData.last_name;
           
-          addDebugInfo(`Telegram WebApp userData: ${JSON.stringify(userData)}`);
-          addDebugInfo(`telegramUserId: ${telegramUserId}`);
-          addDebugInfo(`telegramUsername: ${telegramUsername}`);
+          addDebugInfo(`📱 Данные пользователя:`);
+          addDebugInfo(`- ID: ${telegramUserId}`);
+          addDebugInfo(`- Username: ${telegramUsername}`);
+          addDebugInfo(`- Имя: ${firstName} ${lastName}`);
           
           if (telegramUserId) {
             addDebugInfo(`✅ Получен telegramId из Telegram WebApp: ${telegramUserId}`);
@@ -163,6 +179,9 @@ function HomeContent() {
             sessionStorage.setItem('telegramId', telegramUserId);
             if (telegramUsername) {
               sessionStorage.setItem('telegramUsername', telegramUsername);
+            }
+            if (firstName) {
+              sessionStorage.setItem('telegramFirstName', firstName);
             }
           } else if (telegramUsername) {
             // Если нет ID, но есть username, пытаемся получить ID через API
@@ -224,8 +243,33 @@ function HomeContent() {
               sessionStorage.setItem('telegramUsername', telegramUsername);
             }
           } else {
-            // Если нет ни ID, ни username, используем fallback
-            addDebugInfo('❌ Нет ни telegramId, ни username в Telegram WebApp');
+            // Если нет ни ID, ни username, пробуем альтернативные способы
+            addDebugInfo('❌ Нет ни telegramId, ни username в initDataUnsafe');
+            
+            // Пробуем получить данные из initData напрямую
+            if (initData) {
+              addDebugInfo('🔍 Пробуем парсить initData напрямую...');
+              try {
+                // Простой парсинг initData (небезопасно, но для диагностики)
+                const urlParams = new URLSearchParams(initData);
+                const userParam = urlParams.get('user');
+                if (userParam) {
+                  const user = JSON.parse(decodeURIComponent(userParam));
+                  addDebugInfo(`📱 Данные из initData: ${JSON.stringify(user)}`);
+                  if (user.id) {
+                    addDebugInfo(`✅ Получен ID из initData: ${user.id}`);
+                    setTelegramId(user.id.toString());
+                    setRole('client', parseInt(user.id));
+                    sessionStorage.setItem('telegramId', user.id.toString());
+                    return;
+                  }
+                }
+              } catch (e) {
+                addDebugInfo(`❌ Ошибка парсинга initData: ${e}`);
+              }
+            }
+            
+            // Если ничего не сработало, используем fallback
             addDebugInfo('🔄 Используем fallback ID для тестирования');
             const fallbackId = '531360988'; // Ваш реальный ID
             setTelegramId(fallbackId);
