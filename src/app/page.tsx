@@ -139,6 +139,7 @@ function HomeContent() {
       if (inTelegram) {
         // Если мы в Telegram, получаем данные пользователя
         const webApp = (window as any).Telegram?.WebApp;
+        const webviewProxy = (window as any).TelegramWebviewProxy;
         const userData = webApp?.initDataUnsafe?.user;
         const initData = webApp?.initData;
         
@@ -146,10 +147,63 @@ function HomeContent() {
         addDebugInfo(`- initData: ${initData ? 'есть' : 'нет'}`);
         addDebugInfo(`- initDataUnsafe: ${webApp?.initDataUnsafe ? 'есть' : 'нет'}`);
         addDebugInfo(`- userData: ${userData ? JSON.stringify(userData) : 'нет'}`);
+        addDebugInfo(`- webviewProxy: ${webviewProxy ? 'есть' : 'нет'}`);
         
         // Проверяем также initData для дополнительной диагностики
         if (initData) {
           addDebugInfo(`📋 initData содержимое: ${initData.substring(0, 100)}...`);
+        }
+        
+        // Пробуем получить данные из webviewProxy (старый API)
+        if (webviewProxy && !userData) {
+          addDebugInfo(`🔍 Пробуем получить данные из TelegramWebviewProxy...`);
+          try {
+            const proxyUserData = webviewProxy.initDataUnsafe?.user;
+            if (proxyUserData) {
+              addDebugInfo(`📱 Данные из webviewProxy: ${JSON.stringify(proxyUserData)}`);
+              const telegramUserId = proxyUserData.id?.toString();
+              const telegramUsername = proxyUserData.username;
+              
+              if (telegramUserId) {
+                addDebugInfo(`✅ Получен telegramId из webviewProxy: ${telegramUserId}`);
+                setTelegramId(telegramUserId);
+                
+                const isMasterUser = testAdminIds.includes(telegramUserId);
+                if (isMasterUser) {
+                  setRole('master', parseInt(telegramUserId));
+                } else {
+                  setRole('client', parseInt(telegramUserId));
+                }
+                
+                sessionStorage.setItem('telegramId', telegramUserId);
+                if (telegramUsername) {
+                  sessionStorage.setItem('telegramUsername', telegramUsername);
+                }
+                return; // Выходим, если успешно получили данные
+              }
+            }
+          } catch (e) {
+            addDebugInfo(`❌ Ошибка получения данных из webviewProxy: ${e}`);
+          }
+        }
+        
+        // Пробуем другие возможные источники данных
+        addDebugInfo(`🔍 Проверяем другие источники данных...`);
+        addDebugInfo(`- window.Telegram: ${JSON.stringify((window as any).Telegram)}`);
+        addDebugInfo(`- window.TelegramWebviewProxy: ${JSON.stringify(webviewProxy)}`);
+        
+        // Пробуем получить данные из глобальных переменных Telegram
+        const telegramGlobal = (window as any).Telegram;
+        if (telegramGlobal) {
+          addDebugInfo(`🔍 Проверяем telegramGlobal...`);
+          Object.keys(telegramGlobal).forEach(key => {
+            addDebugInfo(`- ${key}: ${typeof telegramGlobal[key]}`);
+            if (telegramGlobal[key] && typeof telegramGlobal[key] === 'object') {
+              Object.keys(telegramGlobal[key]).forEach(subKey => {
+                addDebugInfo(`  - ${subKey}: ${typeof telegramGlobal[key][subKey]}`);
+              });
+            }
+          });
         }
         
         if (userData) {
