@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Download } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface QRCodeGeneratorProps {
   skupkaId: number;
@@ -57,13 +58,12 @@ export function QRCodeGenerator({ skupkaId, pointId }: QRCodeGeneratorProps) {
           ) : (
             <div className="space-y-4">
               <div className="w-48 h-48 mx-auto bg-white border border-gray-200 rounded-apple-lg flex items-center justify-center">
-                {/* Здесь будет реальный QR-код */}
-                <div className="text-center">
-                  <QrCode className="w-24 h-24 text-gray-400 mx-auto mb-2" />
-                  <p className="text-xs text-gray-500 font-sf-pro">
-                    QR-код будет здесь
-                  </p>
-                </div>
+                <QRCodeCanvas
+                  value={qrString}
+                  size={180}
+                  level="M"
+                  includeMargin={true}
+                />
               </div>
               
               <div className="flex gap-2">

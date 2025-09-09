@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
@@ -12,8 +11,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 
 const FinalPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, price, resetAllStates } = useStartForm();
-    const { setCurrentStep } = useNavigation();
+    const { telegramId, modelname, price, resetAllStates, setCurrentStep } = useAppStore();
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [userTelegramId, setUserTelegramId] = useState('');

@@ -4,7 +4,7 @@ import { backButton } from '@telegram-apps/sdk-react';
 import { PropsWithChildren, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+import { useAppStore } from '@/stores/authStore';
 
 export function Page({ children, back = true }: PropsWithChildren<{
   /**
@@ -15,7 +15,8 @@ export function Page({ children, back = true }: PropsWithChildren<{
 }>) {
   const router = useRouter();
   const { safeAreaInsets, cssVars } = useSafeArea();
-  const { goToPreviousStep, canGoBack } = useNavigation();
+  const { goToPreviousStep, currentStep } = useAppStore();
+  const canGoBack = currentStep !== null;
 
   useEffect(() => {
     try {

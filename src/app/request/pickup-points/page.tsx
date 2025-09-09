@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAppStore, useUserData, useDeviceData, useNavigation } from '@/stores/authStore';
+import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
@@ -9,9 +9,7 @@ import { motion } from 'framer-motion';
 
 const PickupPointsPage = () => {
     const router = useRouter();
-    const { telegramId } = useUserData();
-    const { modelname, price } = useDeviceData();
-    const { setCurrentStep } = useNavigation();
+    const { telegramId, modelname, price, setCurrentStep } = useAppStore();
     const [selectedPoint, setSelectedPoint] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [buttonsDisabled, setButtonsDisabled] = useState(false);

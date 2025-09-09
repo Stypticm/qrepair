@@ -5,48 +5,33 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Bot, BarChart3, Settings, Users, Database } from 'lucide-react';
+import { ArrowLeft, Users, BarChart3 } from 'lucide-react';
 
 export default function AdminPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('overview');
 
   const adminSections = [
     {
-      id: 'overview',
-      title: 'Обзор',
-      description: 'Общая статистика и быстрый доступ',
-      icon: BarChart3,
-      color: 'bg-blue-500'
-    },
-    {
-      id: 'users',
-      title: 'Пользователи',
-      description: 'Управление пользователями и заявками',
+      id: 'masters',
+      title: 'Управление мастерами',
+      description: 'Добавление, редактирование и удаление мастеров',
       icon: Users,
+      color: 'bg-teal-500'
+    },
+    {
+      id: 'requests',
+      title: 'Заявки',
+      description: 'Просмотр и управление заявками',
+      icon: BarChart3,
       color: 'bg-purple-500'
-    },
-    {
-      id: 'database',
-      title: 'База данных',
-      description: 'Просмотр данных и статистики',
-      icon: Database,
-      color: 'bg-orange-500'
-    },
-    {
-      id: 'settings',
-      title: 'Настройки',
-      description: 'Конфигурация системы',
-      icon: Settings,
-      color: 'bg-gray-500'
     }
   ];
 
   const handleSectionClick = (sectionId: string) => {
-    if (sectionId === 'overview') {
-      setActiveTab('overview');
-    } else {
-      setActiveTab(sectionId);
+    if (sectionId === 'masters') {
+      router.push('/admin/masters');
+    } else if (sectionId === 'requests') {
+      router.push('/admin/requests');
     }
   };
 
@@ -57,22 +42,22 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Заголовок */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
               <Button
-                onClick={goBack}
                 variant="ghost"
                 size="sm"
-                className="flex items-center gap-2"
+                onClick={goBack}
+                className="mr-4"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4 mr-2" />
                 Назад
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Админ-панель</h1>
-                <p className="text-gray-600">Управление системой и мониторинг</p>
+                <p className="text-gray-600">Управление системой</p>
               </div>
             </div>
             <Badge variant="outline" className="bg-green-100 text-green-800">
@@ -83,185 +68,42 @@ export default function AdminPage() {
       </div>
 
       {/* Основной контент */}
-      <div className="max-w-7xl mx-auto p-6">
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Общая статистика */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <BarChart3 className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Всего заявок</p>
-                      <p className="text-2xl font-bold text-gray-900">1,234</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Bot className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Активных агентов</p>
-                      <p className="text-2xl font-bold text-gray-900">3</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <Users className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Пользователей</p>
-                      <p className="text-2xl font-bold text-gray-900">567</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <Database className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-600">Успешность тестов</p>
-                      <p className="text-2xl font-bold text-gray-900">98%</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Быстрый доступ</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {adminSections.map((section) => {
-                  const IconComponent = section.icon;
-                  return (
-                    <Card
-                      key={section.id}
-                      className={`cursor-pointer hover:shadow-md transition-shadow ${
-                        activeTab === section.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                      }`}
-                      onClick={() => handleSectionClick(section.id)}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${section.color} text-white`}>
-                            <IconComponent className="w-5 h-5" />
-                          </div>
-                          <CardTitle className="text-lg">{section.title}</CardTitle>
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Управление системой</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {adminSections.map((section) => {
+                const IconComponent = section.icon;
+                return (
+                  <Card
+                    key={section.id}
+                    className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    onClick={() => handleSectionClick(section.id)}
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-xl ${section.color} text-white shadow-lg`}>
+                          <IconComponent className="w-6 h-6" />
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-gray-600 text-sm">{section.description}</p>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Виджет агентов */}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">ИИ Агенты</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              </div>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                {/* Дополнительная статистика */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-blue-500" />
-                      Системная статистика
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">Статус системы</span>
-                      <Badge className="bg-green-100 text-green-800">Онлайн</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">Время работы</span>
-                      <span className="text-sm text-gray-600">24/7</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">Последнее обновление</span>
-                      <span className="text-sm text-gray-600">Только что</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Быстрые действия */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Settings className="w-5 h-5 text-green-500" />
-                      Быстрые действия
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button 
-                      onClick={() => window.location.reload()}
-                      className="w-full justify-start"
-                      variant="outline"
-                    >
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Обновить данные
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
+                        <div>
+                          <CardTitle className="text-xl font-bold text-gray-900">{section.title}</CardTitle>
+                          <p className="text-gray-600 text-sm mt-1">{section.description}</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">Нажмите для перехода</span>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
-        )}
-
-        {activeTab === 'users' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Управление пользователями</h2>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Функционал управления пользователями будет добавлен позже.</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === 'database' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">База данных</h2>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Функционал просмотра базы данных будет добавлен позже.</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === 'settings' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">Настройки системы</h2>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Функционал настроек будет добавлен позже.</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

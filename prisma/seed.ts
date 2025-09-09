@@ -29,6 +29,45 @@ async function main() {
   ])
 
   console.log('✅ Точки приема созданы:', points)
+
+  // Создаем мастеров
+  const masters = await Promise.all([
+    prisma.master.upsert({
+      where: { telegramId: '1' },
+      update: {},
+      create: {
+        telegramId: '1',
+        username: 'admin1',
+        name: 'Админ 1',
+        isActive: true,
+        pointId: points[0].id,
+      },
+    }),
+    prisma.master.upsert({
+      where: { telegramId: '296925626' },
+      update: {},
+      create: {
+        telegramId: '296925626',
+        username: 'admin2',
+        name: 'Админ 2',
+        isActive: true,
+        pointId: points[1].id,
+      },
+    }),
+    prisma.master.upsert({
+      where: { telegramId: '531360988' },
+      update: {},
+      create: {
+        telegramId: '531360988',
+        username: 'admin3',
+        name: 'Админ 3',
+        isActive: true,
+        pointId: points[2].id,
+      },
+    }),
+  ])
+
+  console.log('✅ Мастера созданы:', masters)
 }
 
 main()

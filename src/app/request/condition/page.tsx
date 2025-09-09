@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+
+import { useAppStore } from '@/stores/authStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
@@ -124,8 +125,7 @@ function findModelByName(modelname: string) {
 }
 
 export default function ConditionPage() {
-    const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice } = useStartForm();
-    const { setCurrentStep } = useNavigation();
+    const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice, setCurrentStep } = useAppStore();
     const router = useRouter();
     const devices = useDevices();
 

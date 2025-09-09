@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
@@ -10,8 +10,7 @@ import { motion } from 'framer-motion';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice } = useStartForm();
-    const { setCurrentStep } = useNavigation();
+    const { telegramId, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice, setCurrentStep } = useAppStore();
     const [dataLoaded, setDataLoaded] = useState(false);
     const [priceLoaded, setPriceLoaded] = useState(false);
     const [dbData, setDbData] = useState<any>(null);

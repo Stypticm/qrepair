@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+import { useAppStore } from '@/stores/authStore';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useDevices, Device } from '@/hooks/useDevices';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { motion, LazyMotion, domAnimation } from 'framer-motion';
 
 export default function FormPage() {
-    const { modelname, setModel, telegramId, username, setPrice } = useStartForm();
-    const { setCurrentStep } = useNavigation();
+    const { modelname, setModel, telegramId, username, setPrice, setCurrentStep } = useAppStore();
     const router = useRouter();
     const devices = useDevices();
 

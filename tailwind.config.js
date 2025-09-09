@@ -17,7 +17,6 @@ module.exports = {
       },
       fontFamily: {
         'sf-pro': [
-          'SF Pro Display',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',

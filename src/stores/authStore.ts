@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { shallow } from 'zustand/shallow'
 
 interface FormData {
   sn: string
@@ -90,7 +91,7 @@ interface AppState {
 }
 
 // ID админов из кода
-const ADMIN_IDS = [1, 2, 3] // Fallback, реальные: ['1', '296925626', '531360988']
+const ADMIN_IDS = [1, 296925626, 531360988] // Реальные ID админов
 
 // Порядок шагов
 const stepOrder = [
@@ -273,38 +274,15 @@ export const isMaster = (
   return ADMIN_IDS.includes(userId)
 }
 
-// Селекторы для оптимизации
+// Простые селекторы без shallow для избежания проблем
 export const useUserData = () =>
-  useAppStore((state) => ({
-    username: state.username,
-    telegramId: state.telegramId,
-    userPhotoUrl: state.userPhotoUrl,
-  }))
-
+  useAppStore((state) => state.telegramId)
 export const useDeviceData = () =>
-  useAppStore((state) => ({
-    modelname: state.modelname,
-    comment: state.comment,
-    imei: state.imei,
-    serialNumber: state.serialNumber,
-    price: state.price,
-  }))
-
+  useAppStore((state) => state.modelname)
 export const useConditions = () =>
-  useAppStore((state) => ({
-    deviceConditions: state.deviceConditions,
-    additionalConditions: state.additionalConditions,
-    showQuestionsSuccess: state.showQuestionsSuccess,
-  }))
-
+  useAppStore((state) => state.deviceConditions)
 export const useNavigation = () =>
-  useAppStore((state) => ({
-    currentStep: state.currentStep,
-    setCurrentStep: state.setCurrentStep,
-    goToPreviousStep: state.goToPreviousStep,
-    goToNextStep: state.goToNextStep,
-    clearCurrentStep: state.clearCurrentStep,
-  }))
+  useAppStore((state) => state.currentStep)
 
 // Обратная совместимость
 export const useAuthStore = useAppStore

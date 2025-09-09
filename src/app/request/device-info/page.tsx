@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image';
 import { Page } from '@/components/Page';
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+import { useAppStore } from '@/stores/authStore';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -20,9 +20,9 @@ export default function DeviceInfoPage() {
         username,
         serialNumber,
         setSerialNumber,
-        resetAllStates
-    } = useStartForm();
-    const { setCurrentStep } = useNavigation();
+        resetAllStates,
+        setCurrentStep
+    } = useAppStore();
     const router = useRouter();
 
     // Состояние для ручного ввода S/N

@@ -4,8 +4,6 @@
 export const dynamic = 'force-dynamic';
 
 import { Link } from '@/components/Link/Link';
-import tonSvg from './_assets/ton.svg';
-import picture from './_assets/picture.png';
 import { Button } from '@/components/ui/button';
 
 import { motion } from 'framer-motion';
@@ -15,24 +13,37 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { ExpandButton } from '@/components/ExpandButton';
-import { tailwindColors } from '@/core/colors';
-import { ChatContext } from '@/components/ChatContext';
 import { useSafeArea } from '@/hooks/useSafeArea';
-import { useImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
-import { LoadingIndicator } from '@/components/ImagePreloader/LoadingIndicator';
-import { getHomePagePreloadImages } from '@/core/lib/imageUtils';
-import { useAppStore, isMaster, useUserData, useDeviceData, useConditions } from '@/stores/authStore';
+import { useAppStore, isMaster } from '@/stores/authStore';
 
 function HomeContent() {
-  const { setRole, userId, setModel, setPrice, setImei, setSerialNumber, setDeviceConditions, setAdditionalConditions, resetAllStates } = useAppStore();
-  const { telegramId } = useUserData();
-  const { modelname, imei, serialNumber } = useDeviceData();
-  const { deviceConditions, additionalConditions } = useConditions();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { 
+    setRole, 
+    userId, 
+    role,
+    setModel, 
+    setPrice, 
+    setImei, 
+    setSerialNumber, 
+    setDeviceConditions, 
+    setAdditionalConditions, 
+    resetAllStates, 
+    setTelegramId,
+    telegramId,
+    modelname,
+    imei,
+    serialNumber,
+    deviceConditions,
+    additionalConditions
+  } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
-  const [showImagePreload, setShowImagePreload] = useState(false);
+  const [testAdminIndex, setTestAdminIndex] = useState(0);
   const router = useRouter();
+
+  // ID админов для тестирования в браузере
+  const testAdminIds = ['1', '296925626', '531360988'];
+
 
   // Предзагрузка изображений отключена на главной странице для стабильности
   // Оптимизация работает на страницах condition и additional-condition
@@ -47,23 +58,40 @@ function HomeContent() {
       console.log('Page loaded, forcing fullscreen at', new Date().toISOString());
       forceFullscreen();
     }
+  }, [isInTelegram, isFullscreen, forceFullscreen]);
 
-    if (!telegramId) return;
-
-    if (telegramId === '1' || telegramId === '296925626' || telegramId === '531360988') {
-      setIsAdmin(true);
-      setRole('master', parseInt(telegramId));
-    } else {
-      setRole('client', parseInt(telegramId || '0'));
+  // Отдельный useEffect для инициализации Telegram ID
+  useEffect(() => {
+    if (isInTelegram && window.Telegram?.WebApp) {
+      const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+      if (tgUser?.id) {
+        const tgId = tgUser.id.toString();
+        setTelegramId(tgId);
+        
+        if (tgId === '1' || tgId === '296925626' || tgId === '531360988') {
+          setRole('master', parseInt(tgId));
+        } else {
+          setRole('client', parseInt(tgId));
+        }
+      }
+    } else if (isInTelegram === false) {
+      // Fallback для тестирования в браузере
+      // Используем ID админа для тестирования
+      const testId = testAdminIds[testAdminIndex]; 
+      setTelegramId(testId);
+      setRole('master', parseInt(testId));
+    } else if (isInTelegram === null) {
+      // Если isInTelegram === null, принудительно устанавливаем false
+      setIsInTelegram(false);
     }
-  }, [telegramId, isFullscreen, forceFullscreen, isInTelegram]);
+  }, [isInTelegram, setTelegramId, setRole, testAdminIndex]);
 
   // Проверяем сохраненные данные и перенаправляем на нужный шаг
   useEffect(() => {
     // Проверяем, запущено ли приложение в Telegram
     const checkTelegram = () => {
       if (typeof window !== 'undefined') {
-        // Проверяем Telegram WebApp
+        // Простая проверка - если есть Telegram.WebApp, то это WebApp
         const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
         const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
         
@@ -72,6 +100,11 @@ function HomeContent() {
         
         setIsInTelegram(inTelegram);
         setIsLoading(false);
+        
+        // Если мы не в Telegram, принудительно устанавливаем false
+        if (!inTelegram) {
+          setIsInTelegram(false);
+        }
       }
     };
 
@@ -303,13 +336,39 @@ function HomeContent() {
                 Оценить смартфон
               </Button>
               
-              {isMaster(userId) && (
+              
+
+              {!isLoading && isMaster(userId) && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="w-full h-14 bg-teal-500 hover:bg-teal-600 text-white font-medium text-base rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-200"
+                    onClick={() => router.push('/master')}
+                  >
+                    Для мастеров
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full h-14 bg-purple-500 hover:bg-purple-600 text-white font-medium text-base rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-200"
+                    onClick={() => router.push('/admin')}
+                  >
+                    Админ панель
+                  </Button>
+                </>
+              )}
+
+              {/* Кнопка для переключения ID админов в браузере */}
+              {!isLoading && !isInTelegram && (
                 <Button
                   variant="outline"
-                  className="w-full h-14 bg-teal-500 hover:bg-teal-600 text-white font-medium text-base rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-200"
-                  onClick={() => router.push('/master')}
+                  className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
+                  onClick={() => {
+                    const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
+                    setTestAdminIndex(nextIndex);
+                  }}
                 >
-                  Для мастеров
+                  Переключить ID админа: {testAdminIds[testAdminIndex]} (нажмите для смены)
                 </Button>
               )}
               
@@ -333,20 +392,6 @@ function HomeContent() {
           <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
             {/* Кнопка для принудительного расширения */}
             <ExpandButton className="w-full" />
-
-            {isAdmin && (
-              <Link href="/admin">
-                <div className="w-12 h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer mx-auto overflow-hidden bg-white border border-gray-200 hover:border-gray-300">
-                  <Image
-                    src={getPictureUrl('admin_btn.png') || '/admin_btn.png'}
-                    alt="Админ панель"
-                    width={48}
-                    height={48}
-                    className="w-full h-full object-cover rounded-2xl"
-                  />
-                </div>
-              </Link>
-            )}
           </div>
         </div>
       </div>

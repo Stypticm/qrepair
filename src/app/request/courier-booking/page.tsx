@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useStartForm } from '@/components/StartFormContext/StartFormContext';
-import { useNavigation } from '@/components/NavigationContext/NavigationContext';
+import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
@@ -17,8 +17,7 @@ import { locationManager } from '@telegram-apps/sdk';
 
 const CourierBookingPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, price } = useStartForm();
-    const { setCurrentStep } = useNavigation();
+    const { telegramId, modelname, price, setCurrentStep } = useAppStore();
     
     // locationManager импортирован из @telegram-apps/sdk
     

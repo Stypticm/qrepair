@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAppStore } from '@/stores/authStore';
 import { X, Upload, Camera, CheckCircle, AlertCircle } from 'lucide-react';
 import { ClipLoader } from 'react-spinners';
 
@@ -16,7 +15,6 @@ interface AIEvaluationModalProps {
 }
 
 export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
-  const { setModalOpen } = useAppStore();
   const [step, setStep] = useState<'upload' | 'processing' | 'result'>('upload');
   const [photos, setPhotos] = useState<File[]>([]);
   const [model, setModel] = useState('');
@@ -111,7 +109,6 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
     setSerialNumber('');
     setEvaluation(null);
     setFeedback('');
-    setModalOpen(false);
     onClose();
   };
 
