@@ -59,8 +59,16 @@ const FinalPage = () => {
             // Сначала пытаемся получить из Zustand store
             if (telegramId) {
                 console.log('✅ Loading telegramId from store:', telegramId);
-                setUserTelegramId(telegramId);
-                setTelegramUsername(telegramId);
+                // Проверяем, есть ли username в sessionStorage
+                const savedUsername = sessionStorage.getItem('telegramUsername');
+                if (savedUsername) {
+                    console.log('✅ Found username in sessionStorage:', savedUsername);
+                    setUserTelegramId(`@${savedUsername}`);
+                    setTelegramUsername(savedUsername);
+                } else {
+                    setUserTelegramId(telegramId);
+                    setTelegramUsername(telegramId);
+                }
                 return;
             }
 
@@ -70,8 +78,16 @@ const FinalPage = () => {
 
             if (savedTelegramId) {
                 console.log('✅ Set telegramId from sessionStorage:', savedTelegramId);
-                setUserTelegramId(savedTelegramId);
-                setTelegramUsername(savedTelegramId);
+                // Проверяем, есть ли username в sessionStorage
+                const savedUsername = sessionStorage.getItem('telegramUsername');
+                if (savedUsername) {
+                    console.log('✅ Found username in sessionStorage:', savedUsername);
+                    setUserTelegramId(`@${savedUsername}`);
+                    setTelegramUsername(savedUsername);
+                } else {
+                    setUserTelegramId(savedTelegramId);
+                    setTelegramUsername(savedTelegramId);
+                }
             } else {
                 console.log('❌ No telegramId found in sessionStorage');
 
@@ -452,8 +468,8 @@ const FinalPage = () => {
                                     <h3 className="font-semibold text-gray-900 mb-2">Ваш Telegram:</h3>
                                     <p className="text-sm text-gray-600 mb-3">
                                         {telegramUsername
-                                            ? `Мы получили ваш Telegram ID: ${telegramUsername}. Вы можете изменить его при необходимости.`
-                                            : 'Введите ваш Telegram ID для связи'
+                                            ? `Мы получили ваш Telegram: @${telegramUsername}. Вы можете изменить его при необходимости.`
+                                            : 'Введите ваш Telegram для связи'
                                         }
                                     </p>
 
@@ -463,7 +479,7 @@ const FinalPage = () => {
                                             type="text"
                                             value={userTelegramId}
                                             onChange={(e) => setUserTelegramId(e.target.value)}
-                                            placeholder="username или 123456789"
+                                            placeholder="username"
                                             className="w-full pl-8 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-sm"
                                         />
                                     </div>
