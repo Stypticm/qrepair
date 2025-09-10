@@ -41,10 +41,25 @@ export default function DeviceInfoPage() {
     // Состояние диалогового окна с ошибкой
     const [showErrorDialog, setShowErrorDialog] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    
+    // Состояние для отладочной информации
+    const [debugInfo, setDebugInfo] = useState<string[]>([]);
+    const [showDebugPanel, setShowDebugPanel] = useState(false);
+
+    // Функция для добавления отладочной информации
+    const addDebugInfo = (message: string) => {
+        const timestamp = new Date().toLocaleTimeString();
+        const debugMessage = `[${timestamp}] ${message}`;
+        console.log(debugMessage);
+        setDebugInfo(prev => [...prev.slice(-9), debugMessage]); // Показываем последние 10 сообщений
+    };
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
         setCurrentStep('device-info');
+        addDebugInfo('Страница device-info загружена');
+        addDebugInfo(`telegramId: ${telegramId || 'НЕТ'}`);
+        addDebugInfo(`username: ${username || 'НЕТ'}`);
     }, [setCurrentStep]);
 
     // Автофокус на поле ввода
@@ -177,20 +192,27 @@ export default function DeviceInfoPage() {
 
     // Обработчик подтверждения
     const handleConfirm = async () => {
+        addDebugInfo('Нажата кнопка "Продолжить"');
+        
         if (!manualSerialNumber) {
+            addDebugInfo('❌ Серийный номер не введен');
             setErrorMessage('Пожалуйста, введите серийный номер');
             setShowErrorDialog(true);
             return;
         }
 
+        addDebugInfo(`Проверяем серийный номер: ${manualSerialNumber}`);
+
         // Проверяем длину
         if (manualSerialNumber.length < 10) {
+            addDebugInfo(`❌ Серийный номер слишком короткий: ${manualSerialNumber.length} символов`);
             setErrorMessage('Введён некорректный серийный номер');
             setShowErrorDialog(true);
             return;
         }
 
         if (manualSerialNumber.length > 12) {
+            addDebugInfo(`❌ Серийный номер слишком длинный: ${manualSerialNumber.length} символов`);
             setErrorMessage('Введён некорректный серийный номер');
             setShowErrorDialog(true);
             return;
@@ -198,11 +220,13 @@ export default function DeviceInfoPage() {
 
         // Проверяем валидность серийного номера
         if (!validateSerialNumber(manualSerialNumber)) {
+            addDebugInfo('❌ Серийный номер не прошел валидацию');
             setErrorMessage('Введён некорректный серийный номер');
             setShowErrorDialog(true);
             return;
         }
 
+        addDebugInfo('✅ Серийный номер прошел валидацию');
         // Показываем диалоговое окно
         setShowDialog(true);
     };
@@ -212,31 +236,49 @@ export default function DeviceInfoPage() {
         setShowDialog(false);
         
         try {
+            addDebugInfo('Начинаем сохранение данных');
+            addDebugInfo(`telegramId: ${telegramId || 'НЕТ'}`);
+            addDebugInfo(`username: ${username || 'НЕТ'}`);
+            addDebugInfo(`serialNumber: ${manualSerialNumber}`);
+            
             // Сохраняем в контекст
             setSerialNumber(manualSerialNumber);
 
             // Сохраняем в БД
+            const requestBody = {
+                telegramId,
+                username: username || 'Unknown',
+                serialNumber: manualSerialNumber,
+            };
+            
+            addDebugInfo('Отправляем запрос в API...');
+            
             const response = await fetch('/api/request/device-info', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    telegramId,
-                    username: username || 'Unknown',
-                    serialNumber: manualSerialNumber,
-                }),
+                body: JSON.stringify(requestBody),
             });
 
+            addDebugInfo(`Ответ API: ${response.status} ${response.statusText}`);
+            
             if (!response.ok) {
-                throw new Error('Ошибка сохранения данных');
+                const errorText = await response.text();
+                addDebugInfo(`❌ Ошибка API: ${errorText}`);
+                throw new Error(`Ошибка сохранения данных: ${response.status} ${response.statusText}`);
             }
 
+            const responseData = await response.json();
+            addDebugInfo('✅ Данные успешно сохранены');
+
             // Переходим на следующую страницу
+            addDebugInfo('Переходим на /request/form');
             router.push('/request/form');
         } catch (error) {
-            console.error('Ошибка сохранения:', error);
-            setError('Ошибка сохранения данных. Попробуйте еще раз.');
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            addDebugInfo(`❌ Ошибка: ${errorMessage}`);
+            setError(`Ошибка сохранения данных: ${errorMessage}. Попробуйте еще раз.`);
         }
     };
 
@@ -335,6 +377,53 @@ export default function DeviceInfoPage() {
                                 Продолжить
                             </Button>
                         </motion.div>
+
+                        {/* Кнопка отладки */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.2, delay: 0.4 }}
+                        >
+                            <Button
+                                onClick={() => setShowDebugPanel(!showDebugPanel)}
+                                variant="outline"
+                                className="w-full text-xs text-gray-600 border-gray-300"
+                            >
+                                {showDebugPanel ? 'Скрыть отладку' : 'Показать отладку'}
+                            </Button>
+                        </motion.div>
+
+                        {/* Панель отладки */}
+                        {showDebugPanel && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                transition={{ duration: 0.3 }}
+                                className="mt-2"
+                            >
+                                <Card className="bg-gray-100 border-gray-300">
+                                    <CardContent className="p-3">
+                                        <div className="text-xs font-semibold text-gray-700 mb-2">
+                                            🔍 Отладочная информация:
+                                        </div>
+                                        <div className="space-y-1 max-h-32 overflow-y-auto">
+                                            {debugInfo.length === 0 ? (
+                                                <div className="text-gray-500 text-xs">Нет отладочной информации</div>
+                                            ) : (
+                                                debugInfo.map((info, index) => (
+                                                    <div key={index} className="text-xs text-gray-600 font-mono">
+                                                        {info}
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                        <div className="mt-2 text-xs text-gray-500">
+                                            telegramId: {telegramId || 'НЕТ'} | username: {username || 'НЕТ'}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        )}
                     </div>
                 </div>
             </div>
