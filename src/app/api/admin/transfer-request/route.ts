@@ -12,6 +12,13 @@ export async function POST(req: NextRequest) {
       adminTelegramId,
     } = await req.json()
 
+    console.log('Transfer request data:', {
+      requestId,
+      newPointId,
+      newMasterId,
+      adminTelegramId,
+    })
+
     if (!requestId || !adminTelegramId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -50,6 +57,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Обновляем заявку
+    console.log('Updating request with data:', {
+      pickupPoint: newPointId?.toString(),
+      assignedMasterId: newMasterId,
+    })
+
     const updatedRequest = await prisma.skupka.update({
       where: { id: requestId },
       data: {
@@ -57,6 +69,11 @@ export async function POST(req: NextRequest) {
         assignedMasterId: newMasterId,
       },
     })
+
+    console.log(
+      'Request updated successfully:',
+      updatedRequest
+    )
 
     // Уведомляем нового мастера, если он назначен
     if (newMasterId) {

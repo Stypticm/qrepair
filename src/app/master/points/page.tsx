@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/authStore'
 import { useNotifications } from '@/hooks/useNotifications'
 import { useMasterNotifications } from '@/hooks/useMasterNotifications'
 import Link from 'next/link'
+import { Page } from '@/components/Page'
 
 interface Request {
   id: string
@@ -21,9 +22,15 @@ interface Request {
   }
 }
 
+interface Point {
+  id: number
+  name: string
+  address: string
+}
+
 export default function MasterPointsPage() {
   const [requests, setRequests] = useState<Request[]>([])
-  const [masterPoints, setMasterPoints] = useState<number[]>([])
+  const [masterPoints, setMasterPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedPoints, setExpandedPoints] = useState<Set<number>>(new Set())
@@ -61,7 +68,7 @@ export default function MasterPointsPage() {
       }
       
       setRequests(requestsData.requests)
-      setMasterPoints(pointsData.points.map((point: any) => point.id))
+      setMasterPoints(pointsData.points)
       showNotification('Заявки загружены успешно', 'success')
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -97,7 +104,11 @@ export default function MasterPointsPage() {
   
   const isRequestActive = (request: Request) => {
     const pointId = parseInt(request.pickupPoint || '0')
-    return masterPoints.includes(pointId)
+    return masterPoints.some(point => point.id === pointId)
+  }
+  
+  const getPointInfo = (pointId: number) => {
+    return masterPoints.find(point => point.id === pointId)
   }
   
   if (loading) {
@@ -128,12 +139,20 @@ export default function MasterPointsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-4">
+    <Page back={true}>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-6xl mx-auto p-4">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
           <p className="text-gray-600">Управляйте всеми заявками в системе</p>
+          {masterPoints.length > 0 && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 font-medium">
+                Ваша точка: {masterPoints.map(point => `${point.name} (${point.address})`).join(', ')}
+              </p>
+            </div>
+          )}
         </div>
         
         {requests.length === 0 ? (
@@ -149,8 +168,9 @@ export default function MasterPointsPage() {
         ) : (
           <div className="space-y-6">
             {Object.entries(groupRequestsByPoint()).map(([pointId, pointRequests]) => {
-              const isMyPoint = masterPoints.includes(parseInt(pointId))
+              const isMyPoint = masterPoints.some(point => point.id === parseInt(pointId))
               const isExpanded = expandedPoints.has(parseInt(pointId))
+              const pointInfo = getPointInfo(parseInt(pointId))
               
               return (
                 <div key={pointId} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -164,9 +184,14 @@ export default function MasterPointsPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className={`w-3 h-3 rounded-full ${isMyPoint ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Точка #{pointId} {isMyPoint ? '(Моя точка)' : '(Чужая точка)'}
-                        </h3>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {pointInfo ? pointInfo.name : `Точка #${pointId}`}
+                          </h3>
+                          {pointInfo && (
+                            <p className="text-sm text-gray-600">{pointInfo.address}</p>
+                          )}
+                        </div>
                         <span className={`px-2 py-1 text-xs rounded-full ${
                           isMyPoint ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
                         }`}>
@@ -269,7 +294,8 @@ export default function MasterPointsPage() {
             })}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </Page>
   )
 }

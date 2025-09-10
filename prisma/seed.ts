@@ -41,7 +41,7 @@ async function main() {
       create: {
         telegramId: '1',
         username: 'testPC',
-        name: 'testPC',
+        name: 'Главный Админ',
         isActive: true,
         pointId: points[0].id,
       },
@@ -51,7 +51,7 @@ async function main() {
       update: {},
       create: {
         telegramId: '296925626',
-        username: 'admin2',
+        username: 'roman_qtwe',
         name: 'Роман Qtwe',
         isActive: true,
         pointId: points[1].id,
@@ -62,7 +62,7 @@ async function main() {
       update: {},
       create: {
         telegramId: '531360988',
-        username: 'admin3',
+        username: 'misha_styptic',
         name: 'Миша Styptic',
         isActive: true,
         pointId: points[2].id,
