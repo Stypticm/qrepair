@@ -360,7 +360,7 @@ function HomeContent() {
                   <Button
                     variant="outline"
                     className="w-full h-14 bg-teal-500 hover:bg-teal-600 text-white font-medium text-base rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-200"
-                    onClick={() => router.push('/master')}
+                    onClick={() => router.push('/master/points')}
                   >
                     Для мастеров
                   </Button>
