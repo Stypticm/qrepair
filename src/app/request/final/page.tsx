@@ -56,25 +56,19 @@ const FinalPage = () => {
             });
 
             // Используем данные из Zustand store
-            if (telegramId) {
-                console.log('✅ Using telegramId from Zustand:', telegramId);
+            if (username) {
+                console.log('✅ Using username from Zustand:', username);
+                setUserTelegramId(`@${username}`);
+                setTelegramUsername(username);
+            } else if (telegramId) {
+                console.log('✅ Using telegramId from Zustand as fallback:', telegramId);
                 setUserTelegramId(telegramId);
-                
-                if (username) {
-                    console.log('✅ Using username from Zustand:', username);
-                    setTelegramUsername(username);
-                } else {
-                    // Fallback для тестирования в браузере
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log('🔄 Using fallback username for development');
-                        setTelegramUsername('qoqos_app');
-                    }
-                }
+                setTelegramUsername(telegramId);
             } else {
                 // Fallback для тестирования в браузере
                 if (process.env.NODE_ENV === 'development') {
                     console.log('🔄 Using fallback data for development');
-                    setUserTelegramId('browser_test_user');
+                    setUserTelegramId('@qoqos_app');
                     setTelegramUsername('qoqos_app');
                 }
             }
