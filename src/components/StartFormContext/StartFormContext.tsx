@@ -113,7 +113,15 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         if (initDataState?.user) {
             console.log('Telegram user data:', initDataState.user);
             setUsername(initDataState.user.first_name ?? null);
-            setTelegramId(String(initDataState.user.id));
+            
+            // Устанавливаем telegramId только если он еще не установлен
+            if (!telegramId) {
+                console.log('Setting telegramId from initDataState:', initDataState.user.id);
+                setTelegramId(String(initDataState.user.id));
+            } else {
+                console.log('telegramId already set, not overriding:', telegramId);
+            }
+            
             setUserPhotoUrl(initDataState.user.photo_url ?? null);
             
             // Сохраняем username из Telegram для использования на финальной странице

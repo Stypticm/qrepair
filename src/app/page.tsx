@@ -49,9 +49,9 @@ function HomeContent() {
   // ID админов для тестирования в браузере
   const testAdminIds = ['1', '296925626', '531360988'];
 
-  // Заглушка для отладочной информации (отключена)
+  // Включаем отладочную информацию для диагностики
   const addDebugInfo = (message: string) => {
-    // Отладочная информация отключена
+    console.log(`[DEBUG] ${message}`);
   };
 
 
@@ -72,10 +72,15 @@ function HomeContent() {
 
   // Отдельный useEffect для инициализации Telegram ID
   useEffect(() => {
+    addDebugInfo(`🔍 Первый useEffect: isInTelegram=${isInTelegram}, hasWebApp=${!!window.Telegram?.WebApp}`);
+    
     if (isInTelegram && window.Telegram?.WebApp) {
       const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+      addDebugInfo(`🔍 initDataUnsafe.user: ${JSON.stringify(tgUser)}`);
+      
       if (tgUser?.id) {
         const tgId = tgUser.id.toString();
+        addDebugInfo(`✅ Получен telegramId из первого useEffect: ${tgId}`);
         setTelegramId(tgId);
         
         if (tgId === '1' || tgId === '296925626' || tgId === '531360988') {
@@ -83,18 +88,15 @@ function HomeContent() {
         } else {
           setRole('client', parseInt(tgId));
         }
+      } else {
+        addDebugInfo(`❌ Нет user.id в initDataUnsafe`);
       }
-    } else if (isInTelegram === false) {
-      // Fallback для тестирования в браузере
-      // Используем ID админа для тестирования
-      const testId = testAdminIds[testAdminIndex]; 
-      setTelegramId(testId);
-      setRole('master', parseInt(testId));
     } else if (isInTelegram === null) {
       // Если isInTelegram === null, принудительно устанавливаем false
+      addDebugInfo(`🔄 isInTelegram === null, устанавливаем false`);
       setIsInTelegram(false);
     }
-  }, [isInTelegram, setTelegramId, setRole, testAdminIndex]);
+  }, [isInTelegram, setTelegramId, setRole]);
 
   // Дополнительный useEffect для восстановления telegramId и currentStep из sessionStorage
   // ТОЛЬКО если мы НЕ в Telegram WebApp (для fallback в браузере)
@@ -519,8 +521,15 @@ function HomeContent() {
               }
             }
             
-            // Если ничего не сработало, не используем fallback
-            addDebugInfo('🔄 Не используем fallback ID, чтобы не перезаписывать данные других пользователей');
+            // Если ничего не сработало, используем fallback только для браузера
+            if (!isInTelegram) {
+              addDebugInfo('🔄 Используем fallback ID для браузера');
+              const testId = testAdminIds[testAdminIndex]; 
+              setTelegramId(testId);
+              setRole('master', parseInt(testId));
+            } else {
+              addDebugInfo('🔄 Не используем fallback ID в Telegram, чтобы не перезаписывать данные других пользователей');
+            }
           }
         }
       } else {
@@ -528,8 +537,15 @@ function HomeContent() {
         setIsInTelegram(false);
         addDebugInfo(`🖥️ Не в Telegram WebApp, используем браузерный режим`);
         
-        // В браузере не устанавливаем ID, чтобы не перезаписывать данные других пользователей
-        addDebugInfo(`🖥️ Браузер: не устанавливаем ID, чтобы не перезаписывать данные других пользователей`);
+        // В браузере устанавливаем fallback ID только если нет реальных данных
+        if (!telegramId) {
+          addDebugInfo(`🖥️ Браузер: устанавливаем fallback ID для тестирования`);
+          const testId = testAdminIds[testAdminIndex]; 
+          setTelegramId(testId);
+          setRole('master', parseInt(testId));
+        } else {
+          addDebugInfo(`🖥️ Браузер: используем существующий ID: ${telegramId}`);
+        }
       }
     }
   };
