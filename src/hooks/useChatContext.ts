@@ -27,13 +27,10 @@ export function useChatContext() {
         // Если есть данные чата или start_param, вероятно запуск из чата
         if (hasChatData || hasStartParam) {
           setIsChatContext(true)
-          console.log('Detected chat context launch')
         } else {
           setIsChatContext(false)
-          console.log('Detected external launch')
         }
         
-        console.log('Context detection:', {
           hasChatData: !!hasChatData,
           hasStartParam: !!hasStartParam,
           viewportHeight,
@@ -52,7 +49,6 @@ export function useChatContext() {
           // Если viewport не развернут, возможно это контекст чата
           if (event.is_expanded !== undefined && !event.is_expanded) {
             setIsChatContext(true)
-            console.log('Viewport suggests chat context')
           }
         })
       }

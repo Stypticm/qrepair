@@ -19,8 +19,9 @@
     "migrate-devices": "tsx scripts/migrate-devices-to-db.ts",
     "db:seed": "tsx prisma/seed.ts",
     "cleanup:logs": "node scripts/cleanup-console-logs.js",
+    "cleanup:frontend-logs": "node scripts/cleanup-frontend-logs.js",
     "cleanup:test-apis": "node scripts/remove-test-apis.js",
-    "cleanup:all": "npm run cleanup:logs && npm run cleanup:test-apis"
+    "cleanup:all": "npm run cleanup:frontend-logs && npm run cleanup:test-apis"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

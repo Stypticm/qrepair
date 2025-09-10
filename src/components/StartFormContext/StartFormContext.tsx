@@ -51,7 +51,6 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const addDebugInfo = (message: string) => {
         const timestamp = new Date().toLocaleTimeString();
         const debugMessage = `[${timestamp}] ${message}`;
-        console.log(debugMessage);
         setDebugInfo(prev => [...prev.slice(-9), debugMessage]); // Показываем последние 10 сообщений
     };
 
@@ -89,7 +88,6 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
 
     // Функция для сброса всех состояний
     const resetAllStates = () => {
-        console.log('Сбрасываю все состояния формы...');
         setModel('Apple iPhone 11');
         setComment('');
         setImei(null);
@@ -118,10 +116,8 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             sessionStorage.removeItem('additionalConditions');
             sessionStorage.removeItem('price');
             sessionStorage.removeItem('hasSeenWelcome'); // Сбрасываем флаг приветствия
-            console.log('sessionStorage очищен');
         }
         
-        console.log('Все состояния сброшены');
     };
 
     useEffect(() => {
@@ -195,11 +191,9 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             if (response.ok) {
                 const data = await response.json();
                 if (data) {
-                    console.log('Загружаем данные из БД:', data);
                     
                     // Восстанавливаем данные из БД
                     if (data.modelname) {
-                        console.log('Восстанавливаем modelname из БД:', data.modelname);
                         setModel(data.modelname);
                     }
                     if (data.price) setPrice(data.price);
@@ -210,16 +204,13 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                     
                     // Восстанавливаем текущий шаг из БД
                     if (data.currentStep) {
-                        console.log('Восстанавливаем currentStep из БД:', data.currentStep);
                         // Сохраняем в sessionStorage для NavigationContext
                         if (typeof window !== 'undefined') {
                             sessionStorage.setItem('currentStep', data.currentStep);
                         }
                     }
                     
-                    console.log('Данные восстановлены из БД:', data);
                 } else {
-                    console.log('Нет данных в БД для telegramId:', telegramId);
                 }
             }
         } catch (error) {

@@ -24,7 +24,6 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       const savedStep = sessionStorage.getItem('currentStep');
       if (savedStep) {
-        console.log('Восстанавливаем текущий шаг из sessionStorage:', savedStep);
         setCurrentStep(savedStep);
       }
     }
@@ -33,7 +32,6 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   // Сохраняем текущий шаг в sessionStorage при изменениях
   useEffect(() => {
     if (typeof window !== 'undefined' && currentStep) {
-      console.log('Сохраняем текущий шаг в sessionStorage:', currentStep);
       sessionStorage.setItem('currentStep', currentStep);
     }
   }, [currentStep]);
@@ -151,7 +149,6 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 
   // Функция для очистки текущего шага
   const clearCurrentStep = () => {
-    console.log('Очищаем текущий шаг');
     setCurrentStep(null);
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('currentStep');

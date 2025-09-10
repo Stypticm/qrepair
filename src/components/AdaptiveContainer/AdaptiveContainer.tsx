@@ -31,7 +31,6 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       setIsMobile(mobile);
       setIsDesktop(desktop);
 
-      console.log('Device detection:', { mobile, desktop, userAgent });
     };
 
     checkDevice();
@@ -41,11 +40,9 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       const webApp = window.Telegram.WebApp;
       const isMenuButtonContext = !webApp.initDataUnsafe?.start_param;
       setIsMenuButton(isMenuButtonContext);
-      console.log('App opened via Menu Button:', isMenuButtonContext, 'Start param:', webApp.initDataUnsafe?.start_param);
 
       // Принудительно запрашиваем fullscreen для всех контекстов, если не в fullscreen
       if (!isFullscreen) {
-        console.log('Not in fullscreen, forcing fullscreen at', new Date().toISOString());
         forceFullscreen();
       }
     }

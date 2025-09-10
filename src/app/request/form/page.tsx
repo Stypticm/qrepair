@@ -32,28 +32,21 @@ export default function FormPage() {
 
     // Загружаем модели при инициализации
     useEffect(() => {
-        console.log('FormPage: Загружаем модели...');
         devices.loadModels();
     }, [devices.loadModels]);
 
     // Отладочная информация о загруженных моделях
     useEffect(() => {
-        console.log('FormPage: Модели загружены:', devices.models);
-        console.log('FormPage: Состояние загрузки:', devices.loading);
     }, [devices.models, devices.loading]);
 
     // Сбрасываем все состояния при загрузке страницы (только если это новая заявка)
     useEffect(() => {
         // Логируем для отладки
-        console.log('FormPage: Telegram WebApp доступен:', isTelegramWebApp);
-        console.log('FormPage: telegramId:', telegramId);
-        console.log('FormPage: window.Telegram:', typeof window !== 'undefined' ? (window as any).Telegram : 'undefined');
 
         // Проверяем, есть ли сохраненные данные в sessionStorage
         const savedData = sessionStorage.getItem('phoneSelection');
         if (!savedData) {
             // Только если нет сохраненных данных - сбрасываем состояния
-            console.log('Новая заявка - сбрасываем состояния');
             // Сбрасываем только основные состояния, не вызывая resetAllStates
             setModel('Apple iPhone 11');
             // Очищаем sessionStorage для новой заявки
@@ -61,7 +54,6 @@ export default function FormPage() {
 
             // Приветственный экран теперь показывается на device-info странице
         } else {
-            console.log('Продолжение заявки - оставляем состояния');
         }
     }, [isTelegramWebApp, telegramId, setModel]); // Добавляем setModel в зависимости
 
@@ -206,7 +198,6 @@ export default function FormPage() {
 
 
     const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
-        console.log('Выбор опции:', { type, value, currentOptions: selectedOptions });
 
         // Вибрация при выборе
         if ('vibrate' in navigator) {
@@ -220,7 +211,6 @@ export default function FormPage() {
             [type]: selectedOptions[type] === processedValue ? '' : processedValue
         };
 
-        console.log('Новые опции:', newOptions);
 
         // Сбрасываем зависимые параметры
         if (type === 'model') {
@@ -246,7 +236,6 @@ export default function FormPage() {
             newOptions.country = '';
         }
 
-        console.log('Опции после сброса зависимых:', newOptions);
         setSelectedOptions(newOptions);
 
         // Сбрасываем режим редактирования при новом выборе
@@ -338,7 +327,6 @@ export default function FormPage() {
                 });
 
                 if (response.ok) {
-                    console.log('Модель сохранена в БД:', modelName);
                 } else {
                     console.error('Ошибка сохранения модели в БД');
                 }
@@ -376,12 +364,9 @@ export default function FormPage() {
                     let basePrice = 0; // цена по умолчанию
                     if (devices.selectedDevice) {
                         basePrice = devices.selectedDevice.basePrice;
-                        console.log('✅ Найдена модель:', devices.selectedDevice, 'Цена:', basePrice);
                     } else {
-                        console.log('❌ Модель не найдена. selectedOptions:', selectedOptions);
                     }
 
-                    console.log('🚀 Form page - отправляем в API /choose:', {
                         telegramId,
                         username: username || 'Unknown',
                         price: basePrice,
@@ -583,11 +568,9 @@ export default function FormPage() {
                 }
 
                 // Для обычного браузера (fallback) - просто логируем
-                console.log(`Telegram WebApp API недоступен в браузере: ${methodName}`, data);
             }
         } catch (e) {
             // Ошибка при вызове метода - логируем для отладки
-            console.log(`Ошибка при вызове Telegram метода ${methodName}:`, e);
         }
     };
 

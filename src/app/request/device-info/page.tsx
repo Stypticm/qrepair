@@ -50,7 +50,6 @@ export default function DeviceInfoPage() {
     const addDebugInfo = (message: string) => {
         const timestamp = new Date().toLocaleTimeString();
         const debugMessage = `[${timestamp}] ${message}`;
-        console.log(debugMessage);
         setDebugInfo(prev => [...prev.slice(-9), debugMessage]); // Показываем последние 10 сообщений
     };
 

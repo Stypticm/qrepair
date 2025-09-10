@@ -49,7 +49,6 @@ const FinalPage = () => {
     // Загружаем telegramId из store или sessionStorage при инициализации
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            console.log('🔍 Final page - загружаем данные:', {
                 telegramIdFromStore: telegramId,
                 usernameFromStore: username,
                 telegramWebApp: !!window.Telegram?.WebApp,
@@ -57,17 +56,14 @@ const FinalPage = () => {
 
             // Используем данные из Zustand store
             if (username) {
-                console.log('✅ Using username from Zustand:', username);
                 setUserTelegramId(`@${username}`);
                 setTelegramUsername(username);
             } else if (telegramId) {
-                console.log('✅ Using telegramId from Zustand as fallback:', telegramId);
                 setUserTelegramId(telegramId);
                 setTelegramUsername(telegramId);
             } else {
                 // Fallback для тестирования в браузере
                 if (process.env.NODE_ENV === 'development') {
-                    console.log('🔄 Using fallback data for development');
                     setUserTelegramId('@qoqos_app');
                     setTelegramUsername('qoqos_app');
                 }
@@ -82,19 +78,16 @@ const FinalPage = () => {
         const loadDeliveryData = async () => {
             if (typeof window !== 'undefined') {
                 const savedDeliveryData = sessionStorage.getItem('deliveryData');
-                console.log('🔍 Loading delivery data from sessionStorage:', savedDeliveryData);
 
                 if (savedDeliveryData) {
                     try {
                         const parsed = JSON.parse(savedDeliveryData);
                         setDeliveryData(parsed);
-                        console.log('✅ Delivery data loaded from sessionStorage:', parsed);
                     } catch (e) {
                         console.error('Error parsing delivery data:', e);
                     }
                 } else {
                     // Если нет данных в sessionStorage, пытаемся получить из БД
-                    console.log('⚠️ No delivery data in sessionStorage, trying to load from DB');
                     try {
                         const effectiveTelegramId = telegramId || 'browser_test_user';
                         const response = await fetch('/api/request/getDraft', {
@@ -109,7 +102,6 @@ const FinalPage = () => {
 
                         if (response.ok) {
                             const data = await response.json();
-                            console.log('📦 Draft data from DB:', data);
 
                             if (data.draft) {
                                 const draftDeliveryData = {
@@ -117,7 +109,6 @@ const FinalPage = () => {
                                     pickupPoint: data.draft.pickupPoint || 'Адрес не указан',
                                 };
                                 setDeliveryData(draftDeliveryData);
-                                console.log('✅ Delivery data loaded from DB:', draftDeliveryData);
                             }
                         }
                     } catch (error) {
@@ -150,8 +141,6 @@ const FinalPage = () => {
                 deliveryData,
             };
 
-            console.log('📤 Final submit - отправляемые данные:', requestData);
-            console.log('🔍 Final submit - проверка полей:', {
                 telegramId: !!requestData.telegramId,
                 userTelegramId: !!requestData.userTelegramId,
                 modelname: !!requestData.modelname,
@@ -169,7 +158,6 @@ const FinalPage = () => {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Final submit - ответ от API:', result);
                 setTelegramIdConfirmed(true);
                 setShowThankYou(true);
 

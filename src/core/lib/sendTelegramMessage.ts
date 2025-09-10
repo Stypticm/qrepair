@@ -26,12 +26,6 @@ export async function sendTelegramMessage(
   })
 
   const data = await res.json()
-  console.log('📤 DEBUG - Telegram API response:', {
-    ok: data.ok,
-    error_code: data.error_code,
-    description: data.description,
-    result: data.result ? 'Message sent' : 'No result',
-  })
 
   if (!data.ok) {
     console.error('Telegram API error:', data)
@@ -96,13 +90,6 @@ export async function sendTelegramPhoto(
     caption,
     ...options,
   }
-
-  console.log('📤 DEBUG - Sending photo to Telegram:', {
-    url,
-    telegramId,
-    photo: photo.substring(0, 50) + '...',
-    caption: caption?.substring(0, 100) + '...',
-  })
 
   const res = await fetch(url, {
     method: 'POST',

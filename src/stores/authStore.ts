@@ -243,17 +243,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   goToPreviousStep: () => {
     const { currentStep } = get()
-    console.log(
       'goToPreviousStep called - currentStep:',
       currentStep
     )
     if (!currentStep) {
-      console.log('No currentStep, cannot go back')
       return
     }
 
     const currentIndex = stepOrder.indexOf(currentStep)
-    console.log(
       'Current index:',
       currentIndex,
       'Step order:',
@@ -261,7 +258,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     )
     if (currentIndex > 0) {
       const previousStep = stepOrder[currentIndex - 1]
-      console.log('Going to previous step:', previousStep)
       set({ currentStep: previousStep })
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('currentStep', previousStep)
@@ -269,7 +265,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         window.location.href = `/request/${previousStep}`
       }
     } else {
-      console.log('Already at first step, going to home')
       if (typeof window !== 'undefined') {
         window.location.href = '/'
       }
@@ -337,7 +332,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   addDebugInfo: (message: string) => {
     const timestamp = new Date().toLocaleTimeString()
     const debugMessage = `[${timestamp}] ${message}`
-    console.log(debugMessage)
     set((state) => ({
       debugInfo: [
         ...state.debugInfo.slice(-9),

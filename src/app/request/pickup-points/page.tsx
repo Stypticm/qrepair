@@ -53,11 +53,8 @@ const PickupPointsPage = () => {
                 const response = await fetch('/api/admin/points');
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Загруженные данные:', data);
                     // API возвращает { success: true, points: [...] }
                     const points = data.points || [];
-                    console.log('Точки приема:', points);
-                    console.log('Количество точек:', points.length);
                     setPickupPoints(Array.isArray(points) ? points : []);
                 } else {
                     console.error('Ошибка загрузки точек приема');
@@ -122,8 +119,6 @@ const PickupPointsPage = () => {
                 pickupPoint: selectedPointData?.address,
             };
             
-            console.log('📤 Отправляемые данные:', requestData);
-            console.log('🔍 Проверка полей:', {
                 telegramId: !!telegramId,
                 modelname: !!requestData.modelname,
                 price: !!requestData.price,
@@ -142,7 +137,6 @@ const PickupPointsPage = () => {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ Ответ от API submit-delivery:', result);
                 
                 // Сохраняем данные о доставке в sessionStorage
                 const deliveryData = {
@@ -150,10 +144,8 @@ const PickupPointsPage = () => {
                     pickupPoint: selectedPointData?.address,
                 };
                 sessionStorage.setItem('deliveryData', JSON.stringify(deliveryData));
-                console.log('✅ Данные сохранены в sessionStorage:', deliveryData);
                 
                 // Переходим к финальной странице
-                console.log('🔄 Переходим к финальной странице...');
                 router.push('/request/final');
             } else {
                 console.error('❌ Ошибка API:', response.status, response.statusText);

@@ -81,20 +81,16 @@ export default function AdditionalConditionPage() {
 
     // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {
-        console.log('Загружаю сохраненные дополнительные состояния...');
 
 
 
         // Сначала пытаемся восстановить из sessionStorage
         if (typeof window !== 'undefined') {
             const savedInSession = sessionStorage.getItem('additionalConditions');
-            console.log('[loadSavedConditions] Проверяем sessionStorage:', savedInSession);
 
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
-                    console.log('[loadSavedConditions] Найдено в sessionStorage:', savedInSession);
-                    console.log('[loadSavedConditions] Распарсено из sessionStorage:', parsed);
 
                     // Дополнительная проверка - если данные пустые или некорректные, не загружаем
                     const hasValidData = parsed &&
@@ -115,9 +111,7 @@ export default function AdditionalConditionPage() {
                         
                         setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
                         setShowHints(false); // Отключаем подсказки при загрузке данных
-                        console.log('[loadSavedConditions] Дополнительные состояния загружены из sessionStorage и установлены:', parsed);
                     } else {
-                        console.log('[loadSavedConditions] Данные в sessionStorage некорректные, очищаем');
                         sessionStorage.removeItem('additionalConditions');
                         setAdditionalConditions({
                             faceId: null,
@@ -138,7 +132,6 @@ export default function AdditionalConditionPage() {
         // Если нет данных в sessionStorage, загружаем из БД
         if (telegramId) {
             try {
-                console.log('Загружаю дополнительные состояния из БД для telegramId:', telegramId);
                 const response = await fetch('/api/request/getAdditionalConditions', {
                     method: 'POST',
                     headers: {
@@ -149,11 +142,9 @@ export default function AdditionalConditionPage() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Дополнительные состояния загружены из БД:', data);
 
                     // Проверяем статус заявки - если submitted, то НЕ загружаем старые состояния
                     if (data.status === 'submitted') {
-                        console.log('Заявка уже отправлена, сбрасываем дополнительные состояния');
                         setAdditionalConditions({
                             faceId: null,
                             touchId: null,
@@ -173,7 +164,6 @@ export default function AdditionalConditionPage() {
                             data.additionalConditions.battery;
 
                         if (hasOldData) {
-                            console.log('[loadSavedConditions] Найдены сохраненные дополнительные состояния, загружаем их:', data.additionalConditions);
                             // Проверяем, что данные корректные (не пустые строки или null)
                             const isValidData = data.additionalConditions.faceId &&
                                 data.additionalConditions.touchId &&
@@ -187,23 +177,19 @@ export default function AdditionalConditionPage() {
                                 // Сохраняем в sessionStorage для быстрого доступа
                                 sessionStorage.setItem('additionalConditions', JSON.stringify(data.additionalConditions));
                             } else {
-                                console.log('[loadSavedConditions] Данные в БД некорректные, оставляем пустыми');
                                 // Очищаем некорректные данные из БД
                                 if (typeof window !== 'undefined') {
                                     sessionStorage.removeItem('additionalConditions');
                                 }
                             }
                         } else {
-                            console.log('[loadSavedConditions] Нет сохраненных дополнительных состояний, оставляем пустыми');
                             // НЕ сбрасываем состояния - они уже пустые по умолчанию
                         }
                     } else {
-                        console.log('[loadSavedConditions] Нет дополнительных состояний в БД, оставляем пустыми');
                     }
 
                     setLoadedFromDB(true);
                 } else {
-                    console.log('Не удалось загрузить дополнительные состояния из БД');
                     setLoadedFromDB(true);
                 }
             } catch (error) {
@@ -217,7 +203,6 @@ export default function AdditionalConditionPage() {
 
     // Загружаем состояния при монтировании компонента
     useEffect(() => {
-        console.log('[useEffect] Компонент смонтирован, telegramId:', telegramId);
 
         if (telegramId) {
             // Не загружаем состояния сразу - ждем создания заявки
@@ -242,7 +227,6 @@ export default function AdditionalConditionPage() {
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
-                    console.log('Продолжение заявки - восстановлены дополнительные состояния из sessionStorage:', parsed);
                     setAdditionalConditions(parsed);
                     setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
                     setShowHints(false); // Отключаем подсказки при загрузке данных
@@ -356,7 +340,6 @@ export default function AdditionalConditionPage() {
             const minPrice = basePrice * 0.5;
             const result = Math.max(finalPrice, minPrice);
 
-            console.log('💰 Расчет цены с дополнительными условиями:', {
                 basePrice,
                 totalPenalty,
                 finalPrice: result,
@@ -364,7 +347,6 @@ export default function AdditionalConditionPage() {
                 additionalConditions
             });
 
-            console.log('💾 Сохраняем цену в sessionStorage:', result);
 
             // Обновляем цену в контексте
             setPrice(result);
@@ -381,7 +363,6 @@ export default function AdditionalConditionPage() {
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {
         if (areAllConditionsSelected() && hasChanges) {
-            console.log('[useEffect] Показываем диалог - все условия выбраны и есть изменения');
             
             // Рассчитываем цену перед показом диалога
             calculatePriceWithAdditionalConditions();
@@ -438,7 +419,6 @@ export default function AdditionalConditionPage() {
         if (!telegramId) return;
 
         try {
-            console.log('[saveConditionsToDatabase] Сохраняю дополнительные состояния в БД:', newConditions);
             const response = await fetch('/api/request/saveAdditionalConditions', {
                 method: 'POST',
                 headers: {
@@ -453,7 +433,6 @@ export default function AdditionalConditionPage() {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('[saveConditionsToDatabase] Дополнительные состояния успешно сохранены в БД:', result);
                 // setHasChanges(true); // Убираем отсюда, так как устанавливаем раньше
             } else {
                 const errorData = await response.json();
@@ -470,12 +449,9 @@ export default function AdditionalConditionPage() {
 
     // Обработчик выбора условия
     const handleConditionSelect = (type: 'faceId' | 'touchId' | 'backCamera' | 'battery', conditionId: string) => {
-        console.log(`[handleConditionSelect] Начало выбора ${type} с ID: ${conditionId}`);
-        console.log(`[handleConditionSelect] Текущие состояния ДО выбора:`, additionalConditions);
 
         // Проверяем, можно ли выбрать этот тип
         if (!canSelectSection(type)) {
-            console.log(`[handleConditionSelect] Нельзя выбрать ${type} сейчас`);
             return;
         }
 
@@ -486,7 +462,6 @@ export default function AdditionalConditionPage() {
 
         // Получаем текстовое описание состояния
         const conditionText = getAdditionalConditionText(conditionId);
-        console.log(`[handleConditionSelect] Выбираю ${type}: ${conditionId} -> ${conditionText}`);
 
         // Проверяем, изменилось ли состояние
         if (additionalConditions[type] !== conditionText) {
@@ -495,7 +470,6 @@ export default function AdditionalConditionPage() {
                 [type]: conditionText
             };
 
-            console.log(`[handleConditionSelect] Новые условия для установки:`, newConditions);
 
             // Сначала обновляем контекст
             setAdditionalConditions(newConditions);
@@ -514,13 +488,11 @@ export default function AdditionalConditionPage() {
             // Сохраняем в sessionStorage для быстрого восстановления
             if (typeof window !== 'undefined') {
                 sessionStorage.setItem('additionalConditions', JSON.stringify(newConditions));
-                console.log(`[handleConditionSelect] Сохранено в sessionStorage:`, newConditions);
             }
 
             // Затем сохраняем состояния в БД
             saveConditionsToDatabase(newConditions);
         } else {
-            console.log(`[handleConditionSelect] Состояние ${type} уже установлено как ${conditionText}. Изменений нет.`);
         }
     };
 

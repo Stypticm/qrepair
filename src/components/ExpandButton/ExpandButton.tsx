@@ -20,7 +20,6 @@ export function ExpandButton({ className = '', children = 'Развернуть'
   return (
     <Button
       onClick={() => {
-        console.log('Expand button clicked, forcing fullscreen...');
         forceFullscreen();
       }}
       className={cn('bg-[#2dc2c6] hover:bg-[#25a8ac] text-white', className)}

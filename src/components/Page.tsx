@@ -19,7 +19,6 @@ export function Page({ children, back = true }: PropsWithChildren<{
   const canGoBack = currentStep !== null;
   
   // Отладочная информация
-  console.log('Page component - currentStep:', currentStep, 'canGoBack:', canGoBack);
 
   useEffect(() => {
     try {
@@ -30,7 +29,6 @@ export function Page({ children, back = true }: PropsWithChildren<{
       }
     } catch (error) {
       // Игнорируем ошибки, если приложение не запущено в Telegram
-      console.log('BackButton show/hide error (ignored):', error);
     }
   }, [back]);
 
@@ -50,7 +48,6 @@ export function Page({ children, back = true }: PropsWithChildren<{
       backButton.onClick(handleBackClick);
     } catch (error) {
       // Игнорируем ошибки, если приложение не запущено в Telegram
-      console.log('BackButton setup error (ignored):', error);
     }
 
     // Очистка подписки
@@ -59,7 +56,6 @@ export function Page({ children, back = true }: PropsWithChildren<{
         backButton.offClick(handleBackClick);
       } catch (error) {
         // Игнорируем ошибки при очистке, если приложение не запущено в Telegram
-        console.log('BackButton cleanup error (ignored):', error);
       }
     };
   }, [router, goToPreviousStep, canGoBack]);

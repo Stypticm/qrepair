@@ -71,7 +71,6 @@ function HomeContent() {
   useEffect(() => {
     // Принудительно вызываем fullscreen при загрузке страницы только если мы в Telegram
     if (!isFullscreen && window.Telegram?.WebApp && isInTelegram) {
-      console.log('Page loaded, forcing fullscreen at', new Date().toISOString());
       forceFullscreen();
     }
   }, [isInTelegram, isFullscreen, forceFullscreen]);

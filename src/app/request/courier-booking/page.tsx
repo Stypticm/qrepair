@@ -65,7 +65,6 @@ const CourierBookingPage = () => {
         const timer = setTimeout(() => {
             if (!locationMethod && !isRequestingLocation) {
                 // Показываем уведомление о возможности автоматического получения локации
-                console.log('Предлагаем пользователю получить локацию автоматически');
             }
         }, 1000);
 
@@ -79,7 +78,6 @@ const CourierBookingPage = () => {
                 try {
                     locationManager.unmount();
                 } catch (e) {
-                    console.log('LocationManager unmount error (ignored):', e);
                 }
             }
         };
@@ -87,9 +85,6 @@ const CourierBookingPage = () => {
 
     // Логирование изменений locationMethod
     useEffect(() => {
-        console.log('🔍 locationMethod изменился:', locationMethod);
-        console.log('🔍 Блок выбора способа должен показываться:', !locationMethod);
-        console.log('🔍 Блок адреса должен показываться:', !!locationMethod);
     }, [locationMethod]);
 
 
@@ -179,9 +174,6 @@ const CourierBookingPage = () => {
 
     // Функция для запроса локации через Telegram
     const handleRequestLocation = async () => {
-        console.log('🔍 Начинаем запрос локации...');
-        console.log('🔍 locationManager:', locationManager);
-        console.log('🔍 isRequestingLocation:', isRequestingLocation);
         
         setIsRequestingLocation(true);
         setLocationError('');
@@ -189,46 +181,34 @@ const CourierBookingPage = () => {
         
         try {
             // Убираем проверку Telegram - полагаемся на locationManager.isSupported()
-            console.log('🔍 Пропускаем проверку Telegram, полагаемся на locationManager.isSupported()');
 
             // Проверяем поддержку геолокации
-            console.log('🔍 Проверяем поддержку геолокации...');
             if (!locationManager.isSupported()) {
                 throw new Error('Геолокация не поддерживается в данной версии Telegram');
             }
-            console.log('✅ Геолокация поддерживается');
 
             // Убеждаемся, что locationManager смонтирован
-            console.log('🔍 Монтируем locationManager...');
             try {
                 await locationManager.mount();
-                console.log('✅ LocationManager смонтирован');
             } catch (e) {
-                console.log('⚠️ LocationManager mount error (ignored):', e);
             }
 
             // Небольшая задержка для завершения монтирования
             await new Promise(resolve => setTimeout(resolve, 100));
 
             // Запрашиваем локацию через Telegram SDK
-            console.log('🔍 Запрашиваем локацию...');
             const location = await locationManager.requestLocation();
-            console.log('📍 Получена локация:', location);
             
             if (location && location.latitude && location.longitude) {
                 const { latitude, longitude } = location;
-                console.log(`📍 Координаты: ${latitude}, ${longitude}`);
                 
                 // Получаем адрес по координатам
-                console.log('🔍 Получаем адрес по координатам...');
                 const addressFromCoords = await getAddressFromCoordinates(latitude, longitude);
-                console.log('📍 Адрес:', addressFromCoords);
                 
                 setAddress(addressFromCoords);
                 setLocationMethod('telegram');
                 setLocationError('');
                 setLocationSuccess(true);
-                console.log('✅ Локация успешно получена и обработана');
             } else {
                 throw new Error('Не удалось получить координаты');
             }
@@ -418,8 +398,6 @@ const CourierBookingPage = () => {
                                     <div className="space-y-3">
                                         <Button
                                             onClick={() => {
-                                                console.log('🔍 Кнопка нажата!');
-                                                console.log('🔍 isRequestingLocation:', isRequestingLocation);
                                                 handleRequestLocation();
                                             }}
                                             disabled={isRequestingLocation}
@@ -483,18 +461,14 @@ const CourierBookingPage = () => {
                                         </label>
                                         <Button
                                             onClick={() => {
-                                                console.log('🔍 Кнопка "Изменить" нажата');
-                                                console.log('🔍 Текущий locationMethod:', locationMethod);
                                                 setLocationMethod(null);
                                                 setAddress('');
                                                 setLocationError('');
                                                 setLocationSuccess(false);
-                                                console.log('🔍 locationMethod сброшен в null');
                                                 // Отключаем locationManager при сбросе
                                                 try {
                                                     locationManager.unmount();
                                                 } catch (e) {
-                                                    console.log('LocationManager unmount error (ignored):', e);
                                                 }
                                             }}
                                             variant="ghost"

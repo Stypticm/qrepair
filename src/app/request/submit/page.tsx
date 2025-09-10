@@ -85,20 +85,15 @@ const SubmitPage = () => {
 
             // Загружаем цену из sessionStorage
             const savedPrice = sessionStorage.getItem('price');
-            console.log('🔍 Submit page - savedPrice из sessionStorage:', savedPrice);
             if (savedPrice) {
                 try {
                     const priceValue = JSON.parse(savedPrice);
-                    console.log('🔍 Submit page - parsed priceValue:', priceValue);
                     if (priceValue && priceValue > 0) {
                         setPrice(priceValue);
                         setPriceLoaded(true);
-                        console.log('✅ Submit page - установлена цена из sessionStorage:', priceValue);
                     } else {
-                        console.log('❌ Submit page - цена в sessionStorage невалидна:', priceValue);
                     }
                 } catch (e) {
-                    console.log('❌ Submit page - ошибка парсинга price:', e);
                 }
             }
 
@@ -116,7 +111,6 @@ const SubmitPage = () => {
                 }
             }
             
-            console.log('🔍 Submit page - проверка данных:', {
                 hasSessionData,
                 hasValidPrice,
                 savedPrice,
@@ -124,7 +118,6 @@ const SubmitPage = () => {
             });
 
             if ((!hasSessionData || !hasValidPrice) && telegramId) {
-                console.log('🔄 Submit page - загружаем данные из БД...');
                 // Загружаем данные из БД
                 fetch('/api/request/getDraft', {
                     method: 'POST',
@@ -136,8 +129,6 @@ const SubmitPage = () => {
                     .then(response => response.ok ? response.json() : null)
                     .then(data => {
                         if (data) {
-                            console.log('Загружаем данные из БД в submit:', data);
-                            console.log('💰 Submit page - цены из БД:', {
                                 basePrice: data.basePrice,
                                 damagePercent: data.damagePercent,
                                 finalPrice: data.price,
@@ -154,7 +145,6 @@ const SubmitPage = () => {
                                 // Обновляем цену в sessionStorage
                                 if (typeof window !== 'undefined') {
                                     sessionStorage.setItem('price', JSON.stringify(data.price));
-                                    console.log('✅ Submit page - цена обновлена в sessionStorage:', data.price);
                                 }
                             }
                             if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
@@ -198,7 +188,6 @@ const SubmitPage = () => {
         // Добавляем таймаут для предотвращения зависания
         const timeout = setTimeout(() => {
             if (!dataLoaded) {
-                console.log('⚠️ Submit page - таймаут загрузки данных, принудительно показываем форму');
                 setDataLoaded(true);
             }
         }, 5000); // 5 секунд
@@ -208,7 +197,6 @@ const SubmitPage = () => {
 
     const handleReset = async () => {
         try {
-            console.log('Starting reset process, telegramId:', telegramId);
 
             // Сбрасываем все состояния
             resetAllStates();
@@ -226,7 +214,6 @@ const SubmitPage = () => {
 
             // Очищаем данные в базе данных
             if (telegramId) {
-                console.log('Clearing draft for telegramId:', telegramId);
                 try {
                     const response = await fetch('/api/request/clearDraft', {
                         method: 'DELETE',
@@ -236,14 +223,12 @@ const SubmitPage = () => {
                         body: JSON.stringify({ telegramId }),
                     });
 
-                    console.log('Clear draft response status:', response.status);
 
                     if (!response.ok) {
                         const errorData = await response.text();
                         console.error('Ошибка очистки данных в БД:', response.status, errorData);
                     } else {
                         const result = await response.json();
-                        console.log('Draft cleared successfully:', result);
                     }
                 } catch (fetchError) {
                     console.error('Ошибка при запросе к API clearDraft:', fetchError);
@@ -253,7 +238,6 @@ const SubmitPage = () => {
             }
 
             // Переходим к device-info (первая страница в новой структуре)
-            console.log('Redirecting to device-info');
             router.replace('/request/device-info');
         } catch (error) {
             console.error('Ошибка при сбросе данных:', error);
@@ -358,12 +342,10 @@ const SubmitPage = () => {
     const getFullModelName = (): string => {
         if (typeof window !== 'undefined') {
             const savedPhoneSelection = sessionStorage.getItem('phoneSelection');
-            console.log('phoneSelection from sessionStorage:', savedPhoneSelection);
 
             if (savedPhoneSelection) {
                 try {
                     const parsed = JSON.parse(savedPhoneSelection);
-                    console.log('Parsed phoneSelection:', parsed);
 
                     let fullModel = `iPhone ${parsed.model}`;
 
@@ -395,7 +377,6 @@ const SubmitPage = () => {
                         fullModel += ` ${parsed.country.split(' ')[0]}`;
                     }
 
-                    console.log('Generated full model:', fullModel);
                     return fullModel;
                 } catch (e) {
                     console.error('Error parsing phoneSelection:', e);
@@ -404,7 +385,6 @@ const SubmitPage = () => {
         }
 
         // Возвращаем базовую модель если не удалось получить полную
-        console.log('Using fallback modelname:', modelname);
         const cleanModelName = modelname ? modelname.replace(/^Apple\s+/, '') : 'Модель не найдена';
         return cleanModelName;
     };

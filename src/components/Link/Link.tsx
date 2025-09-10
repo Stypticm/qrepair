@@ -45,7 +45,6 @@ export const Link: FC<LinkProps> = ({
           openLink(targetUrl.toString());
         } catch (error) {
           // Fallback к обычному открытию ссылки
-          console.log('Telegram openLink error, using fallback:', error);
           window.open(targetUrl.toString(), '_blank');
         }
       }

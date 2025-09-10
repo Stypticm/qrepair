@@ -110,7 +110,6 @@ export function useDevices(): UseDevicesReturn {
     async (model: string) => {
       if (!model) return
 
-      console.log('🔄 Loading variants for model:', model)
       setLoading((prev) => ({ ...prev, variants: true }))
       try {
         const startTime = Date.now()
@@ -121,7 +120,6 @@ export function useDevices(): UseDevicesReturn {
         )
         const data = await response.json()
         const endTime = Date.now()
-        console.log(
           `✅ Variants loaded in ${endTime - startTime}ms:`,
           data.variants
         )
@@ -144,7 +142,6 @@ export function useDevices(): UseDevicesReturn {
     ) => {
       if (!filters.model) return
 
-      console.log('🔄 Loading storages for:', filters)
       setLoading((prev) => ({ ...prev, storages: true }))
       try {
         const startTime = Date.now()
@@ -154,7 +151,6 @@ export function useDevices(): UseDevicesReturn {
         if (filters.variant !== undefined)
           params.append('variant', filters.variant)
 
-        console.log(
           '📡 API call to storages with params:',
           params.toString()
         )
@@ -163,7 +159,6 @@ export function useDevices(): UseDevicesReturn {
         )
         const data = await response.json()
         const endTime = Date.now()
-        console.log(
           `✅ Storages loaded in ${endTime - startTime}ms:`,
           data.storages
         )
@@ -189,7 +184,6 @@ export function useDevices(): UseDevicesReturn {
     ) => {
       if (!filters.model) return
 
-      console.log('🔄 Loading colors for:', filters)
       setLoading((prev) => ({ ...prev, colors: true }))
       try {
         const params = new URLSearchParams({
@@ -200,7 +194,6 @@ export function useDevices(): UseDevicesReturn {
         if (filters.storage)
           params.append('storage', filters.storage)
 
-        console.log(
           '📡 API call to colors with params:',
           params.toString()
         )
@@ -209,7 +202,6 @@ export function useDevices(): UseDevicesReturn {
           `/api/devices/colors?${params}`
         )
         const data = await response.json()
-        console.log('✅ Colors loaded:', data)
         if (data.success) {
           setColors(data.colors)
         } else {
@@ -238,7 +230,6 @@ export function useDevices(): UseDevicesReturn {
     ) => {
       if (!filters.model) return
 
-      console.log('🔄 Loading countries for:', filters)
       setLoading((prev) => ({ ...prev, countries: true }))
       try {
         const params = new URLSearchParams({
@@ -253,7 +244,6 @@ export function useDevices(): UseDevicesReturn {
         if (filters.simType)
           params.append('simType', filters.simType)
 
-        console.log(
           '📡 API call to countries with params:',
           params.toString()
         )
@@ -262,7 +252,6 @@ export function useDevices(): UseDevicesReturn {
           `/api/devices/countries?${params}`
         )
         const data = await response.json()
-        console.log('✅ Countries loaded:', data)
         if (data.success) {
           setCountries(data.countries)
         } else {
@@ -293,7 +282,6 @@ export function useDevices(): UseDevicesReturn {
     ) => {
       if (!filters.model) return
 
-      console.log('🔄 Loading sim types for:', filters)
       setLoading((prev) => ({ ...prev, simTypes: true }))
       try {
         const params = new URLSearchParams({
@@ -306,7 +294,6 @@ export function useDevices(): UseDevicesReturn {
         if (filters.color)
           params.append('color', filters.color)
 
-        console.log(
           '📡 API call to sim types with params:',
           params.toString()
         )
@@ -315,7 +302,6 @@ export function useDevices(): UseDevicesReturn {
           `/api/devices/sim-types?${params}`
         )
         const data = await response.json()
-        console.log('✅ Sim types loaded:', data)
         if (data.success) {
           setSimTypes(data.simTypes)
         } else {

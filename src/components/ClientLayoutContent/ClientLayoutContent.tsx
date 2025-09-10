@@ -13,7 +13,6 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
       try {
         init();
       } catch (error) {
-        console.log('Telegram SDK init error (ignored):', error);
       }
     }
   }, []);

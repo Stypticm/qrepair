@@ -150,15 +150,6 @@ export async function POST(request: Request) {
 
     // Отправляем уведомление в Telegram
     try {
-      console.log(
-        '🚀 DEBUG - Начинаем отправку Telegram сообщения'
-      )
-      console.log('🚀 DEBUG - telegramId:', telegramId)
-      console.log(
-        '🚀 DEBUG - BOT_TOKEN exists:',
-        !!process.env.BOT_TOKEN
-      )
-
       // Получаем deviceConditions и additionalConditions из БД для расчета процентов
       const deviceConditions =
         existingRequest.deviceConditions as any
@@ -293,22 +284,9 @@ export async function POST(request: Request) {
       }
 
       const realTelegramId = getRealTelegramId(telegramId)
-      console.log(
-        '🚀 DEBUG - realTelegramId:',
-        realTelegramId
-      )
-      console.log(
-        '🚀 DEBUG - isTestId:',
-        ['1', '2', '3'].includes(telegramId)
-      )
 
       // Отправляем фото с подписью из Supabase
       const photoUrl = getPictureUrl('submit.png')
-      console.log('🚀 DEBUG - photoUrl:', photoUrl)
-      console.log(
-        '🚀 DEBUG - caption length:',
-        caption?.length
-      )
 
       const telegramResult = await sendTelegramPhoto(
         realTelegramId, // Используем реальный ID
@@ -317,11 +295,6 @@ export async function POST(request: Request) {
         {
           parse_mode: 'HTML',
         }
-      )
-
-      console.log(
-        '🚀 DEBUG - Telegram result:',
-        telegramResult
       )
     } catch (telegramError) {
       console.error(
