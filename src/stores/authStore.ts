@@ -387,10 +387,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       addDebugInfo(`ID: ${initDataState.user.id || 'НЕТ'}`)
 
       const tgId = initDataState.user.id.toString()
-      const tgUsername = initDataState.user.first_name
+      const tgUsername = initDataState.user.username
 
       addDebugInfo(`✅ Получен telegramId: ${tgId}`)
       addDebugInfo(`✅ Получен username: ${tgUsername}`)
+      addDebugInfo(
+        `🔍 initDataState.user.username: ${initDataState.user.username}`
+      )
+      addDebugInfo(
+        `🔍 initDataState.user.first_name: ${initDataState.user.first_name}`
+      )
+      addDebugInfo(
+        `🔍 initDataState.user.last_name: ${initDataState.user.last_name}`
+      )
 
       set({
         telegramId: tgId,
@@ -432,13 +441,22 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (userData?.id) {
         const tgId = userData.id.toString()
-        const tgUsername = userData.first_name
+        const tgUsername = userData.username
 
         addDebugInfo(
           `✅ Fallback - Получен telegramId: ${tgId}`
         )
         addDebugInfo(
           `✅ Fallback - Получен username: ${tgUsername}`
+        )
+        addDebugInfo(
+          `🔍 Fallback - userData.username: ${userData.username}`
+        )
+        addDebugInfo(
+          `🔍 Fallback - userData.first_name: ${userData.first_name}`
+        )
+        addDebugInfo(
+          `🔍 Fallback - userData.last_name: ${userData.last_name}`
         )
 
         set({

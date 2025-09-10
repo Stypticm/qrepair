@@ -50,7 +50,6 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
-  const { hasFeature, getActiveFeatures, isTester } = useFeatureFlags();
   const router = useRouter();
   
   // Состояние для отладочной панели
@@ -372,16 +371,16 @@ function HomeContent() {
                 </Button>
               )}
 
-              {/* Кнопка отладки */}
-              {!isLoading && (
-                <Button
-                  variant="outline"
-                  className="w-full h-12 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium text-sm rounded-xl border border-yellow-300 shadow-sm hover:shadow-md transition-all duration-200"
-                  onClick={() => setShowDebugPanel(!showDebugPanel)}
-                >
-                  {showDebugPanel ? 'Скрыть отладку' : 'Показать отладку Telegram'}
-                </Button>
-              )}
+                      {/* Кнопка отладки только для админов */}
+                      {!isLoading && role === 'master' && (
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium text-sm rounded-xl border border-yellow-300 shadow-sm hover:shadow-md transition-all duration-200"
+                          onClick={() => setShowDebugPanel(!showDebugPanel)}
+                        >
+                          {showDebugPanel ? 'Скрыть отладку' : 'Показать отладку Telegram'}
+                        </Button>
+                      )}
 
               {/* Панель отладки */}
               {showDebugPanel && (
@@ -411,22 +410,6 @@ function HomeContent() {
 
               {/* Отладочная информация */}
 
-              {/* Feature Flags информация */}
-              {isTester() && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                  <h3 className="text-sm font-semibold text-blue-700 mb-2">🎯 Активные функции (Feature Flags):</h3>
-                  <div className="space-y-1">
-                    {getActiveFeatures().map((feature, index) => (
-                      <div key={index} className="text-xs text-blue-600">
-                        ✅ {feature}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-2 text-xs text-blue-500">
-                    Вы тестер! Видите новые функции.
-                  </div>
-                </div>
-              )}
               
               <Button
                 variant="outline"

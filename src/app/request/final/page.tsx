@@ -11,7 +11,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 
 const FinalPage = () => {
     const router = useRouter();
-    const { telegramId, modelname, price, resetAllStates, setCurrentStep } = useAppStore();
+    const { telegramId, username, modelname, price, resetAllStates, setCurrentStep } = useAppStore();
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [userTelegramId, setUserTelegramId] = useState('');
@@ -49,65 +49,37 @@ const FinalPage = () => {
     // Загружаем telegramId из store или sessionStorage при инициализации
     useEffect(() => {
         if (typeof window !== 'undefined') {
-            console.log('🔍 Final page - загружаем telegramId:', {
+            console.log('🔍 Final page - загружаем данные:', {
                 telegramIdFromStore: telegramId,
-                sessionStorageKeys: Object.keys(sessionStorage),
+                usernameFromStore: username,
                 telegramWebApp: !!window.Telegram?.WebApp,
-                userData: window.Telegram?.WebApp?.initDataUnsafe?.user
             });
 
-            // Сначала проверяем username в sessionStorage (приоритет)
-            const savedUsername = sessionStorage.getItem('telegramUsername');
-            console.log('🔍 Checking sessionStorage for telegramUsername first:', savedUsername);
-            if (savedUsername) {
-                console.log('✅ Found username in sessionStorage, using it:', savedUsername);
-                setUserTelegramId(`@${savedUsername}`);
-                setTelegramUsername(savedUsername);
-                return;
-            }
-
-            // Если нет username, пытаемся получить из Zustand store
+            // Используем данные из Zustand store
             if (telegramId) {
-                console.log('✅ Loading telegramId from store (fallback):', telegramId);
+                console.log('✅ Using telegramId from Zustand:', telegramId);
                 setUserTelegramId(telegramId);
-                setTelegramUsername(telegramId);
-                return;
-            }
-
-            // Если нет в store, пытаемся получить из sessionStorage
-            // НО ТОЛЬКО если мы не в Telegram WebApp (для fallback в браузере)
-            const savedTelegramId = sessionStorage.getItem('telegramId');
-            console.log('🔍 Loading telegramId from sessionStorage (fallback):', savedTelegramId);
-
-            if (savedTelegramId && typeof window !== 'undefined' && !window.Telegram?.WebApp) {
-                console.log('✅ Set telegramId from sessionStorage (fallback):', savedTelegramId);
-                setUserTelegramId(savedTelegramId);
-                setTelegramUsername(savedTelegramId);
-            } else {
-                console.log('❌ No telegramId found in sessionStorage');
-
-                // Пытаемся получить username напрямую из Telegram WebApp
-                if (window.Telegram?.WebApp?.initDataUnsafe?.user?.username) {
-                    const telegramUsername = window.Telegram.WebApp.initDataUnsafe.user.username;
-                    console.log('✅ Found telegram username from WebApp:', telegramUsername);
-                    setTelegramUsername(telegramUsername);
-                    setUserTelegramId(`@${telegramUsername}`);
-                    // Сохраняем для будущего использования
-                    sessionStorage.setItem('telegramUsername', telegramUsername);
+                
+                if (username) {
+                    console.log('✅ Using username from Zustand:', username);
+                    setTelegramUsername(username);
                 } else {
-                    console.log('❌ No telegram username found in WebApp either');
-
                     // Fallback для тестирования в браузере
                     if (process.env.NODE_ENV === 'development') {
-                        console.log('🔄 Using fallback telegramId for development');
+                        console.log('🔄 Using fallback username for development');
                         setTelegramUsername('qoqos_app');
-                        setUserTelegramId('@qoqos_app');
-                        sessionStorage.setItem('telegramUsername', 'qoqos_app');
                     }
+                }
+            } else {
+                // Fallback для тестирования в браузере
+                if (process.env.NODE_ENV === 'development') {
+                    console.log('🔄 Using fallback data for development');
+                    setUserTelegramId('browser_test_user');
+                    setTelegramUsername('qoqos_app');
                 }
             }
         }
-    }, [telegramId]);
+    }, [telegramId, username]);
 
     // Загружаем данные о выборе доставки из sessionStorage или БД
     const [deliveryData, setDeliveryData] = useState<any>(null);
@@ -480,15 +452,6 @@ const FinalPage = () => {
                                         />
                                     </div>
 
-                                    {telegramUsername && userTelegramId !== telegramUsername && (
-                                        <Button
-                                            onClick={() => setUserTelegramId(telegramUsername)}
-                                            variant="outline"
-                                            className="w-full mt-3 text-sm py-2 border-[#2dc2c6] text-[#2dc2c6] hover:bg-[#2dc2c6] hover:text-white"
-                                        >
-                                            Использовать данные из Telegram
-                                        </Button>
-                                    )}
                                 </div>
                             </div>
                         </motion.div>
