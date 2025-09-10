@@ -30,15 +30,23 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Получаем всех мастеров с их точками
-    const masters = await prisma.master.findMany({
-      include: { point: true },
+    // Получаем все заявки с назначенными мастерами
+    const requests = await prisma.skupka.findMany({
+      include: {
+        assignedMaster: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+          },
+        },
+      },
       orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json({ masters })
+    return NextResponse.json({ requests })
   } catch (error) {
-    console.error('Error fetching masters:', error)
+    console.error('Error fetching requests:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

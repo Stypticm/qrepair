@@ -2,6 +2,7 @@ import type { PropsWithChildren } from 'react';
 import { I18nProvider } from '@/core/i18n/provider';
 import { Comic_Neue } from 'next/font/google';
 import { ClientLayoutContent } from '@/components/ClientLayoutContent/ClientLayoutContent';
+import { Toaster } from 'sonner';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import 'normalize.css/normalize.css';
@@ -35,6 +36,7 @@ export default function RootLayout({
         <I18nProvider>
           <ClientLayoutContent>{children}</ClientLayoutContent>
         </I18nProvider>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
   )

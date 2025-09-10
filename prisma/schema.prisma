@@ -50,6 +50,11 @@ model Skupka {
   telegramIdConfirmed Boolean   @default(false) // Подтвердил ли пользователь свой Telegram ID
   userTelegramId      String? // Подтвержденный Telegram ID пользователя
 
+  // Поля для мастеров
+  assignedMasterId    String? // ID мастера, назначенного на заявку
+  assignedMaster      Master? @relation(fields: [assignedMasterId], references: [id])
+  aiAnalysis          Json? // Результат ИИ-анализа (заглушка)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -70,6 +75,7 @@ model Master {
 
   // Связи
   inspections DeviceInspection[]
+  assignedRequests Skupka[] // Заявки, назначенные мастеру
 }
 
 model Point {

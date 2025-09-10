@@ -91,10 +91,10 @@ function HomeContent() {
       setIsInTelegram(inTelegram);
       setIsLoading(false);
       
-                  if (inTelegram) {
+      if (inTelegram) {
                     // Инициализируем Telegram данные через Zustand
                     initializeTelegram(initDataState);
-                  } else {
+                } else {
         // Fallback для браузера
         addDebugInfo('Браузерный режим - используем fallback ID');
         const testId = testAdminIds[testAdminIndex]; 
@@ -413,7 +413,7 @@ function HomeContent() {
                       debugInfo.map((info, index) => (
                         <div key={index} className="text-xs text-gray-600 font-mono">
                           {info}
-                        </div>
+                      </div>
                       ))
                     )}
                   </div>

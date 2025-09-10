@@ -148,6 +148,52 @@ export async function POST(request: Request) {
       },
     })
 
+    // Рассчитываем финальную цену для уведомлений
+    let finalPrice = price || 0
+    if (!price && modelname) {
+      const foundModel = findModelByName(modelname)
+      if (foundModel) {
+        finalPrice = foundModel.basePrice
+      }
+    }
+
+    // Отправляем уведомление мастеру точки
+    try {
+      // Находим мастера, привязанного к точке заявки
+      const master = await prisma.master.findFirst({
+        where: {
+          pointId: parseInt(
+            updatedRequest.pickupPoint || '1'
+          ),
+        },
+      })
+
+      if (master) {
+        const masterMessage = `🔔 <b>Новая заявка на выкуп устройства!</b>
+
+🆔 <b>ID заявки:</b> ${updatedRequest.id}
+📱 <b>Модель:</b> ${modelname}
+💰 <b>Цена:</b> ${finalPrice.toLocaleString()} ₽
+👤 <b>Клиент:</b> @${updatedRequest.username}
+📍 <b>Точка:</b> ${updatedRequest.pickupPoint}
+
+Перейдите в приложение для обработки заявки.`
+
+        await sendTelegramMessage(
+          master.telegramId,
+          masterMessage,
+          {
+            parse_mode: 'HTML',
+          }
+        )
+      }
+    } catch (masterNotificationError) {
+      console.error(
+        'Error sending master notification:',
+        masterNotificationError
+      )
+    }
+
     // Отправляем уведомление в Telegram
     try {
       // Получаем deviceConditions и additionalConditions из БД для расчета процентов
@@ -255,16 +301,7 @@ export async function POST(request: Request) {
         }
       }
 
-      // Используем переданную цену или ищем basePrice из модели
-      let finalPrice = price || 0
-
-      // Если цена не передана, пытаемся найти basePrice из модели
-      if (!price && modelname) {
-        const foundModel = findModelByName(modelname)
-        if (foundModel) {
-          finalPrice = foundModel.basePrice
-        }
-      }
+      // Используем уже рассчитанную цену
 
       const requestId = updatedRequest.id
       const caption = `✅ <b>Заявка принята!</b>

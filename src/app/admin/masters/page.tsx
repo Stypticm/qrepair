@@ -1,15 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { toast } from 'sonner'
-import { useRouter } from 'next/navigation'
-import { Page } from '@/components/Page'
+import { useAppStore } from '@/stores/authStore'
 
 interface Master {
   id: string
@@ -17,301 +9,219 @@ interface Master {
   username: string
   name: string
   isActive: boolean
-  pointId?: number
+  pointId: number | null
   point?: {
     id: number
     address: string
+    workingHours: string
   }
-  createdAt: string
 }
 
 interface Point {
   id: number
   address: string
+  workingHours: string
 }
 
-export default function MastersPage() {
-  const router = useRouter()
+export default function AdminMastersPage() {
   const [masters, setMasters] = useState<Master[]>([])
   const [points, setPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [newMaster, setNewMaster] = useState({
-    telegramId: '',
-    username: '',
-    name: '',
-    pointId: ''
-  })
-
-  // Загрузка мастеров и точек
-  const loadMasters = async () => {
+  const [error, setError] = useState<string | null>(null)
+  
+  const { telegramId } = useAppStore()
+  
+  useEffect(() => {
+    if (telegramId) {
+      fetchData()
+    }
+  }, [telegramId])
+  
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/admin/masters')
-      if (response.ok) {
-        const data = await response.json()
-        setMasters(data.masters)
+      setLoading(true)
+      
+      // Получаем всех мастеров
+      const mastersResponse = await fetch(`/api/admin/masters?adminTelegramId=${telegramId}`)
+      const mastersData = await mastersResponse.json()
+      
+      if (!mastersResponse.ok) {
+        throw new Error(mastersData.error || 'Failed to fetch masters')
       }
+      
+      setMasters(mastersData.masters)
+      
+      // Получаем все точки
+      const pointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`)
+      const pointsData = await pointsResponse.json()
+      
+      if (!pointsResponse.ok) {
+        throw new Error(pointsData.error || 'Failed to fetch points')
+      }
+      
+      setPoints(pointsData.points)
     } catch (error) {
-      console.error('Error loading masters:', error)
-      toast.error('Ошибка загрузки мастеров')
+      console.error('Error fetching data:', error)
+      setError(error instanceof Error ? error.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
   }
-
-  const loadPoints = async () => {
+  
+  const assignMasterToPoint = async (masterId: string, pointId: number) => {
     try {
-      const response = await fetch('/api/admin/points')
-      if (response.ok) {
-        const data = await response.json()
-        setPoints(data.points)
-      }
-    } catch (error) {
-      console.error('Error loading points:', error)
-      toast.error('Ошибка загрузки точек')
-    }
-  }
-
-  useEffect(() => {
-    loadMasters()
-    loadPoints()
-  }, [])
-
-  // Добавление мастера
-  const addMaster = async () => {
-    if (!newMaster.telegramId || !newMaster.username) {
-      toast.error('Заполните все обязательные поля')
-      return
-    }
-
-    try {
-      const response = await fetch('/api/admin/add-master', {
+      const response = await fetch('/api/admin/assign-master', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...newMaster,
-          pointId: newMaster.pointId ? parseInt(newMaster.pointId) : null
-        }),
+          masterId,
+          pointId,
+          adminTelegramId: telegramId
+        })
       })
-
-      if (response.ok) {
-        toast.success('Мастер добавлен')
-        setNewMaster({ telegramId: '', username: '', name: '', pointId: '' })
-        setIsAddDialogOpen(false)
-        loadMasters()
-      } else {
-        const error = await response.json()
-        toast.error(error.error || 'Ошибка добавления мастера')
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to assign master')
       }
+      
+      // Показываем уведомление об успехе с деталями
+      const master = masters.find(m => m.id.toString() === masterId)
+      const point = points.find(p => p.id === pointId)
+      
+      if (master && point) {
+        alert(`✅ Мастер ${master.name} успешно назначен на точку "${point.address}"\n\nМастер получит уведомление в Telegram.`)
+      } else {
+        alert('✅ Мастер успешно назначен на точку')
+      }
+      
+      fetchData() // Обновляем данные
     } catch (error) {
-      console.error('Error adding master:', error)
-      toast.error('Ошибка добавления мастера')
+      console.error('Error assigning master:', error)
+      alert('❌ Ошибка при назначении мастера на точку')
     }
   }
-
-  // Удаление мастера
-  const deleteMaster = async (id: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этого мастера?')) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/admin/masters/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        toast.success('Мастер удалён')
-        loadMasters()
-      } else {
-        toast.error('Ошибка удаления мастера')
-      }
-    } catch (error) {
-      console.error('Error deleting master:', error)
-      toast.error('Ошибка удаления мастера')
-    }
-  }
-
-  // Активация/деактивация мастера
-  const toggleMasterStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      const response = await fetch(`/api/admin/masters/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      })
-
-      if (response.ok) {
-        toast.success(`Мастер ${!currentStatus ? 'активирован' : 'деактивирован'}`)
-        loadMasters()
-      } else {
-        toast.error('Ошибка изменения статуса')
-      }
-    } catch (error) {
-      console.error('Error toggling master status:', error)
-      toast.error('Ошибка изменения статуса')
-    }
-  }
-
-  return (
-    <Page back={true}>
-      <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <section className='flex flex-col gap-4'>
-                <h1 className="text-3xl font-semibold text-gray-900 text-center mb-2 mt-12">👨‍🔧 Управление мастерами</h1>
-                <p className="text-gray-600 text-center">Добавление и управление мастерами системы</p>
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                                     <DialogTrigger asChild>
-                     <Button className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold">
-                       + Добавить мастера
-                     </Button>
-                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md bg-white border border-gray-200 rounded-2xl shadow-xl">
-                    <DialogHeader>
-                      <DialogTitle className="text-gray-900">Добавить нового мастера</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="telegramId" className="text-gray-700">Telegram ID *</Label>
-                        <Input
-                          id="telegramId"
-                          value={newMaster.telegramId}
-                          onChange={(e) => setNewMaster({ ...newMaster, telegramId: e.target.value })}
-                          placeholder="123456789"
-                          className="text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-lg"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="username" className="text-gray-700">Username *</Label>
-                        <Input
-                          id="username"
-                          value={newMaster.username}
-                          onChange={(e) => setNewMaster({ ...newMaster, username: e.target.value })}
-                          placeholder="username (без @)"
-                          className="text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-lg"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="name" className="text-gray-700">Имя</Label>
-                        <Input
-                          id="name"
-                          value={newMaster.name}
-                          onChange={(e) => setNewMaster({ ...newMaster, name: e.target.value })}
-                          placeholder="Полное имя мастера"
-                          className="text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-lg"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="pointId" className="text-gray-700">Точка привязки</Label>
-                        <select
-                          id="pointId"
-                          value={newMaster.pointId}
-                          onChange={(e) => setNewMaster({ ...newMaster, pointId: e.target.value })}
-                          className="w-full mt-1 px-3 py-2 text-gray-900 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        >
-                          <option value="">Выберите точку</option>
-                          {points.map((point) => (
-                            <option key={point.id} value={point.id}>
-                              {point.address}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsAddDialogOpen(false)}
-                          className="text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg"
-                        >
-                          Отмена
-                        </Button>
-                                                 <Button onClick={addMaster} className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-2xl shadow-lg transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold">
-                           Добавить
-                         </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </section>
-              </div>
-
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-600">Загрузка мастеров...</div>
-                </div>
-              ) : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {masters.map((master) => (
-                    <Card key={master.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-gray-900 text-lg">{master.name || master.username}</CardTitle>
-                          <Badge
-                            variant={master.isActive ? "default" : "secondary"}
-                            className={master.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"}
-                          >
-                            {master.isActive ? 'Активен' : 'Неактивен'}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600">Username:</Label>
-                          <div className="text-gray-900 font-mono">@{master.username}</div>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600">Telegram ID:</Label>
-                          <div className="text-gray-900 font-mono">{master.telegramId}</div>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600">Точка:</Label>
-                          <div className="text-gray-900">
-                            {master.point ? master.point.address : 'Не привязан'}
-                          </div>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600">Добавлен:</Label>
-                          <div className="text-gray-900">
-                            {new Date(master.createdAt).toLocaleDateString('ru-RU')}
-                          </div>
-                        </div>
-                        <div className="flex space-x-2 pt-2 justify-between">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => toggleMasterStatus(master.id, master.isActive)}
-                            className="text-gray-700 border border-gray-200 hover:bg-gray-50 rounded-lg"
-                          >
-                            {master.isActive ? 'Деактивировать' : 'Активировать'}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => deleteMaster(master.id)}>
-                            Удалить
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {!loading && masters.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="text-gray-900 text-lg">Мастера не найдены</div>
-                  <div className="text-gray-600 mt-2">Добавьте первого мастера, чтобы начать работу</div>
-                </div>
-              )}
-            </div>
-          </div>
+  
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Загружаем данные...</p>
         </div>
-      </Page>
+      </div>
+    )
+  }
+  
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Ошибка: {error}</p>
+          <button 
+            onClick={fetchData}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Попробовать снова
+          </button>
+        </div>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto p-4">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление мастерами</h1>
+          <p className="text-gray-600">Назначайте мастеров на точки и управляйте их статусом</p>
+        </div>
+        
+        <div className="space-y-6">
+          {masters.map((master) => (
+            <div key={master.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-900">
+                        {master.name || 'Без имени'}
+                      </h3>
+                      <p className="text-gray-500 text-sm">Мастер</p>
+                    </div>
+                  </div>
+                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                    master.isActive 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {master.isActive ? 'Активен' : 'Неактивен'}
+                  </span>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 0h10m-10 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2H8z" />
+                    </svg>
+                    <div>
+                      <p className="text-gray-700 font-medium">{master.telegramId}</p>
+                      <p className="text-gray-500 text-sm">Telegram ID</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                      <p className="text-gray-700 font-medium">@{master.username}</p>
+                      <p className="text-gray-500 text-sm">Username</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <div>
+                      <p className="text-gray-700 font-medium">
+                        {master.point ? master.point.address : 'Не назначена'}
+                      </p>
+                      <p className="text-gray-500 text-sm">Текущая точка</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Назначить на точку:
+                  </label>
+                  <select 
+                    onChange={(e) => assignMasterToPoint(master.id, parseInt(e.target.value))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  >
+                    <option value="">Выберите точку</option>
+                    {points.map((point) => (
+                      <option key={point.id} value={point.id}>
+                        {point.address} ({point.workingHours})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
