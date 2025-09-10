@@ -49,19 +49,37 @@ const FinalPage = () => {
     // Загружаем telegramId из store или sessionStorage при инициализации
     useEffect(() => {
         if (typeof window !== 'undefined') {
+            console.log('Final page - username:', username, 'telegramId:', telegramId);
 
             // Используем данные из Zustand store
             if (username) {
                 setUserTelegramId(`@${username}`);
                 setTelegramUsername(username);
+                console.log('Set username from store:', username);
             } else if (telegramId) {
                 setUserTelegramId(telegramId);
                 setTelegramUsername(telegramId);
+                console.log('Set telegramId as fallback:', telegramId);
             } else {
-                // Fallback для тестирования в браузере
-                if (process.env.NODE_ENV === 'development') {
-                    setUserTelegramId('@qoqos_app');
-                    setTelegramUsername('qoqos_app');
+                // Проверяем sessionStorage как последний fallback
+                const savedUsername = sessionStorage.getItem('telegramUsername');
+                const savedTelegramId = sessionStorage.getItem('telegramId');
+                
+                if (savedUsername) {
+                    setUserTelegramId(`@${savedUsername}`);
+                    setTelegramUsername(savedUsername);
+                    console.log('Set username from sessionStorage:', savedUsername);
+                } else if (savedTelegramId) {
+                    setUserTelegramId(savedTelegramId);
+                    setTelegramUsername(savedTelegramId);
+                    console.log('Set telegramId from sessionStorage:', savedTelegramId);
+                } else {
+                    // Fallback для тестирования в браузере
+                    if (process.env.NODE_ENV === 'development') {
+                        setUserTelegramId('@qoqos_app');
+                        setTelegramUsername('qoqos_app');
+                        console.log('Set development fallback');
+                    }
                 }
             }
         }

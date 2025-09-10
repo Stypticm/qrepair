@@ -381,10 +381,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       addDebugInfo(`ID: ${initDataState.user.id || 'НЕТ'}`)
 
       const tgId = initDataState.user.id.toString()
-      const tgUsername = initDataState.user.username
+      const tgUsername = initDataState.user.username || null
 
       addDebugInfo(`✅ Получен telegramId: ${tgId}`)
-      addDebugInfo(`✅ Получен username: ${tgUsername}`)
+      addDebugInfo(
+        `✅ Получен username: ${tgUsername || 'НЕТ'}`
+      )
       addDebugInfo(
         `🔍 initDataState.user.username: ${initDataState.user.username}`
       )
@@ -419,6 +421,13 @@ export const useAppStore = create<AppState>((set, get) => ({
             'telegramUsername',
             tgUsername
           )
+          addDebugInfo(
+            `💾 Сохранен username в sessionStorage: ${tgUsername}`
+          )
+        } else {
+          addDebugInfo(
+            `⚠️ Username не сохранен в sessionStorage (null)`
+          )
         }
       }
     } else if (hasTelegramWebApp) {
@@ -435,13 +444,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       if (userData?.id) {
         const tgId = userData.id.toString()
-        const tgUsername = userData.username
+        const tgUsername = userData.username || null
 
         addDebugInfo(
           `✅ Fallback - Получен telegramId: ${tgId}`
         )
         addDebugInfo(
-          `✅ Fallback - Получен username: ${tgUsername}`
+          `✅ Fallback - Получен username: ${
+            tgUsername || 'НЕТ'
+          }`
         )
         addDebugInfo(
           `🔍 Fallback - userData.username: ${userData.username}`
@@ -476,6 +487,13 @@ export const useAppStore = create<AppState>((set, get) => ({
             sessionStorage.setItem(
               'telegramUsername',
               tgUsername
+            )
+            addDebugInfo(
+              `💾 Fallback - Сохранен username в sessionStorage: ${tgUsername}`
+            )
+          } else {
+            addDebugInfo(
+              `⚠️ Fallback - Username не сохранен в sessionStorage (null)`
             )
           }
         }
