@@ -105,13 +105,32 @@ function HomeContent() {
     }
   }, [initializeTelegram, setTelegramId, setRole, testAdminIndex]);
 
-  // Восстанавливаем текущий шаг из sessionStorage
+  // Восстанавливаем данные из sessionStorage
   useEffect(() => {
     const savedStep = sessionStorage.getItem('currentStep');
+    const savedTelegramId = sessionStorage.getItem('telegramId');
+    const savedUsername = sessionStorage.getItem('telegramUsername');
+    
+    addDebugInfo(`Восстановление из sessionStorage:`);
+    addDebugInfo(`- currentStep: ${savedStep || 'НЕТ'}`);
+    addDebugInfo(`- telegramId: ${savedTelegramId || 'НЕТ'}`);
+    addDebugInfo(`- username: ${savedUsername || 'НЕТ'}`);
+    
     if (savedStep) {
       setCurrentStep(savedStep);
     }
-  }, [setCurrentStep]);
+    
+    // Восстанавливаем данные пользователя только если они не были установлены через Telegram
+    if (savedTelegramId && !telegramId) {
+      setTelegramId(savedTelegramId);
+      addDebugInfo(`✅ Восстановлен telegramId из sessionStorage: ${savedTelegramId}`);
+    }
+    
+    if (savedUsername && !username) {
+      setUsername(savedUsername);
+      addDebugInfo(`✅ Восстановлен username из sessionStorage: ${savedUsername}`);
+    }
+  }, [setCurrentStep, setTelegramId, setUsername, telegramId, username, addDebugInfo]);
 
   // Логика инициализации теперь в Zustand store
 

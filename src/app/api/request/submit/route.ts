@@ -204,6 +204,15 @@ export async function POST(request: Request) {
 
     // Отправляем уведомление в Telegram
     try {
+      console.log(
+        '🚀 Submit API - Начинаем отправку Telegram сообщения'
+      )
+      console.log('🚀 Submit API - telegramId:', telegramId)
+      console.log(
+        '🚀 Submit API - BOT_TOKEN exists:',
+        !!process.env.BOT_TOKEN
+      )
+
       // Получаем deviceConditions и additionalConditions из БД для расчета процентов
       const deviceConditions =
         existingRequest.deviceConditions as any
@@ -329,15 +338,45 @@ export async function POST(request: Request) {
 
 Мы свяжемся с вами в ближайшее время для уточнения деталей.`
 
+      // Маппинг тестовых ID на реальные
+      const getRealTelegramId = (id: string) => {
+        if (id === '1') return '531360988' // @Stypticm
+        if (id === '2') return '296925626' // Другой админ
+        if (id === '3') return '1' // Третий админ
+        return id // Реальные ID остаются без изменений
+      }
+
+      const realTelegramId = getRealTelegramId(telegramId)
+      console.log(
+        '🚀 Submit API - original telegramId:',
+        telegramId
+      )
+      console.log(
+        '🚀 Submit API - real telegramId:',
+        realTelegramId
+      )
+      console.log(
+        '🚀 Submit API - isTestId:',
+        ['1', '2', '3'].includes(telegramId)
+      )
+
       // Отправляем фото с подписью из Supabase
       const photoUrl = getPictureUrl('submit.png')
-      await sendTelegramPhoto(
-        telegramId,
+      console.log('🚀 Submit API - photoUrl:', photoUrl)
+      console.log('🚀 Submit API - caption:', caption)
+
+      const telegramResult = await sendTelegramPhoto(
+        realTelegramId, // Используем реальный ID
         photoUrl,
         caption,
         {
           parse_mode: 'Markdown',
         }
+      )
+
+      console.log(
+        '🚀 Submit API - Telegram result:',
+        telegramResult
       )
     } catch (telegramError) {
       console.error(

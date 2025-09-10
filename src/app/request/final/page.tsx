@@ -83,7 +83,7 @@ const FinalPage = () => {
             if (typeof window !== 'undefined') {
                 const savedDeliveryData = sessionStorage.getItem('deliveryData');
                 console.log('🔍 Loading delivery data from sessionStorage:', savedDeliveryData);
-                
+
                 if (savedDeliveryData) {
                     try {
                         const parsed = JSON.parse(savedDeliveryData);
@@ -106,11 +106,11 @@ const FinalPage = () => {
                                 telegramId: effectiveTelegramId,
                             }),
                         });
-                        
+
                         if (response.ok) {
                             const data = await response.json();
                             console.log('📦 Draft data from DB:', data);
-                            
+
                             if (data.draft) {
                                 const draftDeliveryData = {
                                     deliveryMethod: 'pickup',
@@ -140,7 +140,7 @@ const FinalPage = () => {
         try {
             // Используем fallback для браузера, если telegramId не установлен
             const effectiveTelegramId = telegramId || 'browser_test_user';
-            
+
             const requestData = {
                 telegramId: effectiveTelegramId,
                 userTelegramId: userTelegramId.trim(),
@@ -149,7 +149,7 @@ const FinalPage = () => {
                 price: finalPrice,
                 deliveryData,
             };
-            
+
             console.log('📤 Final submit - отправляемые данные:', requestData);
             console.log('🔍 Final submit - проверка полей:', {
                 telegramId: !!requestData.telegramId,
@@ -158,7 +158,7 @@ const FinalPage = () => {
                 price: !!requestData.price,
                 deliveryData: !!requestData.deliveryData,
             });
-            
+
             const response = await fetch('/api/request/submit-final', {
                 method: 'POST',
                 headers: {
@@ -436,7 +436,6 @@ const FinalPage = () => {
                                     </p>
 
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">@</span>
                                         <input
                                             type="text"
                                             value={userTelegramId}

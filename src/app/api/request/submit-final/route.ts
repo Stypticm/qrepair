@@ -175,19 +175,31 @@ export async function POST(request: NextRequest) {
       !['browser_test_user'].includes(telegramId)
 
     console.log(
-      'Attempting to send Telegram message to:',
+      '🚀 Submit-Final API - Начинаем отправку Telegram сообщения'
+    )
+    console.log(
+      '🚀 Submit-Final API - original telegramId:',
       telegramId
     )
-    console.log('Real Telegram ID:', realTelegramId)
-    console.log('Is real Telegram ID:', isRealTelegramId)
-    console.log('Message content:', telegramMessage)
     console.log(
-      'BOT_TOKEN exists:',
+      '🚀 Submit-Final API - real telegramId:',
+      realTelegramId
+    )
+    console.log(
+      '🚀 Submit-Final API - isTestId:',
+      ['1', '2', '3'].includes(telegramId)
+    )
+    console.log(
+      '🚀 Submit-Final API - isRealTelegramId:',
+      isRealTelegramId
+    )
+    console.log(
+      '🚀 Submit-Final API - BOT_TOKEN exists:',
       !!process.env.BOT_TOKEN
     )
     console.log(
-      'BOT_TOKEN value:',
-      process.env.BOT_TOKEN ? 'SET' : 'NOT SET'
+      '🚀 Submit-Final API - message content:',
+      telegramMessage
     )
 
     if (isRealTelegramId && process.env.BOT_TOKEN) {

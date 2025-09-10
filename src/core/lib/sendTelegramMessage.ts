@@ -106,8 +106,10 @@ export async function sendTelegramPhoto(
   })
 
   const data = await res.json()
+  console.log('📤 Telegram API response:', data)
+
   if (!data.ok) {
-    console.error('Telegram API error:', data)
+    console.error('❌ Telegram API error:', data)
     console.error('Request URL:', url)
     console.error(
       'Request body:',
@@ -118,6 +120,7 @@ export async function sendTelegramPhoto(
     )
   }
 
+  console.log('✅ Telegram message sent successfully')
   return data
 }
 
