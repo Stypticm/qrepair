@@ -49,10 +49,6 @@ const FinalPage = () => {
     // Загружаем telegramId из store или sessionStorage при инициализации
     useEffect(() => {
         if (typeof window !== 'undefined') {
-                telegramIdFromStore: telegramId,
-                usernameFromStore: username,
-                telegramWebApp: !!window.Telegram?.WebApp,
-            });
 
             // Используем данные из Zustand store
             if (username) {
@@ -140,13 +136,6 @@ const FinalPage = () => {
                 price: finalPrice,
                 deliveryData,
             };
-
-                telegramId: !!requestData.telegramId,
-                userTelegramId: !!requestData.userTelegramId,
-                modelname: !!requestData.modelname,
-                price: !!requestData.price,
-                deliveryData: !!requestData.deliveryData,
-            });
 
             const response = await fetch('/api/request/submit-final', {
                 method: 'POST',

@@ -340,13 +340,6 @@ export default function AdditionalConditionPage() {
             const minPrice = basePrice * 0.5;
             const result = Math.max(finalPrice, minPrice);
 
-                basePrice,
-                totalPenalty,
-                finalPrice: result,
-                deviceConditions: deviceConditionsData,
-                additionalConditions
-            });
-
 
             // Обновляем цену в контексте
             setPrice(result);

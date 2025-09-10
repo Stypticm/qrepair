@@ -109,13 +109,7 @@ const SubmitPage = () => {
                 } catch (e) {
                     hasValidPrice = false;
                 }
-            }
-            
-                hasSessionData,
-                hasValidPrice,
-                savedPrice,
-                telegramId: !!telegramId
-            });
+                }
 
             if ((!hasSessionData || !hasValidPrice) && telegramId) {
                 // Загружаем данные из БД
@@ -126,33 +120,29 @@ const SubmitPage = () => {
                     },
                     body: JSON.stringify({ telegramId }),
                 })
-                    .then(response => response.ok ? response.json() : null)
-                    .then(data => {
-                        if (data) {
-                                basePrice: data.basePrice,
-                                damagePercent: data.damagePercent,
-                                finalPrice: data.price,
-                                calculatedPrice: data.basePrice * (1 - (data.damagePercent || 0) / 100)
-                            });
+                .then(response => response.ok ? response.json() : null)
+                .then(data => {      
+                    if (data) {      
+                        // Данные загружены успешно
+                    }
 
-                            // Сохраняем данные для отображения
-                            setDbData(data);
+                    // Сохраняем данные для отображения
+                    setDbData(data);
 
-                            if (data.modelname) setModel(data.modelname);
-                            if (data.price) {
-                                setPrice(data.price);
-                                setPriceLoaded(true);
-                                // Обновляем цену в sessionStorage
-                                if (typeof window !== 'undefined') {
-                                    sessionStorage.setItem('price', JSON.stringify(data.price));
-                                }
-                            }
-                            if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
-                            if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
-                            if (data.imei) setImei(data.imei);
-                            if (data.sn) setSerialNumber(data.sn);
+                    if (data.modelname) setModel(data.modelname);
+                    if (data.price) {
+                        setPrice(data.price);
+                        setPriceLoaded(true);
+                        // Обновляем цену в sessionStorage
+                        if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('price', JSON.stringify(data.price));
                         }
-                    })
+                    }
+                    if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
+                    if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
+                    if (data.imei) setImei(data.imei);
+                    if (data.sn) setSerialNumber(data.sn);
+                })
                     .catch(error => {
                         console.error('Ошибка загрузки данных из БД:', error);
                     });

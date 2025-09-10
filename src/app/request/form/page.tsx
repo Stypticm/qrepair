@@ -364,14 +364,8 @@ export default function FormPage() {
                     let basePrice = 0; // цена по умолчанию
                     if (devices.selectedDevice) {
                         basePrice = devices.selectedDevice.basePrice;
-                    } else {
-                    }
-
-                        telegramId,
-                        username: username || 'Unknown',
-                        price: basePrice,
-                        currentStep: 'form'
-                    });
+                        } else {
+                        }
 
                     // На form page всегда сохраняем базовую цену (без поломок)
                     // Это будет перезаписано на condition page с учетом поломок

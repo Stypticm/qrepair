@@ -13,31 +13,27 @@ export function useChatContext() {
   useEffect(() => {
     if (!isMounted) return
 
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+    if (
+      typeof window !== 'undefined' &&
+      window.Telegram?.WebApp
+    ) {
       const webApp = window.Telegram.WebApp
-      
+
       // Определяем контекст запуска
       const determineContext = () => {
         // Проверяем различные признаки контекста чата
         const hasChatData = webApp.initDataUnsafe?.chat
-        const hasStartParam = webApp.initDataUnsafe?.start_param
+        const hasStartParam =
+          webApp.initDataUnsafe?.start_param
         const viewportHeight = webApp.viewportHeight
         const isExpanded = webApp.isExpanded
-        
+
         // Если есть данные чата или start_param, вероятно запуск из чата
         if (hasChatData || hasStartParam) {
           setIsChatContext(true)
         } else {
           setIsChatContext(false)
         }
-        
-          hasChatData: !!hasChatData,
-          hasStartParam: !!hasStartParam,
-          viewportHeight,
-          isExpanded,
-          chatData: hasChatData,
-          startParam: hasStartParam
-        })
       }
 
       // Определяем контекст при инициализации
@@ -47,7 +43,10 @@ export function useChatContext() {
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged((event) => {
           // Если viewport не развернут, возможно это контекст чата
-          if (event.is_expanded !== undefined && !event.is_expanded) {
+          if (
+            event.is_expanded !== undefined &&
+            !event.is_expanded
+          ) {
             setIsChatContext(true)
           }
         })
@@ -57,6 +56,6 @@ export function useChatContext() {
 
   return {
     isChatContext,
-    isMounted
+    isMounted,
   }
 }

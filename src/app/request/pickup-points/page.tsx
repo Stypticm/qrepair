@@ -119,13 +119,6 @@ const PickupPointsPage = () => {
                 pickupPoint: selectedPointData?.address,
             };
             
-                telegramId: !!telegramId,
-                modelname: !!requestData.modelname,
-                price: !!requestData.price,
-                deliveryMethod: !!requestData.deliveryMethod,
-                pickupPoint: !!requestData.pickupPoint,
-            });
-            
             // Сохраняем выбор в БД
             const response = await fetch('/api/request/submit-delivery', {
                 method: 'POST',

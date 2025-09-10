@@ -301,17 +301,10 @@ export const initializeBot = async () => {
 
     // Menu Button "🚀 Open" настраивается через @BotFather
     // /setmenubutton -> Text: "🚀 Open", URL: config.getTelegramWebAppUrl()
-      '✅ Menu Button "🚀 Open" настраивается через @BotFather'
-    )
 
     // Deep linking ссылки для прямого открытия:
     // https://t.me/your_bot_username?start=app
     // https://t.me/your_bot_username?start=webapp
-      '✅ Deep linking настроен: ?start=app или ?start=webapp'
-    )
-
-      '✅ Бот Qoqos успешно инициализирован с deep linking, без Menu Button'
-    )
 
     // Запускаем бота
     bot.start()

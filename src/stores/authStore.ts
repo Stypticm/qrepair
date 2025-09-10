@@ -243,19 +243,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   goToPreviousStep: () => {
     const { currentStep } = get()
-      'goToPreviousStep called - currentStep:',
-      currentStep
-    )
     if (!currentStep) {
       return
     }
 
     const currentIndex = stepOrder.indexOf(currentStep)
-      'Current index:',
-      currentIndex,
-      'Step order:',
-      stepOrder
-    )
     if (currentIndex > 0) {
       const previousStep = stepOrder[currentIndex - 1]
       set({ currentStep: previousStep })

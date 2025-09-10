@@ -120,9 +120,6 @@ export function useDevices(): UseDevicesReturn {
         )
         const data = await response.json()
         const endTime = Date.now()
-          `✅ Variants loaded in ${endTime - startTime}ms:`,
-          data.variants
-        )
         if (data.success) {
           setVariants(data.variants)
         }
@@ -151,17 +148,11 @@ export function useDevices(): UseDevicesReturn {
         if (filters.variant !== undefined)
           params.append('variant', filters.variant)
 
-          '📡 API call to storages with params:',
-          params.toString()
-        )
         const response = await fetch(
           `/api/devices/storages?${params}`
         )
         const data = await response.json()
         const endTime = Date.now()
-          `✅ Storages loaded in ${endTime - startTime}ms:`,
-          data.storages
-        )
         if (data.success) {
           setStorages(data.storages)
         }
@@ -193,10 +184,6 @@ export function useDevices(): UseDevicesReturn {
           params.append('variant', filters.variant)
         if (filters.storage)
           params.append('storage', filters.storage)
-
-          '📡 API call to colors with params:',
-          params.toString()
-        )
 
         const response = await fetch(
           `/api/devices/colors?${params}`
@@ -244,10 +231,6 @@ export function useDevices(): UseDevicesReturn {
         if (filters.simType)
           params.append('simType', filters.simType)
 
-          '📡 API call to countries with params:',
-          params.toString()
-        )
-
         const response = await fetch(
           `/api/devices/countries?${params}`
         )
@@ -293,10 +276,6 @@ export function useDevices(): UseDevicesReturn {
           params.append('storage', filters.storage)
         if (filters.color)
           params.append('color', filters.color)
-
-          '📡 API call to sim types with params:',
-          params.toString()
-        )
 
         const response = await fetch(
           `/api/devices/sim-types?${params}`

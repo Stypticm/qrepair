@@ -32,18 +32,10 @@ export function useSafeArea() {
       typeof window === 'undefined' ||
       !window.Telegram?.WebApp
     ) {
-        'No Telegram WebApp context available at',
-        new Date().toISOString()
-      )
       return
     }
 
     const webApp = window.Telegram.WebApp
-      'Attempting to request fullscreen at',
-      new Date().toISOString(),
-      'URL:',
-      window.location.href
-    )
 
     // Проверяем версию Telegram и контекст
     const supportsFullscreen =
@@ -54,13 +46,6 @@ export function useSafeArea() {
     )
     const isFullscreenMode =
       urlParams.get('mode') === 'fullscreen'
-      'Supports fullscreen:',
-      supportsFullscreen,
-      'Start param:',
-      startParam,
-      'Is Fullscreen Mode:',
-      isFullscreenMode
-    )
 
     // Вызываем requestFullscreen и expand
     if (
@@ -71,8 +56,6 @@ export function useSafeArea() {
       webApp.requestFullscreen()
       webApp.expand() // Резервный вызов
     } else {
-        'requestFullscreen not available, using expand...'
-      )
       webApp.expand()
     }
 
@@ -90,31 +73,15 @@ export function useSafeArea() {
           !isCurrentlyFullscreen &&
           attempt <= maxAttempts
         ) {
-            `Fullscreen not achieved, retrying (attempt ${attempt}/${maxAttempts}) at`,
-            new Date().toISOString()
-          )
           if (
             supportsFullscreen &&
             'requestFullscreen' in webApp
           ) {
             webApp?.requestFullscreen?.()
-            webApp.expand()
           } else {
             webApp.expand()
           }
           retryFullscreen(attempt + 1, maxAttempts)
-        } else if (isCurrentlyFullscreen) {
-            'Fullscreen achieved:',
-            isCurrentlyFullscreen,
-            'at',
-            new Date().toISOString()
-          )
-        } else {
-            'Fullscreen not achieved after',
-            maxAttempts,
-            'attempts at',
-            new Date().toISOString()
-          )
         }
       }, attempt * 100) // Увеличиваем задержку для каждой попытки
     }
@@ -152,19 +119,11 @@ export function useSafeArea() {
       const setup = async () => {
         try {
           // Уведомляем Telegram о готовности
-            'Calling webApp.ready at',
-            new Date().toISOString()
-          )
           webApp.ready()
 
           // Проверяем контекст
           const startParam =
             webApp.initDataUnsafe?.start_param
-            'Start param:',
-            startParam,
-            'URL:',
-            window.location.href
-          )
 
           // Немедленно запрашиваем fullscreen
           if (
@@ -173,15 +132,9 @@ export function useSafeArea() {
               'function' &&
             webApp.isVersionAtLeast?.('8.0')
           ) {
-              'Calling requestFullscreen immediately after ready at',
-              new Date().toISOString()
-            )
             webApp.requestFullscreen()
             webApp.expand()
           } else {
-              'requestFullscreen not available, calling expand immediately at',
-              new Date().toISOString()
-            )
             webApp.expand()
           }
 
@@ -214,14 +167,8 @@ export function useSafeArea() {
             webApp.isFullscreen !== undefined
           ) {
             setIsFullscreen(webApp.isFullscreen)
-              'Initial fullscreen status:',
-              webApp.isFullscreen
-            )
           } else {
             setIsFullscreen(webApp.isExpanded)
-              'Initial expanded status:',
-              webApp.isExpanded
-            )
           }
 
           // Обновление safe area
@@ -234,9 +181,6 @@ export function useSafeArea() {
             }
             if (webApp.safeAreaInsets) {
               newInsets = webApp.safeAreaInsets
-                'Using safeAreaInsets:',
-                newInsets
-              )
             } else if (webApp.safeArea) {
               newInsets = webApp.safeArea
             }
@@ -245,9 +189,6 @@ export function useSafeArea() {
 
           updateSafeArea()
           setIsReady(true)
-            'Telegram WebApp initialized successfully at',
-            new Date().toISOString()
-          )
         } catch (error) {
           console.error(
             'Error initializing Telegram WebApp:',
@@ -262,17 +203,9 @@ export function useSafeArea() {
       // Обработчик изменений viewport
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged((event) => {
-            'Viewport changed:',
-            event,
-            'at',
-            new Date().toISOString()
-          )
           setIsFullscreen(event.is_expanded || false)
 
           if (!event.is_expanded) {
-              'Viewport not in fullscreen, retrying at',
-              new Date().toISOString()
-            )
             forceFullscreen()
           }
         })
@@ -283,27 +216,14 @@ export function useSafeArea() {
         const fullscreenChangedHandler = (event: {
           isFullscreen: boolean
         }) => {
-            'Fullscreen changed:',
-            event,
-            'at',
-            new Date().toISOString()
-          )
           setIsFullscreen(event.isFullscreen)
           if (!event.isFullscreen) {
-              'Not in fullscreen, retrying at',
-              new Date().toISOString()
-            )
             forceFullscreen()
           }
         }
 
         const fullscreenFailedHandler = (error: any) => {
-          console.error(
-            'Fullscreen request failed:',
-            error,
-            'at',
-            new Date().toISOString()
-          )
+          console.error('Fullscreen request failed:', error)
           webApp.expand() // Fallback
         }
 
@@ -320,11 +240,6 @@ export function useSafeArea() {
         const themeChangedHandler = () => {
           if (webApp.colorScheme) {
             setTheme(webApp.colorScheme)
-              'Theme changed:',
-              webApp.colorScheme,
-              'at',
-              new Date().toISOString()
-            )
           }
         }
 
@@ -355,9 +270,6 @@ export function useSafeArea() {
         }
       }
     } else {
-        'Not in Telegram environment, showing app immediately at',
-        new Date().toISOString()
-      )
       setIsTelegram(false)
       setIsReady(true)
     }

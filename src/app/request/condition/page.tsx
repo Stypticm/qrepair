@@ -71,14 +71,6 @@ function findModelByName(modelname: string) {
     const simType = parts[storageIndex + 2] + ' ' + parts[storageIndex + 3]; // "2 SIM"
     const country = parts[storageIndex + 4]; // "Китай"
     
-        model,
-        variant,
-        storage,
-        color,
-        simType,
-        country
-    });
-    
     // Маппинг цветов
     const colorMap: { [key: string]: string } = {
         'Золотой': 'G',
@@ -95,16 +87,8 @@ function findModelByName(modelname: string) {
         'Япония': 'Япония 🇯🇵'
     };
     
-    const mappedColor = colorMap[color] || color;
-    const mappedCountry = countryMap[country] || country;
-    
-        model,
-        variant,
-        storage,
-        color: mappedColor,
-        simType,
-        country: mappedCountry
-    });
+        const mappedColor = colorMap[color] || color;
+        const mappedCountry = countryMap[country] || country;
     
     // Получаем данные устройства из sessionStorage
     const phoneSelection = sessionStorage.getItem('phoneSelection');
@@ -400,14 +384,7 @@ export default function ConditionPage() {
             const newConditions = {
                 ...deviceConditions,
                 [type]: conditionText
-            };
-
-                type,
-                conditionId,
-                conditionText,
-                oldConditions: deviceConditions,
-                newConditions
-            });
+                };
 
             // Сначала обновляем контекст
             setDeviceConditions(newConditions);
@@ -470,13 +447,6 @@ export default function ConditionPage() {
                 telegramId: telegramId || 'test-user'
             };
 
-                basePrice,
-                finalPrice,
-                discountPercent: discountPercent.toFixed(1) + '%',
-                deviceConditions: newConditions,
-                priceDifference: discountAmount
-            });
-
             const response = await fetch('/api/request/saveConditions', {
                 method: 'POST',
                 headers: {
@@ -534,55 +504,23 @@ export default function ConditionPage() {
     const calculateFinalPrice = (basePrice: number, conditions: any = deviceConditions): number => {
         let totalPenalty = 0;
 
-            basePrice,
-            conditions
-        });
-
         // Суммируем проценты по всем выбранным состояниям
         if (conditions.front) {
-                lookingFor: conditions.front,
-                allFrontConditions: frontConditions.map(c => ({ id: c.id, label: c.label, penalty: c.penalty }))
-            });
-            
             const frontCondition = frontConditions.find(c => getConditionText(c.id) === conditions.front);
             if (frontCondition) {
                 totalPenalty += frontCondition.penalty;
-                    condition: conditions.front,
-                    penalty: frontCondition.penalty,
-                    totalPenalty
-                });
-            } else {
-                    condition: conditions.front,
-                    availableConditions: frontConditions.map(c => getConditionText(c.id))
-                });
             }
         }
         if (conditions.back) {
             const backCondition = backConditions.find(c => getConditionText(c.id) === conditions.back);
             if (backCondition) {
                 totalPenalty += backCondition.penalty;
-                    condition: conditions.back,
-                    penalty: backCondition.penalty,
-                    totalPenalty
-                });
-            } else {
-                    condition: conditions.back,
-                    availableConditions: backConditions.map(c => getConditionText(c.id))
-                });
             }
         }
         if (conditions.side) {
             const sideCondition = sideConditions.find(c => getConditionText(c.id) === conditions.side);
             if (sideCondition) {
                 totalPenalty += sideCondition.penalty;
-                    condition: conditions.side,
-                    penalty: sideCondition.penalty,
-                    totalPenalty
-                });
-            } else {
-                    condition: conditions.side,
-                    availableConditions: sideConditions.map(c => getConditionText(c.id))
-                });
             }
         }
 
@@ -595,13 +533,6 @@ export default function ConditionPage() {
         // Ограничиваем минимальную цену 50% от базовой
         const minPrice = basePrice * 0.5;
         const result = Math.max(finalPrice, minPrice);
-
-            basePrice,
-            totalPenalty,
-            calculation: `${basePrice} * (1 + ${totalPenalty}/100) = ${basePrice} * ${(1 + totalPenalty / 100)} = ${finalPrice}`,
-            minPrice,
-            finalPrice: result
-        });
 
         return result;
     };
