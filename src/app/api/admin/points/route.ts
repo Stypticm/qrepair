@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
     if (
       !admin ||
       (admin.telegramId !== '1' &&
-        admin.telegramId !== '531360988')
+        admin.telegramId !== '531360988' &&
+        admin.telegramId !== '296925626')
     ) {
       // Только главные админы
       return NextResponse.json(

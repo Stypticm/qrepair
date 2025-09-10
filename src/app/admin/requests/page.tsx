@@ -42,7 +42,7 @@ export default function AdminRequestsPage() {
   const { telegramId } = useAppStore()
   
   // Проверяем доступ только для админов
-  const isAdmin = telegramId === '1' || telegramId === '531360988'
+  const isAdmin = telegramId === '1' || telegramId === '531360988' || telegramId === '296925626'
   
   useEffect(() => {
     if (telegramId && isAdmin) {
