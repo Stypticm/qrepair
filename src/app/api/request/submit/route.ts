@@ -10,19 +10,12 @@ import { iphones, IPhone } from '@/core/appleModels'
 
 // Функция для поиска модели по названию
 function findModelByName(modelname: string): IPhone | null {
-  console.log(
-    '🔍 Submit API - findModelByName вызвана с modelname:',
-    modelname
-  )
-
   // Парсим название модели для извлечения параметров
   // Примеры:
   // "iPhone 16 Pro 256GB Синий 2 SIM Китай" (Pro модель)
   // "iPhone 16 Pro Max 256GB Синий 2 SIM Китай" (Pro Max модель)
   // "iPhone 16 256GB Синий 2 SIM Китай" (базовая модель)
   const parts = modelname.split(' ')
-
-  console.log('🔍 Submit API - parts после split:', parts)
 
   if (parts.length < 2) return null
 
@@ -68,15 +61,6 @@ function findModelByName(modelname: string): IPhone | null {
     parts[storageIndex + 2] + ' ' + parts[storageIndex + 3] // "2 SIM"
   const country = parts[storageIndex + 4] // "Китай"
 
-  console.log('🔍 Submit API - извлеченные параметры:', {
-    model,
-    variant,
-    storage,
-    color,
-    simType,
-    country,
-  })
-
   // Маппинг цветов
   const colorMap: { [key: string]: string } = {
     Золотой: 'G',
@@ -96,15 +80,6 @@ function findModelByName(modelname: string): IPhone | null {
   const mappedColor = colorMap[color] || color
   const mappedCountry = countryMap[country] || country
 
-  console.log('🔍 Submit API - маппированные параметры:', {
-    model,
-    variant,
-    storage,
-    color: mappedColor,
-    simType,
-    country: mappedCountry,
-  })
-
   // Ищем модель в массиве с учетом варианта
   let foundPhone = iphones.find(
     (phone: IPhone) =>
@@ -116,25 +91,8 @@ function findModelByName(modelname: string): IPhone | null {
       phone.country === mappedCountry
   )
 
-  console.log(
-    '🔍 Submit API - результат поиска модели с вариантом:',
-    foundPhone
-  )
-
   // Если модель с вариантом не найдена, пробуем найти базовую модель (с пустым вариантом)
   if (!foundPhone && variant !== '') {
-    console.log(
-      '🔍 Submit API - модель с вариантом не найдена, ищем базовую модель:',
-      {
-        model,
-        variant,
-        storage,
-        color: mappedColor,
-        simType,
-        country: mappedCountry,
-      }
-    )
-
     foundPhone = iphones.find(
       (phone: IPhone) =>
         phone.model === model &&
@@ -145,16 +103,7 @@ function findModelByName(modelname: string): IPhone | null {
         phone.country === mappedCountry
     )
 
-    if (foundPhone) {
-      console.log(
-        '✅ Submit API - найдена базовая модель:',
-        foundPhone
-      )
-    } else {
-      console.log(
-        '❌ Submit API - базовая модель тоже не найдена'
-      )
-    }
+    // Базовая модель найдена или нет
   }
 
   return foundPhone || null
@@ -164,9 +113,6 @@ export async function POST(request: Request) {
   try {
     const { telegramId, modelname, price, imei, sn } =
       await request.json()
-
-    // Логируем полученную модель для отладки
-    console.log('Received modelname:', modelname)
 
     if (!telegramId || !modelname) {
       return NextResponse.json(
@@ -205,11 +151,11 @@ export async function POST(request: Request) {
     // Отправляем уведомление в Telegram
     try {
       console.log(
-        '🚀 Submit API - Начинаем отправку Telegram сообщения'
+        '🚀 DEBUG - Начинаем отправку Telegram сообщения'
       )
-      console.log('🚀 Submit API - telegramId:', telegramId)
+      console.log('🚀 DEBUG - telegramId:', telegramId)
       console.log(
-        '🚀 Submit API - BOT_TOKEN exists:',
+        '🚀 DEBUG - BOT_TOKEN exists:',
         !!process.env.BOT_TOKEN
       )
 
@@ -330,11 +276,11 @@ export async function POST(request: Request) {
       }
 
       const requestId = updatedRequest.id
-      const caption = `✅ *Заявка принята!*
+      const caption = `✅ <b>Заявка принята!</b>
 
-🆔 *ID заявки:* **${requestId}**
-📱 *Модель:* ${modelname}
-💵 *Итоговая цена:* ${finalPrice.toLocaleString()} ₽
+🆔 <b>ID заявки:</b> <b>${requestId}</b>
+📱 <b>Модель:</b> ${modelname}
+💵 <b>Итоговая цена:</b> ${finalPrice.toLocaleString()} ₽
 
 Мы свяжемся с вами в ближайшее время для уточнения деталей.`
 
@@ -348,34 +294,33 @@ export async function POST(request: Request) {
 
       const realTelegramId = getRealTelegramId(telegramId)
       console.log(
-        '🚀 Submit API - original telegramId:',
-        telegramId
-      )
-      console.log(
-        '🚀 Submit API - real telegramId:',
+        '🚀 DEBUG - realTelegramId:',
         realTelegramId
       )
       console.log(
-        '🚀 Submit API - isTestId:',
+        '🚀 DEBUG - isTestId:',
         ['1', '2', '3'].includes(telegramId)
       )
 
       // Отправляем фото с подписью из Supabase
       const photoUrl = getPictureUrl('submit.png')
-      console.log('🚀 Submit API - photoUrl:', photoUrl)
-      console.log('🚀 Submit API - caption:', caption)
+      console.log('🚀 DEBUG - photoUrl:', photoUrl)
+      console.log(
+        '🚀 DEBUG - caption length:',
+        caption?.length
+      )
 
       const telegramResult = await sendTelegramPhoto(
         realTelegramId, // Используем реальный ID
         photoUrl,
         caption,
         {
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
         }
       )
 
       console.log(
-        '🚀 Submit API - Telegram result:',
+        '🚀 DEBUG - Telegram result:',
         telegramResult
       )
     } catch (telegramError) {

@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
     // Формируем сообщение для Telegram
     const requestId = skupkaId || 'UNKNOWN'
     let telegramMessage = `📱 Новая заявка на выкуп устройства\n\n`
-    telegramMessage += `🆔 ID заявки: **${requestId}**\n`
+    telegramMessage += `🆔 ID заявки: <b>${requestId}</b>\n`
     telegramMessage += `👤 Пользователь: @${username}\n`
     telegramMessage += `📱 Устройство: ${modelname}\n`
     telegramMessage += `💰 Предварительная цена: ${price?.toLocaleString()} ₽\n\n`
@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
         formData.append('chat_id', realTelegramId) // Используем реальный ID
         formData.append('photo', imageUrl)
         formData.append('caption', telegramMessage)
-        formData.append('parse_mode', 'Markdown')
+        formData.append('parse_mode', 'HTML')
 
         // Отправляем в Telegram
         const url = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendPhoto`
@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
           await sendTelegramMessage(
             realTelegramId, // Используем реальный ID
             telegramMessage,
-            { parse_mode: 'Markdown' }
+            { parse_mode: 'HTML' }
           )
           console.log(
             'Fallback: Telegram message sent successfully to:',
