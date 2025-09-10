@@ -39,6 +39,7 @@ export default function AdminRequestsPage() {
   const [points, setPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedPoints, setSelectedPoints] = useState<{ [requestId: string]: number }>({})
 
   const { telegramId } = useAppStore()
 
@@ -92,7 +93,58 @@ export default function AdminRequestsPage() {
     }
   }
 
+  const handlePointSelect = (requestId: string, pointId: number) => {
+    setSelectedPoints(prev => ({
+      ...prev,
+      [requestId]: pointId
+    }))
+  }
+
+  const getMastersForPoint = (pointId: number) => {
+    return masters.filter(master => master.pointId === pointId)
+  }
+
+  const handleMasterSelect = async (requestId: string, masterId: string) => {
+    const selectedPointId = selectedPoints[requestId]
+    if (!selectedPointId) {
+      alert('Сначала выберите точку')
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/transfer-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId,
+          newPointId: selectedPointId,
+          newMasterId: masterId,
+          adminTelegramId: telegramId
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to transfer request')
+      }
+
+      alert('Заявка передана')
+      // Очищаем выбор для этой заявки
+      setSelectedPoints(prev => {
+        const newSelected = { ...prev }
+        delete newSelected[requestId]
+        return newSelected
+      })
+      fetchData() // Обновляем данные
+    } catch (error) {
+      console.error('Error transferring request:', error)
+      alert('Ошибка при передаче заявки')
+    }
+  }
+
   const transferRequest = async (requestId: string, newPointId: number, newMasterId: string) => {
+    // Старая функция для совместимости, теперь не используется
     try {
       const response = await fetch('/api/admin/transfer-request', {
         method: 'POST',
@@ -264,16 +316,17 @@ export default function AdminRequestsPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Переместить на точку:
+                        1. Выберите точку:
                       </label>
                       <select
-                        onChange={(e) => transferRequest(request.id, parseInt(e.target.value), '')}
+                        value={selectedPoints[request.id] || ''}
+                        onChange={(e) => handlePointSelect(request.id, parseInt(e.target.value))}
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       >
                         <option value="">Выберите точку</option>
                         {points.map((point) => (
                           <option key={point.id} value={point.id}>
-                            {point.address}
+                            {point.address} ({point.workingHours})
                           </option>
                         ))}
                       </select>
@@ -281,19 +334,31 @@ export default function AdminRequestsPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Назначить мастера:
+                        2. Назначить мастера:
                       </label>
                       <select
-                        onChange={(e) => transferRequest(request.id, 0, e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                        onChange={(e) => handleMasterSelect(request.id, e.target.value)}
+                        disabled={!selectedPoints[request.id]}
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                          !selectedPoints[request.id] 
+                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' 
+                            : 'border-gray-300'
+                        }`}
                       >
-                        <option value="">Выберите мастера</option>
-                        {masters.map((master) => (
+                        <option value="">
+                          {!selectedPoints[request.id] ? 'Сначала выберите точку' : 'Выберите мастера'}
+                        </option>
+                        {selectedPoints[request.id] && getMastersForPoint(selectedPoints[request.id]).map((master) => (
                           <option key={master.id} value={master.id}>
                             {master.name} (@{master.username})
                           </option>
                         ))}
                       </select>
+                      {selectedPoints[request.id] && getMastersForPoint(selectedPoints[request.id]).length === 0 && (
+                        <p className="mt-2 text-sm text-amber-600">
+                          ⚠️ На выбранной точке нет назначенных мастеров
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
