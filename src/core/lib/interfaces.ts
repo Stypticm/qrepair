@@ -66,6 +66,10 @@ export type FormState = {
 
   // Загрузка сохраненных данных из БД
   loadSavedData: (telegramId: string) => Promise<void>
+
+  // Отладочная информация
+  debugInfo: string[]
+  addDebugInfo: (message: string) => void
 }
 
 export interface SkupkaRequest {

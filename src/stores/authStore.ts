@@ -7,6 +7,10 @@ import {
   getActiveFeatures,
   type FeatureFlag,
 } from '@/lib/featureFlags'
+import {
+  useSignal,
+  initDataState as _initDataState,
+} from '@telegram-apps/sdk-react'
 
 interface FormData {
   sn: string
@@ -41,6 +45,9 @@ interface AppState {
   username: string | null
   telegramId: string | null
   userPhotoUrl: string | null
+
+  // Debug info
+  debugInfo: string[]
 
   // Device data
   modelname: string
@@ -98,6 +105,13 @@ interface AppState {
 
   // Clear session storage
   clearSessionStorage: () => void
+
+  // Debug functions
+  addDebugInfo: (message: string) => void
+  clearDebugInfo: () => void
+
+  // Telegram initialization
+  initializeTelegram: (initDataState?: any) => void
 }
 
 // ID админов из кода
@@ -134,6 +148,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   username: null,
   telegramId: null,
   userPhotoUrl: null,
+
+  // Debug info
+  debugInfo: [],
 
   // Device data
   modelname: 'Apple iPhone 11',
@@ -313,6 +330,148 @@ export const useAppStore = create<AppState>((set, get) => ({
       sessionStorage.removeItem('telegramId')
       sessionStorage.removeItem('telegramUsername')
       sessionStorage.removeItem('currentStep')
+    }
+  },
+
+  // Debug functions
+  addDebugInfo: (message: string) => {
+    const timestamp = new Date().toLocaleTimeString()
+    const debugMessage = `[${timestamp}] ${message}`
+    console.log(debugMessage)
+    set((state) => ({
+      debugInfo: [
+        ...state.debugInfo.slice(-9),
+        debugMessage,
+      ], // Показываем последние 10 сообщений
+    }))
+  },
+
+  clearDebugInfo: () => {
+    set({ debugInfo: [] })
+  },
+
+  // Telegram initialization
+  initializeTelegram: (initDataState?: any) => {
+    const { addDebugInfo } = get()
+
+    addDebugInfo('Инициализация Telegram WebApp')
+
+    if (typeof window === 'undefined') {
+      addDebugInfo('❌ window не доступен')
+      return
+    }
+
+    const hasTelegramWebApp = !!(window as any).Telegram
+      ?.WebApp
+    const hasTelegramWebviewProxy = !!(window as any)
+      .TelegramWebviewProxy
+
+    addDebugInfo(`hasTelegramWebApp: ${hasTelegramWebApp}`)
+    addDebugInfo(
+      `hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`
+    )
+    addDebugInfo(
+      `initDataState?.user: ${
+        initDataState?.user ? 'ЕСТЬ' : 'НЕТ'
+      }`
+    )
+
+    // Сначала пробуем получить данные из initDataState (как в StartFormContext)
+    if (initDataState?.user) {
+      addDebugInfo('✅ Получены данные из initDataState')
+      addDebugInfo(
+        `Username: ${
+          initDataState.user.first_name || 'НЕТ'
+        }`
+      )
+      addDebugInfo(`ID: ${initDataState.user.id || 'НЕТ'}`)
+
+      const tgId = initDataState.user.id.toString()
+      const tgUsername = initDataState.user.first_name
+
+      addDebugInfo(`✅ Получен telegramId: ${tgId}`)
+      addDebugInfo(`✅ Получен username: ${tgUsername}`)
+
+      set({
+        telegramId: tgId,
+        username: tgUsername,
+        userPhotoUrl: initDataState.user.photo_url || null,
+      })
+
+      // Проверяем, является ли пользователь мастером
+      const isMasterUser = ADMIN_IDS.includes(
+        parseInt(tgId)
+      )
+      if (isMasterUser) {
+        set({ role: 'master', userId: parseInt(tgId) })
+      } else {
+        set({ role: 'client', userId: parseInt(tgId) })
+      }
+
+      // Сохраняем в sessionStorage
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('telegramId', tgId)
+        if (tgUsername) {
+          sessionStorage.setItem(
+            'telegramUsername',
+            tgUsername
+          )
+        }
+      }
+    } else if (hasTelegramWebApp) {
+      // Fallback: пытаемся получить данные напрямую из window.Telegram.WebApp
+      addDebugInfo(
+        'Fallback - получаем данные из window.Telegram.WebApp'
+      )
+      const webApp = (window as any).Telegram.WebApp
+      const userData = webApp.initDataUnsafe?.user
+
+      addDebugInfo(
+        `initDataUnsafe.user: ${JSON.stringify(userData)}`
+      )
+
+      if (userData?.id) {
+        const tgId = userData.id.toString()
+        const tgUsername = userData.first_name
+
+        addDebugInfo(
+          `✅ Fallback - Получен telegramId: ${tgId}`
+        )
+        addDebugInfo(
+          `✅ Fallback - Получен username: ${tgUsername}`
+        )
+
+        set({
+          telegramId: tgId,
+          username: tgUsername,
+          userPhotoUrl: userData.photo_url || null,
+        })
+
+        // Проверяем, является ли пользователь мастером
+        const isMasterUser = ADMIN_IDS.includes(
+          parseInt(tgId)
+        )
+        if (isMasterUser) {
+          set({ role: 'master', userId: parseInt(tgId) })
+        } else {
+          set({ role: 'client', userId: parseInt(tgId) })
+        }
+
+        // Сохраняем в sessionStorage
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('telegramId', tgId)
+          if (tgUsername) {
+            sessionStorage.setItem(
+              'telegramUsername',
+              tgUsername
+            )
+          }
+        }
+      } else {
+        addDebugInfo('❌ Нет user.id в initDataUnsafe')
+      }
+    } else {
+      addDebugInfo('❌ Telegram WebApp не доступен')
     }
   },
 }))

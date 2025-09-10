@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 import { FormState } from '@/core/lib/interfaces';
+import { useAppStore } from '@/stores/authStore';
 
 // Функция для получения пути по шагу
 const getPathForStep = (step: string): string | null => {
@@ -35,10 +36,24 @@ const StartFormContext = createContext<FormState | null>(null);
 export function StartFormProvider({ children }: { children: ReactNode }) {
     // Всегда вызываем хук - это требование React
     const initDataState = useSignal(_initDataState);
+    
+    // Получаем данные из Zustand store для синхронизации
+    const { telegramId: storeTelegramId, username: storeUsername, setTelegramId: setStoreTelegramId, setUsername: setStoreUsername } = useAppStore();
 
     const [username, setUsername] = useState<string | null>(null);
     const [telegramId, setTelegramId] = useState<string | null>(null);
     const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
+    
+    // Состояние для отладочной информации
+    const [debugInfo, setDebugInfo] = useState<string[]>([]);
+
+    // Функция для добавления отладочной информации
+    const addDebugInfo = (message: string) => {
+        const timestamp = new Date().toLocaleTimeString();
+        const debugMessage = `[${timestamp}] ${message}`;
+        console.log(debugMessage);
+        setDebugInfo(prev => [...prev.slice(-9), debugMessage]); // Показываем последние 10 сообщений
+    };
 
     const [modelname, setModel] = useState<string>('Apple iPhone 11');
     const [comment, setComment] = useState<string>('');
@@ -110,39 +125,57 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     };
 
     useEffect(() => {
+        addDebugInfo('StartFormContext: initDataState changed');
+        addDebugInfo(`initDataState?.user: ${initDataState?.user ? 'ЕСТЬ' : 'НЕТ'}`);
+        addDebugInfo(`window.Telegram?.WebApp: ${typeof window !== 'undefined' && window.Telegram?.WebApp ? 'ЕСТЬ' : 'НЕТ'}`);
+        
         if (initDataState?.user) {
-            console.log('🔍 StartFormContext: Telegram user data:', initDataState.user);
-            console.log('🔍 StartFormContext: Setting username to:', initDataState.user.first_name);
+            addDebugInfo('StartFormContext: Получены данные из initDataState');
+            addDebugInfo(`Username: ${initDataState.user.first_name || 'НЕТ'}`);
+            addDebugInfo(`ID: ${initDataState.user.id || 'НЕТ'}`);
+            
             setUsername(initDataState.user.first_name ?? null);
             
             // Устанавливаем telegramId только если он еще не установлен
             if (!telegramId) {
-                console.log('🔍 StartFormContext: Setting telegramId from initDataState:', initDataState.user.id);
+                addDebugInfo(`Устанавливаем telegramId: ${initDataState.user.id}`);
                 setTelegramId(String(initDataState.user.id));
             } else {
-                console.log('🔍 StartFormContext: telegramId already set, not overriding:', telegramId);
+                addDebugInfo(`telegramId уже установлен: ${telegramId}`);
             }
             
             setUserPhotoUrl(initDataState.user.photo_url ?? null);
+        } else if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user) {
+            // Fallback: пытаемся получить данные напрямую из window.Telegram.WebApp
+            addDebugInfo('StartFormContext: Fallback - получаем данные из window.Telegram.WebApp');
+            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            addDebugInfo(`Fallback user data: ${JSON.stringify(tgUser)}`);
             
-            // Сохраняем username из Telegram для использования на финальной странице
-            if (initDataState.user.username) {
-                console.log('Saving telegram username:', initDataState.user.username);
-                sessionStorage.setItem('telegramUsername', initDataState.user.username);
+            if (tgUser.id) {
+                addDebugInfo(`Fallback - Setting telegramId: ${tgUser.id}`);
+                setTelegramId(String(tgUser.id));
+            }
+            
+            if (tgUser.first_name) {
+                addDebugInfo(`Fallback - Setting username: ${tgUser.first_name}`);
+                setUsername(tgUser.first_name);
+            }
+            
+            if ((tgUser as any).photo_url) {
+                setUserPhotoUrl((tgUser as any).photo_url);
+            }
+            
+            // Сохраняем username из Telegram для использования на финальной страницы
+            if (tgUser.username) {
+                addDebugInfo(`Saving telegram username from fallback: ${tgUser.username}`);
+                sessionStorage.setItem('telegramUsername', tgUser.username);
             } else {
-                console.log('No username found in Telegram user data');
+                addDebugInfo('No username found in Telegram user data');
                 
-                // Пытаемся получить username напрямую из Telegram WebApp
-                if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user?.username) {
-                    const telegramUsername = window.Telegram.WebApp.initDataUnsafe.user.username;
-                    console.log('Found telegram username from WebApp:', telegramUsername);
-                    sessionStorage.setItem('telegramUsername', telegramUsername);
-                } else {
-                    // Fallback для тестирования в браузере
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log('Using fallback username for development in StartFormContext');
-                        sessionStorage.setItem('telegramUsername', 'qoqos_app');
-                    }
+                // Fallback для тестирования в браузере
+                if (process.env.NODE_ENV === 'development') {
+                    addDebugInfo('Using fallback username for development in StartFormContext');
+                    sessionStorage.setItem('telegramUsername', 'qoqos_app');
                 }
             }
         }
@@ -194,6 +227,36 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Синхронизируем данные с Zustand store
+    useEffect(() => {
+        if (storeTelegramId && storeTelegramId !== telegramId) {
+            addDebugInfo(`Синхронизация telegramId из store: ${storeTelegramId}`);
+            setTelegramId(storeTelegramId);
+        }
+    }, [storeTelegramId]);
+
+    useEffect(() => {
+        if (storeUsername && storeUsername !== username) {
+            addDebugInfo(`Синхронизация username из store: ${storeUsername}`);
+            setUsername(storeUsername);
+        }
+    }, [storeUsername]);
+
+    // Синхронизируем изменения обратно в store
+    useEffect(() => {
+        if (telegramId && telegramId !== storeTelegramId) {
+            addDebugInfo(`Синхронизация telegramId в store: ${telegramId}`);
+            setStoreTelegramId(telegramId);
+        }
+    }, [telegramId]);
+
+    useEffect(() => {
+        if (username && username !== storeUsername) {
+            addDebugInfo(`Синхронизация username в store: ${username}`);
+            setStoreUsername(username);
+        }
+    }, [username]);
+
     // Загружаем данные при инициализации telegramId
     useEffect(() => {
         if (telegramId) {
@@ -229,7 +292,9 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setDeviceConditions,
                 setAdditionalConditions,
                 resetAllStates,
-                loadSavedData
+                loadSavedData,
+                debugInfo,
+                addDebugInfo
             }}
         >
             {children}

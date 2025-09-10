@@ -15,8 +15,12 @@ import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContai
 import { ExpandButton } from '@/components/ExpandButton';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore, isMaster, useFeatureFlags } from '@/stores/authStore';
+import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 
 function HomeContent() {
+  // Всегда вызываем хук - это требование React
+  const initDataState = useSignal(_initDataState);
+  
   const { 
     setRole, 
     userId, 
@@ -38,21 +42,24 @@ function HomeContent() {
     imei,
     serialNumber,
     deviceConditions,
-    additionalConditions
+    additionalConditions,
+    debugInfo,
+    addDebugInfo,
+    initializeTelegram
   } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
   const { hasFeature, getActiveFeatures, isTester } = useFeatureFlags();
   const router = useRouter();
+  
+  // Состояние для отладочной панели
+  const [showDebugPanel, setShowDebugPanel] = useState(false);
 
   // ID админов для тестирования в браузере
   const testAdminIds = ['1', '296925626', '531360988'];
 
-  // Включаем отладочную информацию для диагностики
-  const addDebugInfo = (message: string) => {
-    console.log(`[DEBUG] ${message}`);
-  };
+  // Отладочная информация теперь в Zustand store
 
 
   // Предзагрузка изображений отключена на главной странице для стабильности
@@ -70,492 +77,44 @@ function HomeContent() {
     }
   }, [isInTelegram, isFullscreen, forceFullscreen]);
 
-  // Отдельный useEffect для инициализации Telegram ID
+  // Инициализация Telegram WebApp
   useEffect(() => {
-    addDebugInfo(`🔍 Первый useEffect: isInTelegram=${isInTelegram}, hasWebApp=${!!window.Telegram?.WebApp}`);
-    
-    if (isInTelegram && window.Telegram?.WebApp) {
-      const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
-      addDebugInfo(`🔍 initDataUnsafe.user: ${JSON.stringify(tgUser)}`);
-      
-      if (tgUser?.id) {
-        const tgId = tgUser.id.toString();
-        addDebugInfo(`✅ Получен telegramId из первого useEffect: ${tgId}`);
-        setTelegramId(tgId);
-        
-        if (tgId === '1' || tgId === '296925626' || tgId === '531360988') {
-          setRole('master', parseInt(tgId));
-        } else {
-          setRole('client', parseInt(tgId));
-        }
-      } else {
-        addDebugInfo(`❌ Нет user.id в initDataUnsafe`);
-      }
-    } else if (isInTelegram === null) {
-      // Если isInTelegram === null, принудительно устанавливаем false
-      addDebugInfo(`🔄 isInTelegram === null, устанавливаем false`);
-      setIsInTelegram(false);
-    }
-  }, [isInTelegram, setTelegramId, setRole]);
-
-  // Дополнительный useEffect для восстановления telegramId и currentStep из sessionStorage
-  // ТОЛЬКО если мы НЕ в Telegram WebApp (для fallback в браузере)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !telegramId && !isInTelegram) {
-      const savedTelegramId = sessionStorage.getItem('telegramId');
-      if (savedTelegramId) {
-        addDebugInfo(`🔄 Fallback: используем telegramId из sessionStorage: ${savedTelegramId}`);
-        setTelegramId(savedTelegramId);
-        // Проверяем, является ли пользователь мастером по ID
-        const isMasterUser = testAdminIds.includes(savedTelegramId);
-        if (isMasterUser) {
-          setRole('master', parseInt(savedTelegramId));
-        } else {
-          setRole('client', parseInt(savedTelegramId));
-        }
-      }
-    }
-    
-    // Восстанавливаем текущий шаг из sessionStorage
-    const savedStep = sessionStorage.getItem('currentStep');
-    if (savedStep) {
-      setCurrentStep(savedStep);
-    }
-  }, [telegramId, setTelegramId, setRole, setCurrentStep]);
-
-  // Проверяем сохраненные данные и перенаправляем на нужный шаг
-  useEffect(() => {
-  // Проверяем, запущено ли приложение в Telegram
-  const checkTelegram = async () => {
-    addDebugInfo(`🚀 Начинаем проверку Telegram WebApp...`);
+    addDebugInfo('Запуск инициализации Telegram WebApp');
     
     if (typeof window !== 'undefined') {
-      // Очищаем старые данные из sessionStorage для предотвращения использования чужих ID
-      clearSessionStorage();
-      addDebugInfo(`🧹 Очистили sessionStorage от старых данных`);
-      addDebugInfo(`✅ window доступен`);
-      // Простая проверка - если есть Telegram.WebApp, то это WebApp
       const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
       const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
-      
-      addDebugInfo(`🔍 Проверка Telegram WebApp:`);
-      addDebugInfo(`- hasTelegramWebApp: ${hasTelegramWebApp}`);
-      addDebugInfo(`- hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`);
-      addDebugInfo(`- window.Telegram: ${!!(window as any).Telegram}`);
-      addDebugInfo(`- window.Telegram.WebApp: ${!!(window as any).Telegram?.WebApp}`);
-      
-      // Если есть Telegram.WebApp ИЛИ TelegramWebviewProxy, то это WebApp
       const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
       
-      addDebugInfo(`- inTelegram: ${inTelegram}`);
+      addDebugInfo(`hasTelegramWebApp: ${hasTelegramWebApp}`);
+      addDebugInfo(`hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`);
+      addDebugInfo(`inTelegram: ${inTelegram}`);
       
       setIsInTelegram(inTelegram);
       setIsLoading(false);
       
-      if (inTelegram) {
-        // Если мы в Telegram, получаем данные пользователя
-        const webApp = (window as any).Telegram?.WebApp;
-        const webviewProxy = (window as any).TelegramWebviewProxy;
-        const userData = webApp?.initDataUnsafe?.user;
-        const initData = webApp?.initData;
-        
-        addDebugInfo(`🔍 Telegram WebApp данные:`);
-        addDebugInfo(`- initData: ${initData ? 'есть' : 'нет'}`);
-        addDebugInfo(`- initDataUnsafe: ${webApp?.initDataUnsafe ? 'есть' : 'нет'}`);
-        addDebugInfo(`- userData: ${userData ? JSON.stringify(userData) : 'нет'}`);
-        addDebugInfo(`- webviewProxy: ${webviewProxy ? 'есть' : 'нет'}`);
-        
-        // Проверяем также initData для дополнительной диагностики
-        if (initData) {
-          addDebugInfo(`📋 initData содержимое: ${initData.substring(0, 100)}...`);
-        }
-        
-        // Пробуем получить данные из webviewProxy (старый API)
-        if (webviewProxy && !userData) {
-          addDebugInfo(`🔍 Пробуем получить данные из TelegramWebviewProxy...`);
-          try {
-            const proxyUserData = webviewProxy.initDataUnsafe?.user;
-            if (proxyUserData) {
-              addDebugInfo(`📱 Данные из webviewProxy: ${JSON.stringify(proxyUserData)}`);
-              const telegramUserId = proxyUserData.id?.toString();
-              const telegramUsername = proxyUserData.username;
-              
-              if (telegramUserId) {
-                addDebugInfo(`✅ Получен telegramId из webviewProxy: ${telegramUserId}`);
-                setTelegramId(telegramUserId);
-                
-                const isMasterUser = testAdminIds.includes(telegramUserId);
-                if (isMasterUser) {
-                  setRole('master', parseInt(telegramUserId));
-                } else {
-                  setRole('client', parseInt(telegramUserId));
-                }
-                
-                sessionStorage.setItem('telegramId', telegramUserId);
-                if (telegramUsername) {
-                  sessionStorage.setItem('telegramUsername', telegramUsername);
-                }
-                return; // Выходим, если успешно получили данные
-              }
-            }
-          } catch (e) {
-            addDebugInfo(`❌ Ошибка получения данных из webviewProxy: ${e}`);
-          }
-        }
-        
-        // Пробуем получить данные через WebView API
-        const webView = (window as any).Telegram?.WebView;
-        if (webView && !userData) {
-          addDebugInfo(`🔍 Пробуем получить данные через WebView API...`);
-          try {
-            // Пробуем разные способы получения данных
-            const webViewData = webView.initDataUnsafe?.user;
-            if (webViewData) {
-              addDebugInfo(`📱 Данные из WebView: ${JSON.stringify(webViewData)}`);
-              const telegramUserId = webViewData.id?.toString();
-              const telegramUsername = webViewData.username;
-              
-              if (telegramUserId) {
-                addDebugInfo(`✅ Получен telegramId из WebView: ${telegramUserId}`);
-                setTelegramId(telegramUserId);
-                
-                const isMasterUser = testAdminIds.includes(telegramUserId);
-                if (isMasterUser) {
-                  setRole('master', parseInt(telegramUserId));
-                } else {
-                  setRole('client', parseInt(telegramUserId));
-                }
-                
-                sessionStorage.setItem('telegramId', telegramUserId);
-                if (telegramUsername) {
-                  sessionStorage.setItem('telegramUsername', telegramUsername);
-                }
-                return; // Выходим, если успешно получили данные
-              }
-            }
-            
-            // Пробуем другие методы WebView
-            addDebugInfo(`🔍 Пробуем другие методы WebView...`);
-            if (webView.initData) {
-              addDebugInfo(`📋 WebView initData: ${webView.initData}`);
-              try {
-                const urlParams = new URLSearchParams(webView.initData);
-                const userParam = urlParams.get('user');
-                if (userParam) {
-                  const user = JSON.parse(decodeURIComponent(userParam));
-                  addDebugInfo(`📱 Данные из WebView initData: ${JSON.stringify(user)}`);
-                  if (user.id) {
-                    addDebugInfo(`✅ Получен ID из WebView initData: ${user.id}`);
-                    setTelegramId(user.id.toString());
-                    setRole('client', parseInt(user.id));
-                    sessionStorage.setItem('telegramId', user.id.toString());
-                    return;
-                  }
-                }
-              } catch (e) {
-                addDebugInfo(`❌ Ошибка парсинга WebView initData: ${e}`);
-              }
-            }
-            
-            // Пробуем получить данные через другие свойства
-            addDebugInfo(`🔍 Проверяем другие свойства WebView...`);
-            Object.keys(webView).forEach(key => {
-              addDebugInfo(`- WebView.${key}: ${typeof webView[key]}`);
-              if (webView[key] && typeof webView[key] === 'object' && webView[key] !== null) {
-                Object.keys(webView[key]).forEach(subKey => {
-                  addDebugInfo(`  - WebView.${key}.${subKey}: ${typeof webView[key][subKey]}`);
-                });
-              }
-            });
-            
-            // Пробуем получить данные через события
-            addDebugInfo(`🔍 Пробуем получить данные через события...`);
-            if (webView.receiveEvent) {
-              addDebugInfo(`📡 Устанавливаем обработчик событий...`);
-              
-              // Устанавливаем таймаут для ожидания данных
-              const eventTimeout = setTimeout(() => {
-                addDebugInfo(`⏰ Таймаут ожидания события, не используем fallback ID`);
-                // Не устанавливаем fallback ID, чтобы не перезаписывать данные других пользователей
-              }, 2000);
-              
-              webView.receiveEvent('web_app_data', (data: any) => {
-                clearTimeout(eventTimeout);
-                addDebugInfo(`📨 Получено событие web_app_data: ${JSON.stringify(data)}`);
-                if (data && data.user) {
-                  const telegramUserId = data.user.id?.toString();
-                  if (telegramUserId) {
-                    addDebugInfo(`✅ Получен telegramId из события: ${telegramUserId}`);
-                    setTelegramId(telegramUserId);
-                    
-                    const isMasterUser = testAdminIds.includes(telegramUserId);
-                    if (isMasterUser) {
-                      setRole('master', parseInt(telegramUserId));
-                    } else {
-                      setRole('client', parseInt(telegramUserId));
-                    }
-                    
-                    sessionStorage.setItem('telegramId', telegramUserId);
-                    if (data.user.username) {
-                      sessionStorage.setItem('telegramUsername', data.user.username);
-                    }
-                  }
-                }
-              });
-              
-              // Пробуем также другие события
-              webView.receiveEvent('web_app_init_data', (data: any) => {
-                addDebugInfo(`📨 Получено событие web_app_init_data: ${JSON.stringify(data)}`);
-                if (data && data.user) {
-                  const telegramUserId = data.user.id?.toString();
-                  if (telegramUserId) {
-                    addDebugInfo(`✅ Получен telegramId из web_app_init_data: ${telegramUserId}`);
-                    setTelegramId(telegramUserId);
-                    
-                    const isMasterUser = testAdminIds.includes(telegramUserId);
-                    if (isMasterUser) {
-                      setRole('master', parseInt(telegramUserId));
-                    } else {
-                      setRole('client', parseInt(telegramUserId));
-                    }
-                    
-                    sessionStorage.setItem('telegramId', telegramUserId);
-                    if (data.user.username) {
-                      sessionStorage.setItem('telegramUsername', data.user.username);
-                    }
-                  }
-                }
-              });
-            }
-          } catch (e) {
-            addDebugInfo(`❌ Ошибка получения данных через WebView: ${e}`);
-          }
-        }
-        
-        // Пробуем получить данные из URL параметров
-        addDebugInfo(`🔍 Проверяем URL параметры...`);
-        const urlParams = new URLSearchParams(window.location.search);
-        const tgWebAppData = urlParams.get('tgWebAppData');
-        const tgWebAppStartParam = urlParams.get('tgWebAppStartParam');
-        const user = urlParams.get('user');
-        
-        addDebugInfo(`- tgWebAppData: ${tgWebAppData ? 'есть' : 'нет'}`);
-        addDebugInfo(`- tgWebAppStartParam: ${tgWebAppStartParam ? 'есть' : 'нет'}`);
-        addDebugInfo(`- user: ${user ? 'есть' : 'нет'}`);
-        
-        if (user) {
-          try {
-            const userData = JSON.parse(decodeURIComponent(user));
-            addDebugInfo(`📱 Данные из URL user: ${JSON.stringify(userData)}`);
-            const telegramUserId = userData.id?.toString();
-            if (telegramUserId) {
-              addDebugInfo(`✅ Получен telegramId из URL: ${telegramUserId}`);
-              setTelegramId(telegramUserId);
-              
-              const isMasterUser = testAdminIds.includes(telegramUserId);
-              if (isMasterUser) {
-                setRole('master', parseInt(telegramUserId));
-              } else {
-                setRole('client', parseInt(telegramUserId));
-              }
-              
-              sessionStorage.setItem('telegramId', telegramUserId);
-              if (userData.username) {
-                sessionStorage.setItem('telegramUsername', userData.username);
-              }
-              return;
-            }
-          } catch (e) {
-            addDebugInfo(`❌ Ошибка парсинга user из URL: ${e}`);
-          }
-        }
-        
-        // Пробуем другие возможные источники данных
-        addDebugInfo(`🔍 Проверяем другие источники данных...`);
-        addDebugInfo(`- window.Telegram: ${JSON.stringify((window as any).Telegram)}`);
-        addDebugInfo(`- window.TelegramWebviewProxy: ${JSON.stringify(webviewProxy)}`);
-        
-        // Пробуем получить данные из глобальных переменных Telegram
-        const telegramGlobal = (window as any).Telegram;
-        if (telegramGlobal) {
-          addDebugInfo(`🔍 Проверяем telegramGlobal...`);
-          Object.keys(telegramGlobal).forEach(key => {
-            addDebugInfo(`- ${key}: ${typeof telegramGlobal[key]}`);
-            if (telegramGlobal[key] && typeof telegramGlobal[key] === 'object') {
-              Object.keys(telegramGlobal[key]).forEach(subKey => {
-                addDebugInfo(`  - ${subKey}: ${typeof telegramGlobal[key][subKey]}`);
-              });
-            }
-          });
-        }
-        
-        if (userData) {
-          const telegramUserId = userData.id?.toString();
-          const telegramUsername = userData.username;
-          const firstName = userData.first_name;
-          const lastName = userData.last_name;
-          
-          addDebugInfo(`📱 Данные пользователя:`);
-          addDebugInfo(`- ID: ${telegramUserId}`);
-          addDebugInfo(`- Username: ${telegramUsername}`);
-          addDebugInfo(`- Имя: ${firstName} ${lastName}`);
-          
-          if (telegramUserId) {
-            addDebugInfo(`✅ Получен telegramId из Telegram WebApp: ${telegramUserId}`);
-            setTelegramId(telegramUserId);
-            
-            // Устанавливаем username в store
-            if (telegramUsername) {
-              addDebugInfo(`✅ Устанавливаем username: ${telegramUsername}`);
-              setUsername(telegramUsername);
-            } else if (firstName) {
-              addDebugInfo(`✅ Устанавливаем firstName как username: ${firstName}`);
-              setUsername(firstName);
-            }
-            
-            // Проверяем, является ли пользователь мастером
-            const isMasterUser = testAdminIds.includes(telegramUserId);
-            if (isMasterUser) {
-              setRole('master', parseInt(telegramUserId));
-            } else {
-              setRole('client', parseInt(telegramUserId));
-            }
-            
-            // Сохраняем в sessionStorage
-            sessionStorage.setItem('telegramId', telegramUserId);
-            if (telegramUsername) {
-              sessionStorage.setItem('telegramUsername', telegramUsername);
-            }
-            if (firstName) {
-              sessionStorage.setItem('telegramFirstName', firstName);
-            }
-          } else if (telegramUsername) {
-            // Если нет ID, но есть username, пытаемся получить ID через API
-            addDebugInfo(`🔍 Нет telegramId, но есть username, получаем ID через API: ${telegramUsername}`);
-            try {
-              addDebugInfo('🚀 Отправляем запрос к API для получения telegramId...');
-              const response = await fetch('/api/admin/get-telegram-id', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: telegramUsername })
-              });
-              
-              addDebugInfo(`📡 Ответ от API: ${response.status} ${response.statusText}`);
-              
-              if (response.ok) {
-                const data = await response.json();
-                addDebugInfo(`📦 Данные от API: ${JSON.stringify(data)}`);
-                
-                if (data.success && data.telegramId) {
-                  addDebugInfo(`✅ Получен telegramId через API: ${data.telegramId}`);
-                  setTelegramId(data.telegramId);
-                  
-                  // Устанавливаем username в store
-                  if (telegramUsername) {
-                    addDebugInfo(`✅ Устанавливаем username через API: ${telegramUsername}`);
-                    setUsername(telegramUsername);
-                  }
-                  
-                  // Проверяем, является ли пользователь мастером
-                  const isMasterUser = testAdminIds.includes(data.telegramId.toString());
-                  if (isMasterUser) {
-                    setRole('master', parseInt(data.telegramId));
+                  if (inTelegram) {
+                    // Инициализируем Telegram данные через Zustand
+                    initializeTelegram(initDataState);
                   } else {
-                    setRole('client', parseInt(data.telegramId));
-                  }
-                  
-                  // Сохраняем в sessionStorage
-                  sessionStorage.setItem('telegramId', data.telegramId.toString());
-                  sessionStorage.setItem('telegramUsername', telegramUsername);
-                } else {
-                  addDebugInfo(`❌ API вернул неуспешный ответ: ${JSON.stringify(data)}`);
-                  // Fallback - используем username как ID
-                  addDebugInfo('🔄 Используем username как fallback ID');
-                  setTelegramId(telegramUsername);
-                  setRole('client', 0);
-                  sessionStorage.setItem('telegramId', telegramUsername);
-                  sessionStorage.setItem('telegramUsername', telegramUsername);
-                }
-              } else {
-                addDebugInfo(`❌ API вернул ошибку: ${response.status} ${response.statusText}`);
-                // Fallback - используем username как ID
-                addDebugInfo('🔄 Используем username как fallback ID');
-                setTelegramId(telegramUsername);
-                setRole('client', 0);
-                sessionStorage.setItem('telegramId', telegramUsername);
-                sessionStorage.setItem('telegramUsername', telegramUsername);
-              }
-            } catch (error) {
-              addDebugInfo(`❌ Ошибка при получении telegramId через API: ${error}`);
-              // Fallback - используем username как ID
-              addDebugInfo('🔄 Используем username как fallback ID после ошибки');
-              setTelegramId(telegramUsername);
-              setRole('client', 0);
-              sessionStorage.setItem('telegramId', telegramUsername);
-              sessionStorage.setItem('telegramUsername', telegramUsername);
-            }
-          } else {
-            // Если нет ни ID, ни username, пробуем альтернативные способы
-            addDebugInfo('❌ Нет ни telegramId, ни username в initDataUnsafe');
-            
-            // Пробуем получить данные из initData напрямую
-            if (initData) {
-              addDebugInfo('🔍 Пробуем парсить initData напрямую...');
-              try {
-                // Простой парсинг initData (небезопасно, но для диагностики)
-                const urlParams = new URLSearchParams(initData);
-                const userParam = urlParams.get('user');
-                if (userParam) {
-                  const user = JSON.parse(decodeURIComponent(userParam));
-                  addDebugInfo(`📱 Данные из initData: ${JSON.stringify(user)}`);
-                  if (user.id) {
-                    addDebugInfo(`✅ Получен ID из initData: ${user.id}`);
-                    setTelegramId(user.id.toString());
-                    setRole('client', parseInt(user.id));
-                    sessionStorage.setItem('telegramId', user.id.toString());
-                    return;
-                  }
-                }
-              } catch (e) {
-                addDebugInfo(`❌ Ошибка парсинга initData: ${e}`);
-              }
-            }
-            
-            // Если ничего не сработало, используем fallback только для браузера
-            if (!isInTelegram) {
-              addDebugInfo('🔄 Используем fallback ID для браузера');
-              const testId = testAdminIds[testAdminIndex]; 
-              setTelegramId(testId);
-              setRole('master', parseInt(testId));
-            } else {
-              addDebugInfo('🔄 Не используем fallback ID в Telegram, чтобы не перезаписывать данные других пользователей');
-            }
-          }
-        }
-      } else {
-        // Если мы не в Telegram, принудительно устанавливаем false
-        setIsInTelegram(false);
-        addDebugInfo(`🖥️ Не в Telegram WebApp, используем браузерный режим`);
-        
-        // В браузере устанавливаем fallback ID только если нет реальных данных
-        if (!telegramId) {
-          addDebugInfo(`🖥️ Браузер: устанавливаем fallback ID для тестирования`);
-          const testId = testAdminIds[testAdminIndex]; 
-          setTelegramId(testId);
-          setRole('master', parseInt(testId));
-        } else {
-          addDebugInfo(`🖥️ Браузер: используем существующий ID: ${telegramId}`);
-        }
+        // Fallback для браузера
+        addDebugInfo('Браузерный режим - используем fallback ID');
+        const testId = testAdminIds[testAdminIndex]; 
+        setTelegramId(testId);
+        setRole('master', parseInt(testId));
       }
     }
-  };
+  }, [initializeTelegram, setTelegramId, setRole, testAdminIndex]);
 
-    // Увеличиваем задержку для более надежной проверки
-    const timer = setTimeout(() => {
-      checkTelegram().catch(console.error);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Восстанавливаем текущий шаг из sessionStorage
+  useEffect(() => {
+    const savedStep = sessionStorage.getItem('currentStep');
+    if (savedStep) {
+      setCurrentStep(savedStep);
+    }
+  }, [setCurrentStep]);
+
+  // Логика инициализации теперь в Zustand store
 
 
 
@@ -811,6 +370,43 @@ function HomeContent() {
                 >
                   Переключить ID админа: {testAdminIds[testAdminIndex]} (нажмите для смены)
                 </Button>
+              )}
+
+              {/* Кнопка отладки */}
+              {!isLoading && (
+                <Button
+                  variant="outline"
+                  className="w-full h-12 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium text-sm rounded-xl border border-yellow-300 shadow-sm hover:shadow-md transition-all duration-200"
+                  onClick={() => setShowDebugPanel(!showDebugPanel)}
+                >
+                  {showDebugPanel ? 'Скрыть отладку' : 'Показать отладку Telegram'}
+                </Button>
+              )}
+
+              {/* Панель отладки */}
+              {showDebugPanel && (
+                <div className="mt-2 p-4 bg-gray-100 rounded-lg border border-gray-300">
+                  <div className="text-sm font-semibold text-gray-700 mb-2">
+                    🔍 Отладочная информация Telegram:
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {debugInfo.length === 0 ? (
+                      <div className="text-gray-500 text-xs">Нет отладочной информации</div>
+                    ) : (
+                      debugInfo.map((info, index) => (
+                        <div key={index} className="text-xs text-gray-600 font-mono">
+                          {info}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">
+                    <div>telegramId: {telegramId || 'НЕТ'}</div>
+                    <div>username: {username || 'НЕТ'}</div>
+                    <div>isInTelegram: {isInTelegram === null ? 'null' : isInTelegram ? 'true' : 'false'}</div>
+                    <div>hasWebApp: {typeof window !== 'undefined' && window.Telegram?.WebApp ? 'true' : 'false'}</div>
+                  </div>
+                </div>
               )}
 
               {/* Отладочная информация */}
