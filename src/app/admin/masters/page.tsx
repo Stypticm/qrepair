@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/button'
 
 interface Master {
   id: string
@@ -30,6 +31,7 @@ export default function AdminMastersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [accessDenied, setAccessDenied] = useState(false)
   const [newMaster, setNewMaster] = useState({
     telegramId: '',
     username: '',
@@ -40,14 +42,33 @@ export default function AdminMastersPage() {
 
   const { telegramId } = useAppStore()
 
-  // Проверяем доступ только для админов
-  const isAdmin = telegramId === '1' || telegramId === '531360988' || telegramId === '296925626'
-
+  // Проверяем права доступа
   useEffect(() => {
-    if (telegramId && isAdmin) {
-      fetchData()
+    console.log('Admin masters page - telegramId:', telegramId);
+    
+    if (telegramId) {
+      const adminIds = ['1', '296925626', '531360988'];
+      const isAdmin = adminIds.includes(telegramId);
+      
+      if (isAdmin) {
+        setAccessDenied(false);
+        fetchData();
+      } else {
+        setAccessDenied(true);
+        setLoading(false);
+      }
+    } else {
+      const timer = setTimeout(() => {
+        if (!telegramId) {
+          setAccessDenied(true);
+          setLoading(false);
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [telegramId, isAdmin])
+  }, [telegramId]);
+
 
   const fetchData = async () => {
     try {
@@ -170,25 +191,39 @@ export default function AdminMastersPage() {
     }))
   }
 
-  // Проверяем доступ
-  if (!isAdmin) {
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Доступ запрещен</h1>
-          <p className="text-gray-600">У вас нет прав для доступа к этой странице</p>
-        </div>
+      <div className="min-h-screen bg-white">
+        <Page back={true}>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Загружаем данные...</p>
+            </div>
+          </div>
+        </Page>
       </div>
     )
   }
 
-  if (loading) {
+  if (accessDenied) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Загружаем данные...</p>
-        </div>
+      <div className="min-h-screen bg-white">
+        <Page back={true}>
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-red-600 mb-4">Доступ запрещен</h1>
+              <p className="text-gray-600 mb-4">У вас нет прав для доступа к этой странице</p>
+              <button 
+                onClick={() => window.history.back()} 
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Назад
+              </button>
+            </div>
+          </div>
+        </Page>
       </div>
     )
   }
@@ -212,20 +247,22 @@ export default function AdminMastersPage() {
   return (
     <Page back={true}>
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-6xl mx-auto p-4">
+        <div className="mx-auto pt-16 px-4">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление мастерами</h1>
             <p className="text-gray-600 mb-4">Назначайте мастеров на точки и управляйте их статусом</p>
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-fit"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span>{showAddForm ? 'Отменить' : 'Добавить мастера'}</span>
-            </button>
+            <section className="flex justify-center">
+              <Button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-fit"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>{showAddForm ? 'Отменить' : 'Добавить мастера'}</span>
+              </Button>
+            </section>
           </div>
 
           {/* Форма добавления мастера */}
@@ -272,36 +309,19 @@ export default function AdminMastersPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Точка (необязательно)
-                  </label>
-                  <select
-                    value={newMaster.pointId}
-                    onChange={(e) => handleInputChange('pointId', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  >
-                    <option value="">Выберите точку</option>
-                    {points.map((point) => (
-                      <option key={point.id} value={point.id}>
-                        Точка #{point.id} - {point.address}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex justify-end space-x-4 mt-6">
                 <button
                   onClick={() => setShowAddForm(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Отменить
                 </button>
                 <button
                   onClick={createMaster}
                   disabled={creating}
-                  className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   {creating ? (
                     <>
@@ -340,8 +360,8 @@ export default function AdminMastersPage() {
                       </div>
                     </div>
                     <span className={`px-3 py-1 text-sm font-medium rounded-full ${master.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
                       }`}>
                       {master.isActive ? 'Активен' : 'Неактивен'}
                     </span>
@@ -382,33 +402,6 @@ export default function AdminMastersPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Назначить на точку:
-                    </label>
-                    <select
-                      onChange={(e) => assignMasterToPoint(master.id, parseInt(e.target.value))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                    >
-                      <option value="">Выберите точку</option>
-                      {points
-                        .filter(point => {
-                          // Показываем только свободные точки или текущую точку мастера
-                          const isCurrentPoint = master.pointId === point.id
-                          const isFreePoint = !masters.some(m => m.pointId === point.id)
-                          return isCurrentPoint || isFreePoint
-                        })
-                        .map((point) => {
-                          const isCurrentPoint = master.pointId === point.id
-                          const isFreePoint = !masters.some(m => m.pointId === point.id)
-                          return (
-                            <option key={point.id} value={point.id}>
-                              {point.address} ({point.workingHours}) {isCurrentPoint ? '(Текущая)' : isFreePoint ? '(Свободна)' : ''}
-                            </option>
-                          )
-                        })}
-                    </select>
-                  </div>
                 </div>
               </div>
             ))}

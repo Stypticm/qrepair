@@ -1,15 +1,50 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Users, BarChart3 } from 'lucide-react';
 import { Page } from '@/components/Page';
+import { useAppStore } from '@/stores/authStore';
 
 export default function AdminPage() {
   const router = useRouter();
+  const { telegramId, role } = useAppStore();
+  const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Проверяем права доступа
+  useEffect(() => {
+    console.log('Admin page - telegramId:', telegramId, 'role:', role);
+    
+    if (telegramId) {
+      // Проверяем, является ли пользователь админом
+      const adminIds = ['1', '296925626', '531360988'];
+      const isAdmin = adminIds.includes(telegramId);
+      
+      console.log('Admin page - isAdmin:', isAdmin);
+      
+      if (isAdmin) {
+        setAccessDenied(false);
+      } else {
+        setAccessDenied(true);
+      }
+      setLoading(false);
+    } else {
+      // Если telegramId еще не загружен, ждем
+      const timer = setTimeout(() => {
+        console.log('Admin page - timeout, telegramId:', telegramId);
+        if (!telegramId) {
+          setAccessDenied(true);
+          setLoading(false);
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [telegramId, role]);
 
   const adminSections = [
     {
@@ -35,6 +70,35 @@ export default function AdminPage() {
       router.push('/admin/requests');
     }
   };
+
+  if (loading) {
+    return (
+      <Page back={true}>
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Загрузка...</p>
+          </div>
+        </div>
+      </Page>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <Page back={true}>
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Доступ запрещен</h1>
+            <p className="text-gray-600 mb-4">У вас нет прав для доступа к админ панели</p>
+            <Button onClick={() => router.push('/')} className="bg-blue-600 hover:bg-blue-700">
+              Вернуться на главную
+            </Button>
+          </div>
+        </div>
+      </Page>
+    );
+  }
 
   return (
     <Page back={true}>

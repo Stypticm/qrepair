@@ -133,8 +133,9 @@ const MyDevices = () => {
   };
 
   return (
-    <Page back={true}>
-      <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white">
+      <Page back={true}>
+        <div className="w-full min-h-screen bg-white flex flex-col">
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8 mt-12">
@@ -275,18 +276,17 @@ const MyDevices = () => {
                                   </div>
                                 )}
 
-                                {/* QR-код для мастера */}
+                                {/* QR-код для заявки */}
                                 {device.status === 'submitted' && (
                                   <div className="border-t pt-4">
-                                    <div className="text-center">
-                                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center justify-center gap-2">
-                                        <QrCode className="w-5 h-5 text-teal-500" />
-                                        QR-код для мастера
-                                      </h4>
-                                      <p className="text-sm text-gray-600 mb-4">
-                                        Покажите этот QR-код мастеру при сдаче устройства
+                                    <div className="text-center">                                      
+                                      <p className="text-sm text-gray-600 mb-2">
+                                        ID заявки: <span className="font-mono font-bold text-teal-600">#{device.id}</span>
                                       </p>
-                                      <QRCodeGenerator skupkaId={parseInt(device.id) || 0} pointId={1} />
+                                      <p className="text-sm text-gray-600 mb-4">
+                                        Мастер может отсканировать QR код или ввести ID вручную
+                                      </p>
+                                      <QRCodeGenerator skupkaId={device.id} pointId={1} />
                                     </div>
                                   </div>
                                 )}
@@ -321,8 +321,9 @@ const MyDevices = () => {
             )}
           </div>
         </div>
-      </div>
-    </Page>
+        </div>
+      </Page>
+    </div>
   )
 }
 

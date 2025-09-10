@@ -7,7 +7,7 @@ import { QrCode, Download } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 
 interface QRCodeGeneratorProps {
-  skupkaId: number;
+  skupkaId: string;
   pointId: number;
 }
 
@@ -35,7 +35,7 @@ export function QRCodeGenerator({ skupkaId, pointId }: QRCodeGeneratorProps) {
 
   return (
     <Card className="bg-white border border-gray-200 rounded-apple-lg shadow-sm">
-      <CardHeader>
+      <CardHeader className="flex items-center justify-center">
         <CardTitle className="flex items-center gap-2 text-gray-900 font-sf-pro">
           <QrCode className="w-5 h-5 text-teal-500" />
           QR-код для заявки

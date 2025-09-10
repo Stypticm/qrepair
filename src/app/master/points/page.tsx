@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/stores/authStore'
-import { useNotifications } from '@/hooks/useNotifications'
-import { useMasterNotifications } from '@/hooks/useMasterNotifications'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
 
@@ -34,30 +32,39 @@ export default function MasterPointsPage() {
   const [allPoints, setAllPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [expandedPoints, setExpandedPoints] = useState<Set<number>>(new Set())
   
   const { telegramId } = useAppStore()
-  const { showNotification } = useNotifications()
-  
-  // Включаем уведомления для мастеров
-  useMasterNotifications()
   
   useEffect(() => {
+    console.log('Master page - telegramId:', telegramId)
     if (telegramId) {
-      fetchAllRequests()
+      fetchMasterRequests()
+    } else {
+      // Если telegramId еще не загружен, ждем немного
+      const timer = setTimeout(() => {
+        console.log('Master page - timer check, telegramId:', telegramId)
+        if (telegramId) {
+          fetchMasterRequests()
+        } else {
+          console.log('Master page - no telegramId, stopping loading')
+          setLoading(false)
+        }
+      }, 1000)
+      
+      return () => clearTimeout(timer)
     }
   }, [telegramId])
   
-  const fetchAllRequests = async () => {
+  const fetchMasterRequests = async () => {
     try {
       setLoading(true)
       
-      // Получаем заявки
-      const requestsResponse = await fetch(`/api/admin/requests?adminTelegramId=${telegramId}`)
+      // Получаем только заявки мастера
+      const requestsResponse = await fetch(`/api/master/requests?masterTelegramId=${telegramId}`)
       const requestsData = await requestsResponse.json()
       
       if (!requestsResponse.ok) {
-        throw new Error(requestsData.error || 'Failed to fetch requests')
+        throw new Error(requestsData.error || 'Failed to fetch master requests')
       }
       
       // Получаем точки мастера
@@ -79,47 +86,47 @@ export default function MasterPointsPage() {
       setRequests(requestsData.requests)
       setMasterPoints(pointsData.points)
       setAllPoints(allPointsData.points)
-      showNotification('Заявки загружены успешно', 'success')
+      
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching master requests:', error)
       setError(error instanceof Error ? error.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
   }
   
-  const togglePointExpansion = (pointId: number) => {
-    const newExpanded = new Set(expandedPoints)
-    if (newExpanded.has(pointId)) {
-      newExpanded.delete(pointId)
-    } else {
-      newExpanded.add(pointId)
-    }
-    setExpandedPoints(newExpanded)
-  }
-  
-  const groupRequestsByPoint = () => {
-    const grouped: { [key: number]: Request[] } = {}
-    
-    requests.forEach(request => {
-      const pointId = parseInt(request.pickupPoint || '0')
-      if (!grouped[pointId]) {
-        grouped[pointId] = []
-      }
-      grouped[pointId].push(request)
-    })
-    
-    return grouped
-  }
-  
-  const isRequestActive = (request: Request) => {
-    const pointId = parseInt(request.pickupPoint || '0')
-    return masterPoints.some(point => point.id === pointId)
-  }
   
   const getPointInfo = (pointId: number) => {
     // Ищем среди всех точек для отображения информации
     return allPoints.find(point => point.id === pointId)
+  }
+
+  const addRequestToMaster = async (requestId: string) => {
+    try {
+      const response = await fetch('/api/master/add-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requestId: requestId,
+          masterTelegramId: telegramId
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add request to master')
+      }
+
+      // Заявка успешно добавлена
+      // Обновляем список заявок
+      fetchMasterRequests()
+    } catch (error) {
+      console.error('Error adding request to master:', error)
+      console.error('Ошибка при добавлении заявки')
+    }
   }
   
   if (loading) {
@@ -139,7 +146,7 @@ export default function MasterPointsPage() {
         <div className="text-center">
           <p className="text-red-600 mb-4">Ошибка: {error}</p>
           <button 
-            onClick={fetchAllRequests}
+            onClick={fetchMasterRequests}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Попробовать снова
@@ -151,160 +158,146 @@ export default function MasterPointsPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-6xl mx-auto p-4">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
-          <p className="text-gray-600">Управляйте всеми заявками в системе</p>
-          {masterPoints.length > 0 && (
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-blue-800 font-medium">
-                Ваша точка: {masterPoints.map(point => point.address).join(', ')}
-              </p>
-            </div>
-          )}
-        </div>
-        
-        {requests.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-gray-400 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Нет заявок</h3>
-            <p className="text-gray-500">В системе пока нет заявок</p>
+      <div className="min-h-screen bg-white">
+        <div className="max-w-md mx-auto pt-16 px-4">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
+            <p className="text-gray-600">Сканируйте QR код для добавления заявки</p>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {Object.entries(groupRequestsByPoint()).map(([pointId, pointRequests]) => {
-              const isMyPoint = masterPoints.some(point => point.id === parseInt(pointId))
-              const isExpanded = expandedPoints.has(parseInt(pointId))
-              const pointInfo = getPointInfo(parseInt(pointId))
-              
-              return (
-                <div key={pointId} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  {/* Заголовок точки */}
-                  <div 
-                    className={`p-4 ${isMyPoint ? 'cursor-pointer hover:bg-gray-50 transition-colors' : 'cursor-not-allowed'} ${
-                      isMyPoint ? 'bg-green-50 border-l-4 border-green-500' : 'bg-gray-50 border-l-4 border-gray-300'
-                    }`}
-                    onClick={() => isMyPoint && togglePointExpansion(parseInt(pointId))}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-3 h-3 rounded-full ${isMyPoint ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {pointInfo ? pointInfo.address : `Точка #${pointId}`}
-                          </h3>
-                          {pointInfo && pointInfo.name && (
-                            <p className="text-sm text-gray-600">{pointInfo.name}</p>
-                          )}
-                        </div>
+          
+          {/* QR Scanner and Manual Input */}
+          <div className="mb-8 space-y-4">
+            <button
+              onClick={() => {
+                // Открываем выбор файла для сканирования QR
+                const input = document.createElement('input')
+                input.type = 'file'
+                input.accept = 'image/*'
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0]
+                  if (file) {
+                    // Здесь будет логика сканирования QR кода
+                    console.log('QR код выбран:', file)
+                    // Пока что просто показываем уведомление
+                    alert('QR код выбран! Функционал сканирования будет добавлен.')
+                  }
+                }
+                input.click()
+              }}
+              className="w-full bg-blue-600 text-white px-6 py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+              <span>Сканировать QR код</span>
+            </button>
+            
+            <div className="text-center text-gray-500 text-sm">или</div>
+            
+            <div className="flex space-x-2 gap-2">
+              <input
+                type="text"
+                placeholder="Введите ID заявки"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onKeyPress={async (e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.target as HTMLInputElement
+                    const requestId = input.value.trim()
+                    if (requestId) {
+                      await addRequestToMaster(requestId)
+                      input.value = ''
+                    }
+                  }
+                }}
+              />
+              <button
+                onClick={async () => {
+                  const input = document.querySelector('input[placeholder="Введите ID заявки"]') as HTMLInputElement
+                  const requestId = input?.value.trim()
+                  if (requestId) {
+                    await addRequestToMaster(requestId)
+                    input.value = ''
+                  }
+                }}
+                className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
+              >
+                Добавить
+              </button>
+            </div>
+          </div>
+          
+          {/* Заявки мастера */}
+          {requests.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
+              {requests.map((request) => (
+                <div key={request.id} className="bg-white rounded-lg shadow-md p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h4 className="text-md font-semibold text-gray-900">{request.modelname || 'Не указано'}</h4>
                         <span className={`px-2 py-1 text-xs rounded-full ${
-                          isMyPoint ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+                          request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
+                          request.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                          request.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}>
-                          {pointRequests.length} заявок
+                          {request.status === 'submitted' ? 'Новая' :
+                           request.status === 'in_progress' ? 'В работе' :
+                           request.status === 'completed' ? 'Завершена' :
+                           request.status}
                         </span>
-                        {!isMyPoint && (
-                          <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
-                            Недоступно
-                          </span>
-                        )}
                       </div>
-                      {isMyPoint && (
-                        <svg 
-                          className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      )}
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Клиент:</strong> @{request.username}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        <strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}
+                      </p>
                     </div>
                   </div>
                   
-                  {/* Заявки точки */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-200">
-                      {pointRequests.map((request) => {
-                        const isActive = isRequestActive(request)
-                        
-                        return (
-                          <div 
-                            key={request.id} 
-                            className={`p-4 border-b border-gray-100 last:border-b-0 ${
-                              isActive ? 'hover:bg-gray-50' : 'opacity-60 bg-gray-50'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <h4 className="text-md font-semibold text-gray-900">{request.modelname || 'Не указано'}</h4>
-                                  <span className={`px-2 py-1 text-xs rounded-full ${
-                                    request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
-                                    request.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                                    request.status === 'completed' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
-                                    {request.status === 'submitted' ? 'Новая' :
-                                     request.status === 'in_progress' ? 'В работе' :
-                                     request.status === 'completed' ? 'Завершена' :
-                                     request.status}
-                                  </span>
-                                  {!isActive && (
-                                    <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
-                                      Недоступно
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm text-gray-600 mb-1">
-                                  <strong>Клиент:</strong> @{request.username}
-                                </p>
-                                <p className="text-sm text-gray-600 mb-1">
-                                  <strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  <strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            {isActive && (
-                              <div className="flex space-x-3">
-                                <Link
-                                  href={`/master/requests/${request.id}`}
-                                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
-                                >
-                                  Просмотреть детали
-                                </Link>
-                                <button
-                                  onClick={() => {
-                                    const newStatus = request.status === 'submitted' ? 'in_progress' : 
-                                                     request.status === 'in_progress' ? 'completed' : 'submitted'
-                                    // Здесь можно добавить логику обновления статуса
-                                  }}
-                                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                                >
-                                  {request.status === 'submitted' ? 'Взять в работу' :
-                                   request.status === 'in_progress' ? 'Завершить' :
-                                   'Сбросить'}
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
+                  <div className="flex space-x-3">
+                    <Link
+                      href={`/master/requests/${request.id}`}
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
+                    >
+                      Просмотреть детали
+                    </Link>
+                    <button
+                      onClick={() => {
+                        const newStatus = request.status === 'submitted' ? 'in_progress' : 
+                                         request.status === 'in_progress' ? 'completed' : 'submitted'
+                        // Здесь можно добавить логику обновления статуса
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      {request.status === 'submitted' ? 'Взять в работу' :
+                       request.status === 'in_progress' ? 'Завершить' :
+                       'Сбросить'}
+                    </button>
+                  </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+          
+          {/* Сообщение если нет заявок */}
+          {requests.length === 0 && !loading && (
+            <div className="text-center py-16">
+              <div className="text-gray-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Нет заявок</h3>
+              <p className="text-gray-500">Сканируйте QR код или введите ID заявки для начала работы</p>
+            </div>
+          )}
         </div>
       </div>
     </Page>

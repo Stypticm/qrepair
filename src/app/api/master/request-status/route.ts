@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/core/lib/prisma'
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -10,14 +8,17 @@ export async function PATCH(req: NextRequest) {
 
     if (!requestId || !status || !telegramId) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        {
+          error:
+            'Request ID, status and telegram ID are required',
+        },
         { status: 400 }
       )
     }
 
-    // Проверяем, что мастер существует
+    // Проверяем, является ли пользователь мастером
     const master = await prisma.master.findUnique({
-      where: { telegramId },
+      where: { telegramId: telegramId },
     })
 
     if (!master) {
@@ -27,38 +28,35 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    // Обновляем статус заявки
-    const request = await prisma.skupka.update({
+    // Проверяем, что заявка назначена этому мастеру
+    const request = await prisma.skupka.findUnique({
       where: { id: requestId },
-      data: {
-        status,
-        assignedMasterId: master.id,
-      },
     })
 
-    // Уведомляем клиента об изменении статуса
-    const statusMessages = {
-      accepted: '✅ Ваша заявка принята мастером',
-      paid: '💰 Мастер произвел оплату',
-      completed: '🎉 Заявка завершена',
-    }
-
-    if (
-      statusMessages[status as keyof typeof statusMessages]
-    ) {
-      // Здесь можно добавить отправку уведомления клиенту
-      console.log(
-        `Sending notification to client ${
-          request.telegramId
-        }: ${
-          statusMessages[
-            status as keyof typeof statusMessages
-          ]
-        }`
+    if (!request) {
+      return NextResponse.json(
+        { error: 'Request not found' },
+        { status: 404 }
       )
     }
 
-    return NextResponse.json({ success: true, request })
+    if (request.assignedMasterId !== master.id) {
+      return NextResponse.json(
+        { error: 'You are not assigned to this request' },
+        { status: 403 }
+      )
+    }
+
+    // Обновляем статус заявки
+    const updatedRequest = await prisma.skupka.update({
+      where: { id: requestId },
+      data: { status: status as any },
+    })
+
+    return NextResponse.json({
+      success: true,
+      request: updatedRequest,
+    })
   } catch (error) {
     console.error('Error updating request status:', error)
     return NextResponse.json(

@@ -39,18 +39,38 @@ export default function AdminRequestsPage() {
   const [points, setPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [accessDenied, setAccessDenied] = useState(false)
   const [selectedPoints, setSelectedPoints] = useState<{ [requestId: string]: number }>({})
 
   const { telegramId } = useAppStore()
 
-  // Проверяем доступ только для админов
-  const isAdmin = telegramId === '1' || telegramId === '531360988' || telegramId === '296925626'
-
+  // Проверяем права доступа
   useEffect(() => {
-    if (telegramId && isAdmin) {
-      fetchData()
+    console.log('Admin requests page - telegramId:', telegramId);
+    
+    if (telegramId) {
+      const adminIds = ['1', '296925626', '531360988'];
+      const isAdmin = adminIds.includes(telegramId);
+      
+      if (isAdmin) {
+        setAccessDenied(false);
+        fetchData();
+      } else {
+        setAccessDenied(true);
+        setLoading(false);
+      }
+    } else {
+      const timer = setTimeout(() => {
+        if (!telegramId) {
+          setAccessDenied(true);
+          setLoading(false);
+        }
+      }, 2000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [telegramId, isAdmin])
+  }, [telegramId]);
+
 
   const fetchData = async () => {
     try {
@@ -171,25 +191,39 @@ export default function AdminRequestsPage() {
     }
   }
 
-  // Проверяем доступ
-  if (!isAdmin) {
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Доступ запрещен</h1>
-          <p className="text-gray-600">У вас нет прав для доступа к этой странице</p>
-        </div>
+      <div className="min-h-screen bg-white">
+        <Page back={true}>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Загружаем данные...</p>
+            </div>
+          </div>
+        </Page>
       </div>
     )
   }
 
-  if (loading) {
+  if (accessDenied) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Загружаем данные...</p>
-        </div>
+      <div className="min-h-screen bg-white">
+        <Page back={true}>
+          <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-red-600 mb-4">Доступ запрещен</h1>
+              <p className="text-gray-600 mb-4">У вас нет прав для доступа к этой странице</p>
+              <button 
+                onClick={() => window.history.back()} 
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Назад
+              </button>
+            </div>
+          </div>
+        </Page>
       </div>
     )
   }
@@ -212,20 +246,20 @@ export default function AdminRequestsPage() {
 
   return (
     <Page back={true}>
-      <div className="bg-gray-50 min-h-screen">
-        <div className="max-w-7xl mx-auto p-4 pb-8">
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto pt-16 px-4">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление заявками</h1>
-            <p className="text-gray-600">Перемещайте заявки между точками и назначайте мастеров</p>
+            {/* <p className="text-gray-600">Перемещайте заявки между точками и назначайте мастеров</p> */}
           </div>
 
           <div className="space-y-6">
             {requests.map((request) => (
               <div key={request.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center">
+                  <div className="mb-6">
+                    <div className="flex items-center mb-3">
                       <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
                         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -279,21 +313,10 @@ export default function AdminRequestsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-start">
-                      <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <div>
-                        <p className="text-gray-700 font-medium">{request.pickupPoint}</p>
-                        <p className="text-gray-500 text-sm">Текущая точка</p>
-                      </div>
-                    </div>
-
                     {request.assignedMaster && (
                       <div className="flex items-start">
                         <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6" />
                         </svg>
                         <div>
                           <p className="text-gray-700 font-medium">{request.assignedMaster.name} (@{request.assignedMaster.username})</p>
@@ -301,6 +324,7 @@ export default function AdminRequestsPage() {
                         </div>
                       </div>
                     )}
+
 
                     <div className="flex items-start">
                       <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -313,54 +337,6 @@ export default function AdminRequestsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        1. Выберите точку:
-                      </label>
-                      <select
-                        value={selectedPoints[request.id] || ''}
-                        onChange={(e) => handlePointSelect(request.id, parseInt(e.target.value))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                      >
-                        <option value="">Выберите точку</option>
-                        {points.map((point) => (
-                          <option key={point.id} value={point.id}>
-                            {point.address} ({point.workingHours})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        2. Назначить мастера:
-                      </label>
-                      <select
-                        onChange={(e) => handleMasterSelect(request.id, e.target.value)}
-                        disabled={!selectedPoints[request.id]}
-                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-                          !selectedPoints[request.id] 
-                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' 
-                            : 'border-gray-300'
-                        }`}
-                      >
-                        <option value="">
-                          {!selectedPoints[request.id] ? 'Сначала выберите точку' : 'Выберите мастера'}
-                        </option>
-                        {selectedPoints[request.id] && getMastersForPoint(selectedPoints[request.id]).map((master) => (
-                          <option key={master.id} value={master.id}>
-                            {master.name} (@{master.username})
-                          </option>
-                        ))}
-                      </select>
-                      {selectedPoints[request.id] && getMastersForPoint(selectedPoints[request.id]).length === 0 && (
-                        <p className="mt-2 text-sm text-amber-600">
-                          ⚠️ На выбранной точке нет назначенных мастеров
-                        </p>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
             ))}

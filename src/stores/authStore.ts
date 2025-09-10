@@ -355,6 +355,27 @@ export const useAppStore = create<AppState>((set, get) => ({
       return
     }
 
+    // Сначала пытаемся восстановить данные из sessionStorage
+    const savedTelegramId =
+      sessionStorage.getItem('telegramId')
+    const savedUsername = sessionStorage.getItem(
+      'telegramUsername'
+    )
+
+    if (savedTelegramId && !get().telegramId) {
+      addDebugInfo(
+        `🔄 Восстановление из sessionStorage: telegramId=${savedTelegramId}, username=${savedUsername}`
+      )
+      set({
+        telegramId: savedTelegramId,
+        username: savedUsername,
+        role: ADMIN_IDS.includes(parseInt(savedTelegramId))
+          ? 'master'
+          : 'client',
+        userId: parseInt(savedTelegramId),
+      })
+    }
+
     const hasTelegramWebApp = !!(window as any).Telegram
       ?.WebApp
     const hasTelegramWebviewProxy = !!(window as any)

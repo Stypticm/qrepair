@@ -1,32 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/core/lib/prisma'
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const telegramId = searchParams.get('telegramId')
-    const pointId = searchParams.get('pointId')
+    const masterTelegramId = searchParams.get(
+      'masterTelegramId'
+    )
 
-    if (!telegramId) {
+    if (!masterTelegramId) {
       return NextResponse.json(
-        { error: 'Telegram ID is required' },
+        { error: 'Master Telegram ID is required' },
         { status: 400 }
       )
     }
 
-    if (!pointId) {
-      return NextResponse.json(
-        { error: 'Point ID is required' },
-        { status: 400 }
-      )
-    }
-
-    // Проверяем, что мастер привязан к этой точке
+    // Находим мастера
     const master = await prisma.master.findUnique({
-      where: { telegramId },
-      include: { point: true },
+      where: { telegramId: masterTelegramId },
     })
 
     if (!master) {
@@ -36,23 +27,20 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    if (master.pointId !== parseInt(pointId)) {
-      return NextResponse.json(
-        { error: 'Master is not assigned to this point' },
-        { status: 403 }
-      )
-    }
-
-    // Получаем заявки для точки мастера
+    // Получаем только заявки, назначенные этому мастеру
     const requests = await prisma.skupka.findMany({
       where: {
-        pickupPoint: pointId,
-        status: 'submitted',
+        assignedMasterId: master.id,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        createdAt: 'desc',
+      },
     })
 
-    return NextResponse.json({ requests })
+    return NextResponse.json({
+      success: true,
+      requests: requests,
+    })
   } catch (error) {
     console.error('Error fetching master requests:', error)
     return NextResponse.json(
