@@ -47,12 +47,13 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
 
   return (
     <div
-      className="w-full h-dvh"
+      className="w-full h-dvh bg-white"
       style={{
         minHeight: '100dvh',
         width: '100vw',
         maxWidth: '100vw',
         overflowX: 'hidden',
+        backgroundColor: '#ffffff',
       }}
     >
       {children}

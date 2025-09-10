@@ -119,6 +119,9 @@ model Device {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Связи
+  marketPrices MarketPrice[]
+
   // Индексы для быстрой фильтрации
   @@index([model])
   @@index([model, variant])
@@ -129,6 +132,32 @@ model Device {
   @@index([basePrice])
   
   // Уникальный индекс для предотвращения дубликатов
+}
+
+model MarketPrice {
+  id          String   @id @default(cuid())
+  deviceId    String   // Связь с устройством
+  source      String   // "avito", "youla", "wildberries", etc.
+  price       Float    // Цена с площадки
+  url         String?  // Ссылка на объявление
+  title       String?  // Заголовок объявления
+  description String?  // Описание
+  location    String?  // Город/регион
+  condition   String?  // Состояние (новый, б/у, etc.)
+  sellerType  String?  // Тип продавца (частник, магазин)
+  parsedAt    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Связи
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  // Индексы
+  @@index([deviceId])
+  @@index([source])
+  @@index([parsedAt])
+  @@index([price])
+  @@index([source, deviceId])
 }
 
 enum SkupkaStatus {

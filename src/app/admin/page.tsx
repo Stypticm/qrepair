@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, BarChart3 } from 'lucide-react';
+import { Users, BarChart3, TrendingUp } from 'lucide-react';
 import { Page } from '@/components/Page';
 import { useAppStore } from '@/stores/authStore';
 
@@ -19,31 +19,42 @@ export default function AdminPage() {
   useEffect(() => {
     console.log('Admin page - telegramId:', telegramId, 'role:', role);
     
-    if (telegramId) {
-      // Проверяем, является ли пользователь админом
-      const adminIds = ['1', '296925626', '531360988'];
-      const isAdmin = adminIds.includes(telegramId);
+    const checkAccess = () => {
+      // Проверяем telegramId из store или sessionStorage
+      const currentTelegramId = telegramId || sessionStorage.getItem('telegramId');
       
-      console.log('Admin page - isAdmin:', isAdmin);
-      
-      if (isAdmin) {
-        setAccessDenied(false);
-      } else {
-        setAccessDenied(true);
-      }
-      setLoading(false);
-    } else {
-      // Если telegramId еще не загружен, ждем
-      const timer = setTimeout(() => {
-        console.log('Admin page - timeout, telegramId:', telegramId);
-        if (!telegramId) {
+      if (currentTelegramId) {
+        // Проверяем, является ли пользователь админом
+        const adminIds = ['1', '296925626', '531360988'];
+        const isAdmin = adminIds.includes(currentTelegramId);
+        
+        console.log('Admin page - isAdmin:', isAdmin, 'telegramId:', currentTelegramId);
+        
+        if (isAdmin) {
+          setAccessDenied(false);
+        } else {
           setAccessDenied(true);
-          setLoading(false);
         }
-      }, 2000);
-      
-      return () => clearTimeout(timer);
+        setLoading(false);
+        return true;
+      }
+      return false;
+    };
+
+    if (checkAccess()) {
+      return;
     }
+
+    // Если telegramId еще не загружен, ждем дольше
+    const timer = setTimeout(() => {
+      console.log('Admin page - timeout, checking sessionStorage');
+      if (!checkAccess()) {
+        setAccessDenied(true);
+        setLoading(false);
+      }
+    }, 5000); // Увеличиваем до 5 секунд
+    
+    return () => clearTimeout(timer);
   }, [telegramId, role]);
 
   const adminSections = [
@@ -60,14 +71,46 @@ export default function AdminPage() {
       description: 'Просмотр и управление заявками',
       icon: BarChart3,
       color: 'bg-purple-500'
+    },
+    {
+      id: 'price-parsing',
+      title: 'Парсинг цен',
+      description: 'Сравнение цен с рыночными',
+      icon: TrendingUp,
+      color: 'bg-orange-500'
     }
   ];
+
+  const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
+
+  const handleCleanupDuplicates = async () => {
+    try {
+      setCleaningDuplicates(true);
+      const response = await fetch('/api/admin/cleanup-duplicates', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`Очистка завершена!\nУдалено дубликатов: ${data.cleanedDuplicates}\nУдалено старых записей: ${data.cleanedOldRecords}`);
+      } else {
+        alert(`Ошибка очистки: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error cleaning duplicates:', error);
+      alert('Ошибка при очистке дубликатов');
+    } finally {
+      setCleaningDuplicates(false);
+    }
+  };
 
   const handleSectionClick = (sectionId: string) => {
     if (sectionId === 'masters') {
       router.push('/admin/masters');
     } else if (sectionId === 'requests') {
       router.push('/admin/requests');
+    } else if (sectionId === 'price-parsing') {
+      router.push('/admin/price-parsing');
     }
   };
 
@@ -147,6 +190,49 @@ export default function AdminPage() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Рыночные цены */}
+            <div className="mt-8">
+              <Card className="bg-blue-50 border-2 border-gray-600">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Рыночные цены</h3>
+                      <p className="text-sm text-gray-600">Просмотр сохраненных данных парсинга</p>
+                    </div>
+                    <Button
+                      onClick={() => window.location.href = '/admin/market-prices'}
+                      variant="outline"
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                      Просмотреть цены
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Кнопка очистки дубликатов */}
+            <div className="mt-4">
+              <Card className="bg-orange-50 border-2 border-gray-600">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">Очистка данных</h3>
+                      <p className="text-sm text-gray-600">Удалить дублирующиеся записи цен</p>
+                    </div>
+                    <Button
+                      onClick={handleCleanupDuplicates}
+                      disabled={cleaningDuplicates}
+                      variant="outline"
+                      className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                    >
+                      {cleaningDuplicates ? 'Очистка...' : 'Очистить дубликаты'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

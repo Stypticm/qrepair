@@ -46,27 +46,42 @@ export default function AdminMastersPage() {
   useEffect(() => {
     console.log('Admin masters page - telegramId:', telegramId);
     
-    if (telegramId) {
-      const adminIds = ['1', '296925626', '531360988'];
-      const isAdmin = adminIds.includes(telegramId);
+    const checkAccess = () => {
+      // Проверяем telegramId из store или sessionStorage
+      const currentTelegramId = telegramId || sessionStorage.getItem('telegramId');
       
-      if (isAdmin) {
-        setAccessDenied(false);
-        fetchData();
-      } else {
-        setAccessDenied(true);
-        setLoading(false);
-      }
-    } else {
-      const timer = setTimeout(() => {
-        if (!telegramId) {
+      if (currentTelegramId) {
+        const adminIds = ['1', '296925626', '531360988'];
+        const isAdmin = adminIds.includes(currentTelegramId);
+        
+        console.log('Admin masters page - isAdmin:', isAdmin, 'telegramId:', currentTelegramId);
+        
+        if (isAdmin) {
+          setAccessDenied(false);
+          fetchData();
+        } else {
           setAccessDenied(true);
           setLoading(false);
         }
-      }, 2000);
-      
-      return () => clearTimeout(timer);
+        return true;
+      }
+      return false;
+    };
+
+    if (checkAccess()) {
+      return;
     }
+
+    // Если telegramId еще не загружен, ждем дольше
+    const timer = setTimeout(() => {
+      console.log('Admin masters page - timeout, checking sessionStorage');
+      if (!checkAccess()) {
+        setAccessDenied(true);
+        setLoading(false);
+      }
+    }, 5000); // Увеличиваем до 5 секунд
+    
+    return () => clearTimeout(timer);
   }, [telegramId]);
 
 

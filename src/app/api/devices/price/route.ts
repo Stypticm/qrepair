@@ -33,7 +33,11 @@ export async function GET(request: NextRequest) {
     if (country) whereClause.country = country
     if (simType) whereClause.simType = simType
 
-    const device = await prisma.device.findFirst({
+    const limit = parseInt(
+      searchParams.get('limit') || '50'
+    )
+
+    const devices = await prisma.device.findMany({
       where: whereClause,
       select: {
         id: true,
@@ -45,18 +49,23 @@ export async function GET(request: NextRequest) {
         simType: true,
         basePrice: true,
       },
+      take: limit,
+      orderBy: {
+        basePrice: 'asc',
+      },
     })
 
-    if (!device) {
+    if (devices.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Device not found' },
+        { success: false, error: 'Devices not found' },
         { status: 404 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      device,
+      devices,
+      count: devices.length,
     })
   } catch (error) {
     console.error('Error fetching device price:', error)

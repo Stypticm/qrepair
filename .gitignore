@@ -43,3 +43,6 @@ certificates
 /src/generated/prisma
 
 .vercel
+
+# Python parser (local development only)
+python-parser/

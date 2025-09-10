@@ -51,7 +51,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Не рендерим ничего до монтирования
   if (!isMounted) {
     return (
-      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
+      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white">
         <div className="w-full max-w-md mx-auto text-center">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded mb-4"></div>
@@ -69,13 +69,13 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       // Браузерный режим (ПК или мобильный)
       if (isDesktop) {
         return {
-          container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
+          container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
           main: 'flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl',
           wrapper: 'w-full max-w-md mx-auto',
         };
       } else if (isMobile) {
         return {
-          container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
+          container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
           main: 'flex-1 h-full w-full max-w-md mx-auto shadow-lg bg-white rounded-2xl',
           wrapper: 'w-full h-full max-w-md mx-auto',
         };
@@ -86,14 +86,14 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     if (isDesktop) {
       // На десктопе - ограниченный размер
       return {
-        container: 'min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 items-center justify-center',
+        container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
         main: 'flex-1 w-full max-w-2xl shadow-lg bg-white rounded-2xl',
         wrapper: 'w-full max-w-2xl mx-auto p-4',
       };
     } else {
       // На мобильных - полный экран
       return {
-        container: `min-h-dvh w-full flex flex-col bg-gradient-to-b from-white to-gray-50 telegram-fullscreen`,
+        container: `min-h-dvh w-full flex flex-col bg-white telegram-fullscreen`,
         main: 'flex-1 w-full p-4',
         wrapper: 'w-full',
       };
@@ -105,7 +105,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   // Показываем загрузку только для Telegram
   if (isTelegram && !isReady) {
     return (
-      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
+      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
           <p className="text-gray-600">Инициализация Telegram WebApp...</p>

@@ -62,7 +62,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   return (
     <section
-      className="w-full min-h-screen flex flex-col items-stretch justify-start bg-[#2dc2c6] text-black"
+      className="w-full min-h-screen flex flex-col items-stretch justify-start bg-white text-black"
       style={{
         ...cssVars as React.CSSProperties,
         paddingTop: `${safeAreaInsets.top}px`,

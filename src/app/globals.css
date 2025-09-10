@@ -26,13 +26,12 @@
     }
   }
 
-  /* Тёмная тема */
-  @media (prefers-color-scheme: dark) {
+  /* Тёмная тема отключена - всегда используем светлую тему */
+  /* @media (prefers-color-scheme: dark) {
     :root {
       --background: #000000;
-      /* ... остальные переменные для dark ... */
     }
-  }
+  } */
 
   /* Основные стили */
   * {
@@ -51,7 +50,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--background);
+    background-color: #ffffff !important;
     color: var(--foreground);
     overflow-x: hidden;
     display: flex;
@@ -112,7 +111,7 @@
       border-radius: 32px;
       box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
       overflow: hidden;
-      background: var(--background);
+      background: #ffffff !important;
     }
   }
 
@@ -127,7 +126,7 @@
       border-radius: 12px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       overflow: hidden;
-      background: var(--background);
+      background: #ffffff !important;
     }
   }
 
