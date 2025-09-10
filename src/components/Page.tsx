@@ -36,7 +36,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
     const handleBackClick = () => {
       // Используем навигацию по шагам вместо router.back()
       if (canGoBack) {
-        goToPreviousStep();
+        goToPreviousStep(router);
       } else {
         // Если не можем идти назад по шагам, используем обычную навигацию
         // Для страниц без навигации по шагам (например, "Мои устройства") всегда идем на главную

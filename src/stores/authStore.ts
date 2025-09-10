@@ -96,7 +96,7 @@ interface AppState {
 
   // Navigation actions
   setCurrentStep: (step: string | null) => void
-  goToPreviousStep: () => void
+  goToPreviousStep: (router?: any) => void
   goToNextStep: () => void
   clearCurrentStep: () => void
 
@@ -241,7 +241,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       sessionStorage.setItem('currentStep', currentStep)
     }
   },
-  goToPreviousStep: () => {
+  goToPreviousStep: (router?: any) => {
     const { currentStep } = get()
     if (!currentStep) {
       return
@@ -253,12 +253,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ currentStep: previousStep })
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('currentStep', previousStep)
-        // Используем window.location для навигации
-        window.location.href = `/request/${previousStep}`
+        // Используем переданный router или window.location как fallback
+        if (router) {
+          router.push(`/request/${previousStep}`)
+        } else {
+          window.location.href = `/request/${previousStep}`
+        }
       }
     } else {
       if (typeof window !== 'undefined') {
-        window.location.href = '/'
+        if (router) {
+          router.push('/')
+        } else {
+          window.location.href = '/'
+        }
       }
     }
   },
