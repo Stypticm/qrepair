@@ -60,6 +60,7 @@ export default function PriceParsingPage() {
   const [accessDenied, setAccessDenied] = useState(false)
   const [selectedModel, setSelectedModel] = useState<string>('all')
   const [availableModels, setAvailableModels] = useState<string[]>([])
+  const [parsingProgress, setParsingProgress] = useState(0)
 
   const { telegramId } = useAppStore()
 
@@ -117,30 +118,32 @@ export default function PriceParsingPage() {
     try {
       setLoading(true)
       console.log('Starting to fetch devices...')
-      const response = await fetch('/api/devices/models')
+      
+      // Сначала получаем список моделей для фильтрации
+      const modelsResponse = await fetch('/api/devices/models')
+      const modelsData = await modelsResponse.json()
+      
+      if (modelsData.success) {
+        setAvailableModels(modelsData.models)
+        console.log('Available models:', modelsData.models)
+      }
+      
+      // Загружаем ВСЕ устройства из БД без ограничений
+      const response = await fetch('/api/devices/all')
       const data = await response.json()
       
-      console.log('Models response:', data)
+      console.log('All devices response:', data)
       
       if (data.success) {
-        setAvailableModels(data.models)
-        console.log('Available models:', data.models)
-        
-        // Получаем детали для всех моделей (по 5 вариантов каждой)
-        const modelPromises = data.models.map(async (model: string) => {
-          console.log(`Fetching devices for model: ${model}`)
-          const deviceResponse = await fetch(`/api/devices/price?model=${model}&limit=5`)
-          const deviceData = await deviceResponse.json()
-          console.log(`Response for model ${model}:`, deviceData)
-          return deviceData.devices || []
-        })
-        
-        const deviceResults = await Promise.all(modelPromises)
-        const allDevices = deviceResults.flat().filter(Boolean)
+        const allDevices = data.devices || []
         console.log('Total devices loaded:', allDevices.length)
+        console.log('Total in DB:', data.totalInDb)
+        console.log('Duplicates removed:', data.duplicatesRemoved)
         setAllDevices(allDevices)
         setDevices(allDevices) // Показываем все устройства по умолчанию
         console.log('Devices state updated, should show buttons now')
+      } else {
+        setError('Ошибка загрузки устройств')
       }
     } catch (error) {
       console.error('Error fetching devices:', error)
@@ -190,7 +193,7 @@ export default function PriceParsingPage() {
             },
             body: JSON.stringify({
               deviceId: deviceId,
-              sources: ['avito', 'youla', 'wildberries']
+              sources: ['avito', 'youla', 'wildberries', 'yandex_market']
             })
           })
 
@@ -248,12 +251,12 @@ export default function PriceParsingPage() {
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
       
-      setBulkStats({
-        totalDevices: selectedDevices.length,
-        totalParsed,
-        totalErrors,
-        sources: ['avito', 'youla', 'wildberries']
-      })
+        setBulkStats({
+          totalDevices: selectedDevices.length,
+          totalParsed,
+          totalErrors,
+          sources: ['avito', 'youla', 'wildberries', 'yandex_market']
+        })
       
       fetchBulkStats() // Обновляем общую статистику
       
@@ -269,6 +272,19 @@ export default function PriceParsingPage() {
     try {
       setBulkLoading(true)
       setParsingResults([])
+      setParsingProgress(0)
+      setError(null)
+      
+      // Показываем прогресс-бар сразу
+      console.log('🚀 Начинаем парсинг всех устройств...')
+      
+      // Симуляция прогресса (так как bulk API не возвращает промежуточные результаты)
+      const progressInterval = setInterval(() => {
+        setParsingProgress(prev => {
+          if (prev >= 90) return prev // Останавливаем на 90% до получения результата
+          return prev + Math.random() * 10
+        })
+      }, 500)
       
       const response = await fetch('/api/admin/price-parsing/bulk', {
         method: 'POST',
@@ -276,16 +292,20 @@ export default function PriceParsingPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          limit: 10,
-          sources: ['avito', 'youla', 'wildberries']
+          limit: 1000, // Парсим все устройства
+          sources: ['avito', 'youla', 'wildberries', 'yandex_market']
         })
       })
 
       const data = await response.json()
       
+      // Останавливаем симуляцию прогресса
+      clearInterval(progressInterval)
+      
       if (data.success) {
         setParsingResults(data.results)
         setBulkStats(data.summary)
+        setParsingProgress(100) // Завершен
         fetchBulkStats()
         console.log('✅ Парсинг завершен! Обработано устройств:', data.results.length)
         alert(`✅ Парсинг завершен!\nОбработано устройств: ${data.results.length}\nСпарсено цен: ${data.summary.totalParsed}\nОшибок: ${data.summary.totalErrors}`)
@@ -299,6 +319,7 @@ export default function PriceParsingPage() {
       setError('Ошибка парсинга цен')
     } finally {
       setBulkLoading(false)
+      setParsingProgress(0)
     }
   }
 
@@ -361,7 +382,7 @@ export default function PriceParsingPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 text-center">Парсинг цен</h1>
-                <p className="text-sm sm:text-base text-gray-600">Сравнивайте цены с Avito, Youla, Wildberries</p>
+                <p className="text-sm sm:text-base text-gray-600">Сравнивайте цены с Avito, Youla, Wildberries, Yandex Market</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-xs sm:text-sm text-gray-500">Python парсер</div>
@@ -416,8 +437,8 @@ export default function PriceParsingPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-gray-600">Источники</p>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">3</p>
-                    <p className="text-xs text-gray-500">Avito • Youla • WB</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">4</p>
+                    <p className="text-xs text-gray-500">Avito • Youla • WB • YM</p>
                   </div>
                   <Search className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
                 </div>
@@ -433,12 +454,16 @@ export default function PriceParsingPage() {
                 <div className="mb-4">
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                     <span>Парсинг в процессе...</span>
-                    <span>{parsingResults.length} из {devices.length}</span>
+                    <span>
+                      {parsingProgress > 0 ? `${parsingProgress}%` : `${parsingResults.length} из ${devices.length}`}
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${devices.length > 0 ? (parsingResults.length / devices.length) * 100 : 0}%` }}
+                      style={{ 
+                        width: `${parsingProgress > 0 ? parsingProgress : (devices.length > 0 ? (parsingResults.length / devices.length) * 100 : 0)}%` 
+                      }}
                     ></div>
                   </div>
                 </div>

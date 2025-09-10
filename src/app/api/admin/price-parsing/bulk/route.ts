@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/core/lib/prisma'
 
-// Импортируем функцию парсинга напрямую
+// Функция для реального парсинга через Python API
 async function parseDevicePrices(
   deviceId: string,
-  sources: string[] = ['avito', 'youla', 'wildberries']
+  sources: string[] = [
+    'avito',
+    'youla',
+    'wildberries',
+    'yandex_market',
+  ]
 ) {
   try {
     // Получаем устройство из БД
@@ -16,76 +21,96 @@ async function parseDevicePrices(
       throw new Error('Device not found')
     }
 
-    // Генерируем моковые цены (упрощенная версия)
-    const basePrice = device.basePrice || 50000
-    const variation = 0.3
+    // Пытаемся использовать реальный Python парсер
+    const PYTHON_PARSER_URL =
+      process.env.PYTHON_PARSER_URL ||
+      'http://localhost:8001'
+    let allPrices = []
+    let useExternalParser = false
 
-    const prices = []
-
-    // Avito - б/у устройства (дешевле)
-    for (let i = 0; i < 3; i++) {
-      const priceVariation =
-        (Math.random() - 0.5) * 2 * variation
-      const price = Math.round(
-        basePrice * (1 + priceVariation) * 0.7
+    try {
+      console.log(
+        `🐍 Trying Python parser at: ${PYTHON_PARSER_URL}`
       )
 
-      prices.push({
-        source: 'Avito',
-        price: price,
-        url: `https://avito.ru/moskva/telefony/iphone_${device.model.toLowerCase()}_${i}`,
-        title: `iPhone ${device.model} ${device.variant} ${device.storage} ${device.color}`,
-        description: 'Продаю iPhone в отличном состоянии',
-        location: 'Москва',
-        condition: [
-          'б/у',
-          'отличное состояние',
-          'хорошее состояние',
-        ][i],
-        sellerType: ['частник', 'магазин', 'салон'][i],
-      })
+      const deviceName =
+        `${device.model} ${device.variant} ${device.storage} ${device.color}`.trim()
+
+      const response = await fetch(
+        `${PYTHON_PARSER_URL}/parse-prices`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ deviceName }),
+          signal: AbortSignal.timeout
+            ? AbortSignal.timeout(30000)
+            : undefined,
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        allPrices = data.results || []
+        useExternalParser = true
+        console.log(
+          `✅ Python parser returned ${allPrices.length} results`
+        )
+      } else {
+        console.log(
+          `❌ Python parser failed with status: ${response.status}`
+        )
+      }
+    } catch (error) {
+      console.log(
+        `❌ Python parser error: ${
+          error instanceof Error
+            ? error.message
+            : String(error)
+        }`
+      )
     }
 
-    // Youla - альтернативная площадка
-    for (let i = 0; i < 2; i++) {
-      const priceVariation =
-        (Math.random() - 0.5) * 2 * variation
-      const price = Math.round(
-        basePrice * (1 + priceVariation) * 0.75
+    // Если Python парсер недоступен, возвращаем ошибку
+    if (!useExternalParser) {
+      throw new Error(
+        'Python parser not available. Please start the parser server.'
       )
-
-      prices.push({
-        source: 'Youla',
-        price: price,
-        url: `https://youla.ru/moskva/telefony/iphone_${device.model.toLowerCase()}_${i}`,
-        title: `iPhone ${device.model} ${device.variant} ${device.storage}`,
-        description: 'Продаю iPhone, торг уместен',
-        location: 'Москва',
-        condition: ['б/у', 'отличное состояние'][i],
-        sellerType: ['частник', 'магазин'][i],
-      })
     }
 
-    // Wildberries - новые устройства (дороже)
-    for (let i = 0; i < 2; i++) {
-      const priceVariation =
-        (Math.random() - 0.5) * 2 * 0.15
-      const price = Math.round(
-        basePrice * (1 + priceVariation) * 1.2
+    // Если парсер работает, но результатов нет - это нормально, не ошибка
+    if (allPrices.length === 0) {
+      console.log(
+        `⚠️ No prices found for device: ${device.model} ${device.variant}`
       )
-
-      prices.push({
-        source: 'Wildberries',
-        price: price,
-        url: `https://wildberries.ru/catalog/0/search.aspx?search=iphone_${device.model.toLowerCase()}_${i}`,
-        title: `iPhone ${device.model} ${device.variant} ${device.storage} ${device.color}`,
-        description: 'Официальный iPhone с гарантией',
-        location: 'Россия',
-        condition: 'новый',
-        sellerType: ['Wildberries', 'Официальный магазин'][
-          i
-        ],
-      })
+      // Возвращаем успешный результат с пустыми данными
+      return {
+        success: true,
+        device: {
+          id: device.id,
+          model: device.model,
+          variant: device.variant,
+          storage: device.storage,
+          color: device.color,
+          basePrice: device.basePrice,
+        },
+        parsedPrices: {
+          count: 0,
+          average: 0,
+          min: 0,
+          max: 0,
+          sources: [],
+        },
+        comparison: {
+          yourPrice: device.basePrice,
+          marketAverage: 0,
+          difference: device.basePrice,
+          differencePercent: '100.0',
+          status: 'no_data',
+        },
+        savedPrices: 0,
+      }
     }
 
     // Сначала удаляем старые записи для этого устройства (старше 1 часа)
@@ -103,7 +128,7 @@ async function parseDevicePrices(
     // Сохраняем новые цены в БД
     const savedPrices = []
 
-    for (const priceData of prices) {
+    for (const priceData of allPrices) {
       try {
         // Проверяем, есть ли уже такая запись
         const existingPrice =
@@ -159,17 +184,19 @@ async function parseDevicePrices(
 
     // Вычисляем статистику
     const avgPrice =
-      prices.length > 0
-        ? prices.reduce((sum, p) => sum + p.price, 0) /
-          prices.length
+      allPrices.length > 0
+        ? allPrices.reduce(
+            (sum: number, p: any) => sum + p.price,
+            0
+          ) / allPrices.length
         : 0
     const minPrice =
-      prices.length > 0
-        ? Math.min(...prices.map((p) => p.price))
+      allPrices.length > 0
+        ? Math.min(...allPrices.map((p: any) => p.price))
         : 0
     const maxPrice =
-      prices.length > 0
-        ? Math.max(...prices.map((p) => p.price))
+      allPrices.length > 0
+        ? Math.max(...allPrices.map((p: any) => p.price))
         : 0
 
     const priceDifference = device.basePrice - avgPrice
@@ -192,11 +219,13 @@ async function parseDevicePrices(
         basePrice: device.basePrice,
       },
       parsedPrices: {
-        count: prices.length,
+        count: allPrices.length,
         average: Math.round(avgPrice),
         min: minPrice,
         max: maxPrice,
-        sources: [...new Set(prices.map((p) => p.source))],
+        sources: [
+          ...new Set(allPrices.map((p: any) => p.source)),
+        ],
       },
       comparison: {
         yourPrice: device.basePrice,
@@ -224,8 +253,8 @@ async function parseDevicePrices(
 export async function POST(req: NextRequest) {
   try {
     const {
-      limit = 10,
-      sources = ['avito', 'youla'],
+      limit = 1000, // Парсим все устройства
+      sources = ['avito', 'youla', 'wildberries'],
       models = [],
       startFrom = 0,
     } = await req.json()
@@ -256,9 +285,15 @@ export async function POST(req: NextRequest) {
     const results = []
     let totalParsed = 0
     let totalErrors = 0
+    let criticalError = false
 
     // Парсим каждое устройство
     for (const device of devices) {
+      // Если была критическая ошибка (например, Python парсер недоступен), останавливаем парсинг
+      if (criticalError) {
+        break
+      }
+
       try {
         // Вызываем функцию парсинга напрямую
         const parseData = await parseDevicePrices(
@@ -285,31 +320,52 @@ export async function POST(req: NextRequest) {
           `Error parsing device ${device.id}:`,
           error
         )
+
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : 'Unknown error'
+
+        // Проверяем, является ли ошибка критической (Python парсер недоступен)
+        if (
+          errorMessage.includes(
+            'Python parser not available'
+          )
+        ) {
+          criticalError = true
+          console.log(
+            '🚨 Critical error detected: Python parser not available. Stopping bulk parsing.'
+          )
+        }
+
         results.push({
           deviceId: device.id,
           model: `${device.model} ${device.variant}`.trim(),
           success: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Unknown error',
+          error: errorMessage,
         })
         totalErrors++
       }
 
-      // Небольшая задержка между запросами
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000)
-      )
+      // Небольшая задержка между запросами (только если не критическая ошибка)
+      if (!criticalError) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000)
+        )
+      }
     }
 
     return NextResponse.json({
-      success: true,
+      success: !criticalError, // Если была критическая ошибка, success = false
       summary: {
         totalDevices: devices.length,
         totalParsed,
         totalErrors,
         sources: sources,
+        criticalError: criticalError,
+        message: criticalError
+          ? 'Python parser not available. Please start the parser server.'
+          : undefined,
       },
       results,
     })

@@ -37,7 +37,12 @@ export async function POST(req: NextRequest) {
   try {
     const {
       deviceId,
-      sources = ['avito', 'youla', 'wildberries'],
+      sources = [
+        'avito',
+        'youla',
+        'wildberries',
+        'yandex_market',
+      ],
     } = await req.json()
 
     if (!deviceId) {
@@ -299,7 +304,7 @@ export async function POST(req: NextRequest) {
         ? isVercel
           ? 'Internal'
           : 'Python'
-        : 'Mock',
+        : 'None',
     })
   } catch (error) {
     console.error('Error parsing prices:', error)
