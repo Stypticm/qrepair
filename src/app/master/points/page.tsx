@@ -31,6 +31,7 @@ interface Point {
 export default function MasterPointsPage() {
   const [requests, setRequests] = useState<Request[]>([])
   const [masterPoints, setMasterPoints] = useState<Point[]>([])
+  const [allPoints, setAllPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedPoints, setExpandedPoints] = useState<Set<number>>(new Set())
@@ -67,8 +68,17 @@ export default function MasterPointsPage() {
         throw new Error(pointsData.error || 'Failed to fetch master points')
       }
       
+      // Получаем все точки для отображения информации
+      const allPointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`)
+      const allPointsData = await allPointsResponse.json()
+      
+      if (!allPointsResponse.ok) {
+        throw new Error(allPointsData.error || 'Failed to fetch all points')
+      }
+      
       setRequests(requestsData.requests)
       setMasterPoints(pointsData.points)
+      setAllPoints(allPointsData.points)
       showNotification('Заявки загружены успешно', 'success')
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -108,7 +118,8 @@ export default function MasterPointsPage() {
   }
   
   const getPointInfo = (pointId: number) => {
-    return masterPoints.find(point => point.id === pointId)
+    // Ищем среди всех точек для отображения информации
+    return allPoints.find(point => point.id === pointId)
   }
   
   if (loading) {
@@ -143,13 +154,13 @@ export default function MasterPointsPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-6xl mx-auto p-4">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
           <p className="text-gray-600">Управляйте всеми заявками в системе</p>
           {masterPoints.length > 0 && (
             <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-blue-800 font-medium">
-                Ваша точка: {masterPoints.map(point => `${point.name} (${point.address})`).join(', ')}
+                Ваша точка: {masterPoints.map(point => point.address).join(', ')}
               </p>
             </div>
           )}
@@ -186,10 +197,10 @@ export default function MasterPointsPage() {
                         <div className={`w-3 h-3 rounded-full ${isMyPoint ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {pointInfo ? pointInfo.name : `Точка #${pointId}`}
+                            {pointInfo ? pointInfo.address : `Точка #${pointId}`}
                           </h3>
-                          {pointInfo && (
-                            <p className="text-sm text-gray-600">{pointInfo.address}</p>
+                          {pointInfo && pointInfo.name && (
+                            <p className="text-sm text-gray-600">{pointInfo.name}</p>
                           )}
                         </div>
                         <span className={`px-2 py-1 text-xs rounded-full ${

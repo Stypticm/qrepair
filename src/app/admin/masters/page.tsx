@@ -215,21 +215,17 @@ export default function AdminMastersPage() {
         <div className="max-w-6xl mx-auto p-4">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex flex-col space-y-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление мастерами</h1>
-                <p className="text-gray-600">Назначайте мастеров на точки и управляйте их статусом</p>
-              </div>
-              <button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-fit"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <span>{showAddForm ? 'Отменить' : 'Добавить мастера'}</span>
-              </button>
-            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление мастерами</h1>
+            <p className="text-gray-600 mb-4">Назначайте мастеров на точки и управляйте их статусом</p>
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 w-fit"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>{showAddForm ? 'Отменить' : 'Добавить мастера'}</span>
+            </button>
           </div>
 
           {/* Форма добавления мастера */}
@@ -395,11 +391,22 @@ export default function AdminMastersPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     >
                       <option value="">Выберите точку</option>
-                      {points.map((point) => (
-                        <option key={point.id} value={point.id}>
-                          {point.address} ({point.workingHours})
-                        </option>
-                      ))}
+                      {points
+                        .filter(point => {
+                          // Показываем только свободные точки или текущую точку мастера
+                          const isCurrentPoint = master.pointId === point.id
+                          const isFreePoint = !masters.some(m => m.pointId === point.id)
+                          return isCurrentPoint || isFreePoint
+                        })
+                        .map((point) => {
+                          const isCurrentPoint = master.pointId === point.id
+                          const isFreePoint = !masters.some(m => m.pointId === point.id)
+                          return (
+                            <option key={point.id} value={point.id}>
+                              {point.address} ({point.workingHours}) {isCurrentPoint ? '(Текущая)' : isFreePoint ? '(Свободна)' : ''}
+                            </option>
+                          )
+                        })}
                     </select>
                   </div>
                 </div>
