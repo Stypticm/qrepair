@@ -20,8 +20,12 @@ export async function POST(req: NextRequest) {
       where: { telegramId: adminTelegramId },
     })
 
-    if (!admin || admin.telegramId !== '1') {
-      // Только главный админ
+    if (
+      !admin ||
+      (admin.telegramId !== '1' &&
+        admin.telegramId !== '531360988')
+    ) {
+      // Только главные админы
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }

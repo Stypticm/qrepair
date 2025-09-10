@@ -41,11 +41,14 @@ export default function AdminRequestsPage() {
   
   const { telegramId } = useAppStore()
   
+  // Проверяем доступ только для админов
+  const isAdmin = telegramId === '1' || telegramId === '531360988'
+  
   useEffect(() => {
-    if (telegramId) {
+    if (telegramId && isAdmin) {
       fetchData()
     }
-  }, [telegramId])
+  }, [telegramId, isAdmin])
   
   const fetchData = async () => {
     try {
@@ -115,6 +118,18 @@ export default function AdminRequestsPage() {
     }
   }
   
+  // Проверяем доступ
+  if (!isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Доступ запрещен</h1>
+          <p className="text-gray-600">У вас нет прав для доступа к этой странице</p>
+        </div>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
