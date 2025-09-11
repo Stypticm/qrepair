@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/authStore'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
+import { QRScanner } from '@/components/QRScanner'
 
 interface Request {
   id: string
@@ -34,6 +35,7 @@ export default function MasterPointsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [showQRScanner, setShowQRScanner] = useState(false)
 
   const { telegramId } = useAppStore()
 
@@ -134,6 +136,12 @@ export default function MasterPointsPage() {
     }
   }
 
+  const handleQRScanSuccess = async (skupkaId: string) => {
+    console.log('QR код отсканирован, ID заявки:', skupkaId)
+    setShowQRScanner(false)
+    await addRequestToMaster(skupkaId)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -174,22 +182,7 @@ export default function MasterPointsPage() {
           {/* QR Scanner and Manual Input */}
           <div className="mb-8 space-y-4">
             <button
-              onClick={() => {
-                // Открываем выбор файла для сканирования QR
-                const input = document.createElement('input')
-                input.type = 'file'
-                input.accept = 'image/*'
-                input.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0]
-                  if (file) {
-                    // Здесь будет логика сканирования QR кода
-                    console.log('QR код выбран:', file)
-                    // Пока что просто показываем уведомление
-                    alert('QR код выбран! Функционал сканирования будет добавлен.')
-                  }
-                }
-                input.click()
-              }}
+              onClick={() => setShowQRScanner(true)}
               className="w-full bg-blue-600 text-white px-6 py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -361,6 +354,14 @@ export default function MasterPointsPage() {
           )}
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScanner
+          onScanSuccess={handleQRScanSuccess}
+          onClose={() => setShowQRScanner(false)}
+        />
+      )}
     </Page>
   )
 }
