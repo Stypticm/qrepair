@@ -36,18 +36,51 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     try {
       setError(null);
       
-      // Небольшая задержка для инициализации видео элемента
+      // Проверяем, находимся ли мы в Telegram WebApp
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp?.showScanQrPopup) {
+        // Используем встроенный сканер Telegram WebApp
+        window.Telegram.WebApp.showScanQrPopup(
+          {
+            text: 'Наведите камеру на QR код заявки'
+          },
+          (text: string) => {
+            // Обрабатываем результат сканирования
+            try {
+              // Парсим JSON из QR кода
+              const qrData = JSON.parse(text);
+              
+              if (qrData.skupkaId) {
+                onScanSuccess(qrData.skupkaId);
+              } else {
+                setError('QR код не содержит ID заявки');
+              }
+            } catch (parseError) {
+              // Если не JSON, пробуем как простой ID
+              if (text && text.trim()) {
+                onScanSuccess(text.trim());
+              } else {
+                setError('Неверный формат QR кода');
+              }
+            }
+          }
+        );
+        return;
+      }
+
+      // Fallback для обычного браузера
       await new Promise(resolve => setTimeout(resolve, 100));
       
       if (!videoRef.current) {
-        setError('Видео элемент не найден. Попробуйте еще раз.');
+        setError('Видео элемент не найден. Используйте загрузку файла.');
+        setHasPermission(false);
         return;
       }
 
       // Проверяем доступность камеры
       const hasCamera = await QrScanner.hasCamera();
       if (!hasCamera) {
-        setError('Камера не найдена на устройстве');
+        setError('Камера не найдена на устройстве. Используйте загрузку файла.');
+        setHasPermission(false);
         return;
       }
 
@@ -80,7 +113,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
-          preferredCamera: 'environment', // Задняя камера для лучшего сканирования
+          preferredCamera: 'environment',
         }
       );
 
@@ -93,16 +126,16 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       console.error('Ошибка при запуске сканера:', err);
       
       if (err.name === 'NotAllowedError') {
-        setError('Доступ к камере запрещен. Разрешите доступ к камере в настройках браузера.');
+        setError('Доступ к камере запрещен. Используйте загрузку файла.');
         setHasPermission(false);
       } else if (err.name === 'NotFoundError') {
-        setError('Камера не найдена');
+        setError('Камера не найдена. Используйте загрузку файла.');
         setHasPermission(false);
       } else if (err.message?.includes('video element')) {
-        setError('Ошибка инициализации видео. Попробуйте еще раз.');
-        setHasPermission(null);
+        setError('Ошибка инициализации видео. Используйте загрузку файла.');
+        setHasPermission(false);
       } else {
-        setError(`Ошибка: ${err.message}`);
+        setError(`Ошибка: ${err.message}. Используйте загрузку файла.`);
         setHasPermission(false);
       }
     }
@@ -159,7 +192,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <QrCode className="w-5 h-5 text-teal-500" />
-            Сканирование QR кода
+            Загрузка QR кода
           </CardTitle>
           <Button
             variant="ghost"
@@ -221,39 +254,28 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           {!isScanning && hasPermission !== false && (
             <div className="text-center space-y-4">
               <div className="w-48 h-48 mx-auto bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                <Camera className="w-12 h-12 text-gray-400" />
+                <QrCode className="w-12 h-12 text-gray-400" />
               </div>
               <p className="text-sm text-gray-600">
-                Наведите камеру на QR код заявки
+                Загрузите фото QR кода заявки
               </p>
-              <div className="space-y-2">
+              <label className="w-full">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
                 <Button
-                  onClick={startScanning}
                   className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                  asChild
                 >
-                  <Camera className="w-4 h-4 mr-2" />
-                  Начать сканирование
+                  <span>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Загрузить фото QR кода
+                  </span>
                 </Button>
-                <div className="text-center text-gray-500 text-sm">или</div>
-                <label className="w-full">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    className="w-full border-teal-500 text-teal-500 hover:bg-teal-50"
-                    asChild
-                  >
-                    <span>
-                      <Upload className="w-4 h-4 mr-2" />
-                      Загрузить фото QR кода
-                    </span>
-                  </Button>
-                </label>
-              </div>
+              </label>
             </div>
           )}
 
