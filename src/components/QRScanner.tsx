@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, Camera, X, AlertCircle } from 'lucide-react';
+import { QrCode, Camera, X, AlertCircle, Upload } from 'lucide-react';
 import QrScanner from 'qr-scanner';
 
 interface QRScannerProps {
@@ -19,6 +19,12 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   useEffect(() => {
+    // Инициализируем Telegram WebApp если доступен
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
     return () => {
       if (qrScannerRef.current) {
         qrScannerRef.current.destroy();
@@ -30,8 +36,11 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     try {
       setError(null);
       
+      // Небольшая задержка для инициализации видео элемента
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       if (!videoRef.current) {
-        setError('Видео элемент не найден');
+        setError('Видео элемент не найден. Попробуйте еще раз.');
         return;
       }
 
@@ -71,6 +80,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         {
           highlightScanRegion: true,
           highlightCodeOutline: true,
+          preferredCamera: 'environment', // Задняя камера для лучшего сканирования
         }
       );
 
@@ -88,6 +98,9 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       } else if (err.name === 'NotFoundError') {
         setError('Камера не найдена');
         setHasPermission(false);
+      } else if (err.message?.includes('video element')) {
+        setError('Ошибка инициализации видео. Попробуйте еще раз.');
+        setHasPermission(null);
       } else {
         setError(`Ошибка: ${err.message}`);
         setHasPermission(false);
@@ -107,6 +120,37 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const handleClose = () => {
     stopScanning();
     onClose();
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setError(null);
+      const result = await QrScanner.scanImage(file);
+      
+      try {
+        // Парсим JSON из QR кода
+        const qrData = JSON.parse(result);
+        
+        if (qrData.skupkaId) {
+          onScanSuccess(qrData.skupkaId);
+        } else {
+          setError('QR код не содержит ID заявки');
+        }
+      } catch (parseError) {
+        // Если не JSON, пробуем как простой ID
+        if (result && result.trim()) {
+          onScanSuccess(result.trim());
+        } else {
+          setError('Неверный формат QR кода');
+        }
+      }
+    } catch (err: any) {
+      console.error('Ошибка при сканировании файла:', err);
+      setError('Не удалось распознать QR код в файле');
+    }
   };
 
   return (
@@ -143,13 +187,34 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
                   Разрешите доступ к камере в настройках браузера и попробуйте снова
                 </p>
               </div>
-              <Button
-                onClick={startScanning}
-                className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Попробовать снова
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={startScanning}
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Попробовать снова
+                </Button>
+                <div className="text-center text-gray-500 text-sm">или</div>
+                <label className="w-full">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full border-teal-500 text-teal-500 hover:bg-teal-50"
+                    asChild
+                  >
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Загрузить фото QR кода
+                    </span>
+                  </Button>
+                </label>
+              </div>
             </div>
           )}
 
@@ -161,13 +226,34 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
               <p className="text-sm text-gray-600">
                 Наведите камеру на QR код заявки
               </p>
-              <Button
-                onClick={startScanning}
-                className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Начать сканирование
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={startScanning}
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Начать сканирование
+                </Button>
+                <div className="text-center text-gray-500 text-sm">или</div>
+                <label className="w-full">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full border-teal-500 text-teal-500 hover:bg-teal-50"
+                    asChild
+                  >
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Загрузить фото QR кода
+                    </span>
+                  </Button>
+                </label>
+              </div>
             </div>
           )}
 
