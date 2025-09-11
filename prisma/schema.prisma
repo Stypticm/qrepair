@@ -80,6 +80,7 @@ model Master {
 
 model Point {
   id           Int      @id @default(autoincrement())
+  name         String   @default("Точка приёма")
   address      String   @unique
   workingHours String   @default("10:00 - 22:00")
   masters      Master[]

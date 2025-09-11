@@ -181,6 +181,11 @@ export default function FormPage() {
 
     // Состояние для диалогового окна
     const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+    
+    // Отладочный лог для состояния диалога
+    useEffect(() => {
+        console.log('🔍 Dialog state changed - showSummaryDialog:', showSummaryDialog);
+    }, [showSummaryDialog]);
 
 
 
@@ -292,6 +297,9 @@ export default function FormPage() {
             selectedOptions.simType !== '' &&
             selectedOptions.country !== '';
 
+        console.log('🔍 isAllOptionsSelected - selectedOptions:', selectedOptions);
+        console.log('🔍 isAllOptionsSelected - allSelected:', allSelected);
+        
         return allSelected;
     }, [selectedOptions]);
 
@@ -299,7 +307,11 @@ export default function FormPage() {
     useEffect(() => {
         const allSelected = isAllOptionsSelected();
 
+        console.log('🔍 LoadDevice useEffect - allSelected:', allSelected);
+        console.log('🔍 LoadDevice useEffect - selectedOptions:', selectedOptions);
+
         if (allSelected) {
+            console.log('🔍 LoadDevice useEffect - Loading device...');
             devices.loadDevice({
                 model: selectedOptions.model,
                 variant: selectedOptions.variant || '',
@@ -337,7 +349,10 @@ export default function FormPage() {
     };
 
     useEffect(() => {
+        console.log('🔍 SelectedDevice useEffect - devices.selectedDevice:', devices.selectedDevice);
+        
         if (devices.selectedDevice) {
+            console.log('🔍 SelectedDevice useEffect - Processing selected device...');
             const device = devices.selectedDevice;
             const fullName = `Apple iPhone ${device.model}${device.variant ? ` ${getVariantLabel(device.variant)}` : ''} ${device.storage} ${getColorLabel(device.color)} ${device.country.split(' ')[0]} ${device.simType}`;
 
@@ -350,8 +365,7 @@ export default function FormPage() {
             // Сохраняем модель в БД
             saveModelToDB(fullName);
 
-            // Показываем диалог с итоговой информацией когда все выбрано
-            setShowSummaryDialog(true);
+            // Диалог будет показан автоматически в другом useEffect
         }
     }, [devices.selectedDevice, setModel, setPrice, telegramId]);
 
@@ -475,8 +489,13 @@ export default function FormPage() {
     // Автоматически открываем диалог когда все поля заполнены
     useEffect(() => {
         const allSelected = isAllOptionsSelected();
+        
+        console.log('🔍 Dialog useEffect - allSelected:', allSelected);
+        console.log('🔍 Dialog useEffect - selectedOptions:', selectedOptions);
+        console.log('🔍 Dialog useEffect - devices.selectedDevice:', devices.selectedDevice);
 
         if (allSelected && devices.selectedDevice) {
+            console.log('🔍 Dialog useEffect - Showing dialog!');
             // Небольшая задержка для лучшего UX
             setTimeout(() => {
                 setShowSummaryDialog(true);
@@ -485,11 +504,12 @@ export default function FormPage() {
     }, [isAllOptionsSelected, devices.selectedDevice]);
 
     // Скрываем диалог если не все поля заполнены
-    useEffect(() => {
-        if (!isAllOptionsSelected()) {
-            setShowSummaryDialog(false);
-        }
-    }, [isAllOptionsSelected]);
+    // Убираем этот useEffect, так как он конфликтует с логикой показа диалога
+    // useEffect(() => {
+    //     if (!isAllOptionsSelected()) {
+    //         setShowSummaryDialog(false);
+    //     }
+    // }, [isAllOptionsSelected]);
 
     // Убираем принудительное скрытие диалога - пусть логика выше управляет показом
 
@@ -642,7 +662,7 @@ export default function FormPage() {
             <Page back={true}>
                 <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
                     {/* Прогресс-бар */}
-                    <div className="pt-6 pb-1">
+                    <div className="pt-10 pb-1">
                         <ProgressBar
                             currentStep={getCurrentStep()}
                             totalSteps={5}

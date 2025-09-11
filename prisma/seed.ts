@@ -9,6 +9,7 @@ async function main() {
       where: { address: 'ул. Тверская, 15' },
       update: {},
       create: {
+        name: 'Точка приёма на Тверской',
         address: 'ул. Тверская, 15',
         workingHours: '10:00 - 22:00',
       },
@@ -17,6 +18,7 @@ async function main() {
       where: { address: 'Ходынский бул., 4' },
       update: {},
       create: {
+        name: 'Точка приёма на Ходынском',
         address: 'Ходынский бул., 4',
         workingHours: '10:00 - 22:00',
       },
@@ -25,8 +27,36 @@ async function main() {
       where: { address: 'пр. Мира, 100' },
       update: {},
       create: {
+        name: 'Точка приёма на Мира',
         address: 'пр. Мира, 100',
         workingHours: '09:00 - 21:00',
+      },
+    }),
+    prisma.point.upsert({
+      where: { address: 'ул. Пушкина, д. 10, офис 101' },
+      update: {},
+      create: {
+        name: 'Точка приёма №1',
+        address: 'ул. Пушкина, д. 10, офис 101',
+        workingHours: '10:00 - 22:00',
+      },
+    }),
+    prisma.point.upsert({
+      where: { address: 'пр. Ленина, д. 25, офис 205' },
+      update: {},
+      create: {
+        name: 'Точка приёма №2',
+        address: 'пр. Ленина, д. 25, офис 205',
+        workingHours: '09:00 - 21:00',
+      },
+    }),
+    prisma.point.upsert({
+      where: { address: 'ул. Гагарина, д. 5, офис 15' },
+      update: {},
+      create: {
+        name: 'Точка приёма №3',
+        address: 'ул. Гагарина, д. 5, офис 15',
+        workingHours: '11:00 - 23:00',
       },
     }),
   ])

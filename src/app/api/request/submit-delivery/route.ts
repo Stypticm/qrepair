@@ -16,6 +16,17 @@ export async function POST(request: NextRequest) {
       courierTime,
     } = await request.json()
 
+    console.log('🔍 Submit-delivery API received:', {
+      telegramId,
+      modelname,
+      price,
+      deliveryMethod,
+      pickupPoint,
+      courierAddress,
+      courierDate,
+      courierTime,
+    })
+
     if (!telegramId || !modelname || !deliveryMethod) {
       return NextResponse.json(
         { error: 'Недостаточно данных' },

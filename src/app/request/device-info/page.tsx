@@ -289,7 +289,7 @@ export default function DeviceInfoPage() {
         <Page back={true}>
             <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
                 {/* Прогресс-бар */}
-                <div className="pt-6 pb-0">
+                <div className="pt-10 pb-0">
                     <ProgressBar
                         currentStep={getCurrentStep()}
                         totalSteps={5}

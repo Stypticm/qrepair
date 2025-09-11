@@ -37,6 +37,23 @@ export async function GET(req: NextRequest) {
       },
     })
 
+    console.log(
+      '🔍 Master requests API - master.id:',
+      master.id
+    )
+    console.log(
+      '🔍 Master requests API - found requests:',
+      requests.length
+    )
+    console.log(
+      '🔍 Master requests API - requests:',
+      requests.map((r) => ({
+        id: r.id,
+        status: r.status,
+        assignedMasterId: r.assignedMasterId,
+      }))
+    )
+
     return NextResponse.json({
       success: true,
       requests: requests,

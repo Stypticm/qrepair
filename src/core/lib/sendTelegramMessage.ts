@@ -6,34 +6,49 @@ export async function sendTelegramMessage(
     reply_markup?: object
   } = {}
 ) {
+  console.log('📤 sendTelegramMessage called with:', {
+    telegramId,
+    textLength: text.length,
+    options,
+  })
+
   const BOT_TOKEN = process.env.BOT_TOKEN
   if (!BOT_TOKEN) {
+    console.error('❌ BOT_TOKEN is not defined')
     throw new Error('BOT_TOKEN is not defined')
   }
 
   const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`
+  console.log('🌐 Telegram API URL:', url)
+
+  const requestBody = {
+    chat_id: telegramId,
+    text,
+    ...options,
+  }
+
+  console.log('📤 Request body:', requestBody)
 
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      chat_id: telegramId,
-      text,
-      ...options,
-    }),
+    body: JSON.stringify(requestBody),
   })
 
+  console.log('📡 Response status:', res.status)
   const data = await res.json()
+  console.log('📡 Response data:', data)
 
   if (!data.ok) {
-    console.error('Telegram API error:', data)
+    console.error('❌ Telegram API error:', data)
     throw new Error(
       data.description || 'Unknown Telegram API error'
     )
   }
 
+  console.log('✅ Telegram message sent successfully')
   return data
 }
 

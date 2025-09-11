@@ -50,18 +50,24 @@ const PickupPointsPage = () => {
         const loadPickupPoints = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('/api/admin/points');
+                console.log('🔍 Loading pickup points...');
+                const response = await fetch('/api/points');
+                console.log('🔍 Points API response status:', response.status);
+                
                 if (response.ok) {
                     const data = await response.json();
+                    console.log('🔍 Points API response data:', data);
                     // API возвращает { success: true, points: [...] }
                     const points = data.points || [];
                     setPickupPoints(Array.isArray(points) ? points : []);
+                    console.log('🔍 Set pickup points:', points);
                 } else {
-                    console.error('Ошибка загрузки точек приема');
+                    console.error('Ошибка загрузки точек приема:', response.status, response.statusText);
                     setPickupPoints([]);
                 }
             } catch (error) {
                 console.error('Ошибка загрузки точек приема:', error);
+                setPickupPoints([]);
             } finally {
                 setLoading(false);
             }
@@ -108,6 +114,13 @@ const PickupPointsPage = () => {
         try {
             const selectedPointData = Array.isArray(pickupPoints) ? pickupPoints.find(p => p.id === selectedPoint) : null;
             
+            console.log('🔍 Pickup point selection:', {
+                selectedPoint,
+                selectedPointData,
+                pickupPoints: pickupPoints.length,
+                address: selectedPointData?.address
+            });
+            
             // Используем fallback для браузера, если telegramId не установлен
             const effectiveTelegramId = telegramId || 'browser_test_user';
             
@@ -118,6 +131,8 @@ const PickupPointsPage = () => {
                 deliveryMethod: 'pickup',
                 pickupPoint: selectedPointData?.address,
             };
+            
+            console.log('🔍 Request data for delivery:', requestData);
             
             // Сохраняем выбор в БД
             const response = await fetch('/api/request/submit-delivery', {
@@ -281,10 +296,6 @@ const PickupPointsPage = () => {
                                                 <div className="flex items-center space-x-2">
                                                     <span className="text-sm">🕒</span>
                                                     <span className="text-apple-body text-gray-600 font-sf-pro">Режим работы: {point.workingHours}</span>
-                                                </div>
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-sm">ℹ️</span>
-                                                    <span className="text-apple-body text-gray-600 font-sf-pro">{point.description}</span>
                                                 </div>
                                             </div>
                                         </div>

@@ -39,12 +39,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Обновляем заявку, назначая её мастеру
+    // Обновляем заявку, назначая её мастеру (статус остается submitted)
     const updatedRequest = await prisma.skupka.update({
       where: { id: requestId },
       data: {
         assignedMasterId: master.id,
-        status: 'in_progress', // Меняем статус на "в работе"
+        // Статус остается submitted - мастер должен нажать "Взять в работу"
       },
     })
 

@@ -301,7 +301,15 @@ export function useDevices(): UseDevicesReturn {
   // Загрузка конкретного устройства
   const loadDevice = useCallback(
     async (filters: DeviceFilters) => {
-      if (!filters.model) return
+      console.log(
+        '🔍 loadDevice called with filters:',
+        filters
+      )
+
+      if (!filters.model) {
+        console.log('🔍 loadDevice - no model, returning')
+        return
+      }
 
       setLoading((prev) => ({ ...prev, device: true }))
       try {
@@ -319,12 +327,36 @@ export function useDevices(): UseDevicesReturn {
         if (filters.simType)
           params.append('simType', filters.simType)
 
+        console.log(
+          '🔍 loadDevice - fetching with params:',
+          params.toString()
+        )
+
         const response = await fetch(
           `/api/devices/price?${params}`
         )
         const data = await response.json()
+        console.log('🔍 loadDevice - response data:', data)
+
         if (data.success) {
-          setSelectedDevice(data.device)
+          console.log(
+            '🔍 loadDevice - API response data:',
+            data
+          )
+          // API возвращает devices (массив), берем первый элемент
+          const device =
+            data.devices && data.devices.length > 0
+              ? data.devices[0]
+              : null
+          console.log(
+            '🔍 loadDevice - setting selectedDevice:',
+            device
+          )
+          setSelectedDevice(device)
+        } else {
+          console.log(
+            '🔍 loadDevice - API returned success: false'
+          )
         }
       } catch (error) {
         console.error('Error loading device:', error)

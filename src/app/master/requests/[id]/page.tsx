@@ -72,7 +72,41 @@ export default function MasterRequestPage({ params }: PageProps) {
   const [totalPenalty, setTotalPenalty] = useState(0)
   const [currentStep, setCurrentStep] = useState(1) // 1: фото, 2: тесты, 3: цена, 4: сохранение
 
-  const { telegramId } = useAppStore()
+  // Сохраняем шаг в localStorage
+  const saveStepToStorage = (step: number) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`master_step_${requestId}`, step.toString())
+    }
+  }
+
+  // Загружаем шаг из localStorage
+  const loadStepFromStorage = () => {
+    if (typeof window !== 'undefined' && requestId) {
+      const savedStep = localStorage.getItem(`master_step_${requestId}`)
+      if (savedStep) {
+        return parseInt(savedStep, 10)
+      }
+    }
+    return 1
+  }
+
+  const { telegramId, initializeTelegram } = useAppStore()
+
+  // Инициализация Telegram при загрузке страницы
+  useEffect(() => {
+    console.log('🔍 Master page - initializing Telegram...')
+    initializeTelegram()
+  }, [initializeTelegram])
+
+  // Отладочная информация о telegramId
+  useEffect(() => {
+    console.log('🔍 Master page - telegramId:', telegramId)
+    if (!telegramId) {
+      console.log('❌ Master page - no telegramId, stopping loading')
+    } else {
+      console.log('✅ Master page - telegramId found:', telegramId)
+    }
+  }, [telegramId])
 
   // Функциональные тесты
   const [functionalityTests, setFunctionalityTests] = useState<FunctionalityTest[]>([
@@ -195,6 +229,9 @@ export default function MasterRequestPage({ params }: PageProps) {
   useEffect(() => {
     if (requestId) {
       fetchRequest()
+      // Загружаем сохраненный шаг
+      const savedStep = loadStepFromStorage()
+      setCurrentStep(savedStep)
     }
   }, [requestId])
 
@@ -203,30 +240,17 @@ export default function MasterRequestPage({ params }: PageProps) {
 
     try {
       setLoading(true)
-      // Здесь нужно создать API для получения конкретной заявки
-      // Пока что используем заглушку
-      const mockRequest: Request = {
-        id: requestId,
-        modelname: 'iPhone 15 Pro',
-        price: 50000,
-        username: 'test_user',
-        status: 'submitted',
-        createdAt: new Date().toISOString(),
-        sn: 'ABC123456789',
-        deviceConditions: {
-          front: 'good',
-          back: 'excellent',
-          side: 'new'
-        },
-        additionalConditions: {
-          faceId: true,
-          touchId: true,
-          backCamera: true,
-          battery: 95
-        }
+      console.log('🔍 Fetching request:', requestId)
+      
+      const response = await fetch(`/api/master/request/${requestId}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch request')
       }
 
-      setRequest(mockRequest)
+      console.log('🔍 Request data received:', data.request)
+      setRequest(data.request)
     } catch (error) {
       console.error('Error fetching request:', error)
       setError(error instanceof Error ? error.message : 'Unknown error')
@@ -400,13 +424,17 @@ export default function MasterRequestPage({ params }: PageProps) {
   // Функции навигации между шагами
   const nextStep = () => {
     if (currentStep < 4) {
-      setCurrentStep(currentStep + 1)
+      const newStep = currentStep + 1
+      setCurrentStep(newStep)
+      saveStepToStorage(newStep)
     }
   }
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      const newStep = currentStep - 1
+      setCurrentStep(newStep)
+      saveStepToStorage(newStep)
     }
   }
 
@@ -489,64 +517,60 @@ export default function MasterRequestPage({ params }: PageProps) {
   return (
     <Page back={true}>
       <div className="min-h-screen bg-white">
-        <div className="max-w-4xl mx-auto p-4">
+        <div className="max-w-4xl mx-auto pt-16">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2 font-sf-pro">Вторичная оценка</h1>
-              <p className="text-gray-600">Заявка #{request.id}</p>
-              <div className="mt-2">
-                <Badge 
-                  variant={request.status === 'completed' ? 'default' : 'outline'}
-                  className={
-                    request.status === 'completed' 
-                      ? 'bg-green-100 text-green-800 border-green-200' 
-                      : request.status === 'paid'
-                      ? 'bg-blue-100 text-blue-800 border-blue-200'
-                      : request.status === 'inspected'
-                      ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
-                      : 'bg-gray-100 text-gray-800 border-gray-200'
-                  }
-                >
-                  {request.status === 'inspected' && 'Проверена'}
-                  {request.status === 'paid' && 'Оплачена'}
-                  {request.status === 'completed' && 'Завершена'}
-                  {!['inspected', 'paid', 'completed'].includes(request.status) && 'В процессе'}
-                </Badge>
-              </div>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 font-sf-pro">Вторичная оценка</h1>
+            <p className="text-gray-600 mb-4">Заявка #{request.id}</p>
+            <div className="flex justify-center">
+              <Badge 
+                variant={request.status === 'completed' ? 'default' : 'outline'}
+                className={
+                  request.status === 'completed' 
+                    ? 'bg-green-500 text-white border-green-500 px-4 py-2 text-sm font-semibold' 
+                    : request.status === 'paid'
+                    ? 'bg-blue-500 text-white border-blue-500 px-4 py-2 text-sm font-semibold'
+                    : request.status === 'inspected'
+                    ? 'bg-yellow-500 text-white border-yellow-500 px-4 py-2 text-sm font-semibold'
+                    : 'bg-orange-500 text-white border-orange-500 px-4 py-2 text-sm font-semibold'
+                }
+              >
+                {request.status === 'inspected' && 'Проверена'}
+                {request.status === 'paid' && 'Оплачена'}
+                {request.status === 'completed' && 'Завершена'}
+                {!['inspected', 'paid', 'completed'].includes(request.status) && 'В процессе'}
+              </Badge>
             </div>
-            <Link
-              href="/master/points"
-              className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-            >
-              <X className="w-4 h-4 mr-2" />
-              Назад
-            </Link>
           </div>
 
           <div className="space-y-6">
             {/* Информация о клиенте - компактно */}
             <Card className="border-2 border-gray-200">
               <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-semibold text-gray-900">Данные клиента</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900 text-center">Данные клиента</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-gray-500">Устройство</p>
-                    <p className="font-medium text-gray-900">{request.modelname}</p>
+                <div className="space-y-4 text-sm">
+                  {/* Устройство - на отдельной строке */}
+                  <div className="text-center">
+                    <p className="text-gray-500 mb-2">Устройство</p>
+                    <p className="font-medium text-gray-900 text-lg break-words">{request.modelname}</p>
                   </div>
-                  <div>
-                    <p className="text-gray-500">Клиент</p>
-                    <p className="font-medium text-gray-900">@{request.username}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Предварительная цена</p>
-                    <p className="font-medium text-gray-900">{request.price.toLocaleString()} ₽</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Создана</p>
-                    <p className="font-medium text-gray-900">{new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
+                  
+                  {/* Остальная информация в grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-500">Клиент</p>
+                      <p className="font-medium text-gray-900">@{request.username}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Предварительная цена</p>
+                      <p className="font-medium text-gray-900">{request.price.toLocaleString()} ₽</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Создана</p>
+                      <p className="font-medium text-gray-900">{new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -593,8 +617,14 @@ export default function MasterRequestPage({ params }: PageProps) {
                           </div>
                           <div>
                             <p className="font-medium text-gray-900">{photo.label}</p>
-                            <p className="text-sm text-gray-500">
-                              {photo.uploaded ? 'Загружено' : photo.file ? 'Готово к загрузке' : 'Не выбрано'}
+                            <p className={`text-sm ${
+                              photo.uploaded 
+                                ? 'text-green-600 font-semibold' 
+                                : photo.file 
+                                  ? 'text-orange-600 font-semibold bg-orange-50 px-2 py-1 rounded-md' 
+                                  : 'text-gray-500'
+                            }`}>
+                              {photo.uploaded ? '✅ Загружено' : photo.file ? '📸 Готово к загрузке' : '❌ Не выбрано'}
                             </p>
                           </div>
                         </div>
@@ -641,13 +671,12 @@ export default function MasterRequestPage({ params }: PageProps) {
                       return (
                         <div key={test.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
                           <div className="flex items-center">
-                            <IconComponent className="w-5 h-5 text-gray-600 mr-3" />
+                            <div className="w-12 h-12 flex items-center justify-center mr-4">
+                              <IconComponent className="w-10 h-10 text-gray-600" />
+                            </div>
                             <div>
                               <p className="font-medium text-gray-900">{test.name}</p>
                               <p className="text-sm text-gray-500">{test.description}</p>
-                              <p className="text-xs text-gray-400">
-                                Штраф: {test.penaltyPercent}% {test.isNegative && '(отрицательный)'}
-                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -685,12 +714,26 @@ export default function MasterRequestPage({ params }: PageProps) {
                   <CardTitle className="text-lg font-semibold text-gray-900 flex items-center justify-between">
                     <span>Шаг 3: Итоговая цена</span>
                     <Button
-                      onClick={calculateFinalPrice}
+                      onClick={() => {
+                        const confirmed = confirm('Рассчитать итоговую цену на основе результатов проверки?')
+                        if (confirmed) {
+                          calculateFinalPrice()
+                          alert('Цена рассчитана! Переходим к завершению проверки.')
+                          // Автоматически переходим к шагу 4 (завершение)
+                          setTimeout(() => {
+                            setCurrentStep(4)
+                            // Убеждаемся, что цена рассчитана
+                            if (finalPrice === null) {
+                              calculateFinalPrice()
+                            }
+                          }, 1000)
+                        }
+                      }}
                       variant="outline"
                       size="sm"
-                      className="bg-white hover:bg-gray-50"
+                      className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
                     >
-                      Рассчитать
+                      💰 Рассчитать цену
                     </Button>
                   </CardTitle>
                 </CardHeader>
@@ -699,10 +742,6 @@ export default function MasterRequestPage({ params }: PageProps) {
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Предварительная цена:</span>
                       <span className="font-medium">{request.price.toLocaleString()} ₽</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Штрафы ({totalPenalty > 0 ? Math.round((totalPenalty / request.price) * 100) : 0}%):</span>
-                      <span className="font-medium text-red-600">-{totalPenalty.toLocaleString()} ₽</span>
                     </div>
                     <div className="border-t border-blue-200 pt-4">
                       <div className="flex justify-between items-center">
@@ -735,17 +774,49 @@ export default function MasterRequestPage({ params }: PageProps) {
                     {/* Кнопки управления статусом */}
                     <div className="space-y-3">
                       {request.status === 'inspected' && (
-                        <Button
-                          onClick={() => updateRequestStatus('paid')}
-                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
-                        >
-                          💳 Оплатить
-                        </Button>
+                        <div className="space-y-3">
+                          {/* Показываем итоговую цену */}
+                          <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 text-center">
+                            <p className="text-sm text-gray-600 mb-2">Итоговая цена для клиента:</p>
+                            <p className="text-2xl font-bold text-green-600">
+                              {(() => {
+                                // Рассчитываем цену если не рассчитана
+                                if (finalPrice === null) {
+                                  let totalPenaltyPercent = 0
+                                  functionalityTests.forEach(test => {
+                                    if (test.working !== null) {
+                                      const shouldApplyPenalty = test.isNegative ? !test.working : test.working === false
+                                      if (shouldApplyPenalty) {
+                                        totalPenaltyPercent += test.penaltyPercent
+                                      }
+                                    }
+                                  })
+                                  const penaltyAmount = (request.price * totalPenaltyPercent) / 100
+                                  const calculatedPrice = Math.max(0, request.price - penaltyAmount)
+                                  return calculatedPrice.toLocaleString()
+                                }
+                                return finalPrice.toLocaleString()
+                              })()} ₽
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Озвучьте эту цену клиенту</p>
+                          </div>
+                          
+                          <Button
+                            onClick={() => updateRequestStatus('paid')}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                          >
+                            💳 Оплатить
+                          </Button>
+                        </div>
                       )}
                       
                       {request.status === 'paid' && (
                         <Button
-                          onClick={() => updateRequestStatus('completed')}
+                          onClick={async () => {
+                            await updateRequestStatus('completed')
+                            // Переходим на страницу мастера
+                            window.location.href = '/master/points'
+                          }}
                           className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
                         >
                           ✅ Завершить
@@ -761,12 +832,77 @@ export default function MasterRequestPage({ params }: PageProps) {
                         </div>
                       )}
                       
-                      {/* Кнопка сохранения проверки (если еще не сохранена) */}
-                      {request.status !== 'inspected' && request.status !== 'paid' && request.status !== 'completed' && (
+                      
+                      {/* Кнопка завершения проверки */}
+                      {request.status === 'in_progress' && (
+                        <div className="space-y-4">
+                          {/* Показываем итоговую цену */}
+                          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-center">
+                            <p className="text-sm text-gray-600 mb-2">Итоговая цена для клиента:</p>
+                            <p className="text-3xl font-bold text-blue-600">
+                              {(() => {
+                                // Если finalPrice не рассчитан, рассчитываем его сейчас
+                                if (finalPrice === null) {
+                                  let totalPenaltyPercent = 0
+                                  functionalityTests.forEach(test => {
+                                    if (test.working !== null) {
+                                      const shouldApplyPenalty = test.isNegative ? !test.working : test.working === false
+                                      if (shouldApplyPenalty) {
+                                        totalPenaltyPercent += test.penaltyPercent
+                                      }
+                                    }
+                                  })
+                                  const penaltyAmount = (request.price * totalPenaltyPercent) / 100
+                                  const calculatedPrice = Math.max(0, request.price - penaltyAmount)
+                                  return calculatedPrice.toLocaleString()
+                                }
+                                return finalPrice.toLocaleString()
+                              })()} ₽
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Озвучьте эту цену клиенту</p>
+                          </div>
+                          
+                          <Button
+                            onClick={async () => {
+                              try {
+                                const response = await fetch('/api/master/request-status', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    requestId: request.id,
+                                    status: 'inspected',
+                                    masterTelegramId: telegramId
+                                  })
+                                })
+
+                                const data = await response.json()
+
+                                if (!response.ok) {
+                                  throw new Error(data.error || 'Failed to update status')
+                                }
+
+                                // Обновляем статус заявки локально
+                                setRequest(prev => prev ? { ...prev, status: 'inspected' } : prev)
+                                
+                                // Показываем уведомление
+                                alert('Проверка завершена! Заявка передана клиенту.')
+                              } catch (error) {
+                                console.error('Error completing inspection:', error)
+                              }
+                            }}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+                          >
+                            ✅ Проверка завершена
+                          </Button>
+                        </div>
+                      )}
+                      
+                      {/* Кнопка сохранения проверки (для других статусов) */}
+                      {request.status !== 'in_progress' && request.status !== 'inspected' && request.status !== 'paid' && request.status !== 'completed' && (
                         <Button
                           onClick={saveInspection}
                           disabled={saving}
-                          className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
                         >
                           {saving ? 'Сохраняем...' : 'Сохранить проверку'}
                         </Button>
@@ -780,24 +916,14 @@ export default function MasterRequestPage({ params }: PageProps) {
             {/* Навигация */}
             <Card className="border-2 border-gray-200">
               <CardContent className="p-4">
-                <div className="flex justify-between">
+                <div className="flex justify-start">
                   <Button
                     onClick={prevStep}
                     disabled={currentStep === 1}
                     variant="outline"
                     className="flex items-center"
                   >
-                    <X className="w-4 h-4 mr-2 rotate-90" />
-                    Назад
-                  </Button>
-                  
-                  <Button
-                    onClick={nextStep}
-                    disabled={currentStep === 4 || !canProceedToNextStep()}
-                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
-                  >
-                    Далее
-                    <X className="w-4 h-4 ml-2 -rotate-90" />
+                    ← Назад
                   </Button>
                 </div>
               </CardContent>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
+import { Button } from '@/components/ui/button'
 
 interface Request {
   id: string
@@ -32,9 +33,10 @@ export default function MasterPointsPage() {
   const [allPoints, setAllPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+
   const { telegramId } = useAppStore()
-  
+
   useEffect(() => {
     console.log('Master page - telegramId:', telegramId)
     if (telegramId) {
@@ -50,43 +52,46 @@ export default function MasterPointsPage() {
           setLoading(false)
         }
       }, 1000)
-      
+
       return () => clearTimeout(timer)
     }
   }, [telegramId])
-  
+
   const fetchMasterRequests = async () => {
     try {
       setLoading(true)
-      
+
       // Получаем только заявки мастера
       const requestsResponse = await fetch(`/api/master/requests?masterTelegramId=${telegramId}`)
       const requestsData = await requestsResponse.json()
-      
+
       if (!requestsResponse.ok) {
         throw new Error(requestsData.error || 'Failed to fetch master requests')
       }
-      
+
       // Получаем точки мастера
       const pointsResponse = await fetch(`/api/master/points?telegramId=${telegramId}`)
       const pointsData = await pointsResponse.json()
-      
+
       if (!pointsResponse.ok) {
         throw new Error(pointsData.error || 'Failed to fetch master points')
       }
-      
+
       // Получаем все точки для отображения информации
       const allPointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`)
       const allPointsData = await allPointsResponse.json()
-      
+
       if (!allPointsResponse.ok) {
         throw new Error(allPointsData.error || 'Failed to fetch all points')
       }
-      
+
+      console.log('🔍 Master page - requests received:', requestsData.requests.length)
+      console.log('🔍 Master page - requests data:', requestsData.requests.map((r: any) => ({ id: r.id, status: r.status, assignedMasterId: r.assignedMasterId })))
+
       setRequests(requestsData.requests)
       setMasterPoints(pointsData.points)
       setAllPoints(allPointsData.points)
-      
+
     } catch (error) {
       console.error('Error fetching master requests:', error)
       setError(error instanceof Error ? error.message : 'Unknown error')
@@ -94,8 +99,8 @@ export default function MasterPointsPage() {
       setLoading(false)
     }
   }
-  
-  
+
+
   const getPointInfo = (pointId: number) => {
     // Ищем среди всех точек для отображения информации
     return allPoints.find(point => point.id === pointId)
@@ -128,7 +133,7 @@ export default function MasterPointsPage() {
       console.error('Ошибка при добавлении заявки')
     }
   }
-  
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -139,13 +144,13 @@ export default function MasterPointsPage() {
       </div>
     )
   }
-  
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <p className="text-red-600 mb-4">Ошибка: {error}</p>
-          <button 
+          <button
             onClick={fetchMasterRequests}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
@@ -165,7 +170,7 @@ export default function MasterPointsPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
             <p className="text-gray-600">Сканируйте QR код для добавления заявки</p>
           </div>
-          
+
           {/* QR Scanner and Manual Input */}
           <div className="mb-8 space-y-4">
             <button
@@ -192,9 +197,9 @@ export default function MasterPointsPage() {
               </svg>
               <span>Сканировать QR код</span>
             </button>
-            
+
             <div className="text-center text-gray-500 text-sm">или</div>
-            
+
             <div className="flex space-x-2 gap-2">
               <input
                 type="text"
@@ -226,8 +231,9 @@ export default function MasterPointsPage() {
               </button>
             </div>
           </div>
-          
+
           {/* Заявки мастера */}
+
           {requests.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
@@ -237,16 +243,15 @@ export default function MasterPointsPage() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h4 className="text-md font-semibold text-gray-900">{request.modelname || 'Не указано'}</h4>
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
-                          request.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                          request.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
+                            request.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                              request.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                'bg-gray-100 text-gray-800'
+                          }`}>
                           {request.status === 'submitted' ? 'Новая' :
-                           request.status === 'in_progress' ? 'В работе' :
-                           request.status === 'completed' ? 'Завершена' :
-                           request.status}
+                            request.status === 'in_progress' ? 'В работе' :
+                              request.status === 'completed' ? 'Завершена' :
+                                request.status}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mb-1">
@@ -260,32 +265,88 @@ export default function MasterPointsPage() {
                       </p>
                     </div>
                   </div>
-                  
-                  <div className="flex space-x-3">
-                    <Link
-                      href={`/master/requests/${request.id}`}
-                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
-                    >
-                      Просмотреть детали
-                    </Link>
-                    <button
-                      onClick={() => {
-                        const newStatus = request.status === 'submitted' ? 'in_progress' : 
-                                         request.status === 'in_progress' ? 'completed' : 'submitted'
-                        // Здесь можно добавить логику обновления статуса
+
+
+                   <div className="flex space-x-3 gap-2">
+                     {/* Показываем кнопки только если заявка не завершена */}
+                     {request.status !== 'completed' && (
+                       <>
+                         <Link
+                           href={`/master/requests/${request.id}`}
+                           className="flex-1 bg-blue-600 text-black border-2 border-black px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
+                         >
+                           Просмотреть детали
+                         </Link>
+                         <button
+                      onClick={async () => {
+                        // Кнопка неактивна для in_progress
+                        if (request.status === 'in_progress') return
+
+                        const newStatus = request.status === 'submitted' ? 'in_progress' :
+                          request.status === 'inspected' ? 'completed' : 'submitted'
+
+                        setUpdatingStatus(request.id)
+
+                        try {
+                          const response = await fetch('/api/master/request-status', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              requestId: request.id,
+                              status: newStatus,
+                              masterTelegramId: telegramId
+                            })
+                          })
+
+                          const data = await response.json()
+
+                          if (!response.ok) {
+                            throw new Error(data.error || 'Failed to update status')
+                          }
+
+                          // Локально обновляем статус заявки
+                          setRequests(prevRequests =>
+                            prevRequests.map(req =>
+                              req.id === request.id
+                                ? { ...req, status: newStatus }
+                                : req
+                            )
+                          )
+                        } catch (error) {
+                          console.error('Error updating request status:', error)
+                        } finally {
+                          setUpdatingStatus(null)
+                        }
                       }}
-                      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      disabled={request.status === 'in_progress' || updatingStatus === request.id}
+                      className={`px-4 py-2 rounded-md transition-colors ${request.status === 'in_progress' || updatingStatus === request.id
+                          ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                          : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
                     >
-                      {request.status === 'submitted' ? 'Взять в работу' :
-                       request.status === 'in_progress' ? 'Завершить' :
-                       'Сбросить'}
+                      {updatingStatus === request.id ? 'Обновляем...' :
+                        request.status === 'submitted' ? 'Взять в работу' :
+                          request.status === 'in_progress' ? 'На проверке' :
+                            request.status === 'inspected' ? 'Завершить' :
+                              'Сбросить'}
                     </button>
+                       </>
+                     )}
+                     
+                     {/* Показываем статус для завершенных заявок */}
+                     {request.status === 'completed' && (
+                       <div className="w-full bg-green-50 border-2 border-green-200 rounded-lg p-3 text-center">
+                         <p className="text-green-700 font-semibold">✅ Заявка завершена</p>
+                         <p className="text-sm text-green-600">Все работы выполнены</p>
+                         <p className="text-sm text-yellow-600 font-medium mt-1">💰 Деньги переданы клиенту</p>
+                       </div>
+                     )}
                   </div>
                 </div>
               ))}
             </div>
           )}
-          
+
           {/* Сообщение если нет заявок */}
           {requests.length === 0 && !loading && (
             <div className="text-center py-16">

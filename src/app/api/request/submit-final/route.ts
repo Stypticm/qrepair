@@ -38,6 +38,9 @@ export async function POST(request: NextRequest) {
 
     // Получаем информацию о точке из базы данных
     let pickupPointAddress = 'Адрес не указан'
+    
+    console.log('🔍 Submit-final - deliveryData received:', deliveryData);
+    
     if (deliveryData?.pickupPoint) {
       // Если адрес передан в deliveryData, используем его
       pickupPointAddress = deliveryData.pickupPoint
@@ -198,16 +201,32 @@ export async function POST(request: NextRequest) {
       !!process.env.BOT_TOKEN
     )
     console.log(
+      '🚀 Submit-Final API - BOT_TOKEN length:',
+      process.env.BOT_TOKEN?.length || 0
+    )
+    console.log(
+      '🚀 Submit-Final API - BOT_TOKEN first 10 chars:',
+      process.env.BOT_TOKEN?.substring(0, 10) || 'undefined'
+    )
+    console.log(
       '🚀 Submit-Final API - message content:',
       telegramMessage
     )
+    console.log(
+      '🚀 Submit-Final API - userTelegramId:',
+      userTelegramId
+    )
+    console.log('🚀 Submit-Final API - username:', username)
 
     if (isRealTelegramId && process.env.BOT_TOKEN) {
+      console.log(
+        '✅ Условия для отправки выполнены, начинаем отправку...'
+      )
       try {
         // Отправляем фото по URL из Supabase Storage (рабочий способ)
         const imageUrl =
           'https://aygvejwrrifuhbkbivoa.supabase.co/storage/v1/object/public/pictures/submit.png'
-        console.log('Sending photo by URL:', imageUrl)
+        console.log('📸 Sending photo by URL:', imageUrl)
 
         // Создаем FormData для отправки фото по URL
         const formData = new FormData()
@@ -218,12 +237,24 @@ export async function POST(request: NextRequest) {
 
         // Отправляем в Telegram
         const url = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendPhoto`
+        console.log('🌐 Telegram API URL:', url)
+        console.log(
+          '📤 Sending to chat_id:',
+          realTelegramId
+        )
+
         const response = await fetch(url, {
           method: 'POST',
           body: formData,
         })
 
+        console.log(
+          '📡 Telegram API response status:',
+          response.status
+        )
         const data = await response.json()
+        console.log('📡 Telegram API response data:', data)
+
         if (!data.ok) {
           throw new Error(
             data.description || 'Telegram API error'
@@ -231,29 +262,32 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(
-          'Telegram photo with message sent successfully to:',
+          '✅ Telegram photo with message sent successfully to:',
           realTelegramId
         )
       } catch (error) {
         console.error(
-          'Error sending Telegram photo:',
+          '❌ Error sending Telegram photo:',
           error
         )
 
         // Fallback: если не удалось отправить фото, отправляем обычное сообщение
         try {
+          console.log(
+            '🔄 Trying fallback: sending text message...'
+          )
           await sendTelegramMessage(
             realTelegramId, // Используем реальный ID
             telegramMessage,
             { parse_mode: 'HTML' }
           )
           console.log(
-            'Fallback: Telegram message sent successfully to:',
+            '✅ Fallback: Telegram message sent successfully to:',
             realTelegramId
           )
         } catch (fallbackError) {
           console.error(
-            'Error sending fallback Telegram message:',
+            '❌ Error sending fallback Telegram message:',
             fallbackError
           )
           // Не прерываем выполнение, если не удалось отправить в Telegram
