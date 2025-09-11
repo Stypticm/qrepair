@@ -145,7 +145,7 @@ export default function AdminPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      <div className="min-h-screen bg-white">
         {/* Заголовок */}
         <div className="bg-white shadow-sm border-b pt-12">
           <div className="max-w-4xl mx-auto px-6 py-4">
@@ -194,7 +194,7 @@ export default function AdminPage() {
 
             {/* Рыночные цены */}
             <div className="mt-8">
-              <Card className="bg-blue-50 border-2 border-gray-600">
+              <Card className="bg-blue-50 border-2 border-blue-200 shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -215,7 +215,7 @@ export default function AdminPage() {
 
             {/* Кнопка очистки дубликатов */}
             <div className="mt-4">
-              <Card className="bg-orange-50 border-2 border-gray-600">
+              <Card className="bg-orange-50 border-2 border-orange-200 shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>

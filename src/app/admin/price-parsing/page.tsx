@@ -282,9 +282,9 @@ export default function PriceParsingPage() {
       const progressInterval = setInterval(() => {
         setParsingProgress(prev => {
           if (prev >= 90) return prev // Останавливаем на 90% до получения результата
-          return prev + Math.random() * 10
+          return Math.min(prev + Math.floor(Math.random() * 5) + 1, 90) // Увеличиваем на 1-5% за раз
         })
-      }, 500)
+      }, 800)
       
       const response = await fetch('/api/admin/price-parsing/bulk', {
         method: 'POST',
@@ -376,7 +376,7 @@ export default function PriceParsingPage() {
   return (
     <div className="min-h-screen bg-white">
       <Page back={true}>
-        <div className="w-full px-4 pt-16 pb-6">
+        <div className="w-full px-4 pt-16 pb-6 bg-white">
           {/* Header */}
           <div className="mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -396,48 +396,48 @@ export default function PriceParsingPage() {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-            <Card className="border-l-4 border-l-blue-500 border border-gray-600">
+            <Card className="border-2 border-gray-200 bg-white shadow-sm">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-gray-600">Устройств</p>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{devices.length}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 font-sf-pro">{devices.length}</p>
                   </div>
                   <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-green-500 border border-gray-600">
+            <Card className="border-2 border-gray-200 bg-white shadow-sm">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-gray-600">Спарсено</p>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{bulkStats?.totalParsed || 0}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 font-sf-pro">{bulkStats?.totalParsed || 0}</p>
                   </div>
                   <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-red-500 border border-gray-600">
+            <Card className="border-2 border-gray-200 bg-white shadow-sm">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-gray-600">Ошибок</p>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{bulkStats?.totalErrors || 0}</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 font-sf-pro">{bulkStats?.totalErrors || 0}</p>
                   </div>
                   <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-purple-500 border border-gray-600">
+            <Card className="border-2 border-gray-200 bg-white shadow-sm">
               <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm font-medium text-gray-600">Источники</p>
-                    <p className="text-xl sm:text-2xl font-bold text-gray-900">4</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900 font-sf-pro">4</p>
                     <p className="text-xs text-gray-500">Avito • Youla • WB • YM</p>
                   </div>
                   <Search className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
@@ -447,7 +447,7 @@ export default function PriceParsingPage() {
           </div>
 
           {/* Action Buttons */}
-          <Card className="mb-6 border-2 border-gray-600">
+          <Card className="mb-6 border-2 border-gray-200 bg-white shadow-sm">
             <CardContent className="p-4">
               {/* Progress Bar */}
               {bulkLoading && (
@@ -455,14 +455,14 @@ export default function PriceParsingPage() {
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                     <span>Парсинг в процессе...</span>
                     <span>
-                      {parsingProgress > 0 ? `${parsingProgress}%` : `${parsingResults.length} из ${devices.length}`}
+                      {parsingProgress > 0 ? `${Math.floor(parsingProgress)}%` : `${parsingResults.length} из ${devices.length}`}
                     </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{ 
-                        width: `${parsingProgress > 0 ? parsingProgress : (devices.length > 0 ? (parsingResults.length / devices.length) * 100 : 0)}%` 
+                        width: `${parsingProgress > 0 ? Math.floor(parsingProgress) : (devices.length > 0 ? Math.floor((parsingResults.length / devices.length) * 100) : 0)}%` 
                       }}
                     ></div>
                   </div>
@@ -509,27 +509,11 @@ export default function PriceParsingPage() {
                 </div>
               </div>
               
-              {bulkLoading && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center text-xs sm:text-sm text-blue-700">
-                    <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                    <span>Парсинг... ({parsingResults.length}/{selectedDevices.length || devices.length})</span>
-                  </div>
-                  <div className="mt-2 w-full bg-blue-200 rounded-full h-1.5">
-                    <div 
-                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                      style={{ 
-                        width: `${selectedDevices.length > 0 ? (parsingResults.length / selectedDevices.length) * 100 : (parsingResults.length / devices.length) * 100}%` 
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
           {/* Devices List */}
-          <Card className="mb-6 border-2 border-gray-600">
+          <Card className="mb-6 border-2 border-gray-200 bg-white shadow-sm">
             <CardHeader className="pb-3">
               <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <span className="text-lg">Выберите устройства</span>
@@ -622,7 +606,7 @@ export default function PriceParsingPage() {
 
           {/* Parsing Results Table */}
           {parsingResults.length > 0 && (
-            <Card className="bg-white border-2 border-gray-600">
+            <Card className="bg-white border-2 border-gray-200 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <span className="text-lg">Результаты парсинга</span>

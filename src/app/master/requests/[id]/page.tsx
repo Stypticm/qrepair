@@ -5,6 +5,21 @@ import { useAppStore } from '@/stores/authStore'
 import { useMasterNotifications } from '@/hooks/useMasterNotifications'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { 
+  CheckCircle, 
+  XCircle, 
+  Camera, 
+  Smartphone, 
+  Battery, 
+  Fingerprint,
+  Eye,
+  AlertTriangle,
+  CheckCircle2,
+  X
+} from 'lucide-react'
 
 interface Request {
   id: string
@@ -18,6 +33,26 @@ interface Request {
   additionalConditions?: any
   aiAnalysis?: any
   photoUrls?: string[]
+  phoneData?: any
+  deviceData?: any
+}
+
+interface FunctionalityTest {
+  id: string
+  name: string
+  description: string
+  icon: any
+  working: boolean | null
+  penaltyPercent: number
+  isNegative: boolean // true если "нет" означает что всё хорошо (например, нет сколов)
+}
+
+interface PhotoUpload {
+  id: string
+  label: string
+  file: File | null
+  uploaded: boolean
+  url?: string
 }
 
 interface PageProps {
@@ -30,12 +65,121 @@ export default function MasterRequestPage({ params }: PageProps) {
   const [request, setRequest] = useState<Request | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [photos, setPhotos] = useState<File[]>([])
-  const [analysisResult, setAnalysisResult] = useState<any>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [finalPrice, setFinalPrice] = useState<number | null>(null)
+  const [totalPenalty, setTotalPenalty] = useState(0)
+  const [currentStep, setCurrentStep] = useState(1) // 1: фото, 2: тесты, 3: цена, 4: сохранение
 
   const { telegramId } = useAppStore()
+
+  // Функциональные тесты
+  const [functionalityTests, setFunctionalityTests] = useState<FunctionalityTest[]>([
+    {
+      id: 'power_button',
+      name: 'Кнопка питания',
+      description: 'Работает ли кнопка включения/выключения',
+      icon: Smartphone,
+      working: null,
+      penaltyPercent: 5,
+      isNegative: false
+    },
+    {
+      id: 'volume_buttons',
+      name: 'Кнопки громкости',
+      description: 'Работают ли кнопки увеличения/уменьшения громкости',
+      icon: Smartphone,
+      working: null,
+      penaltyPercent: 3,
+      isNegative: false
+    },
+    {
+      id: 'face_id',
+      name: 'Face ID',
+      description: 'Работает ли распознавание лица',
+      icon: Eye,
+      working: null,
+      penaltyPercent: 8,
+      isNegative: false
+    },
+    {
+      id: 'touch_id',
+      name: 'Touch ID',
+      description: 'Работает ли сканер отпечатков пальцев',
+      icon: Fingerprint,
+      working: null,
+      penaltyPercent: 8,
+      isNegative: false
+    },
+    {
+      id: 'back_camera',
+      name: 'Задняя камера',
+      description: 'Работает ли основная камера',
+      icon: Camera,
+      working: null,
+      penaltyPercent: 10,
+      isNegative: false
+    },
+    {
+      id: 'front_camera',
+      name: 'Фронтальная камера',
+      description: 'Работает ли селфи камера',
+      icon: Camera,
+      working: null,
+      penaltyPercent: 5,
+      isNegative: false
+    },
+    {
+      id: 'battery_health',
+      name: 'Здоровье батареи',
+      description: 'Батарея держит заряд нормально',
+      icon: Battery,
+      working: null,
+      penaltyPercent: 15,
+      isNegative: false
+    },
+    {
+      id: 'screen_scratches',
+      name: 'Царапины на экране',
+      description: 'Есть ли заметные царапины на дисплее',
+      icon: AlertTriangle,
+      working: null,
+      penaltyPercent: 5,
+      isNegative: true // "нет" царапин = хорошо
+    },
+    {
+      id: 'back_scratches',
+      name: 'Царапины на задней панели',
+      description: 'Есть ли заметные царапины на задней части',
+      icon: AlertTriangle,
+      working: null,
+      penaltyPercent: 3,
+      isNegative: true // "нет" царапин = хорошо
+    }
+  ])
+
+  // Загрузка фотографий
+  const [photoUploads, setPhotoUploads] = useState<PhotoUpload[]>([
+    {
+      id: 'front',
+      label: 'Передняя часть',
+      file: null,
+      uploaded: false
+    },
+    {
+      id: 'back',
+      label: 'Задняя панель',
+      file: null,
+      uploaded: false
+    },
+    {
+      id: 'side',
+      label: 'Боковая грань',
+      file: null,
+      uploaded: false
+    }
+  ])
 
   // Включаем уведомления для мастеров
   useMasterNotifications()
@@ -91,67 +235,191 @@ export default function MasterRequestPage({ params }: PageProps) {
     }
   }
 
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>, photoId: string) => {
     const file = event.target.files?.[0]
     if (file) {
-      const newPhotos = [...photos]
-      newPhotos[index] = file
-      setPhotos(newPhotos)
+      setPhotoUploads(prev => prev.map(photo => 
+        photo.id === photoId 
+          ? { ...photo, file, uploaded: false }
+          : photo
+      ))
     }
   }
 
-  const analyzeDevice = async () => {
-    if (photos.length < 3) {
-      alert('Пожалуйста, загрузите все 3 фото')
+  const uploadPhotos = async () => {
+    if (photoUploads.some(photo => !photo.file)) {
+      alert('Пожалуйста, загрузите все 3 фотографии')
       return
     }
 
     try {
-      setAnalyzing(true)
+      setUploading(true)
+      const updatedUploads = [...photoUploads]
 
-      // Загружаем фото в Supabase
-      const photoUrls: string[] = []
-      for (let i = 0; i < photos.length; i++) {
-        const formData = new FormData()
-        formData.append('photo', photos[i])
-        formData.append('requestId', requestId!)
+      for (let i = 0; i < photoUploads.length; i++) {
+        const photo = photoUploads[i]
+        if (photo.file) {
+          const formData = new FormData()
+          formData.append('photo', photo.file)
+          formData.append('requestId', requestId!)
+          formData.append('photoType', photo.id)
 
-        const uploadResponse = await fetch('/api/admin/upload-master-photo', {
-          method: 'POST',
-          body: formData
-        })
+          const response = await fetch('/api/master/upload-photo', {
+            method: 'POST',
+            body: formData
+          })
 
-        const uploadData = await uploadResponse.json()
+          const data = await response.json()
 
-        if (!uploadResponse.ok) {
-          throw new Error(uploadData.error || 'Failed to upload photo')
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to upload photo')
+          }
+
+          updatedUploads[i] = { ...photo, uploaded: true, url: data.photoUrl }
         }
-
-        photoUrls.push(uploadData.photoUrl)
       }
 
-      const response = await fetch('/api/ai/evaluate-device', {
+      setPhotoUploads(updatedUploads)
+      alert('Все фотографии успешно загружены!')
+      // Автоматически переходим к следующему шагу
+      setTimeout(() => {
+        setCurrentStep(2)
+      }, 1000)
+    } catch (error) {
+      console.error('Error uploading photos:', error)
+      alert('Ошибка при загрузке фотографий')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const updateFunctionalityTest = (testId: string, working: boolean) => {
+    setFunctionalityTests(prev => prev.map(test => 
+      test.id === testId ? { ...test, working } : test
+    ))
+  }
+
+  const calculateFinalPrice = () => {
+    if (!request) return
+
+    let totalPenaltyPercent = 0
+    
+    functionalityTests.forEach(test => {
+      if (test.working !== null) {
+        const shouldApplyPenalty = test.isNegative ? !test.working : test.working === false
+        if (shouldApplyPenalty) {
+          totalPenaltyPercent += test.penaltyPercent
+        }
+      }
+    })
+
+    const penaltyAmount = (request.price * totalPenaltyPercent) / 100
+    const calculatedFinalPrice = Math.max(0, request.price - penaltyAmount)
+    
+    setTotalPenalty(penaltyAmount)
+    setFinalPrice(calculatedFinalPrice)
+    
+    // Если все тесты завершены, автоматически переходим к шагу с ценой
+    if (functionalityTests.every(test => test.working !== null) && currentStep === 2) {
+      setTimeout(() => {
+        setCurrentStep(3)
+      }, 500)
+    }
+  }
+
+  const saveInspection = async () => {
+    if (!request) return
+
+    try {
+      setSaving(true)
+      
+      // Рассчитываем финальную цену, если она еще не была рассчитана
+      let calculatedFinalPrice = finalPrice
+      let calculatedTotalPenalty = totalPenalty
+      
+      if (calculatedFinalPrice === null) {
+        let totalPenaltyPercent = 0
+        
+        functionalityTests.forEach(test => {
+          if (test.working !== null) {
+            const shouldApplyPenalty = test.isNegative ? !test.working : test.working === false
+            if (shouldApplyPenalty) {
+              totalPenaltyPercent += test.penaltyPercent
+            }
+          }
+        })
+
+        calculatedTotalPenalty = (request.price * totalPenaltyPercent) / 100
+        calculatedFinalPrice = Math.max(0, request.price - calculatedTotalPenalty)
+      }
+      
+      const response = await fetch('/api/master/save-inspection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          requestId,
-          photos: photoUrls,
-          telegramId: telegramId
+          requestId: request.id,
+          masterTelegramId: telegramId,
+          functionalityTests: functionalityTests.map(test => ({
+            id: test.id,
+            working: test.working,
+            penaltyPercent: test.penaltyPercent,
+            isNegative: test.isNegative
+          })),
+          finalPrice: calculatedFinalPrice,
+          totalPenalty: calculatedTotalPenalty,
+          photoUrls: photoUploads.filter(p => p.uploaded).map(p => p.url)
         })
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to analyze device')
+        throw new Error(data.error || 'Failed to save inspection')
       }
 
-      setAnalysisResult(data.analysis)
+      alert('Проверка успешно сохранена!')
+      // Обновляем статус заявки
+      await updateRequestStatus('inspected')
+      // Обновляем локальное состояние
+      if (request) {
+        setRequest({ ...request, status: 'inspected' })
+      }
     } catch (error) {
-      console.error('Error analyzing device:', error)
-      alert('Ошибка при анализе устройства')
+      console.error('Error saving inspection:', error)
+      alert('Ошибка при сохранении проверки')
     } finally {
-      setAnalyzing(false)
+      setSaving(false)
+    }
+  }
+
+  // Обновляем расчет цены при изменении тестов
+  useEffect(() => {
+    calculateFinalPrice()
+  }, [functionalityTests, request])
+
+  // Функции навигации между шагами
+  const nextStep = () => {
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+    }
+  }
+
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 1: // Фото
+        return photoUploads.every(photo => photo.uploaded)
+      case 2: // Тесты
+        return functionalityTests.every(test => test.working !== null)
+      case 3: // Цена
+        return finalPrice !== null
+      default:
+        return true
     }
   }
 
@@ -163,7 +431,7 @@ export default function MasterRequestPage({ params }: PageProps) {
         body: JSON.stringify({
           requestId,
           status,
-          telegramId: telegramId
+          masterTelegramId: telegramId
         })
       })
 
@@ -174,13 +442,17 @@ export default function MasterRequestPage({ params }: PageProps) {
       }
 
       const statusMessages = {
-        'accepted': 'принята',
-        'rejected': 'отклонена',
+        'inspected': 'проверена',
         'paid': 'отмечена как оплаченная',
         'completed': 'завершена'
       }
+      
       alert(`Заявка ${statusMessages[status as keyof typeof statusMessages] || 'обновлена'}`)
-      fetchRequest() // Обновляем данные
+      
+      // Обновляем локальное состояние
+      if (request) {
+        setRequest({ ...request, status })
+      }
     } catch (error) {
       console.error('Error updating status:', error)
       alert('Ошибка при обновлении статуса')
@@ -216,307 +488,320 @@ export default function MasterRequestPage({ params }: PageProps) {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto p-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Заявка #{request.id}</h1>
-              <p className="text-gray-600">Обработка заявки клиента</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2 font-sf-pro">Вторичная оценка</h1>
+              <p className="text-gray-600">Заявка #{request.id}</p>
+              <div className="mt-2">
+                <Badge 
+                  variant={request.status === 'completed' ? 'default' : 'outline'}
+                  className={
+                    request.status === 'completed' 
+                      ? 'bg-green-100 text-green-800 border-green-200' 
+                      : request.status === 'paid'
+                      ? 'bg-blue-100 text-blue-800 border-blue-200'
+                      : request.status === 'inspected'
+                      ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                      : 'bg-gray-100 text-gray-800 border-gray-200'
+                  }
+                >
+                  {request.status === 'inspected' && 'Проверена'}
+                  {request.status === 'paid' && 'Оплачена'}
+                  {request.status === 'completed' && 'Завершена'}
+                  {!['inspected', 'paid', 'completed'].includes(request.status) && 'В процессе'}
+                </Badge>
+              </div>
             </div>
             <Link
               href="/master/points"
               className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
             >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Назад к точкам
+              <X className="w-4 h-4 mr-2" />
+              Назад
             </Link>
           </div>
 
           <div className="space-y-6">
-            {/* Информация о заявке */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
+            {/* Информация о клиенте - компактно */}
+            <Card className="border-2 border-gray-200">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-semibold text-gray-900">Данные клиента</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">Устройство</p>
+                    <p className="font-medium text-gray-900">{request.modelname}</p>
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Информация о заявке</h2>
-                    <p className="text-gray-500 text-sm">Детали заявки клиента</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <div>
-                      <p className="text-gray-700 font-medium">{request.modelname}</p>
-                      <p className="text-gray-500 text-sm">Модель устройства</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                    <div>
-                      <p className="text-gray-700 font-medium">{request.price} ₽</p>
-                      <p className="text-gray-500 text-sm">Предварительная цена</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <div>
-                      <p className="text-gray-700 font-medium">@{request.username}</p>
-                      <p className="text-gray-500 text-sm">Клиент</p>
-                    </div>
-                  </div>
-
-                  {request.sn && (
-                    <div className="flex items-start">
-                      <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <div>
-                        <p className="text-gray-700 font-medium">{request.sn}</p>
-                        <p className="text-gray-500 text-sm">Серийный номер</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex items-start">
-                    <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div>
-                      <p className="text-gray-700 font-medium">{new Date(request.createdAt).toLocaleString('ru-RU')}</p>
-                      <p className="text-gray-500 text-sm">Время создания</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ИИ-анализ */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mr-4">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
+                    <p className="text-gray-500">Клиент</p>
+                    <p className="font-medium text-gray-900">@{request.username}</p>
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">ИИ-анализ устройства</h2>
-                    <p className="text-gray-500 text-sm">Анализ состояния устройства</p>
+                    <p className="text-gray-500">Предварительная цена</p>
+                    <p className="font-medium text-gray-900">{request.price.toLocaleString()} ₽</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Создана</p>
+                    <p className="font-medium text-gray-900">{new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                {!analysisResult ? (
-                  <div>
-                    <div className="space-y-6 mb-8">
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-3">
-                            <span className="flex items-center">
-                              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold mr-2">1</span>
-                              Фото передней части
-                            </span>
-                          </label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handlePhotoUpload(e, 0)}
-                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
-                          />
-                        </div>
+            {/* Прогресс-бар */}
+            <Card className="border-2 border-gray-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-medium text-gray-600">Прогресс проверки</span>
+                  <span className="text-sm text-gray-500">{currentStep} из 4</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${(currentStep / 4) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between mt-2 text-xs text-gray-500">
+                  <span>Фото</span>
+                  <span>Тесты</span>
+                  <span>Цена</span>
+                  <span>Сохранение</span>
+                </div>
+              </CardContent>
+            </Card>
 
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-3">
-                            <span className="flex items-center">
-                              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold mr-2">2</span>
-                              Фото задней панели
-                            </span>
-                          </label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handlePhotoUpload(e, 1)}
-                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-3">
-                            <span className="flex items-center">
-                              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold mr-2">3</span>
-                              Фото боковой грани
-                            </span>
-                          </label>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handlePhotoUpload(e, 2)}
-                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={analyzeDevice}
-                      disabled={photos.length < 3 || analyzing}
-                      className="w-full px-6 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
-                    >
-                      {analyzing ? (
-                        <>
-                          <svg className="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
-                          Анализируем...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                          Анализировать устройство
-                        </>
-                      )}
-                    </button>
-
-                    {analyzing && (
-                      <div className="mt-6">
-                        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                          <div className="bg-blue-600 h-3 rounded-full animate-pulse transition-all duration-1000" style={{ width: '75%' }}></div>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-3 text-center">Анализируем устройство с помощью ИИ...</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
+            {/* Шаг 1: Загрузка фотографий */}
+            {currentStep === 1 && (
+              <Card className="border-2 border-gray-200 animate-in slide-in-from-right-5 duration-300">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
+                    <Camera className="w-5 h-5 mr-2" />
+                    Шаг 1: Фотографии устройства
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
-                    <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                      <div className="flex items-center mb-2">
-                        <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-medium text-green-800">Передняя часть</span>
+                    {photoUploads.map((photo, index) => (
+                      <div key={photo.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-semibold mr-3">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{photo.label}</p>
+                            <p className="text-sm text-gray-500">
+                              {photo.uploaded ? 'Загружено' : photo.file ? 'Готово к загрузке' : 'Не выбрано'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {photo.uploaded ? (
+                            <CheckCircle2 className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handlePhotoUpload(e, photo.id)}
+                              className="text-sm text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                            />
+                          )}
+                        </div>
                       </div>
-                      <p className="text-green-700">{analysisResult.front.condition} (-{analysisResult.front.damagePercent}%)</p>
-                    </div>
+                    ))}
+                    
+                    <Button
+                      onClick={uploadPhotos}
+                      disabled={uploading || photoUploads.some(photo => !photo.file)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {uploading ? 'Загружаем...' : 'Загрузить все фотографии'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-                    <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                      <div className="flex items-center mb-2">
-                        <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-medium text-green-800">Задняя панель</span>
-                      </div>
-                      <p className="text-green-700">{analysisResult.back.condition} (-{analysisResult.back.damagePercent}%)</p>
-                    </div>
+            {/* Шаг 2: Проверка функционала */}
+            {currentStep === 2 && (
+              <Card className="border-2 border-gray-200 animate-in slide-in-from-right-5 duration-300">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
+                    <Smartphone className="w-5 h-5 mr-2" />
+                    Шаг 2: Проверка функционала
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {functionalityTests.map((test) => {
+                      const IconComponent = test.icon
+                      return (
+                        <div key={test.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
+                          <div className="flex items-center">
+                            <IconComponent className="w-5 h-5 text-gray-600 mr-3" />
+                            <div>
+                              <p className="font-medium text-gray-900">{test.name}</p>
+                              <p className="text-sm text-gray-500">{test.description}</p>
+                              <p className="text-xs text-gray-400">
+                                Штраф: {test.penaltyPercent}% {test.isNegative && '(отрицательный)'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant={test.working === true ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => updateFunctionalityTest(test.id, true)}
+                              className={test.working === true ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              {test.isNegative ? 'Нет' : 'Да'}
+                            </Button>
+                            <Button
+                              variant={test.working === false ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => updateFunctionalityTest(test.id, false)}
+                              className={test.working === false ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+                            >
+                              <XCircle className="w-4 h-4 mr-1" />
+                              {test.isNegative ? 'Да' : 'Нет'}
+                            </Button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-                    <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-                      <div className="flex items-center mb-2">
-                        <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="font-medium text-green-800">Боковая грань</span>
-                      </div>
-                      <p className="text-green-700">{analysisResult.side.condition} (-{analysisResult.side.damagePercent}%)</p>
+            {/* Шаг 3: Расчет финальной цены */}
+            {currentStep === 3 && (
+              <Card className="border-2 border-blue-200 bg-blue-50 animate-in slide-in-from-right-5 duration-300">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center justify-between">
+                    <span>Шаг 3: Итоговая цена</span>
+                    <Button
+                      onClick={calculateFinalPrice}
+                      variant="outline"
+                      size="sm"
+                      className="bg-white hover:bg-gray-50"
+                    >
+                      Рассчитать
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Предварительная цена:</span>
+                      <span className="font-medium">{request.price.toLocaleString()} ₽</span>
                     </div>
-
-                    <div className="p-6 bg-blue-50 rounded-xl border-2 border-blue-200">
-                      <div className="text-center">
-                        <p className="text-sm text-blue-600 mb-2">Финальная цена</p>
-                        <p className="text-3xl font-bold text-blue-900">{analysisResult.finalPrice} ₽</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Штрафы ({totalPenalty > 0 ? Math.round((totalPenalty / request.price) * 100) : 0}%):</span>
+                      <span className="font-medium text-red-600">-{totalPenalty.toLocaleString()} ₽</span>
+                    </div>
+                    <div className="border-t border-blue-200 pt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-900">Финальная цена:</span>
+                        <span className="text-2xl font-bold text-blue-600">
+                          {finalPrice !== null ? finalPrice.toLocaleString() : request.price.toLocaleString()} ₽
+                        </span>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Действия с заявкой */}
-            {analysisResult && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-center mb-6">
-                    <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mr-4">
-                      <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+            {/* Шаг 4: Сохранение и управление статусом */}
+            {currentStep === 4 && (
+              <Card className="border-2 border-gray-200 animate-in slide-in-from-right-5 duration-300">
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="w-8 h-8 text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">Действия с заявкой</h2>
-                      <p className="text-gray-500 text-sm">Выберите действие после анализа</p>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Проверка завершена</h3>
+                      <p className="text-gray-600 text-sm">
+                        Все проверки завершены. Выберите действие для заявки.
+                      </p>
+                    </div>
+                    
+                    {/* Кнопки управления статусом */}
+                    <div className="space-y-3">
+                      {request.status === 'inspected' && (
+                        <Button
+                          onClick={() => updateRequestStatus('paid')}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                        >
+                          💳 Оплатить
+                        </Button>
+                      )}
+                      
+                      {request.status === 'paid' && (
+                        <Button
+                          onClick={() => updateRequestStatus('completed')}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+                        >
+                          ✅ Завершить
+                        </Button>
+                      )}
+                      
+                      {request.status === 'completed' && (
+                        <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                          <div className="flex items-center justify-center">
+                            <CheckCircle2 className="w-5 h-5 text-green-600 mr-2" />
+                            <span className="text-green-800 font-medium">Заявка завершена</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Кнопка сохранения проверки (если еще не сохранена) */}
+                      {request.status !== 'inspected' && request.status !== 'paid' && request.status !== 'completed' && (
+                        <Button
+                          onClick={saveInspection}
+                          disabled={saving}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+                        >
+                          {saving ? 'Сохраняем...' : 'Сохранить проверку'}
+                        </Button>
+                      )}
                     </div>
                   </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <button
-                      onClick={() => updateRequestStatus('accepted')}
-                      className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium flex items-center justify-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Принять заявку
-                    </button>
-
-                    <button
-                      onClick={() => updateRequestStatus('rejected')}
-                      className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors font-medium flex items-center justify-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                      Отклонить заявку
-                    </button>
-
-                    <button
-                      onClick={() => updateRequestStatus('paid')}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                      Оплачено
-                    </button>
-
-                    <button
-                      onClick={() => updateRequestStatus('completed')}
-                      className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium flex items-center justify-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Завершено
-                    </button>
-
-                    <button
-                      onClick={() => alert('Функция запроса дополнительных фото будет добавлена')}
-                      className="px-6 py-3 bg-yellow-600 text-white rounded-xl hover:bg-yellow-700 transition-colors font-medium flex items-center justify-center"
-                    >
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      Запросить доп. фото
-                    </button>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
+
+            {/* Навигация */}
+            <Card className="border-2 border-gray-200">
+              <CardContent className="p-4">
+                <div className="flex justify-between">
+                  <Button
+                    onClick={prevStep}
+                    disabled={currentStep === 1}
+                    variant="outline"
+                    className="flex items-center"
+                  >
+                    <X className="w-4 h-4 mr-2 rotate-90" />
+                    Назад
+                  </Button>
+                  
+                  <Button
+                    onClick={nextStep}
+                    disabled={currentStep === 4 || !canProceedToNextStep()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white flex items-center"
+                  >
+                    Далее
+                    <X className="w-4 h-4 ml-2 -rotate-90" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

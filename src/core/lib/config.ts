@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.9'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.10'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {

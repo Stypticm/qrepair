@@ -165,6 +165,7 @@ enum SkupkaStatus {
   submitted
   on_the_way
   in_progress
+  inspected
   accepted
   paid
   completed
