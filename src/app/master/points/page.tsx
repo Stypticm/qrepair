@@ -33,6 +33,7 @@ export default function MasterPointsPage() {
   const [masterPoints, setMasterPoints] = useState<Point[]>([])
   const [allPoints, setAllPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState(true)
+  const [showSpinner, setShowSpinner] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [showQRScanner, setShowQRScanner] = useState(false)
@@ -40,59 +41,47 @@ export default function MasterPointsPage() {
   const { telegramId } = useAppStore()
 
   useEffect(() => {
-    console.log('Master page - telegramId:', telegramId)
     if (telegramId) {
       fetchMasterRequests()
     } else {
-      // Если telegramId еще не загружен, ждем немного
-      const timer = setTimeout(() => {
-        console.log('Master page - timer check, telegramId:', telegramId)
-        if (telegramId) {
-          fetchMasterRequests()
-        } else {
-          console.log('Master page - no telegramId, stopping loading')
-          setLoading(false)
-        }
-      }, 1000)
-
-      return () => clearTimeout(timer)
+      // Нет telegramId — не блокируем UI
+      setLoading(false)
     }
   }, [telegramId])
+
+  // Плавное появление спиннера только если загрузка > 200мс
+  useEffect(() => {
+    if (!loading) {
+      setShowSpinner(false)
+      return
+    }
+    const t = setTimeout(() => setShowSpinner(true), 200)
+    return () => clearTimeout(t)
+  }, [loading])
 
   const fetchMasterRequests = async () => {
     try {
       setLoading(true)
 
-      // Получаем только заявки мастера
-      const requestsResponse = await fetch(`/api/master/requests?masterTelegramId=${telegramId}`)
-      const requestsData = await requestsResponse.json()
+      const [requestsRes, pointsRes, allPointsRes] = await Promise.all([
+        fetch(`/api/master/requests?masterTelegramId=${telegramId}`),
+        fetch(`/api/master/points?telegramId=${telegramId}`),
+        fetch(`/api/admin/points?adminTelegramId=${telegramId}`),
+      ])
 
-      if (!requestsResponse.ok) {
-        throw new Error(requestsData.error || 'Failed to fetch master requests')
-      }
+      const [requestsData, pointsData, allPointsData] = await Promise.all([
+        requestsRes.json(),
+        pointsRes.json(),
+        allPointsRes.json(),
+      ])
 
-      // Получаем точки мастера
-      const pointsResponse = await fetch(`/api/master/points?telegramId=${telegramId}`)
-      const pointsData = await pointsResponse.json()
+      if (!requestsRes.ok) throw new Error(requestsData.error || 'Failed to fetch master requests')
+      if (!pointsRes.ok) throw new Error(pointsData.error || 'Failed to fetch master points')
+      if (!allPointsRes.ok) throw new Error(allPointsData.error || 'Failed to fetch all points')
 
-      if (!pointsResponse.ok) {
-        throw new Error(pointsData.error || 'Failed to fetch master points')
-      }
-
-      // Получаем все точки для отображения информации
-      const allPointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`)
-      const allPointsData = await allPointsResponse.json()
-
-      if (!allPointsResponse.ok) {
-        throw new Error(allPointsData.error || 'Failed to fetch all points')
-      }
-
-      console.log('🔍 Master page - requests received:', requestsData.requests.length)
-      console.log('🔍 Master page - requests data:', requestsData.requests.map((r: any) => ({ id: r.id, status: r.status, assignedMasterId: r.assignedMasterId })))
-
-      setRequests(requestsData.requests)
-      setMasterPoints(pointsData.points)
-      setAllPoints(allPointsData.points)
+      setRequests(requestsData.requests || [])
+      setMasterPoints(pointsData.points || [])
+      setAllPoints(allPointsData.points || [])
 
     } catch (error) {
       console.error('Error fetching master requests:', error)
@@ -142,7 +131,7 @@ export default function MasterPointsPage() {
     await addRequestToMaster(skupkaId)
   }
 
-  if (loading) {
+  if (loading && showSpinner) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
