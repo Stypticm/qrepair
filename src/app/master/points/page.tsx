@@ -65,25 +65,13 @@ export default function MasterPointsPage() {
     try {
       setLoading(true)
 
-      const [requestsRes, pointsRes, allPointsRes] = await Promise.all([
-        fetch(`/api/master/requests?masterTelegramId=${telegramId}`),
-        fetch(`/api/master/points?telegramId=${telegramId}`),
-        fetch(`/api/admin/points?adminTelegramId=${telegramId}`),
-      ])
+      const res = await fetch(`/api/master/dashboard?telegramId=${telegramId}`, { cache: 'no-store' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch dashboard')
 
-      const [requestsData, pointsData, allPointsData] = await Promise.all([
-        requestsRes.json(),
-        pointsRes.json(),
-        allPointsRes.json(),
-      ])
-
-      if (!requestsRes.ok) throw new Error(requestsData.error || 'Failed to fetch master requests')
-      if (!pointsRes.ok) throw new Error(pointsData.error || 'Failed to fetch master points')
-      if (!allPointsRes.ok) throw new Error(allPointsData.error || 'Failed to fetch all points')
-
-      setRequests(requestsData.requests || [])
-      setMasterPoints(pointsData.points || [])
-      setAllPoints(allPointsData.points || [])
+      setRequests(data.requests || [])
+      setMasterPoints(data.points || [])
+      setAllPoints(data.allPoints || [])
 
     } catch (error) {
       console.error('Error fetching master requests:', error)

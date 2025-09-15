@@ -74,7 +74,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
       }}
     >
       <div className="w-full flex-1 flex justify-center">
-        <div className="w-full max-w-md md:max-w-sm lg:max-w-sm xl:max-w-sm 2xl:max-w-sm mx-auto">
+        <div className="w-full max-w-md md:w-[390px] md:h-[844px] md:overflow-y-auto md:rounded-3xl md:shadow-[0_10px_30px_rgba(0,0,0,0.10)] md:bg-white mx-auto">
           {children}
         </div>
       </div>
