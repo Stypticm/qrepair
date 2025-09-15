@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
@@ -37,16 +37,18 @@ export default function MasterPointsPage() {
   const [error, setError] = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [showQRScanner, setShowQRScanner] = useState(false)
+  const hasFetchedRef = useRef(false)
 
   const { telegramId } = useAppStore()
 
   useEffect(() => {
-    if (telegramId) {
-      fetchMasterRequests()
-    } else {
-      // Нет telegramId — не блокируем UI
+    if (!telegramId) {
       setLoading(false)
+      return
     }
+    if (hasFetchedRef.current) return
+    hasFetchedRef.current = true
+    fetchMasterRequests()
   }, [telegramId])
 
   // Плавное появление спиннера только если загрузка > 200мс
