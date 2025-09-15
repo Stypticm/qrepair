@@ -70,8 +70,8 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       if (isDesktop) {
         return {
           container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-          main: 'flex-1 w-full max-w-md shadow-lg bg-white rounded-2xl',
-          wrapper: 'w-full max-w-md mx-auto',
+          main: 'w-[390px] h-[844px] overflow-y-auto shadow-[0_10px_30px_rgba(0,0,0,0.10)] bg-white rounded-3xl',
+          wrapper: 'w-[390px] h-[844px] mx-auto',
         };
       } else if (isMobile) {
         return {
@@ -84,11 +84,11 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
 
     // Telegram режим - адаптивный размер
     if (isDesktop) {
-      // На десктопе - ограниченный размер
+      // На десктопе - фиксированный размер телефона
       return {
         container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-        main: 'flex-1 w-full max-w-2xl shadow-lg bg-white rounded-2xl',
-        wrapper: 'w-full max-w-2xl mx-auto p-4',
+        main: 'w-[390px] h-[844px] overflow-y-auto shadow-[0_10px_30px_rgba(0,0,0,0.10)] bg-white rounded-3xl',
+        wrapper: 'w-[390px] h-[844px] mx-auto p-4',
       };
     } else {
       // На мобильных - полный экран
