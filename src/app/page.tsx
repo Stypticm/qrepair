@@ -322,7 +322,7 @@ function HomeContent() {
     <AdaptiveContainer>
 
       
-      <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50 pt-20">
+      <div className="h-full w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50 pt-28">
         <div className="w-full max-w-md mx-auto text-center space-y-8">
           <div className="space-y-6">
             <motion.div
@@ -401,7 +401,7 @@ function HomeContent() {
           )}
 
           {/* Гамбургер-меню */}
-          <div className="fixed top-5 right-5 z-50">
+          <div className="fixed top-24 right-5 z-50">
             <Menubar>
               <MenubarMenu>
                 <MenubarTrigger
