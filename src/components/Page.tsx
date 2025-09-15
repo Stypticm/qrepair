@@ -73,7 +73,11 @@ export function Page({ children, back = true }: PropsWithChildren<{
         boxSizing: 'border-box'
       }}
     >
-      {children}
+      <div className="w-full flex-1 flex justify-center">
+        <div className="w-full max-w-md md:max-w-sm lg:max-w-sm xl:max-w-sm 2xl:max-w-sm mx-auto">
+          {children}
+        </div>
+      </div>
     </section>
   );
 }

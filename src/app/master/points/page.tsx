@@ -133,16 +133,7 @@ export default function MasterPointsPage() {
     await addRequestToMaster(skupkaId)
   }
 
-  if (loading && showSpinner) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Загружаем заявки...</p>
-        </div>
-      </div>
-    )
-  }
+  // Убираем глобальный спиннер. Лоадер будет показан только в секции "Мои заявки" ниже
 
   if (error) {
     return (
@@ -218,7 +209,18 @@ export default function MasterPointsPage() {
 
           {/* Заявки мастера */}
 
-          {requests.length > 0 && (
+          {loading && showSpinner && (
+            <div className="space-y-3">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
+              <div className="animate-pulse space-y-3">
+                <div className="h-24 w-full bg-gray-200 rounded-xl" />
+                <div className="h-24 w-full bg-gray-200 rounded-xl" />
+                <div className="h-24 w-full bg-gray-200 rounded-xl" />
+              </div>
+            </div>
+          )}
+
+          {!loading && requests.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
               {requests.map((request) => (
