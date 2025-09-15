@@ -15,6 +15,10 @@ export default function InternalPage() {
     if (!isMaster(userId)) {
       router.replace('/');
     }
+    // Прелоад раздела мастеров
+    try {
+      router.prefetch('/master/points');
+    } catch {}
   }, [userId, router]);
 
   if (!isMaster(userId)) return null;

@@ -77,6 +77,15 @@ function HomeContent() {
     }
   }, [isInTelegram, isFullscreen, forceFullscreen]);
 
+  // Прелоад раздела мастеров для ускорения
+  useEffect(() => {
+    if (!isLoading && isMaster(userId)) {
+      try {
+        router.prefetch('/master/points');
+      } catch {}
+    }
+  }, [isLoading, userId, router]);
+
   // Управление состоянием иконки (shadcn-like menubar)
 
   // Инициализация Telegram WebApp
