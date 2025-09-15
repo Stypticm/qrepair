@@ -36,6 +36,14 @@ export function useSafeArea() {
     }
 
     const webApp = window.Telegram.WebApp
+    const platform = webApp.platform
+    const isMobilePlatform =
+      platform === 'android' || platform === 'ios'
+
+    // На десктопе/вебе не запрашиваем fullscreen
+    if (!isMobilePlatform) {
+      return
+    }
 
     // Проверяем версию Telegram и контекст
     const supportsFullscreen =
@@ -125,17 +133,22 @@ export function useSafeArea() {
           const startParam =
             webApp.initDataUnsafe?.start_param
 
-          // Немедленно запрашиваем fullscreen
-          if (
-            'requestFullscreen' in webApp &&
-            typeof webApp.requestFullscreen ===
-              'function' &&
-            webApp.isVersionAtLeast?.('8.0')
-          ) {
-            webApp.requestFullscreen()
-            webApp.expand()
-          } else {
-            webApp.expand()
+          // Немедленно запрашиваем fullscreen только на мобильных
+          const platform = webApp.platform
+          const isMobilePlatform =
+            platform === 'android' || platform === 'ios'
+          if (isMobilePlatform) {
+            if (
+              'requestFullscreen' in webApp &&
+              typeof webApp.requestFullscreen ===
+                'function' &&
+              webApp.isVersionAtLeast?.('8.0')
+            ) {
+              webApp.requestFullscreen()
+              webApp.expand()
+            } else {
+              webApp.expand()
+            }
           }
 
           // Устанавливаем цвета

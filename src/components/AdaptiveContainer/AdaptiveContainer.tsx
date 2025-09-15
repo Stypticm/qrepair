@@ -41,8 +41,8 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       const isMenuButtonContext = !webApp.initDataUnsafe?.start_param;
       setIsMenuButton(isMenuButtonContext);
 
-      // Принудительно запрашиваем fullscreen для всех контекстов, если не в fullscreen
-      if (!isFullscreen) {
+      // Принудительно запрашиваем fullscreen ТОЛЬКО на мобильных
+      if (!isFullscreen && isMobile) {
         forceFullscreen();
       }
     }

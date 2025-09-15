@@ -71,8 +71,9 @@ function HomeContent() {
   const { forceFullscreen, isFullscreen } = safeAreaHook;
 
   useEffect(() => {
-    // Принудительно вызываем fullscreen при загрузке страницы только если мы в Telegram
-    if (!isFullscreen && window.Telegram?.WebApp && isInTelegram) {
+    // Принудительно fullscreen только на мобильных ширинах
+    const isMobileWidth = typeof window !== 'undefined' ? window.innerWidth < 768 : true;
+    if (!isFullscreen && window.Telegram?.WebApp && isInTelegram && isMobileWidth) {
       forceFullscreen();
     }
   }, [isInTelegram, isFullscreen, forceFullscreen]);

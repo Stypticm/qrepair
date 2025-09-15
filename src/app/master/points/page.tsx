@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
 import { QRScanner } from '@/components/QRScanner'
+import useSWR from '@/hooks/useSWR'
 
 interface Request {
   id: string
@@ -29,57 +30,24 @@ interface Point {
 }
 
 export default function MasterPointsPage() {
-  const [requests, setRequests] = useState<Request[]>([])
-  const [masterPoints, setMasterPoints] = useState<Point[]>([])
-  const [allPoints, setAllPoints] = useState<Point[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showSpinner, setShowSpinner] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [showQRScanner, setShowQRScanner] = useState(false)
-  const hasFetchedRef = useRef(false)
 
   const { telegramId } = useAppStore()
 
-  useEffect(() => {
-    if (!telegramId) {
-      setLoading(false)
-      return
+  const fetcher = (url: string) => fetch(url).then((res) => res.json())
+  const { data, error, isLoading, mutate, isValidating } = useSWR(
+    telegramId ? `/api/master/dashboard?telegramId=${telegramId}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      keepPreviousData: true,
     }
-    if (hasFetchedRef.current) return
-    hasFetchedRef.current = true
-    fetchMasterRequests()
-  }, [telegramId])
+  )
 
-  // Плавное появление спиннера только если загрузка > 200мс
-  useEffect(() => {
-    if (!loading) {
-      setShowSpinner(false)
-      return
-    }
-    const t = setTimeout(() => setShowSpinner(true), 200)
-    return () => clearTimeout(t)
-  }, [loading])
-
-  const fetchMasterRequests = async () => {
-    try {
-      setLoading(true)
-
-      const res = await fetch(`/api/master/dashboard?telegramId=${telegramId}`, { cache: 'no-store' })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch dashboard')
-
-      setRequests(data.requests || [])
-      setMasterPoints(data.points || [])
-      setAllPoints(data.allPoints || [])
-
-    } catch (error) {
-      console.error('Error fetching master requests:', error)
-      setError(error instanceof Error ? error.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const requests: Request[] = data?.requests || []
+  const masterPoints: Point[] = data?.points || []
+  const allPoints: Point[] = data?.allPoints || []
 
 
   const getPointInfo = (pointId: number) => {
@@ -106,9 +74,8 @@ export default function MasterPointsPage() {
         throw new Error(data.error || 'Failed to add request to master')
       }
 
-      // Заявка успешно добавлена
-      // Обновляем список заявок
-      fetchMasterRequests()
+      // Заявка успешно добавлена — обновляем данные
+      await mutate()
     } catch (error) {
       console.error('Error adding request to master:', error)
       console.error('Ошибка при добавлении заявки')
@@ -121,7 +88,7 @@ export default function MasterPointsPage() {
     await addRequestToMaster(skupkaId)
   }
 
-  // Убираем глобальный спиннер. Лоадер будет показан только в секции "Мои заявки" ниже
+  // Убираем глобальный спиннер. Лоадер показан только в секции "Мои заявки" ниже
 
   if (error) {
     return (
@@ -129,7 +96,7 @@ export default function MasterPointsPage() {
         <div className="text-center">
           <p className="text-red-600 mb-4">Ошибка: {error}</p>
           <button
-            onClick={fetchMasterRequests}
+            onClick={() => mutate()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Попробовать снова
@@ -197,18 +164,16 @@ export default function MasterPointsPage() {
 
           {/* Заявки мастера */}
 
-          {loading && showSpinner && (
+          {(isLoading || isValidating) && (
             <div className="space-y-3">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
-              <div className="animate-pulse space-y-3">
-                <div className="h-24 w-full bg-gray-200 rounded-xl" />
-                <div className="h-24 w-full bg-gray-200 rounded-xl" />
-                <div className="h-24 w-full bg-gray-200 rounded-xl" />
+              <div className="w-full flex items-center justify-center py-6">
+                <div className="inline-block h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />
               </div>
             </div>
           )}
 
-          {!loading && requests.length > 0 && (
+          {!isLoading && requests.length > 0 && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
               {requests.map((request) => (
@@ -278,14 +243,8 @@ export default function MasterPointsPage() {
                             throw new Error(data.error || 'Failed to update status')
                           }
 
-                          // Локально обновляем статус заявки
-                          setRequests(prevRequests =>
-                            prevRequests.map(req =>
-                              req.id === request.id
-                                ? { ...req, status: newStatus }
-                                : req
-                            )
-                          )
+                          // Обновляем кэш
+                          await mutate()
                         } catch (error) {
                           console.error('Error updating request status:', error)
                         } finally {
@@ -322,7 +281,7 @@ export default function MasterPointsPage() {
           )}
 
           {/* Сообщение если нет заявок */}
-          {requests.length === 0 && !loading && (
+          {requests.length === 0 && !isLoading && (
             <div className="text-center py-16">
               <div className="text-gray-400 mb-4">
                 <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
