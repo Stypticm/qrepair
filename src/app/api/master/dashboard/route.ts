@@ -11,24 +11,19 @@ export async function GET(req: Request) {
       )
     }
 
+    const origin = new URL(req.url).origin
     const [requestsRes, pointsRes, allPointsRes] =
       await Promise.all([
         fetch(
-          `${
-            process.env.NEXT_PUBLIC_BASE_URL || ''
-          }/api/master/requests?masterTelegramId=${telegramId}`,
+          `${origin}/api/master/requests?masterTelegramId=${telegramId}`,
           { cache: 'no-store' }
         ),
         fetch(
-          `${
-            process.env.NEXT_PUBLIC_BASE_URL || ''
-          }/api/master/points?telegramId=${telegramId}`,
+          `${origin}/api/master/points?telegramId=${telegramId}`,
           { next: { revalidate: 30 } }
         ),
         fetch(
-          `${
-            process.env.NEXT_PUBLIC_BASE_URL || ''
-          }/api/admin/points?adminTelegramId=${telegramId}`,
+          `${origin}/api/admin/points?adminTelegramId=${telegramId}`,
           { next: { revalidate: 30 } }
         ),
       ])

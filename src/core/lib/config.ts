@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.23'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.24'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -36,7 +36,10 @@ export function useSafeArea() {
 
   // Функция для принудительного полноэкранного режима
   const forceFullscreen = useCallback(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+    if (
+      typeof window !== 'undefined' &&
+      window.Telegram?.WebApp
+    ) {
       const webApp = window.Telegram.WebApp
       console.log(
         'Attempting to request fullscreen at',
@@ -51,26 +54,29 @@ export function useSafeArea() {
         supportsFullscreen
       )
 
-      if (
-        supportsFullscreen &&
-        'requestFullscreen' in webApp
-      ) {
-        console.log('Using requestFullscreen...')
-        try {
-          webApp.requestFullscreen?.()
-        } catch (error) {
-          console.error('requestFullscreen failed:', error)
+      const platform = webApp.platform
+      const isMobilePlatform =
+        platform === 'android' || platform === 'ios'
+      if (isMobilePlatform) {
+        if (
+          supportsFullscreen &&
+          'requestFullscreen' in webApp
+        ) {
+          console.log('Using requestFullscreen...')
+          try {
+            webApp.requestFullscreen?.()
+          } catch (error) {
+            console.error(
+              'requestFullscreen failed:',
+              error
+            )
+          }
+        } else {
+          console.log(
+            'requestFullscreen not available, using expand...'
+          )
+          webApp.expand()
         }
-      } else {
-        console.log(
-          'requestFullscreen not available, using expand...'
-        )
-        webApp.expand()
-
-        // ПРИНУДИТЕЛЬНО expand несколько раз
-        setTimeout(() => webApp.expand(), 100)
-        setTimeout(() => webApp.expand(), 500)
-        setTimeout(() => webApp.expand(), 1000)
       }
     } else {
       console.log('No Telegram WebApp context available')
@@ -84,7 +90,10 @@ export function useSafeArea() {
   useEffect(() => {
     if (!isMounted) return
 
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+    if (
+      typeof window !== 'undefined' &&
+      window.Telegram?.WebApp
+    ) {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
@@ -112,7 +121,12 @@ export function useSafeArea() {
             window.location.href
           )
 
-          // АГРЕССИВНЫЙ ПОДХОД: Принудительно заставляем fullscreen
+          // Платформа и разрешение fullscreen только для мобильных
+          const platform = webApp.platform
+          const isMobilePlatform =
+            platform === 'android' || platform === 'ios'
+
+          // АГРЕССИВНЫЙ ПОДХОД (мобильные только): Принудительно заставляем fullscreen
           console.log(
             'Available methods:',
             Object.keys(webApp)
@@ -122,7 +136,7 @@ export function useSafeArea() {
           console.log(
             'Calling webApp.expand() multiple times...'
           )
-          webApp.expand()
+          if (isMobilePlatform) webApp.expand()
 
           // Способ 2: Проверяем fullscreen поддержку
           const supportsFullscreen =
@@ -139,7 +153,8 @@ export function useSafeArea() {
           ) {
             console.log('Attempting requestFullscreen...')
             try {
-              webApp.requestFullscreen?.()
+              if (isMobilePlatform)
+                webApp.requestFullscreen?.()
             } catch (error) {
               console.error(
                 'requestFullscreen failed:',
@@ -151,7 +166,7 @@ export function useSafeArea() {
           // Способ 4: Принудительно expand каждые 100ms в течение 2 секунд
           const expandInterval = setInterval(() => {
             console.log('Forcing expand...')
-            webApp.expand()
+            if (isMobilePlatform) webApp.expand()
           }, 100)
 
           // Останавливаем интервал через 2 секунды
@@ -165,7 +180,7 @@ export function useSafeArea() {
           delays.forEach((delay: number) => {
             setTimeout(() => {
               console.log(`Retry expand at ${delay}ms...`)
-              webApp.expand()
+              if (isMobilePlatform) webApp.expand()
 
               // Если поддерживается fullscreen, пробуем снова
               if (
@@ -173,7 +188,8 @@ export function useSafeArea() {
                 'requestFullscreen' in webApp
               ) {
                 try {
-                  webApp.requestFullscreen?.()
+                  if (isMobilePlatform)
+                    webApp.requestFullscreen?.()
                 } catch (error) {
                   console.error(
                     `requestFullscreen failed at ${delay}ms:`,
@@ -265,12 +281,15 @@ export function useSafeArea() {
           )
           setIsFullscreen(event.is_expanded || false)
 
-          // ПРИНУДИТЕЛЬНО expand если viewport не развернут
+          // ПРИНУДИТЕЛЬНО expand если viewport не развернут (только мобильные)
           if (!event.is_expanded) {
             console.log(
               'Viewport not expanded, FORCING expand...'
             )
-            webApp.expand()
+            const platform = webApp.platform
+            const isMobilePlatform =
+              platform === 'android' || platform === 'ios'
+            if (isMobilePlatform) webApp.expand()
 
             // Если поддерживается fullscreen, пробуем снова
             if (
@@ -278,7 +297,12 @@ export function useSafeArea() {
               'requestFullscreen' in webApp
             ) {
               try {
-                webApp.requestFullscreen?.()
+                const platform2 = webApp.platform
+                const isMobilePlatform2 =
+                  platform2 === 'android' ||
+                  platform2 === 'ios'
+                if (isMobilePlatform2)
+                  webApp.requestFullscreen?.()
               } catch (error) {
                 console.error(
                   'requestFullscreen failed in viewport handler:',
