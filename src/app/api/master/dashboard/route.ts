@@ -12,28 +12,21 @@ export async function GET(req: Request) {
     }
 
     const origin = new URL(req.url).origin
-    const [requestsRes, pointsRes, allPointsRes] =
-      await Promise.all([
-        fetch(
-          `${origin}/api/master/requests?masterTelegramId=${telegramId}`,
-          { cache: 'no-store' }
-        ),
-        fetch(
-          `${origin}/api/master/points?telegramId=${telegramId}`,
-          { next: { revalidate: 30 } }
-        ),
-        fetch(
-          `${origin}/api/admin/points?adminTelegramId=${telegramId}`,
-          { next: { revalidate: 30 } }
-        ),
-      ])
+    const [requestsRes, pointsRes] = await Promise.all([
+      fetch(
+        `${origin}/api/master/requests?masterTelegramId=${telegramId}`,
+        { cache: 'no-store' }
+      ),
+      fetch(
+        `${origin}/api/master/points?telegramId=${telegramId}`,
+        { next: { revalidate: 30 } }
+      ),
+    ])
 
-    const [requestsData, pointsData, allPointsData] =
-      await Promise.all([
-        requestsRes.json(),
-        pointsRes.json(),
-        allPointsRes.json(),
-      ])
+    const [requestsData, pointsData] = await Promise.all([
+      requestsRes.json(),
+      pointsRes.json(),
+    ])
 
     if (!requestsRes.ok)
       return NextResponse.json(
@@ -52,15 +45,7 @@ export async function GET(req: Request) {
         },
         { status: 500 }
       )
-    if (!allPointsRes.ok)
-      return NextResponse.json(
-        {
-          error:
-            allPointsData.error ||
-            'Failed to fetch all points',
-        },
-        { status: 500 }
-      )
+    // allPoints временно совпадает с points для уменьшения запросов
 
     // Обрезаем поля до нужного минимума
     const requests = (requestsData.requests || []).map(
@@ -77,7 +62,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       requests,
       points: pointsData.points || [],
-      allPoints: allPointsData.points || [],
+      allPoints: pointsData.points || [],
     })
   } catch (e: any) {
     return NextResponse.json(

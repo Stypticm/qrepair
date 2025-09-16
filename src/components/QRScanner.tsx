@@ -21,8 +21,12 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   useEffect(() => {
     // Инициализируем Telegram WebApp если доступен
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+      const webApp = window.Telegram.WebApp;
+      webApp.ready();
+      const platform = webApp.platform;
+      if (platform === 'android' || platform === 'ios') {
+        webApp.expand();
+      }
     }
 
     return () => {

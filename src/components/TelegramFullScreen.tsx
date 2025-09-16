@@ -12,6 +12,10 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && miniApp && miniApp.isSupported()) {
+      // На десктопе не разворачиваем полноэкранно
+      const platform = (window as any).Telegram?.WebApp?.platform
+      const isMobile = platform === 'android' || platform === 'ios'
+      if (!isMobile) return
       // Принудительное fullscreen
       const requestFull = () => {
         try {
