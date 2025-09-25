@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { miniApp, expandViewport, viewport } from '@telegram-apps/sdk';
+import { miniApp, viewport } from '@telegram-apps/sdk';
 
 interface TelegramFullScreenProps {
   children: React.ReactNode;
@@ -12,46 +12,39 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && miniApp && miniApp.isSupported()) {
-      // На десктопе не разворачиваем полноэкранно
-      const platform = (window as any).Telegram?.WebApp?.platform
-      const isMobile = platform === 'android' || platform === 'ios'
-      if (!isMobile) return
-      // Принудительное fullscreen
-      const requestFull = () => {
-        try {
-          // Используем requestFullscreen согласно документации
-          if (viewport.requestFullscreen) {
-            viewport.requestFullscreen();
-          } else {
-            viewport.expand();
-          }
-        } catch (error) {
-          // Fallback к expand
+      const platform = window.Telegram?.WebApp?.platform;
+      const isMobile = platform === 'android' || platform === 'ios';
+
+      if (isMobile) {
+        // Полноэкранный режим только для мобильных
+        const requestFull = () => {
           try {
-            viewport.expand();
-          } catch (e) {
-            // Если и expand не работает, используем expandViewport
-            expandViewport();
+            if (viewport.requestFullscreen) {
+              viewport.requestFullscreen();
+              setIsFullscreen(true);
+            } else {
+              viewport.expand();
+              setIsFullscreen(true);
+            }
+          } catch (error) {
+            console.warn('Failed to request fullscreen:', error);
           }
-        }
-      };
+        };
 
-      // Немедленно запрашиваем fullscreen
-      requestFull();
-
-      // Повторные попытки через небольшие интервалы
-      const retryIntervals = [100, 300, 500];
-      retryIntervals.forEach((delay) => {
-        setTimeout(() => {
-          requestFull();
-        }, delay);
-      });
+        requestFull();
+        const retryIntervals = [100, 300, 500];
+        retryIntervals.forEach((delay) => {
+          setTimeout(() => {
+            if (!isFullscreen) requestFull();
+          }, delay);
+        });
+      }
     }
-  }, []);
+  }, [isFullscreen]);
 
   return (
     <div
-      className="w-full h-dvh bg-white"
+      className="w-full min-h-dvh bg-white"
       style={{
         minHeight: '100dvh',
         width: '100vw',

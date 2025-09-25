@@ -1,9 +1,8 @@
-'use client'
+'use client';
 
-// Принудительно делаем страницу динамической для обхода кэширования
 export const dynamic = 'force-dynamic';
 
-import { Page } from '@/components/Page'
+import { Page } from '@/components/Page';
 import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +11,7 @@ import { SkupkaRequest } from '@/core/lib/interfaces';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QRCodeGenerator } from '@/components/QRCodeGenerator';
-import { ChevronDown, ChevronUp, QrCode, Calendar, User, Smartphone } from 'lucide-react';
+import { ChevronDown, ChevronUp, Smartphone, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
@@ -24,7 +23,6 @@ const MyDevices = () => {
   const [loading, setLoading] = useState(true);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
-  // Функция для переключения раскрытия карточки
   const toggleCard = (deviceId: string) => {
     setExpandedCards(prev => {
       const newSet = new Set(prev);
@@ -37,107 +35,56 @@ const MyDevices = () => {
     });
   };
 
-  // НЕ восстанавливаем telegramId из sessionStorage, чтобы не перезаписывать данные других пользователей
-  // useEffect(() => {
-  //   if (typeof window !== 'undefined' && !telegramId) {
-  //     const savedTelegramId = sessionStorage.getItem('telegramId');
-  //     if (savedTelegramId) {
-  //       setTelegramId(savedTelegramId);
-  //     }
-  //   }
-  // }, [telegramId, setTelegramId]);
-
   useEffect(() => {
     if (telegramId) {
       const getData = async () => {
         try {
           setLoading(true);
-          const res = await fetch(`/api/my-devices?telegramId=${telegramId}`)
-          const data = await res.json()
-          setMyDevices(data)
+          const res = await fetch(`/api/my-devices?telegramId=${telegramId}`);
+          const data = await res.json();
+          setMyDevices(data);
         } catch (e) {
-          console.error('Ошибка при загрузке данных:', e)
+          console.error('Ошибка при загрузке данных:', e);
         } finally {
           setLoading(false);
         }
-      }
-      getData()
+      };
+      getData();
     }
-  }, [telegramId])
+  }, [telegramId]);
 
-  // Функция для получения статуса на русском
   const getStatusText = (status: string | undefined) => {
     if (!status) return 'Неизвестно';
-
     switch (status) {
-      case 'draft':
-        return 'Черновик';
-      case 'submitted':
-        return 'Отправлена';
-      case 'in_progress':
-        return 'На проверке';
-      case 'on_the_way':
-        return 'В пути';
-      case 'accepted':
-        return 'Принята';
-      case 'paid':
-        return 'Оплачено';
-      case 'completed':
-        return 'Завершено';
-      default:
-        return status;
+      case 'draft': return 'Черновик';
+      case 'submitted': return 'Отправлена';
+      case 'in_progress': return 'На проверке';
+      case 'on_the_way': return 'В пути';
+      case 'accepted': return 'Принята';
+      case 'paid': return 'Оплачено';
+      case 'completed': return 'Завершено';
+      default: return status;
     }
   };
 
-  // Функция для получения цвета статуса
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'bg-gray-600';
-    
     switch (status) {
-      case 'draft':
-        return 'bg-gray-500';
-      case 'submitted':
-        return 'bg-[#2dc2c6]';
-      case 'accepted':
-        return 'bg-green-500';
-      case 'in_progress':
-        return 'bg-yellow-500';
-      case 'on_the_way':
-        return 'bg-[#2dc2c6]';
-      case 'paid':
-        return 'bg-emerald-500';
-      default:
-        return 'bg-gray-600';
-    }
-  };
-
-  const getStatusHoverColor = (status: string | undefined) => {
-    if (!status) return 'hover:bg-gray-700';
-    
-    switch (status) {
-      case 'draft':
-        return 'hover:bg-gray-600';
-      case 'submitted':
-        return 'hover:bg-[#25a8ac]';
-      case 'accepted':
-        return 'hover:bg-green-600';
-      case 'in_progress':
-        return 'hover:bg-yellow-600';
-      case 'on_the_way':
-        return 'hover:bg-[#25a8ac]';
-      case 'paid':
-        return 'hover:bg-emerald-600';
-      default:
-        return 'hover:bg-gray-700';
+      case 'draft': return 'bg-gray-500';
+      case 'submitted': return 'bg-[#2dc2c6]';
+      case 'accepted': return 'bg-green-500';
+      case 'in_progress': return 'bg-yellow-500';
+      case 'on_the_way': return 'bg-[#2dc2c6]';
+      case 'paid': return 'bg-emerald-500';
+      default: return 'bg-gray-600';
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Page back={true}>
-        <div className="w-full min-h-screen bg-white flex flex-col">
-        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
-          <div className="max-w-4xl mx-auto">
+    <Page back={true}>
+      <div className="w-full h-full flex flex-col mx-auto">
+        <div className="h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="w-full max-w-md mx-auto px-2">
             <div className="text-center mb-8 mt-12">
               <h1 className="text-3xl font-semibold text-gray-900 mb-2">Мои устройства</h1>
               {!loading && myDevices.length > 0 && (
@@ -168,21 +115,18 @@ const MyDevices = () => {
                   const isExpanded = expandedCards.has(device.id);
                   return (
                     <Card key={device.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
-                      {/* Заголовок карточки - всегда видимый */}
-                      <CardHeader 
+                      <CardHeader
                         className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
                         onClick={() => toggleCard(device.id)}
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1 pr-4">
                             <CardTitle className="text-lg font-semibold text-gray-900">
-                              {device.modelname ? 
-                                (device.modelname.length > 50 ? 
-                                  device.modelname.substring(0, 50) + '...' : 
-                                  device.modelname
-                                ) : 
-                                'Неизвестная модель'
-                              }
+                              {device.modelname
+                                ? (device.modelname.length > 50
+                                  ? device.modelname.substring(0, 50) + '...'
+                                  : device.modelname)
+                                : 'Неизвестная модель'}
                             </CardTitle>
                           </div>
                           <div className="flex flex-col items-end gap-2">
@@ -204,7 +148,6 @@ const MyDevices = () => {
                         </div>
                       </CardHeader>
 
-                      {/* Раскрывающийся контент */}
                       <AnimatePresence>
                         {isExpanded && (
                           <motion.div
@@ -216,7 +159,6 @@ const MyDevices = () => {
                           >
                             <CardContent className="pt-0 space-y-4">
                               <div className="grid grid-cols-1 gap-3 text-sm">
-                                {/* Основная информация */}
                                 <div className="space-y-3 mb-4">
                                   <div className="flex items-center gap-2">
                                     <Smartphone className="w-4 h-4 text-gray-500" />
@@ -241,7 +183,7 @@ const MyDevices = () => {
                                   <span className="font-semibold text-gray-600">Полная модель:</span>
                                   <div className="text-gray-800 break-words bg-gray-50 p-2 rounded-lg">{device.modelname || '—'}</div>
                                 </div>
-                                
+
                                 {device.comment && (
                                   <div>
                                     <span className="font-semibold text-gray-600">Комментарий:</span>
@@ -255,7 +197,6 @@ const MyDevices = () => {
                                     <div className="text-emerald-600 font-semibold bg-emerald-50 p-2 rounded-lg">{device.finalPrice} ₽</div>
                                   </div>
                                 )}
-
 
                                 {device.courierTelegramId && (
                                   <div>
@@ -276,15 +217,14 @@ const MyDevices = () => {
                                   </div>
                                 )}
 
-                                {/* QR-код для заявки */}
                                 {device.status === 'submitted' && (
                                   <div className="border-t pt-4">
-                                    <div className="text-center">                                      
+                                    <div className="text-center">
                                       <p className="text-sm text-gray-600 mb-2">
                                         ID заявки: <span className="font-mono font-bold text-teal-600">#{device.id}</span>
                                       </p>
                                       <p className="text-sm text-gray-600 mb-4">
-                                        Мастер может отсканировать QR код или ввести ID вручную
+                                        Покажите этот QR-код мастеру
                                       </p>
                                       <QRCodeGenerator skupkaId={device.id} pointId={1} />
                                     </div>
@@ -297,7 +237,8 @@ const MyDevices = () => {
                                   <Button
                                     size="sm"
                                     className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-lg shadow-sm"
-                                    onClick={() => router.push(`/my-devices/inspection?id=${device.id}`)}>
+                                    onClick={() => router.push(`/my-devices/inspection?id=${device.id}`)}
+                                  >
                                     Проверить устройство
                                   </Button>
                                 )}
@@ -305,7 +246,8 @@ const MyDevices = () => {
                                 {device.status === 'accepted' && (
                                   <Button
                                     size="sm"
-                                    className="bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm">
+                                    className="bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-sm"
+                                  >
                                     Подтвердить цену
                                   </Button>
                                 )}
@@ -321,10 +263,9 @@ const MyDevices = () => {
             )}
           </div>
         </div>
-        </div>
-      </Page>
-    </div>
-  )
-}
+      </div>
+    </Page>
+  );
+};
 
-export default MyDevices
+export default MyDevices;

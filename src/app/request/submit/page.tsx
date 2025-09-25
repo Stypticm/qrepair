@@ -381,9 +381,9 @@ const SubmitPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
-                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
+                <div className="flex-1 p-3 pt-2 flex items-start justify-center">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-4 pb-4 my-auto">
                         {!dataLoaded ? (
                             <div className="w-full max-w-md text-center">
                                 <Image
@@ -412,11 +412,11 @@ const SubmitPage = () => {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3 }}
-                                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+                                    className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm  text-center"
                                 >
-                                    <h3 className="text-xl font-semibold mb-6 text-center text-gray-900">
+                                    <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                                         Предварительная оценка
-                                    </h3>
+                                    </h2>
 
                                     <div className="space-y-4">
                                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">

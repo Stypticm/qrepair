@@ -62,9 +62,7 @@ export default function FormPage() {
         model: '',
         variant: null, // Изменяем на null чтобы не было предвыбора
         storage: '',
-        color: '',
-        country: '',
-        simType: ''
+        color: ''
     });
 
     // Загружаем данные при изменении фильтров
@@ -93,28 +91,9 @@ export default function FormPage() {
         }
     }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices.loadColors]);
 
-    useEffect(() => {
-        if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined && selectedOptions.storage && selectedOptions.color) {
-            devices.loadSimTypes({
-                model: selectedOptions.model,
-                variant: selectedOptions.variant || '',
-                storage: selectedOptions.storage,
-                color: selectedOptions.color
-            });
-        }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, devices.loadSimTypes]);
+    // Убрали загрузку типов SIM
 
-    useEffect(() => {
-        if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined && selectedOptions.storage && selectedOptions.color && selectedOptions.simType) {
-            devices.loadCountries({
-                model: selectedOptions.model,
-                variant: selectedOptions.variant || '',
-                storage: selectedOptions.storage,
-                color: selectedOptions.color,
-                simType: selectedOptions.simType
-            } as any);
-        }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.simType, devices.loadCountries]);
+    // Убрали загрузку стран
 
     // Состояние для отображения текущего выбора в центре
     const [currentSelection, setCurrentSelection] = useState<string>('');
@@ -127,7 +106,7 @@ export default function FormPage() {
 
     // Функция для проверки, все ли выбрано
     const checkIfAllSelected = useCallback((options: typeof selectedOptions) => {
-        return options.model && options.variant !== null && options.variant !== undefined && options.storage && options.color && options.simType && options.country;
+        return options.model && options.variant !== null && options.variant !== undefined && options.storage && options.color;
     }, []);
 
     // Функция для обновления текущего выбора
@@ -151,13 +130,7 @@ export default function FormPage() {
             selection += ` ${getColorLabel(options.color)}`;
         }
 
-        if (options.simType) {
-            selection += ` ${options.simType}`;
-        }
-
-        if (options.country) {
-            selection += ` ${options.country.split(' ')[0]}`;
-        }
+        // simType и country убраны
 
         setCurrentSelection(selection);
 
@@ -172,8 +145,7 @@ export default function FormPage() {
         if (!selectedOptions.variant) return 'variant';
         if (!selectedOptions.storage) return 'storage';
         if (!selectedOptions.color) return 'color';
-        if (!selectedOptions.simType) return 'simType';
-        if (!selectedOptions.country) return 'country';
+        
         return null; // все выбрано
     };
 
@@ -222,24 +194,13 @@ export default function FormPage() {
             newOptions.variant = null;
             newOptions.storage = '';
             newOptions.color = '';
-            newOptions.country = '';
-            newOptions.simType = '';
             devices.clearFilters();
         } else if (type === 'variant') {
             newOptions.storage = '';
             newOptions.color = '';
-            newOptions.country = '';
-            newOptions.simType = '';
         } else if (type === 'storage') {
             newOptions.color = '';
-            newOptions.country = '';
-            newOptions.simType = '';
-        } else if (type === 'color') {
-            newOptions.country = '';
-            newOptions.simType = '';
-        } else if (type === 'simType') {
-            newOptions.country = '';
-        }
+        } 
 
         setSelectedOptions(newOptions);
 
@@ -293,9 +254,7 @@ export default function FormPage() {
         const allSelected = selectedOptions.model !== '' &&
             selectedOptions.variant !== null && selectedOptions.variant !== undefined &&
             selectedOptions.storage !== '' &&
-            selectedOptions.color !== '' &&
-            selectedOptions.simType !== '' &&
-            selectedOptions.country !== '';
+            selectedOptions.color !== '';
 
         console.log('🔍 isAllOptionsSelected - selectedOptions:', selectedOptions);
         console.log('🔍 isAllOptionsSelected - allSelected:', allSelected);
@@ -316,9 +275,7 @@ export default function FormPage() {
                 model: selectedOptions.model,
                 variant: selectedOptions.variant || '',
                 storage: selectedOptions.storage,
-                color: selectedOptions.color,
-                country: selectedOptions.country,
-                simType: selectedOptions.simType
+                color: selectedOptions.color
             });
         }
     }, [selectedOptions, devices.loadDevice, isAllOptionsSelected]);
@@ -354,7 +311,7 @@ export default function FormPage() {
         if (devices.selectedDevice) {
             console.log('🔍 SelectedDevice useEffect - Processing selected device...');
             const device = devices.selectedDevice;
-            const fullName = `Apple iPhone ${device.model}${device.variant ? ` ${getVariantLabel(device.variant)}` : ''} ${device.storage} ${getColorLabel(device.color)} ${device.country.split(' ')[0]} ${device.simType}`;
+            const fullName = `Apple iPhone ${device.model}${device.variant ? ` ${getVariantLabel(device.variant)}` : ''} ${device.storage} ${getColorLabel(device.color)}`;
 
             setModel(fullName);
             setPrice(device.basePrice);
@@ -422,7 +379,7 @@ export default function FormPage() {
                     // Обновляем текущий выбор
                     updateCurrentSelection(parsed);
                     // Проверяем, есть ли уже выбранные элементы (режим редактирования)
-                    const hasSelectedItems = parsed.model || parsed.variant || parsed.storage || parsed.color || parsed.simType || parsed.country;
+                    const hasSelectedItems = parsed.model || parsed.variant || parsed.storage || parsed.color;
                     if (hasSelectedItems) {
                         setIsEditing(true);
                         // Проверяем, все ли выбрано
@@ -452,7 +409,7 @@ export default function FormPage() {
                             // Обновляем текущий выбор
                             updateCurrentSelection(parsed.data);
                             // Проверяем, есть ли уже выбранные элементы (режим редактирования)
-                            const hasSelectedItems = parsed.data.model || parsed.data.variant || parsed.data.storage || parsed.data.color || parsed.data.simType || parsed.data.country;
+                            const hasSelectedItems = parsed.data.model || parsed.data.variant || parsed.data.storage || parsed.data.color;
                             if (hasSelectedItems) {
                                 setIsEditing(true);
                             }
@@ -660,7 +617,7 @@ export default function FormPage() {
     return (
         <LazyMotion features={domAnimation}>
             <Page back={true}>
-                <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-hidden">
                     {/* Прогресс-бар */}
                     <div className="pt-10 pb-1">
                         <ProgressBar
@@ -839,7 +796,7 @@ export default function FormPage() {
                             )}
 
                             {/* Секция выбора типа SIM */}
-                            {selectedOptions.model && devices.simTypes.length > 0 && (
+                            {/* {selectedOptions.model && devices.simTypes.length > 0 && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -858,20 +815,14 @@ export default function FormPage() {
                                                         : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm'
                                                     }`}
                                             >
-                                                {selectedOptions.simType === simType && (
-                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                        <span className="text-white text-xs font-bold">✓</span>
-                                                    </div>
-                                                )}
-                                                {simType}
                                             </Button>
                                         ))}
                                     </div>
                                 </motion.div>
-                            )}
+                            )} */}
 
                             {/* Секция выбора страны производителя */}
-                            {selectedOptions.model && devices.countries.length > 0 && (
+                            {/* {selectedOptions.model && devices.countries.length > 0 && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -890,11 +841,7 @@ export default function FormPage() {
                                                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                                     }`}
                                             >
-                                                {selectedOptions.country === country && (
-                                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                        <span className="text-white text-xs font-bold">✓</span>
-                                                    </div>
-                                                )}
+                                            
                                                 <div className="flex items-center justify-center">
                                                     <span className="text-lg">{country.split(' ')[1]}</span>
                                                 </div>
@@ -902,7 +849,7 @@ export default function FormPage() {
                                         ))}
                                     </div>
                                 </motion.div>
-                            )}
+                            )} */}
 
                             {/* Диалоговое окно с итоговой информацией */}
                             <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>

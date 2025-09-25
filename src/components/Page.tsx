@@ -7,18 +7,14 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore } from '@/stores/authStore';
 
 export function Page({ children, back = true }: PropsWithChildren<{
-  /**
-   * True if it is allowed to go back from this page.
-   * @default true
-   */
   back?: boolean;
 }>) {
   const router = useRouter();
-  const { safeAreaInsets, cssVars } = useSafeArea();
+  const { safeAreaInsets, cssVars, isTelegram, isDesktop } = useSafeArea();
   const { goToPreviousStep, currentStep } = useAppStore();
   const canGoBack = currentStep !== null;
-  
-  // Отладочная информация
+
+  console.log('Page safeAreaInsets:', safeAreaInsets);
 
   useEffect(() => {
     try {
@@ -28,18 +24,15 @@ export function Page({ children, back = true }: PropsWithChildren<{
         backButton.hide();
       }
     } catch (error) {
-      // Игнорируем ошибки, если приложение не запущено в Telegram
+      console.log('Error managing back button:', error);
     }
   }, [back]);
 
   useEffect(() => {
     const handleBackClick = () => {
-      // Используем навигацию по шагам вместо router.back()
       if (canGoBack) {
         goToPreviousStep(router);
       } else {
-        // Если не можем идти назад по шагам, используем обычную навигацию
-        // Для страниц без навигации по шагам (например, "Мои устройства") всегда идем на главную
         router.push('/');
       }
     };
@@ -47,34 +40,34 @@ export function Page({ children, back = true }: PropsWithChildren<{
     try {
       backButton.onClick(handleBackClick);
     } catch (error) {
-      // Игнорируем ошибки, если приложение не запущено в Telegram
+      console.log('Error binding back button:', error);
     }
 
-    // Очистка подписки
     return () => {
       try {
         backButton.offClick(handleBackClick);
       } catch (error) {
-        // Игнорируем ошибки при очистке, если приложение не запущено в Telegram
+        console.log('Error unbinding back button:', error);
       }
     };
   }, [router, goToPreviousStep, canGoBack]);
 
   return (
     <section
-      className="w-full min-h-screen flex flex-col items-stretch justify-start bg-white text-black"
+      className="w-full h-dvh bg-white text-black"
       style={{
         ...cssVars as React.CSSProperties,
-        paddingTop: `${safeAreaInsets.top}px`,
-        paddingBottom: `${safeAreaInsets.bottom}px`,
-        paddingLeft: `${safeAreaInsets.left}px`,
-        paddingRight: `${safeAreaInsets.right}px`,
-        height: '90vh',
-        boxSizing: 'border-box'
+        paddingTop: isTelegram ? `${safeAreaInsets.top}px` : '0px',
+        paddingBottom: isTelegram ? `${safeAreaInsets.bottom}px` : '0px',
+        paddingLeft: isTelegram ? `${safeAreaInsets.left}px` : '0px',
+        paddingRight: isTelegram ? `${safeAreaInsets.right}px` : '0px',
+        boxSizing: 'border-box',
       }}
     >
-      <div className="w-full flex-1 flex justify-center">
-        <div className="w-full max-w-md md:w-[390px] md:h-[844px] md:overflow-y-auto md:rounded-3xl md:shadow-[0_10px_30px_rgba(0,0,0,0.10)] md:bg-white mx-auto">
+      <div className="w-full h-full flex justify-center items-start">
+        <div
+          className={`w-full max-w-md ${isDesktop && isTelegram ? 'md:w-[390px] h-[844px]' : 'h-full'} mx-auto bg-white ${isDesktop && isTelegram ? 'rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.10)]' : ''} px-4 box-border`}
+        >
           {children}
         </div>
       </div>

@@ -100,9 +100,9 @@ const DeliveryOptionsPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4 items-center text-center">
                         {/* Заголовок */}
                         <motion.div 
                             initial={{ opacity: 0, y: 20 }}
@@ -126,9 +126,9 @@ const DeliveryOptionsPage = () => {
                             className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
                         >
                             <div className="text-center space-y-2">
-                                <p className="text-sm text-gray-600">Ваше устройство:</p>
-                                <p className="font-semibold text-gray-900">{getFullModelName()}</p>
-                                <p className="text-base text-gray-600">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
+                                <p className="text-base text-gray-700">Ваше устройство:</p>
+                                <p className="text-xl font-semibold text-gray-900">{getFullModelName()}</p>
+                                <p className="text-lg text-gray-700">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
                             </div>
                         </motion.div>
 

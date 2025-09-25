@@ -574,9 +574,9 @@ export default function AdditionalConditionPage() {
     return (
         <Page back={true}>
             <ImagePreloader images={preloadImages} />
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
                 {/* Прогресс-бар */}
-                <div className="pt-10 pb-1">
+                <div className="pt-6 pb-2">
                     <ProgressBar
                         currentStep={getCurrentStep()}
                         totalSteps={5}
@@ -584,7 +584,7 @@ export default function AdditionalConditionPage() {
                     />
                 </div>
 
-                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
+                <div className="flex-1 p-3 pt-2 flex items-start justify-center">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
 
 

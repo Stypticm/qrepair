@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Download } from 'lucide-react';
@@ -9,18 +9,19 @@ import { QRCodeCanvas } from 'qrcode.react';
 interface QRCodeGeneratorProps {
   skupkaId: string;
   pointId: number;
+  showHeader?: boolean;
+  showId?: boolean;
+  showDownload?: boolean;
 }
 
-export function QRCodeGenerator({ skupkaId, pointId }: QRCodeGeneratorProps) {
-  const [showQR, setShowQR] = useState(false);
-  
-  const qrData = {
+export function QRCodeGenerator({ skupkaId, pointId, showHeader = true, showId = true, showDownload = true }: QRCodeGeneratorProps) {
+  const qrData = useMemo(() => ({
     skupkaId,
     pointId,
     timestamp: Date.now()
-  };
+  }), [skupkaId, pointId]);
 
-  const qrString = JSON.stringify(qrData);
+  const qrString = useMemo(() => JSON.stringify(qrData), [qrData]);
 
   const handleDownloadQR = () => {
     // Mock функция для скачивания QR-кода
@@ -35,37 +36,32 @@ export function QRCodeGenerator({ skupkaId, pointId }: QRCodeGeneratorProps) {
 
   return (
     <Card className="bg-white border border-gray-200 rounded-apple-lg shadow-sm">
-      <CardHeader className="flex items-center justify-center">
-        <CardTitle className="flex items-center gap-2 text-gray-900 font-sf-pro">
-          <QrCode className="w-5 h-5 text-teal-500" />
-          QR-код для заявки
-        </CardTitle>
-      </CardHeader>
+      {showHeader && (
+        <CardHeader className="flex items-center justify-center">
+          <CardTitle className="flex items-center gap-2 text-gray-900 font-sf-pro">
+            <QrCode className="w-5 h-5 text-teal-500" />
+            QR-код для заявки
+          </CardTitle>
+        </CardHeader>
+      )}
       <CardContent className="space-y-4">
         <div className="text-center">
-          <p className="text-sm text-gray-600 font-sf-pro mb-4">
-            ID заявки: #{skupkaId}
-          </p>
+          {showId && (
+            <p className="text-sm text-gray-600 font-sf-pro mb-4">
+              ID заявки: #{skupkaId}
+            </p>
+          )}
           
-          {!showQR ? (
-            <Button
-              onClick={() => setShowQR(true)}
-              className="bg-teal-500 hover:bg-teal-600 text-white rounded-apple font-sf-pro shadow-sm hover:shadow-md transition-all duration-200"
-            >
-              <QrCode className="w-4 h-4 mr-2" />
-              Сгенерировать QR-код
-            </Button>
-          ) : (
-            <div className="space-y-4">
-              <div className="w-48 h-48 mx-auto bg-white border border-gray-200 rounded-apple-lg flex items-center justify-center">
-                <QRCodeCanvas
-                  value={qrString}
-                  size={180}
-                  level="M"
-                  includeMargin={true}
-                />
-              </div>
-              
+          <div className="space-y-4">
+            <div className="w-48 h-48 mx-auto bg-white border border-gray-200 rounded-apple-lg flex items-center justify-center">
+              <QRCodeCanvas
+                value={qrString}
+                size={180}
+                level="M"
+                includeMargin={true}
+              />
+            </div>
+            {showDownload && (
               <div className="flex gap-2">
                 <Button
                   onClick={handleDownloadQR}
@@ -75,16 +71,9 @@ export function QRCodeGenerator({ skupkaId, pointId }: QRCodeGeneratorProps) {
                   <Download className="w-4 h-4 mr-2" />
                   Скачать
                 </Button>
-                <Button
-                  onClick={() => setShowQR(false)}
-                  variant="outline"
-                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-apple font-sf-pro"
-                >
-                  Скрыть
-                </Button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

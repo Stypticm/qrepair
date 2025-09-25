@@ -8,6 +8,7 @@ import { Page } from '@/components/Page';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
+import { QRCodeGenerator } from '@/components/QRCodeGenerator';
 
 const FinalPage = () => {
     const router = useRouter();
@@ -18,6 +19,7 @@ const FinalPage = () => {
     const [telegramIdConfirmed, setTelegramIdConfirmed] = useState(false);
     const [telegramUsername, setTelegramUsername] = useState('');
     const [showThankYou, setShowThankYou] = useState(false);
+    const [createdRequestId, setCreatedRequestId] = useState<string | null>(null);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -64,7 +66,7 @@ const FinalPage = () => {
                 // Проверяем sessionStorage как последний fallback
                 const savedUsername = sessionStorage.getItem('telegramUsername');
                 const savedTelegramId = sessionStorage.getItem('telegramId');
-                
+
                 if (savedUsername) {
                     setUserTelegramId(`@${savedUsername}`);
                     setTelegramUsername(savedUsername);
@@ -167,29 +169,10 @@ const FinalPage = () => {
                 const result = await response.json();
                 setTelegramIdConfirmed(true);
                 setShowThankYou(true);
-
-                // Переходим на главную страницу через 3 секунды
-                setTimeout(() => {
-                    router.push('/');
-
-                    // Очищаем данные
-                    setTimeout(() => {
-                        if (typeof window !== 'undefined') {
-                            // Очищаем все данные заявки
-                            sessionStorage.removeItem('phoneSelection');
-                            sessionStorage.removeItem('deviceConditions');
-                            sessionStorage.removeItem('additionalConditions');
-                            sessionStorage.removeItem('imei');
-                            sessionStorage.removeItem('serialNumber');
-                            sessionStorage.removeItem('deliveryData');
-                            sessionStorage.removeItem('deliveryOptionsData');
-                            sessionStorage.removeItem('pickupPointsData');
-                            sessionStorage.removeItem('courierBookingData');
-                            sessionStorage.setItem('requestSubmitted', 'true');
-                        }
-                        resetAllStates();
-                    }, 100);
-                }, 3000);
+                if (result?.requestId) {
+                    setCreatedRequestId(result.requestId);
+                }
+                // Больше не редиректим автоматически, даём показать QR
             } else {
                 console.error('❌ Final submit - ошибка API:', response.status, response.statusText);
                 const errorText = await response.text();
@@ -275,7 +258,7 @@ const FinalPage = () => {
     if (submitted) {
         return (
             <Page back={false}>
-                <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
+                <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-hidden">
                     <div className="flex-1 flex items-center justify-center p-6">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
@@ -300,11 +283,11 @@ const FinalPage = () => {
                             <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                                 Спасибо за использование нашего сервиса!
                             </h2>
-                            <p className="text-gray-600 mb-4">
-                                Ваша заявка успешно отправлена.
+                            <p className="text-gray-700 mb-4">
+                                ✅ Ваша заявка успешно отправлена.
                             </p>
-                            <p className="text-gray-600 mb-6">
-                                📞 Менеджер свяжется с вами для уточнения деталей и подтверждения времени.
+                            <p className="text-gray-700 mb-6">
+                                📞 Менеджер свяжется с вами для уточнения деталей и подтверждения времени. ⏳
                             </p>
                             <div className="flex items-center justify-center space-x-2 text-[#2dc2c6]">
                                 <div className="w-2 h-2 bg-[#2dc2c6] rounded-full animate-pulse"></div>
@@ -322,41 +305,30 @@ const FinalPage = () => {
     if (showThankYou) {
         return (
             <Page back={false}>
-                <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
-                    <div className="flex-1 flex items-center justify-center p-6">
+                <div className="w-full h-screen bg-white flex flex-col">
+                    <div className="flex-1 flex items-center justify-center p-4">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                            className="text-center max-w-md mx-auto"
+                            transition={{ duration: 0.4 }}
+                            className="text-center max-w-md mx-auto space-y-3"
                         >
-                            <motion.div
-                                initial={{ y: -20 }}
-                                animate={{ y: 0 }}
-                                transition={{ delay: 0.2, duration: 0.6 }}
-                                className="w-full mx-auto mb-6 flex items-center justify-center"
-                            >
-                                <Image
-                                    src={getPictureUrl('logo_bye.png') || '/logo_bye.png'}
-                                    alt="До свидания"
-                                    width={400}
-                                    height={200}
-                                    className="w-full h-auto object-contain rounded-2xl shadow-lg"
-                                />
-                            </motion.div>
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                                Спасибо за использование нашего сервиса!
-                            </h2>
-                            <p className="text-gray-600 mb-4">
-                                Ваша заявка успешно отправлена.
-                            </p>
-                            <p className="text-gray-600 mb-6">
-                                📞 Менеджер свяжется с вами для уточнения деталей и подтверждения времени.
-                            </p>
-                            <div className="flex items-center justify-center space-x-2 text-[#2dc2c6]">
-                                <div className="w-2 h-2 bg-[#2dc2c6] rounded-full animate-pulse"></div>
-                                <div className="w-2 h-2 bg-[#2dc2c6] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                                <div className="w-2 h-2 bg-[#2dc2c6] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                            <h2 className="text-2xl font-semibold text-gray-900">Заявка отправлена</h2>
+                            <p className="text-gray-600 text-sm">Покажите этот QR-код мастеру</p>
+                            {createdRequestId && (
+                                <div className="my-2">
+                                    <QRCodeGenerator skupkaId={createdRequestId} pointId={1} showDownload={false} showId={false} />
+                                </div>
+                            )}
+                            <p className="text-gray-700 text-base">📞 Менеджер свяжется с вами для уточнения деталей.</p>
+                            <div className="pt-2">
+                                <Button
+                                    onClick={() => router.push('/')}
+                                    variant="outline"
+                                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg py-4 rounded-2xl transition-all duration-200 hover:shadow-lg shadow-md disabled:opacity-50"
+                                >
+                                    На главную
+                                </Button>
                             </div>
                         </motion.div>
                     </div>
@@ -367,7 +339,7 @@ const FinalPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-hidden">
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
                     <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4">
                         {/* Заголовок */}

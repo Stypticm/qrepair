@@ -57,6 +57,21 @@
     flex-direction: column;
   }
 
+  /* Утилиты для управления скроллом */
+  .no-horizontal-scroll {
+    overflow-x: hidden !important;
+  }
+
+  .scrollbar-hidden {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+
   /* Стили для полноэкранного режима */
   .telegram-fullscreen {
     min-height: 100dvh !important;

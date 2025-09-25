@@ -53,7 +53,7 @@ const PickupPointsPage = () => {
                 console.log('🔍 Loading pickup points...');
                 const response = await fetch('/api/points');
                 console.log('🔍 Points API response status:', response.status);
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     console.log('🔍 Points API response data:', data);
@@ -105,6 +105,8 @@ const PickupPointsPage = () => {
         setSelectedPoint(pointId);
     };
 
+    // Автопереход убран: второй клик на уже выбранной карточке запускает переход
+
     const handleSubmit = async () => {
         if (!selectedPoint) return;
 
@@ -113,17 +115,17 @@ const PickupPointsPage = () => {
         setSubmitting(true);
         try {
             const selectedPointData = Array.isArray(pickupPoints) ? pickupPoints.find(p => p.id === selectedPoint) : null;
-            
+
             console.log('🔍 Pickup point selection:', {
                 selectedPoint,
                 selectedPointData,
                 pickupPoints: pickupPoints.length,
                 address: selectedPointData?.address
             });
-            
+
             // Используем fallback для браузера, если telegramId не установлен
             const effectiveTelegramId = telegramId || 'browser_test_user';
-            
+
             const requestData = {
                 telegramId: effectiveTelegramId,
                 modelname: getFullModelName(),
@@ -131,9 +133,9 @@ const PickupPointsPage = () => {
                 deliveryMethod: 'pickup',
                 pickupPoint: selectedPointData?.address,
             };
-            
+
             console.log('🔍 Request data for delivery:', requestData);
-            
+
             // Сохраняем выбор в БД
             const response = await fetch('/api/request/submit-delivery', {
                 method: 'POST',
@@ -145,14 +147,14 @@ const PickupPointsPage = () => {
 
             if (response.ok) {
                 const result = await response.json();
-                
+
                 // Сохраняем данные о доставке в sessionStorage
                 const deliveryData = {
                     deliveryMethod: 'pickup',
                     pickupPoint: selectedPointData?.address,
                 };
                 sessionStorage.setItem('deliveryData', JSON.stringify(deliveryData));
-                
+
                 // Переходим к финальной странице
                 router.push('/request/final');
             } else {
@@ -223,9 +225,9 @@ const PickupPointsPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-y-auto">
-                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
+                <div className="flex-1 p-4 pt-8 flex items-start justify-center min-h-0">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-6 min-h-0 h-full">
                         {/* Заголовок */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -233,9 +235,9 @@ const PickupPointsPage = () => {
                             transition={{ duration: 0.3 }}
                             className="text-center"
                         >
-                                                    <h2 className="text-3xl font-bold text-gray-900 mb-2 font-sf-pro">
-                            Наши точки приема
-                        </h2>
+                            <h2 className="text-3xl font-bold text-gray-900 mb-2 font-sf-pro">
+                                Наши точки приема
+                            </h2>
                             <p className="text-apple-body text-gray-600 font-sf-pro">
                                 Выберите удобную для вас точку или измените способ доставки
                             </p>
@@ -256,7 +258,7 @@ const PickupPointsPage = () => {
                         </motion.div>
 
                         {/* Точки самовывоза */}
-                        <div className="space-y-4">
+                        <div className="space-y-4 flex-1 overflow-auto min-h-0 h-full w-full p-4 pb-20">
                             {loading ? (
                                 <div className="flex justify-center items-center py-8">
                                     <Image
@@ -272,55 +274,56 @@ const PickupPointsPage = () => {
                                     Точки приема не найдены
                                 </div>
                             ) : (
-                                pickupPoints.map((point, index) => (
-                                    <div
-                                        key={point.id}
-                                        onClick={() => handlePointSelect(point.id)}
-                                        className={`p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer ${selectedPoint === point.id
+                                pickupPoints.map((point) => {
+                                    const isSelected = selectedPoint === point.id;
+                                    return (
+                                        <div
+                                            key={point.id}
+                                            className={`p-4 rounded-2xl border-2 transition-all duration-200 flex items-center justify-between ${isSelected
                                                 ? 'border-teal-500 bg-teal-50'
                                                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                                            }`}
-                                    >
-                                        <div className="space-y-3">
-                                            <div className="flex items-center space-x-3">
-                                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                                    <span className="text-lg">📍</span>
+                                                }`}
+                                        >
+                                            <button
+                                                type="button"
+                                                onClick={() => handlePointSelect(point.id)}
+                                                className="flex-1 text-left"
+                                            >
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center space-x-3">
+                                                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                                            <span className="text-lg">📍</span>
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h3 className="font-semibold text-gray-900 text-apple-title font-sf-pro">{point.name}</h3>
+                                                            <p className="text-apple-body text-gray-600 font-sf-pro">{point.address}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <div className="flex items-center space-x-2">
+                                                            <span className="text-sm">🕒</span>
+                                                            <span className="text-apple-body text-gray-600 font-sf-pro">Режим работы: {point.workingHours}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="flex-1">
-                                                    <h3 className="font-semibold text-gray-900 text-apple-title font-sf-pro">{point.name}</h3>
-                                                    <p className="text-apple-body text-gray-600 font-sf-pro">{point.address}</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <div className="flex items-center space-x-2">
-                                                    <span className="text-sm">🕒</span>
-                                                    <span className="text-apple-body text-gray-600 font-sf-pro">Режим работы: {point.workingHours}</span>
-                                                </div>
-                                            </div>
+                                            </button>
+                                            <div className="mx-3 self-stretch w-px bg-gray-200" aria-hidden />
+                                            <Button
+                                                type="button"
+                                                onClick={handleSubmit}
+                                                disabled={!isSelected || submitting || buttonsDisabled}
+                                                className={`flex items-center justify-center rounded-lg w-12 h-12 transition-colors ${isSelected ? 'bg-teal-500 text-white hover:bg-teal-600 animate-pulse' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                                                style={{ animationDuration: isSelected ? '0.8s' as any : undefined }}
+                                                aria-label="Далее"
+                                                title={isSelected ? 'Далее' : 'Сначала выберите адрес'}
+                                            >
+                                                ➔
+                                            </Button>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
-
-                        {/* Кнопка подтверждения */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="space-y-3 flex flex-col gap-2"
-                        >
-                            {selectedPoint && (
-                                <Button
-                                    onClick={handleSubmit}
-                                    disabled={submitting || buttonsDisabled}
-                                    className="w-full bg-teal-500 hover:bg-teal-600 text-white font-sf-pro text-apple-button py-4 rounded-apple-xl transition-all duration-200 hover:shadow-lg shadow-md disabled:opacity-50"
-                                >
-                                    {submitting ? 'Сохраняем...' : 'Выбрать эту точку'}
-                                </Button>
-                            )}
-                        </motion.div>
                     </div>
                 </div>
             </div>

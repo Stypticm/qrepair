@@ -1,12 +1,36 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import {
+  useState,
+  useEffect,
+  useCallback,
+  Dispatch,
+  SetStateAction,
+} from 'react'
 
 interface SafeAreaInsets {
   top: number
   right: number
   bottom: number
   left: number
+}
+
+interface SafeAreaState {
+  safeAreaInsets: SafeAreaInsets
+  isReady: boolean
+  isTelegram: boolean
+  theme: 'light' | 'dark'
+  isFullscreen: boolean
+  isMobile: boolean
+  isDesktop: boolean
+  cssVars: {
+    '--safe-area-top': string
+    '--safe-area-right': string
+    '--safe-area-bottom': string
+    '--safe-area-left': string
+  }
+  setIsMobile: Dispatch<SetStateAction<boolean>>
+  setIsDesktop: Dispatch<SetStateAction<boolean>>
 }
 
 export function useSafeArea() {
@@ -23,11 +47,11 @@ export function useSafeArea() {
     'light'
   )
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
-  // Функция для принудительного полноэкранного режима
   const forceFullscreen = useCallback(() => {
-    // Проверяем, что мы в Telegram WebApp
     if (
       typeof window === 'undefined' ||
       !window.Telegram?.WebApp
@@ -40,34 +64,23 @@ export function useSafeArea() {
     const isMobilePlatform =
       platform === 'android' || platform === 'ios'
 
-    // На десктопе/вебе не запрашиваем fullscreen
     if (!isMobilePlatform) {
       return
     }
 
-    // Проверяем версию Telegram и контекст
     const supportsFullscreen =
       webApp.isVersionAtLeast?.('8.0') || false
-    const startParam = webApp.initDataUnsafe?.start_param
-    const urlParams = new URLSearchParams(
-      window.location.search
-    )
-    const isFullscreenMode =
-      urlParams.get('mode') === 'fullscreen'
-
-    // Вызываем requestFullscreen и expand
     if (
       supportsFullscreen &&
       'requestFullscreen' in webApp &&
       typeof webApp.requestFullscreen === 'function'
     ) {
       webApp.requestFullscreen()
-      webApp.expand() // Резервный вызов
+      webApp.expand()
     } else {
       webApp.expand()
     }
 
-    // Многократные повторные попытки
     const retryFullscreen = (
       attempt = 1,
       maxAttempts = 3
@@ -91,7 +104,7 @@ export function useSafeArea() {
           }
           retryFullscreen(attempt + 1, maxAttempts)
         }
-      }, attempt * 100) // Увеличиваем задержку для каждой попытки
+      }, attempt * 100)
     }
 
     retryFullscreen()
@@ -104,10 +117,22 @@ export function useSafeArea() {
   useEffect(() => {
     if (!isMounted) return
 
-    // Проверяем, что мы в браузере
     if (typeof window === 'undefined') return
 
-    // Проверяем, действительно ли мы в Telegram WebApp
+    // Device detection
+    const userAgent = navigator.userAgent
+    const mobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        userAgent
+      )
+    const desktop =
+      !mobile &&
+      (userAgent.includes('Windows') ||
+        userAgent.includes('Mac') ||
+        userAgent.includes('Linux'))
+    setIsMobile(mobile)
+    setIsDesktop(desktop)
+
     const isInTelegram = !!(
       window.Telegram?.WebApp ||
       window.location.href.includes('tgWebAppPlatform') ||
@@ -119,21 +144,9 @@ export function useSafeArea() {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
-      // Добавляем CSS-класс немедленно
-      document.documentElement.classList.add(
-        'telegram-fullscreen'
-      )
-
       const setup = async () => {
         try {
-          // Уведомляем Telegram о готовности
           webApp.ready()
-
-          // Проверяем контекст
-          const startParam =
-            webApp.initDataUnsafe?.start_param
-
-          // Немедленно запрашиваем fullscreen только на мобильных
           const platform = webApp.platform
           const isMobilePlatform =
             platform === 'android' || platform === 'ios'
@@ -151,17 +164,14 @@ export function useSafeArea() {
             }
           }
 
-          // Устанавливаем цвета
           webApp.headerColor = '#2dc2c6'
           webApp.backgroundColor = '#ffffff'
 
-          // Настраиваем цвета кнопок для лучшей видимости
           if (webApp.MainButton) {
             webApp.MainButton.color = '#2dc2c6'
             webApp.MainButton.textColor = '#ffffff'
           }
 
-          // Настраиваем цвета BackButton через themeParams
           if (webApp.themeParams) {
             webApp.themeParams.button_color = '#2dc2c6'
             webApp.themeParams.button_text_color = '#ffffff'
@@ -169,12 +179,10 @@ export function useSafeArea() {
             webApp.themeParams.text_color = '#000000'
           }
 
-          // Получаем тему
           if (webApp.colorScheme) {
             setTheme(webApp.colorScheme)
           }
 
-          // Проверяем статус fullscreen
           if (
             'isFullscreen' in webApp &&
             webApp.isFullscreen !== undefined
@@ -184,7 +192,6 @@ export function useSafeArea() {
             setIsFullscreen(webApp.isExpanded)
           }
 
-          // Обновление safe area
           const updateSafeArea = () => {
             let newInsets = {
               top: 0,
@@ -193,9 +200,22 @@ export function useSafeArea() {
               left: 0,
             }
             if (webApp.safeAreaInsets) {
-              newInsets = webApp.safeAreaInsets
+              newInsets = {
+                top: Math.min(
+                  webApp.safeAreaInsets.top,
+                  44
+                ),
+                right: webApp.safeAreaInsets.right,
+                bottom: webApp.safeAreaInsets.bottom,
+                left: webApp.safeAreaInsets.left,
+              }
             } else if (webApp.safeArea) {
-              newInsets = webApp.safeArea
+              newInsets = {
+                top: Math.min(webApp.safeArea.top, 44),
+                right: webApp.safeArea.right,
+                bottom: webApp.safeArea.bottom,
+                left: webApp.safeArea.left,
+              }
             }
             setSafeAreaInsets(newInsets)
           }
@@ -207,24 +227,21 @@ export function useSafeArea() {
             'Error initializing Telegram WebApp:',
             error
           )
-          setIsReady(true) // Fallback
+          setIsReady(true)
         }
       }
 
       setup()
 
-      // Обработчик изменений viewport
       if (webApp.onViewportChanged) {
         webApp.onViewportChanged((event) => {
           setIsFullscreen(event.is_expanded || false)
-
           if (!event.is_expanded) {
             forceFullscreen()
           }
         })
       }
 
-      // Обработчик событий fullscreen
       if (webApp.onEvent) {
         const fullscreenChangedHandler = (event: {
           isFullscreen: boolean
@@ -237,7 +254,13 @@ export function useSafeArea() {
 
         const fullscreenFailedHandler = (error: any) => {
           console.error('Fullscreen request failed:', error)
-          webApp.expand() // Fallback
+          webApp.expand()
+        }
+
+        const themeChangedHandler = () => {
+          if (webApp.colorScheme) {
+            setTheme(webApp.colorScheme)
+          }
         }
 
         webApp.onEvent(
@@ -248,17 +271,8 @@ export function useSafeArea() {
           'fullscreenFailed',
           fullscreenFailedHandler
         )
-
-        // Обработчик темы
-        const themeChangedHandler = () => {
-          if (webApp.colorScheme) {
-            setTheme(webApp.colorScheme)
-          }
-        }
-
         webApp.onEvent('theme_changed', themeChangedHandler)
 
-        // Очистка
         return () => {
           if (webApp.offViewportChanged) {
             webApp.offViewportChanged(() => {})
@@ -277,9 +291,6 @@ export function useSafeArea() {
               themeChangedHandler
             )
           }
-          document.documentElement.classList.remove(
-            'telegram-fullscreen'
-          )
         }
       }
     } else {
@@ -287,6 +298,25 @@ export function useSafeArea() {
       setIsReady(true)
     }
   }, [isMounted, forceFullscreen])
+
+  const getState = () => ({
+    safeAreaInsets,
+    isReady,
+    isTelegram,
+    theme,
+    isFullscreen,
+    isMobile,
+    isDesktop,
+    forceFullscreen,
+    cssVars: {
+      '--safe-area-top': `${safeAreaInsets.top}px`,
+      '--safe-area-right': `${safeAreaInsets.right}px`,
+      '--safe-area-bottom': `${safeAreaInsets.bottom}px`,
+      '--safe-area-left': `${safeAreaInsets.left}px`,
+    },
+    setIsMobile,
+    setIsDesktop,
+  })
 
   if (!isMounted) {
     return {
@@ -298,8 +328,10 @@ export function useSafeArea() {
       },
       isReady: false,
       isTelegram: false,
-      theme: 'light',
+      theme: 'light' as const,
       isFullscreen: false,
+      isMobile: false,
+      isDesktop: false,
       forceFullscreen,
       cssVars: {
         '--safe-area-top': '0px',
@@ -307,6 +339,9 @@ export function useSafeArea() {
         '--safe-area-bottom': '0px',
         '--safe-area-left': '0px',
       },
+      getState,
+      setIsMobile,
+      setIsDesktop,
     }
   }
 
@@ -316,6 +351,8 @@ export function useSafeArea() {
     isTelegram,
     theme,
     isFullscreen,
+    isMobile,
+    isDesktop,
     forceFullscreen,
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,
@@ -323,5 +360,8 @@ export function useSafeArea() {
       '--safe-area-bottom': `${safeAreaInsets.bottom}px`,
       '--safe-area-left': `${safeAreaInsets.left}px`,
     },
+    getState,
+    setIsMobile,
+    setIsDesktop,
   }
 }

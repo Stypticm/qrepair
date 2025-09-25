@@ -38,9 +38,12 @@ export async function POST(request: NextRequest) {
 
     // Получаем информацию о точке из базы данных
     let pickupPointAddress = 'Адрес не указан'
-    
-    console.log('🔍 Submit-final - deliveryData received:', deliveryData);
-    
+
+    console.log(
+      '🔍 Submit-final - deliveryData received:',
+      deliveryData
+    )
+
     if (deliveryData?.pickupPoint) {
       // Если адрес передан в deliveryData, используем его
       pickupPointAddress = deliveryData.pickupPoint
@@ -87,7 +90,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    let skupkaId = null
+    let skupkaId: string | null = null
     if (updatedSkupka.count === 0) {
       // Если запись не найдена, создаем новую
       const newSkupka = await prisma.skupka.create({
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
           updatedAt: 'desc',
         },
       })
-      skupkaId = updatedRecord?.id
+      skupkaId = updatedRecord?.id || null
     }
 
     // Формируем сообщение для Telegram
@@ -309,6 +312,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: telegramMessage,
+      requestId: skupkaId,
     })
   } catch (error) {
     console.error(
