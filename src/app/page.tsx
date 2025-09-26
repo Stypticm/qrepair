@@ -2,11 +2,10 @@
 
 export const dynamic = 'force-dynamic';
 
-import { Link } from '@/components/Link/Link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { getPictureUrl } from '@/core/lib/assets';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
@@ -204,79 +203,80 @@ function HomeContent() {
 
   return (
     <AdaptiveContainer>
-      <div className="w-full max-w-[480px] mx-auto h-full overflow-y-auto flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-8 box-border">        <div className=" w-full max-w-md mx-auto text-center space-y-4">
-      <motion.div
-        initial={{ x: -300, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 70, damping: 12, duration: 2.2 }}
-        className="w-full"
-      >
-        <Image
-          src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
-          alt="Логотип"
-          width={400}
-          height={150}
-          className="w-full max-w-md h-auto object-contain mx-auto rounded-2xl shadow-lg"
-          priority
-        />
-      </motion.div>
-
-      <div className="flex flex-col gap-4 w-full">
-        <Button
-          variant="outline"
-          className="w-full h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
-          onClick={handleStartForm}
-        >
-          Оценить смартфон
-        </Button>
-        <MarketplaceFeed />
-        {!isLoading && !isInTelegram && (
-          <Button
-            variant="outline"
-            className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
-            onClick={() => {
-              const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
-              setTestAdminIndex(nextIndex);
-            }}
+      <div className="w-full max-w-[480px] mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-8 box-border">
+        <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-16">
+          <motion.div
+            initial={{ x: -300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 70, damping: 12, duration: 2.2 }}
+            className="w-full"
           >
-            Переключить ID админа: {testAdminIds[testAdminIndex]}
-          </Button>
-        )}
-      </div>
+            <Image
+              src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
+              alt="Логотип"
+              width={400}
+              height={150}
+              className="w-full max-w-md h-auto object-contain mx-auto rounded-2xl shadow-lg"
+              priority
+            />
+          </motion.div>
 
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
-        <ExpandButton className="w-full" />
-      </div>
-
-      {!isLoading && isMaster(userId) && (
-        <button
-          onClick={() => router.push('/internal')}
-          className="fixed bottom-5 right-5 w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center active:scale-95 transition"
-          aria-label="Открыть админ панель"
-        >
-          ⚙️
-        </button>
-      )}
-
-      <div className="fixed top-8 right-5 z-50">
-        <Menubar>
-          <MenubarTrigger
-            aria-label="Открыть меню"
-            className="w-12 h-12 rounded-full bg-gray-900/80 text-white shadow-md flex items-center justify-center active:scale-95 transition"
-          >
-            ☰
-          </MenubarTrigger>
-          <MenubarContent className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-            <MenubarItem
-              className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-              onSelect={() => router.push('/my-devices')}
+          <div className="flex flex-col gap-4 w-full">
+            <Button
+              variant="outline"
+              className="w-full h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+              onClick={handleStartForm}
             >
-              Мои устройства
-            </MenubarItem>
-          </MenubarContent>
-        </Menubar>
-      </div>
-    </div>
+              Оценить смартфон
+            </Button>
+            <MarketplaceFeed />
+            {!isLoading && !isInTelegram && (
+              <Button
+                variant="outline"
+                className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
+                onClick={() => {
+                  const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
+                  setTestAdminIndex(nextIndex);
+                }}
+              >
+                Переключить ID админа: {testAdminIds[testAdminIndex]}
+              </Button>
+            )}
+          </div>
+
+          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
+            <ExpandButton className="w-full" />
+          </div>
+
+          {!isLoading && isMaster(userId) && (
+            <button
+              onClick={() => router.push('/internal')}
+              className="fixed bottom-5 right-5 w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center active:scale-95 transition"
+              aria-label="Открыть админ панель"
+            >
+              ⚙️
+            </button>
+          )}
+
+          <div className="fixed top-22 right-5 z-50">
+            <Menubar>
+              <MenubarTrigger
+                aria-label="Открыть меню"
+                className="w-12 h-12 rounded-full bg-gray-900/80 text-white shadow-md flex items-center justify-center active:scale-95 transition"
+              >
+                ☰
+              </MenubarTrigger>
+              <MenubarContent className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+                <MenubarItem
+                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                  onSelect={() => router.push('/my-devices')}
+                >
+                  Мои устройства
+                </MenubarItem>
+              </MenubarContent>
+            </Menubar>
+          </div>
+        </div>
       </div >
     </AdaptiveContainer >
   );
@@ -290,29 +290,57 @@ function MarketplaceFeed() {
   const [visibleCount, setVisibleCount] = useState(6);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const router = useRouter();
+  const observer = useRef<IntersectionObserver | null>(null);
 
-  const items = Array.from({ length: 12 }).map((_, i) => ({
+  const items = useMemo(() => Array.from({ length: 24 }).map((_, i) => ({
     id: i + 1,
     title: `iPhone ${i + 8}`,
     price: `${(49990 + i * 1000).toLocaleString('ru-RU')} ₽`,
     image: '/logo3.png',
     isNew: i % 4 === 0,
     hasDiscount: i % 3 === 0,
-  }));
+  })), []);
+
+  const loadMoreItems = useCallback(() => {
+    if (isLoadingMore || visibleCount >= items.length) return;
+
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount((prevCount) => Math.min(prevCount + 6, items.length));
+      setIsLoadingMore(false);
+    }, 500);
+  }, [isLoadingMore, visibleCount, items.length]);
+
+  const lastItemRef = useCallback((node: HTMLDivElement) => {
+    if (isLoadingMore) return;
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && visibleCount < items.length) {
+        loadMoreItems();
+      }
+    });
+
+    if (node) observer.current.observe(node);
+  }, [isLoadingMore, loadMoreItems, visibleCount, items.length]);
 
   const visibleItems = items.slice(0, visibleCount);
 
   return (
-    <div className="w-full flex-1 overflow-y-auto h-full">
+    <div className="w-full">
       <div className="grid grid-cols-2 gap-2">
-        {visibleItems.map((item) => (
-          <div
+        {visibleItems.map((item, index) => (
+          <motion.div
             key={item.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: (index % 6) * 0.05 }}
             className="bg-white rounded-2xl border border-gray-200
             shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_20px_rgba(0,0,0,0.06)] transition hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_10px_24px_rgba(0,0,0,0.10)]"
             role="button"
             tabIndex={0}
             onClick={() => router.push(`/market/${item.id}`)}
+            ref={index === visibleItems.length - 1 ? lastItemRef : null}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
@@ -326,7 +354,10 @@ function MarketplaceFeed() {
                 alt={item.title}
                 width={160}
                 height={80}
+                placeholder="blur"
+                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN8/wcAAgAB/epv2AAAAABJRU5ErkJggg=="
                 className="object-contain w-full h-full p-3"
+                priority={index < 6}
               />
             </div>
             <div className="p-2 text-left">
@@ -345,31 +376,16 @@ function MarketplaceFeed() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-      {visibleCount < items.length && (
-        <Button
-          variant="outline"
-          disabled={isLoadingMore}
-          className="mt-3 w-full h-10 bg-white hover:bg-gray-50 text-gray-800 font-medium text-sm rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-          onClick={() => {
-            setIsLoadingMore(true);
-            setTimeout(() => {
-              setVisibleCount((c) => Math.min(c + 6, items.length));
-              setIsLoadingMore(false);
-            }, 500);
-          }}
-        >
-          {isLoadingMore ? (
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-block w-4 h-4 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
-              Загрузка...
-            </span>
-          ) : (
-            'Показать ещё'
-          )}
-        </Button>
+      {isLoadingMore && (
+        <div className="flex justify-center items-center p-4">
+          <span className="inline-flex items-center gap-2 text-gray-500">
+            <span className="inline-block w-4 h-4 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
+            Загрузка...
+          </span>
+        </div>
       )}
     </div>
   );
