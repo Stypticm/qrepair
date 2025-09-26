@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import { Page } from '@/components/Page'
 
@@ -44,6 +44,47 @@ export default function AdminRequestsPage() {
 
   const { telegramId } = useAppStore()
 
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true)
+
+      // Получаем все заявки
+      const requestsResponse = await fetch(`/api/admin/requests?adminTelegramId=${telegramId}`)
+      const requestsData = await requestsResponse.json()
+
+      if (!requestsResponse.ok) {
+        throw new Error(requestsData.error || 'Failed to fetch requests')
+      }
+
+      setRequests(requestsData.requests)
+
+      // Получаем всех мастеров
+      const mastersResponse = await fetch(`/api/admin/masters?adminTelegramId=${telegramId}`)
+      const mastersData = await mastersResponse.json()
+
+      if (!mastersResponse.ok) {
+        throw new Error(mastersData.error || 'Failed to fetch masters')
+      }
+
+      setMasters(mastersData.masters)
+
+      // Получаем все точки
+      const pointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`)
+      const pointsData = await pointsResponse.json()
+
+      if (!pointsResponse.ok) {
+        throw new Error(pointsData.error || 'Failed to fetch points')
+      }
+
+      setPoints(pointsData.points)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+      setError(error instanceof Error ? error.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }, [telegramId])
+
   // Проверяем права доступа
   useEffect(() => {
     console.log('Admin requests page - telegramId:', telegramId);
@@ -84,49 +125,7 @@ export default function AdminRequestsPage() {
     }, 5000); // Увеличиваем до 5 секунд
     
     return () => clearTimeout(timer);
-  }, [telegramId]);
-
-
-  const fetchData = async () => {
-    try {
-      setLoading(true)
-
-      // Получаем все заявки
-      const requestsResponse = await fetch(`/api/admin/requests?adminTelegramId=${telegramId}`)
-      const requestsData = await requestsResponse.json()
-
-      if (!requestsResponse.ok) {
-        throw new Error(requestsData.error || 'Failed to fetch requests')
-      }
-
-      setRequests(requestsData.requests)
-
-      // Получаем всех мастеров
-      const mastersResponse = await fetch(`/api/admin/masters?adminTelegramId=${telegramId}`)
-      const mastersData = await mastersResponse.json()
-
-      if (!mastersResponse.ok) {
-        throw new Error(mastersData.error || 'Failed to fetch masters')
-      }
-
-      setMasters(mastersData.masters)
-
-      // Получаем все точки
-      const pointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`)
-      const pointsData = await pointsResponse.json()
-
-      if (!pointsResponse.ok) {
-        throw new Error(pointsData.error || 'Failed to fetch points')
-      }
-
-      setPoints(pointsData.points)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      setError(error instanceof Error ? error.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [telegramId, fetchData]);
 
   const handlePointSelect = (requestId: string, pointId: number) => {
     setSelectedPoints(prev => ({

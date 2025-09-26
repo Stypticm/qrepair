@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Page } from '@/components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
+import {
+  ArrowUpRight,
+  ArrowDownRight,
   RefreshCw
 } from 'lucide-react'
 
@@ -55,35 +55,18 @@ export default function MarketPricesPage() {
   const [selectedModel, setSelectedModel] = useState<string>('all')
   const [availableModels, setAvailableModels] = useState<string[]>([])
 
-  useEffect(() => {
-    fetchPrices()
-    fetchModels()
-  }, [])
-
-  const fetchModels = async () => {
-    try {
-      const response = await fetch('/api/devices/models')
-      const data = await response.json()
-      if (data.success) {
-        setAvailableModels(data.models)
-      }
-    } catch (error) {
-      console.error('Error fetching models:', error)
-    }
-  }
-
-  const fetchPrices = async () => {
+  const fetchPrices = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
-      
-      const url = selectedModel === 'all' 
+
+      const url = selectedModel === 'all'
         ? '/api/admin/market-prices'
         : `/api/admin/market-prices?model=${selectedModel}`
-      
+
       const response = await fetch(url)
       const data = await response.json()
-      
+
       if (data.success) {
         setPrices(data.data)
       } else {
@@ -95,7 +78,24 @@ export default function MarketPricesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedModel])
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await fetch('/api/devices/models')
+        const data = await response.json()
+        if (data.success) {
+          setAvailableModels(data.models)
+        }
+      } catch (error) {
+        console.error('Error fetching models:', error)
+      }
+    }
+
+    fetchPrices()
+    fetchModels()
+  }, [selectedModel, fetchPrices])
 
   const getPriceDifference = (ourPrice: number, marketPrice: number) => {
     const difference = ((marketPrice - ourPrice) / ourPrice) * 100
@@ -108,7 +108,7 @@ export default function MarketPricesPage() {
 
   const getStatusColor = (ourPrice: number, marketPrice: number) => {
     const diff = getPriceDifference(ourPrice, marketPrice)
-    
+
     if (diff.percentage > 20) return 'text-red-600 bg-red-50'
     if (diff.percentage < -20) return 'text-green-600 bg-green-50'
     return 'text-yellow-600 bg-yellow-50'
@@ -116,7 +116,7 @@ export default function MarketPricesPage() {
 
   const getStatusText = (ourPrice: number, marketPrice: number) => {
     const diff = getPriceDifference(ourPrice, marketPrice)
-    
+
     if (diff.percentage > 20) return 'Дорого'
     if (diff.percentage < -20) return 'Дешево'
     return 'Нормально'
@@ -180,11 +180,10 @@ export default function MarketPricesPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedModel('all')}
-                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                    selectedModel === 'all'
+                  className={`px-3 py-1 text-xs rounded-full border transition-colors ${selectedModel === 'all'
                       ? 'bg-blue-500 text-white border-blue-500'
                       : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                  }`}
+                    }`}
                 >
                   Все модели ({prices.length})
                 </button>
@@ -194,11 +193,10 @@ export default function MarketPricesPage() {
                     <button
                       key={model}
                       onClick={() => setSelectedModel(model)}
-                      className={`px-3 py-1 text-xs rounded-full border transition-colors ${
-                        selectedModel === model
+                      className={`px-3 py-1 text-xs rounded-full border transition-colors ${selectedModel === model
                           ? 'bg-blue-500 text-white border-blue-500'
                           : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       iPhone {model} ({modelCount})
                     </button>
@@ -228,126 +226,125 @@ export default function MarketPricesPage() {
               </CardContent>
             </Card>
           ) : (
-             <div className="space-y-6">
-               {prices.map((group, index) => (
-                 <div key={index}>
-                   <Card className="border-2 border-gray-600">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">
-                          iPhone {group.device.model} {group.device.variant} {group.device.storage} {group.device.color}
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          {group.prices.length} цен
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="text-xs">
-                          {group.sources.join(', ')}
-                        </Badge>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    {/* Summary */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="text-center">
-                        <p className="text-xs text-gray-600">Наша цена</p>
-                        <p className="text-lg font-bold text-gray-900">
-                          {group.device.basePrice.toLocaleString()} ₽
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-600">Средняя рыночная</p>
-                        <p className="text-lg font-bold text-gray-900">
-                          {group.averagePrice.toLocaleString()} ₽
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-600">Диапазон</p>
-                        <p className="text-sm font-medium text-gray-900">
-                          {group.minPrice.toLocaleString()} - {group.maxPrice.toLocaleString()} ₽
-                        </p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-gray-600">Статус</p>
-                        <Badge className={`text-xs ${getStatusColor(group.device.basePrice, group.averagePrice)}`}>
-                          {getStatusText(group.device.basePrice, group.averagePrice)}
-                        </Badge>
-                      </div>
-                    </div>
+            <div className="space-y-6">
+              {prices.map((group, index) => (
+                <div key={index}>
+                  <Card className="border-2 border-gray-600">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">
+                            iPhone {group.device.model} {group.device.variant} {group.device.storage} {group.device.color}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {group.prices.length} цен
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="text-xs">
+                            {group.sources.join(', ')}
+                          </Badge>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
 
-                     {/* Individual Prices - Compact Table */}
-                     <div className="overflow-x-auto">
-                       <table className="w-full text-sm">
-                         <thead>
-                           <tr className="border-b border-gray-300">
-                             <th className="text-left py-2 px-3 font-medium text-gray-700">Источник</th>
-                             <th className="text-left py-2 px-3 font-medium text-gray-700">Цена</th>
-                             <th className="text-left py-2 px-3 font-medium text-gray-700">Разница</th>
-                             <th className="text-left py-2 px-3 font-medium text-gray-700">Местоположение</th>
-                             <th className="text-left py-2 px-3 font-medium text-gray-700">Состояние</th>
-                             <th className="text-left py-2 px-3 font-medium text-gray-700">Продавец</th>
-                             <th className="text-left py-2 px-3 font-medium text-gray-700">Дата</th>
-                           </tr>
-                         </thead>
-                         <tbody>
-                           {group.prices.map((price, priceIndex) => {
-                             const diff = getPriceDifference(group.device.basePrice, price.price)
-                             return (
-                               <tr key={priceIndex} className="border-b border-gray-200 hover:bg-gray-50">
-                                 <td className="py-2 px-3">
-                                   <Badge variant="outline" className="text-xs">
-                                     {price.source}
-                                   </Badge>
-                                 </td>
-                                 <td className="py-2 px-3 font-medium text-gray-900">
-                                   {price.price.toLocaleString()} ₽
-                                 </td>
-                                 <td className="py-2 px-3">
-                                   <div className="flex items-center gap-1">
-                                     {diff.isHigher ? (
-                                       <ArrowUpRight className="h-3 w-3 text-red-500" />
-                                     ) : diff.isLower ? (
-                                       <ArrowDownRight className="h-3 w-3 text-green-500" />
-                                     ) : null}
-                                     <span className={`text-xs px-2 py-1 rounded ${
-                                       diff.isHigher ? 'bg-red-100 text-red-700' : 
-                                       diff.isLower ? 'bg-green-100 text-green-700' : 
-                                       'bg-yellow-100 text-yellow-700'
-                                     }`}>
-                                       {diff.percentage > 0 ? '+' : ''}{diff.percentage}%
-                                     </span>
-                                   </div>
-                                 </td>
-                                 <td className="py-2 px-3 text-gray-600">
-                                   {price.location || '-'}
-                                 </td>
-                                 <td className="py-2 px-3 text-gray-600">
-                                   {price.condition || '-'}
-                                 </td>
-                                 <td className="py-2 px-3 text-gray-600">
-                                   {price.sellerType || '-'}
-                                 </td>
-                                 <td className="py-2 px-3 text-gray-500 text-xs">
-                                   {formatDate(price.parsedAt)}
-                                 </td>
-                               </tr>
-                             )
-                           })}
-                         </tbody>
-                       </table>
-                     </div>
-                   </CardContent>
-                 </Card>
-                 {index < prices.length - 1 && (
-                   <div className="h-4 border-b-2 border-gray-300 mx-4"></div>
-                 )}
-                 </div>
-               ))}
-             </div>
+                    <CardContent>
+                      {/* Summary */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-600">Наша цена</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            {group.device.basePrice.toLocaleString()} ₽
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-600">Средняя рыночная</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            {group.averagePrice.toLocaleString()} ₽
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-600">Диапазон</p>
+                          <p className="text-sm font-medium text-gray-900">
+                            {group.minPrice.toLocaleString()} - {group.maxPrice.toLocaleString()} ₽
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-gray-600">Статус</p>
+                          <Badge className={`text-xs ${getStatusColor(group.device.basePrice, group.averagePrice)}`}>
+                            {getStatusText(group.device.basePrice, group.averagePrice)}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Individual Prices - Compact Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-300">
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Источник</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Цена</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Разница</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Местоположение</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Состояние</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Продавец</th>
+                              <th className="text-left py-2 px-3 font-medium text-gray-700">Дата</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {group.prices.map((price, priceIndex) => {
+                              const diff = getPriceDifference(group.device.basePrice, price.price)
+                              return (
+                                <tr key={priceIndex} className="border-b border-gray-200 hover:bg-gray-50">
+                                  <td className="py-2 px-3">
+                                    <Badge variant="outline" className="text-xs">
+                                      {price.source}
+                                    </Badge>
+                                  </td>
+                                  <td className="py-2 px-3 font-medium text-gray-900">
+                                    {price.price.toLocaleString()} ₽
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <div className="flex items-center gap-1">
+                                      {diff.isHigher ? (
+                                        <ArrowUpRight className="h-3 w-3 text-red-500" />
+                                      ) : diff.isLower ? (
+                                        <ArrowDownRight className="h-3 w-3 text-green-500" />
+                                      ) : null}
+                                      <span className={`text-xs px-2 py-1 rounded ${diff.isHigher ? 'bg-red-100 text-red-700' :
+                                          diff.isLower ? 'bg-green-100 text-green-700' :
+                                            'bg-yellow-100 text-yellow-700'
+                                        }`}>
+                                        {diff.percentage > 0 ? '+' : ''}{diff.percentage}%
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="py-2 px-3 text-gray-600">
+                                    {price.location || '-'}
+                                  </td>
+                                  <td className="py-2 px-3 text-gray-600">
+                                    {price.condition || '-'}
+                                  </td>
+                                  <td className="py-2 px-3 text-gray-600">
+                                    {price.sellerType || '-'}
+                                  </td>
+                                  <td className="py-2 px-3 text-gray-500 text-xs">
+                                    {formatDate(price.parsedAt)}
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  {index < prices.length - 1 && (
+                    <div className="h-4 border-b-2 border-gray-300 mx-4"></div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

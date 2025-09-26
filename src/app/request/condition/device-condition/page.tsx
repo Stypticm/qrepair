@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useDevices, Device } from '@/hooks/useDevices';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ export default function DeviceConditionPage() {
         if (selectedOptions.model) {
             devices.loadVariants(selectedOptions.model);
         }
-    }, [selectedOptions.model, devices.loadVariants]);
+    }, [selectedOptions.model, devices]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant) {
@@ -38,7 +38,7 @@ export default function DeviceConditionPage() {
                 variant: selectedOptions.variant
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, devices.loadStorages]);
+    }, [selectedOptions.model, selectedOptions.variant, devices]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant && selectedOptions.storage) {
@@ -48,7 +48,7 @@ export default function DeviceConditionPage() {
                 storage: selectedOptions.storage
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices.loadColors]);
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant && selectedOptions.storage && selectedOptions.color) {
@@ -59,7 +59,7 @@ export default function DeviceConditionPage() {
                 color: selectedOptions.color
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, devices.loadCountries]);
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, devices]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant && selectedOptions.storage && selectedOptions.color && selectedOptions.country) {
@@ -71,7 +71,12 @@ export default function DeviceConditionPage() {
                 country: selectedOptions.country
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.country, devices.loadSimTypes]);
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.country, devices]);
+
+    // Проверяем, все ли опции выбраны
+    const isAllOptionsSelected = useCallback(() => {
+        return selectedOptions.model && selectedOptions.variant !== null && selectedOptions.storage && selectedOptions.color && selectedOptions.country && selectedOptions.simType;
+    }, [selectedOptions]);
 
     // Загружаем устройство и цену когда все выбрано
     useEffect(() => {
@@ -85,12 +90,7 @@ export default function DeviceConditionPage() {
                 simType: selectedOptions.simType
             });
         }
-    }, [selectedOptions, devices.loadDevice]);
-
-    // Проверяем, все ли опции выбраны
-    const isAllOptionsSelected = () => {
-        return selectedOptions.model && selectedOptions.variant !== null && selectedOptions.storage && selectedOptions.color && selectedOptions.country && selectedOptions.simType;
-    };
+    }, [selectedOptions, devices, isAllOptionsSelected]);
 
     // Обработчик выбора опции
     const handleOptionSelect = (type: string, value: string) => {

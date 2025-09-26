@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
@@ -44,58 +44,57 @@ export default function MasterPointsPage() {
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadData = async () => {
-    if (!effectiveTelegramId) {
-      console.warn('No effectiveTelegramId, skipping loadData')
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    setError(null)
-    console.log('Loading data with telegramId:', effectiveTelegramId)
-    try {
-      const res = await fetch(`/api/master/dashboard?telegramId=${effectiveTelegramId}`, {
-        signal: AbortSignal.timeout(5000) // Таймаут 5 секунд
-      })
-      console.log('Dashboard API response status:', res.status)
-      if (!res.ok) {
-        const json = await res.json()
-        throw new Error(json?.error || `HTTP ${res.status}`)
+  const loadData = useCallback(async () => {
+      if (!effectiveTelegramId) {
+          console.warn('No effectiveTelegramId, skipping loadData');
+          setLoading(false);
+          return;
       }
-      const json = await res.json()
-      console.log('Dashboard API response:', json)
-      setRequests(json.requests || [])
-      setMasterPoints(json.points || [])
-      setAllPoints(json.allPoints || json.points || [])
-    } catch (e: any) {
-      console.error('Dashboard fetch error:', e.message)
+      setLoading(true);
+      setError(null);
+      console.log('Loading data with telegramId:', effectiveTelegramId);
       try {
-        const [reqRes, ptsRes] = await Promise.all([
-          fetch(`/api/master/requests?masterTelegramId=${effectiveTelegramId}`),
-          fetch(`/api/master/points?telegramId=${effectiveTelegramId}`),
-        ])
-        console.log('Requests API status:', reqRes.status, 'Points API status:', ptsRes.status)
-        if (!reqRes.ok) {
-          const json = await reqRes.json()
-          throw new Error(json?.error || `Requests HTTP ${reqRes.status}`)
-        }
-        if (!ptsRes.ok) {
-          const json = await ptsRes.json()
-          throw new Error(json?.error || `Points HTTP ${ptsRes.status}`)
-        }
-        const [reqJson, ptsJson] = await Promise.all([reqRes.json(), ptsRes.json()])
-        setRequests(reqJson.requests || [])
-        setMasterPoints(ptsJson.points || [])
-        setAllPoints(ptsJson.points || [])
-      } catch (ee: any) {
-        console.error('Fallback fetch error:', ee.message)
-        setError(ee?.message || 'Failed to load data')
+          const res = await fetch(`/api/master/dashboard?telegramId=${effectiveTelegramId}`, {
+              signal: AbortSignal.timeout(5000) // Таймаут 5 секунд
+          });
+          console.log('Dashboard API response status:', res.status);
+          if (!res.ok) {
+              const json = await res.json();
+              throw new Error(json?.error || `HTTP ${res.status}`);
+          }
+          const json = await res.json();
+          console.log('Dashboard API response:', json);
+          setRequests(json.requests || []);
+          setMasterPoints(json.points || []);
+          setAllPoints(json.allPoints || json.points || []);
+      } catch (e) {
+          console.error('Dashboard fetch error:', e instanceof Error ? e.message : String(e));
+          try {
+              const [reqRes, ptsRes] = await Promise.all([
+                  fetch(`/api/master/requests?masterTelegramId=${effectiveTelegramId}`),
+                  fetch(`/api/master/points?telegramId=${effectiveTelegramId}`),
+              ]);
+              console.log('Requests API status:', reqRes.status, 'Points API status:', ptsRes.status);
+              if (!reqRes.ok) {
+                  const json = await reqRes.json();
+                  throw new Error(json?.error || `Requests HTTP ${reqRes.status}`);
+              }
+              if (!ptsRes.ok) {
+                  const json = await ptsRes.json();
+                  throw new Error(json?.error || `Points HTTP ${ptsRes.status}`);
+              }
+              const [reqJson, ptsJson] = await Promise.all([reqRes.json(), ptsRes.json()]);
+              setRequests(reqJson.requests || []);
+              setMasterPoints(ptsJson.points || []);
+              setAllPoints(ptsJson.points || []);
+          } catch (e) {
+              setError(e instanceof Error ? e.message : 'Failed to load data');
+          }
+      } finally {
+          console.log('loadData completed, setting loading to false');
+          setLoading(false);
       }
-    } finally {
-      console.log('loadData completed, setting loading to false')
-      setLoading(false)
-    }
-  }
+  }, [effectiveTelegramId]);
 
   useEffect(() => {
     if (effectiveTelegramId) {
@@ -105,7 +104,7 @@ export default function MasterPointsPage() {
       console.warn('No effectiveTelegramId, skipping loadData')
       setLoading(false)
     }
-  }, [effectiveTelegramId])
+  }, [effectiveTelegramId, loadData])
 
   const getPointInfo = (pointId: number) => {
     return allPoints.find(point => point.id === pointId)

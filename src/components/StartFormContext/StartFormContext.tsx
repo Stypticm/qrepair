@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 import { FormState } from '@/core/lib/interfaces';
 import { useAppStore } from '@/stores/authStore';
@@ -48,11 +48,11 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
     // Функция для добавления отладочной информации
-    const addDebugInfo = (message: string) => {
+    const addDebugInfo = useCallback((message: string) => {
         const timestamp = new Date().toLocaleTimeString();
         const debugMessage = `[${timestamp}] ${message}`;
         setDebugInfo(prev => [...prev.slice(-9), debugMessage]); // Показываем последние 10 сообщений
-    };
+    }, []);
 
     const [modelname, setModel] = useState<string>('Apple iPhone 11');
     const [comment, setComment] = useState<string>('');
@@ -224,14 +224,14 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             addDebugInfo(`Синхронизация telegramId из store: ${storeTelegramId}`);
             setTelegramId(storeTelegramId);
         }
-    }, [storeTelegramId]);
+    }, [storeTelegramId, addDebugInfo, telegramId]);
 
     useEffect(() => {
         if (storeUsername && storeUsername !== username) {
             addDebugInfo(`Синхронизация username из store: ${storeUsername}`);
             setUsername(storeUsername);
         }
-    }, [storeUsername]);
+    }, [storeUsername, addDebugInfo, username]);
 
     // Синхронизируем изменения обратно в store
     useEffect(() => {
@@ -239,14 +239,14 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             addDebugInfo(`Синхронизация telegramId в store: ${telegramId}`);
             setStoreTelegramId(telegramId);
         }
-    }, [telegramId]);
+    }, [telegramId, storeTelegramId, addDebugInfo, setStoreTelegramId]);
 
     useEffect(() => {
         if (username && username !== storeUsername) {
             addDebugInfo(`Синхронизация username в store: ${username}`);
             setStoreUsername(username);
         }
-    }, [username]);
+    }, [username, storeUsername, addDebugInfo, setStoreUsername]);
 
     // Загружаем данные при инициализации telegramId
     useEffect(() => {

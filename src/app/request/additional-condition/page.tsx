@@ -68,179 +68,94 @@ export default function AdditionalConditionPage() {
         // Показываем шаг 4 на странице additional-condition
         return 4;
     };
-
+    
     // Функция для проверки, все ли выбрано
-    const checkIfAllSelected = (conditions: typeof additionalConditions) => {
-        return conditions.faceId &&
-            conditions.touchId &&
-            conditions.backCamera &&
-            conditions.battery;
-    };
-
-
-
-    // Загрузка сохраненных состояний из sessionStorage или БД
-    const loadSavedConditions = useCallback(async () => {
-
+    const checkIfAllSelected = useCallback((conditions: typeof additionalConditions) => {
+        return conditions.faceId && conditions.touchId && conditions.backCamera && conditions.battery;
+    }, []);
 
 
         // Сначала пытаемся восстановить из sessionStorage
-        if (typeof window !== 'undefined') {
+    // Загружаем состояния при монтировании компонента
+    useEffect(() => {
+        const loadData = async () => {
+            // 1. Попытка восстановить из sessionStorage
             const savedInSession = sessionStorage.getItem('additionalConditions');
-
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
-
-                    // Дополнительная проверка - если данные пустые или некорректные, не загружаем
-                    const hasValidData = parsed &&
-                        typeof parsed === 'object' &&
-                        (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery);
+                    const hasValidData = parsed && typeof parsed === 'object' && (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery);
 
                     if (hasValidData) {
                         setAdditionalConditions(parsed);
-                        
-                        // Проверяем, есть ли уже выбранные элементы (режим редактирования)
-                        const hasSelectedItems = parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery;
-                        if (hasSelectedItems) {
-                            setIsEditing(true);
-                            // Проверяем, все ли выбрано
-                            const allSelected = checkIfAllSelected(parsed);
-                            setIsAllSelected(!!allSelected);
-                        }
-                        
-                        setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
-                        setShowHints(false); // Отключаем подсказки при загрузке данных
+                        setIsEditing(true);
+                        setIsAllSelected(!!checkIfAllSelected(parsed));
+                        setHasChanges(true);
+                        setShowHints(false);
                     } else {
                         sessionStorage.removeItem('additionalConditions');
-                        setAdditionalConditions({
-                            faceId: null,
-                            touchId: null,
-                            backCamera: null,
-                            battery: null
-                        });
                     }
                     setLoadedFromDB(true);
-                    return; // Не загружаем из БД, если есть в sessionStorage
+                    return; // Данные из сессии загружены, выходим
                 } catch (e) {
-                    console.error('Ошибка при парсинге sessionStorage:', e);
-                    sessionStorage.removeItem('additionalConditions'); // Очищаем поврежденные данные
-                }
-            }
-        }
-
-        // Если нет данных в sessionStorage, загружаем из БД
-        if (telegramId) {
-            try {
-                const response = await fetch('/api/request/getAdditionalConditions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ telegramId }),
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    // Проверяем статус заявки - если submitted, то НЕ загружаем старые состояния
-                    if (data.status === 'submitted') {
-                        setAdditionalConditions({
-                            faceId: null,
-                            touchId: null,
-                            backCamera: null,
-                            battery: null
-                        });
-                        setHasChanges(false);
-                        setLoadedFromDB(true);
-                        return;
-                    }
-
-                    if (data.additionalConditions) {
-                        // Проверяем, что это действительно новая заявка, а не старая
-                        const hasOldData = data.additionalConditions.faceId ||
-                            data.additionalConditions.touchId ||
-                            data.additionalConditions.backCamera ||
-                            data.additionalConditions.battery;
-
-                        if (hasOldData) {
-                            // Проверяем, что данные корректные (не пустые строки или null)
-                            const isValidData = data.additionalConditions.faceId &&
-                                data.additionalConditions.touchId &&
-                                data.additionalConditions.backCamera &&
-                                data.additionalConditions.battery;
-
-                            if (isValidData) {
-                                setAdditionalConditions(data.additionalConditions);
-                                setHasChanges(true); // Устанавливаем флаг изменений для загруженных из БД состояний
-                                setShowHints(false); // Отключаем подсказки при загрузке данных
-                                // Сохраняем в sessionStorage для быстрого доступа
-                                sessionStorage.setItem('additionalConditions', JSON.stringify(data.additionalConditions));
-                            } else {
-                                // Очищаем некорректные данные из БД
-                                if (typeof window !== 'undefined') {
-                                    sessionStorage.removeItem('additionalConditions');
-                                }
-                            }
-                        } else {
-                            // НЕ сбрасываем состояния - они уже пустые по умолчанию
-                        }
-                    } else {
-                    }
-
-                    setLoadedFromDB(true);
-                } else {
-                    setLoadedFromDB(true);
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки дополнительных состояний:', error);
-                setLoadedFromDB(true);
-            }
-        } else {
-            setLoadedFromDB(true);
-        }
-    }, [setAdditionalConditions, telegramId, checkIfAllSelected]);
-
-    // Загружаем состояния при монтировании компонента
-    useEffect(() => {
-
-        if (telegramId) {
-            // Не загружаем состояния сразу - ждем создания заявки
-        } else {
-            // Сбрасываем состояния только если нет telegramId (для новых пользователей)
-            setAdditionalConditions({
-                faceId: null,
-                touchId: null,
-                backCamera: null,
-                battery: null
-            });
-            setHasChanges(false);
-            setLoadedFromDB(true); // Устанавливаем флаг загрузки для новых пользователей
-        }
-    }, [telegramId, setAdditionalConditions]);
-
-    // Восстанавливаем состояния из sessionStorage при возврате на страницу (продолжение заявки)
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const savedInSession = sessionStorage.getItem('additionalConditions');
-
-            if (savedInSession) {
-                try {
-                    const parsed = JSON.parse(savedInSession);
-                    setAdditionalConditions(parsed);
-                    setHasChanges(true); // Устанавливаем флаг изменений для восстановленных состояний
-                    setShowHints(false); // Отключаем подсказки при загрузке данных
-                    setLoadedFromDB(true); // Устанавливаем флаг загрузки
-                } catch (e) {
-                    console.error('Ошибка при парсинге sessionStorage при возврате:', e);
+                    console.error('Ошибка парсинга additionalConditions из sessionStorage:', e);
                     sessionStorage.removeItem('additionalConditions');
                 }
             }
-        }
 
-        // Устанавливаем флаг загрузки для новой заявки
-        setLoadedFromDB(true);
-    }, [setAdditionalConditions]); // Запускается только один раз при загрузке страницы
+            // 2. Если в сессии нет, и есть telegramId, грузим из БД
+            if (telegramId) {
+                try {
+                    const response = await fetch('/api/request/getAdditionalConditions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ telegramId }),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        if (data.status === 'submitted') {
+                            // Заявка отправлена, сбрасываем состояние
+                            setAdditionalConditions({ faceId: null, touchId: null, backCamera: null, battery: null });
+                            setHasChanges(false);
+                        } else if (data.additionalConditions) {
+                            const hasOldData = data.additionalConditions.faceId || data.additionalConditions.touchId || data.additionalConditions.backCamera || data.additionalConditions.battery;
+                            if (hasOldData) {
+                                setAdditionalConditions(data.additionalConditions);
+                                setHasChanges(true);
+                                setShowHints(false);
+                                sessionStorage.setItem('additionalConditions', JSON.stringify(data.additionalConditions));
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки дополнительных состояний из БД:', error);
+                }
+            }
+
+            // 3. Создаем/обновляем шаг заявки в БД
+            if (telegramId) {
+                try {
+                    await fetch('/api/request/choose', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            telegramId,
+                            username: username || 'Unknown',
+                            currentStep: 'additional-condition',
+                        }),
+                    });
+                } catch (error) {
+                    console.error('Error updating request step:', error);
+                }
+            }
+
+            setLoadedFromDB(true);
+        };
+
+        loadData();
+    }, [telegramId, username, setAdditionalConditions, checkIfAllSelected]);
 
     // Проверяем, заполнены ли все состояния
     const areAllConditionsSelected = useCallback(() => {

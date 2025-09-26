@@ -133,7 +133,7 @@ export default function ConditionPage() {
     // Функция для проверки, все ли выбрано
     const checkIfAllSelected = useCallback((conditions: typeof deviceConditions) => {
         return conditions.front && conditions.back && conditions.side;
-    }, [deviceConditions]);
+    }, []);
 
     // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {

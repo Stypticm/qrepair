@@ -6,7 +6,7 @@ import { Link } from '@/components/Link/Link';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { getPictureUrl } from '@/core/lib/assets';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
@@ -38,7 +38,7 @@ function HomeContent() {
   const [testAdminIndex, setTestAdminIndex] = useState(0);
   const router = useRouter();
   const { forceFullscreen, isFullscreen } = useSafeArea();
-  const testAdminIds = ['1', '296925626', '531360988'];
+  const testAdminIds = useMemo(() => ['1', '296925626', '531360988'], []);
 
   useEffect(() => {
     const isMobileWidth = typeof window !== 'undefined' ? window.innerWidth < 768 : true;
@@ -78,7 +78,7 @@ function HomeContent() {
         setRole('master', parseInt(testId));
       }
     }
-  }, [initializeTelegram, setTelegramId, setRole, testAdminIndex]);
+  }, [initializeTelegram, setTelegramId, setRole, testAdminIndex, addDebugInfo, initDataState, testAdminIds]);
 
   useEffect(() => {
     const savedStep = sessionStorage.getItem('currentStep');
@@ -93,7 +93,7 @@ function HomeContent() {
     if (savedStep) setCurrentStep(savedStep);
     if (savedTelegramId && !useAppStore.getState().telegramId) setTelegramId(savedTelegramId);
     if (savedUsername && !useAppStore.getState().username) setUsername(savedUsername);
-  }, [setCurrentStep, setTelegramId, setUsername]);
+  }, [setCurrentStep, setTelegramId, setUsername, addDebugInfo]);
 
   const handleStartForm = async () => {
     try {

@@ -37,7 +37,7 @@ export default function FormPage() {
     // Загружаем модели при инициализации
     useEffect(() => {
         devices.loadModels();
-    }, [devices.loadModels]);
+    }, [devices]);
 
     // Отладочная информация о загруженных моделях
     useEffect(() => {
@@ -74,7 +74,7 @@ export default function FormPage() {
         if (selectedOptions.model) {
             devices.loadVariants(selectedOptions.model);
         }
-    }, [selectedOptions.model, devices.loadVariants]);
+    }, [selectedOptions.model, devices]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined) {
@@ -83,7 +83,7 @@ export default function FormPage() {
                 variant: selectedOptions.variant
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, devices.loadStorages]);
+    }, [selectedOptions.model, selectedOptions.variant, devices]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined && selectedOptions.storage) {
@@ -93,7 +93,7 @@ export default function FormPage() {
                 storage: selectedOptions.storage
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices.loadColors]);
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices]);
 
     // Убрали загрузку типов SIM
 
@@ -282,10 +282,10 @@ export default function FormPage() {
                 color: selectedOptions.color
             });
         }
-    }, [selectedOptions, devices.loadDevice, isAllOptionsSelected]);
+    }, [selectedOptions, devices, isAllOptionsSelected]);
 
     // Функция для сохранения модели в БД
-    const saveModelToDB = async (modelName: string) => {
+    const saveModelToDB = useCallback(async (modelName: string) => {
         if (telegramId) {
             try {
                 const response = await fetch('/api/request/model', {
@@ -307,7 +307,9 @@ export default function FormPage() {
                 console.error('Ошибка при сохранении модели:', error);
             }
         }
-    };
+    }, [telegramId]);
+
+    const memoizedSaveModelToDB = useCallback(saveModelToDB, [telegramId, saveModelToDB]);
 
     useEffect(() => {
         console.log('🔍 SelectedDevice useEffect - devices.selectedDevice:', devices.selectedDevice);
@@ -324,11 +326,11 @@ export default function FormPage() {
             sessionStorage.setItem('basePrice', device.basePrice.toString());
 
             // Сохраняем модель в БД
-            saveModelToDB(fullName);
+            memoizedSaveModelToDB(fullName);
 
             // Диалог будет показан автоматически в другом useEffect
         }
-    }, [devices.selectedDevice, setModel, setPrice, telegramId]);
+    }, [devices.selectedDevice, setModel, setPrice, memoizedSaveModelToDB]);
 
     // Создаем заявку при загрузке страницы
     useEffect(() => {
@@ -429,7 +431,7 @@ export default function FormPage() {
                 }
             },
         });
-    }, [updateCurrentSelection, checkIfAllSelected]);
+    }, [updateCurrentSelection, checkIfAllSelected, selectedOptions]);
 
     // Инициализация Telegram WebApp при загрузке
     useEffect(() => {
