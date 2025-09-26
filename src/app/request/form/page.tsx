@@ -617,9 +617,9 @@ export default function FormPage() {
     return (
         <LazyMotion features={domAnimation}>
             <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-hidden">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                     {/* Прогресс-бар */}
-                    <div className="pt-10 pb-1">
+                    <div className="pb-1">
                         <ProgressBar
                             currentStep={getCurrentStep()}
                             totalSteps={5}
@@ -795,62 +795,6 @@ export default function FormPage() {
                                 </motion.div>
                             )}
 
-                            {/* Секция выбора типа SIM */}
-                            {/* {selectedOptions.model && devices.simTypes.length > 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.2, ease: "easeOut" }}
-                                    className="p-2 rounded-xl shadow-sm bg-white"
-                                >
-                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Тип SIM</h3>
-                                    <div className="grid grid-cols-2 gap-1">
-                                        {devices.simTypes.map((simType: string) => (
-                                            <Button
-                                                key={simType}
-                                                onClick={() => handleOptionSelect('simType', simType)}
-                                                className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center relative ${selectedOptions.simType === simType
-                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:shadow-sm'
-                                                    }`}
-                                            >
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )} */}
-
-                            {/* Секция выбора страны производителя */}
-                            {/* {selectedOptions.model && devices.countries.length > 0 && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.2, ease: "easeOut" }}
-                                    className="p-2 rounded-xl shadow-sm bg-white"
-                                >
-                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Страна производитель</h3>
-                                    <div className="grid grid-cols-2 gap-1">
-                                        {devices.countries.map((country: string) => (
-                                            <Button
-                                                key={country}
-                                                onClick={() => handleOptionSelect('country', country)}
-                                                className={`w-full h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center relative ${selectedOptions.country === country
-                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                                    }`}
-                                            >
-                                            
-                                                <div className="flex items-center justify-center">
-                                                    <span className="text-lg">{country.split(' ')[1]}</span>
-                                                </div>
-                                            </Button>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )} */}
-
                             {/* Диалоговое окно с итоговой информацией */}
                             <Dialog open={showSummaryDialog} onOpenChange={setShowSummaryDialog}>
                                 <DialogContent
@@ -871,8 +815,6 @@ export default function FormPage() {
                                                         {devices.selectedDevice.variant ? ` ${getVariantLabel(devices.selectedDevice.variant)}` : ''}
                                                         {devices.selectedDevice.storage ? ` ${devices.selectedDevice.storage}` : ''}
                                                         {devices.selectedDevice.color ? ` ${getColorLabel(devices.selectedDevice.color)}` : ''}
-                                                        {devices.selectedDevice.simType ? ` ${devices.selectedDevice.simType}` : ''}
-                                                        {devices.selectedDevice.country ? ` ${devices.selectedDevice.country.split(' ')[0]}` : ''}
                                                     </p>
                                                 </div>
                                             </div>
@@ -895,6 +837,3 @@ export default function FormPage() {
         </LazyMotion>
     );
 }
-
-
-
