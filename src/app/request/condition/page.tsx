@@ -106,6 +106,13 @@ export default function ConditionPage() {
     const router = useRouter();
     const devices = useDevices();
 
+    // Проверяем, открыто ли приложение в обычном браузере на ПК
+    const [isDesktopBrowser, setIsDesktopBrowser] = useState(false);
+    useEffect(() => {
+        const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+        setIsDesktopBrowser(!isTelegramWebApp && window.innerWidth > 768);
+    }, []);
+
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
         setCurrentStep('condition');
@@ -663,9 +670,11 @@ export default function ConditionPage() {
     const preloadImages = getConditionImages();
 
     return (
-        <Page back={true}>
-            <ImagePreloader images={preloadImages} />
-            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
+        <div className={isDesktopBrowser ? "flex justify-center items-start min-h-screen bg-gray-900 pt-10" : ""}>
+            <div className={isDesktopBrowser ? "w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" : ""}>
+                <Page back={true}>
+                    <ImagePreloader images={preloadImages} />
+                    <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                 {/* Прогресс-бар */}
                 <div className="pt-6 pb-2">
                     <ProgressBar
@@ -718,7 +727,7 @@ export default function ConditionPage() {
                         )}
                     </div>
                 </div>
-            </div>
+                    </div>
 
             {/* Диалоговое окно с итоговой информацией */}
             <Dialog open={showDialog} onOpenChange={handleEdit}>
@@ -775,6 +784,8 @@ export default function ConditionPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-        </Page>
+                </Page>
+            </div>
+        </div>
     );
 }

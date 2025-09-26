@@ -19,11 +19,15 @@ import Image from 'next/image';
 
 export default function FormPage() {
     const { modelname, setModel, telegramId, username, setPrice, setCurrentStep } = useAppStore();
-    const router = useRouter();
+    const router = useRouter(); 
     const devices = useDevices();
 
     // Проверяем, доступен ли Telegram WebApp API
-    const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+    const [isDesktopBrowser, setIsDesktopBrowser] = useState(false);
+    useEffect(() => {
+        const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+        setIsDesktopBrowser(!isTelegramWebApp && window.innerWidth > 768);
+    }, []);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -46,7 +50,7 @@ export default function FormPage() {
         // Проверяем, есть ли сохраненные данные в sessionStorage
         const savedData = sessionStorage.getItem('phoneSelection');
         if (!savedData) {
-            // Только если нет сохраненных данных - сбрасываем состояния
+            // Только если нет сохраненных данных - сбрасываем состояния 
             // Сбрасываем только основные состояния, не вызывая resetAllStates
             setModel('Apple iPhone 11');
             // Очищаем sessionStorage для новой заявки
@@ -54,8 +58,8 @@ export default function FormPage() {
 
             // Приветственный экран теперь показывается на device-info странице
         } else {
-        }
-    }, [isTelegramWebApp, telegramId, setModel]); // Добавляем setModel в зависимости
+        } 
+    }, [telegramId, setModel]); // Убрал isTelegramWebApp, так как он теперь в другом useEffect
 
     // Инициализируем состояние
     const [selectedOptions, setSelectedOptions] = useState({
@@ -616,8 +620,10 @@ export default function FormPage() {
 
     return (
         <LazyMotion features={domAnimation}>
-            <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
+            <div className={isDesktopBrowser ? "flex justify-center items-start min-h-screen bg-gray-900 pt-10" : ""}>
+                <div className={isDesktopBrowser ? "w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" : ""}>
+                    <Page back={true}>
+                    <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                     {/* Прогресс-бар */}
                     <div className="pb-1">
                         <ProgressBar
@@ -832,8 +838,10 @@ export default function FormPage() {
 
                         </div>
                     </div>
+                    </div>
+                    </Page>
                 </div>
-            </Page>
+            </div>
         </LazyMotion>
     );
 }
