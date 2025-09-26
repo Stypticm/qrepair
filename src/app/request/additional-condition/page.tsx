@@ -36,6 +36,13 @@ export default function AdditionalConditionPage() {
     } = useAppStore();
     const router = useRouter();
 
+    // Проверяем, открыто ли приложение в обычном браузере на ПК
+    const [isDesktopBrowser, setIsDesktopBrowser] = useState(false);
+    useEffect(() => {
+        const isTelegramWebApp = typeof window !== 'undefined' && (window as any).Telegram?.WebApp;
+        setIsDesktopBrowser(!isTelegramWebApp && window.innerWidth > 768);
+    }, []);
+
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
         setCurrentStep('additional-condition');
@@ -487,9 +494,11 @@ export default function AdditionalConditionPage() {
     const preloadImages = getAdditionalConditionImages();
 
     return (
-        <Page back={true}>
-            <ImagePreloader images={preloadImages} />
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
+        <div className={isDesktopBrowser ? "flex justify-center items-start min-h-screen bg-gray-900 pt-10" : ""}>
+            <div className={isDesktopBrowser ? "w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden" : ""}>
+                <Page back={true}>
+                    <ImagePreloader images={preloadImages} />
+                    <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                 {/* Прогресс-бар */}
                 <div className="pt-6 pb-2">
                     <ProgressBar
@@ -739,8 +748,8 @@ export default function AdditionalConditionPage() {
                     </div>
                 </DialogContent>
             </Dialog>
-
-
-        </Page>
+                </Page>
+            </div>
+        </div>
     );
 }
