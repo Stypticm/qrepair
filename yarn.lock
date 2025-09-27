@@ -4137,6 +4137,11 @@ use-sidecar@^1.1.3:
     detect-node-es "^1.1.0"
     tslib "^2.0.0"
 
+use-sync-external-store@>=1.2.0:
+  version "1.5.0"
+  resolved "https://registry.npmjs.org/use-sync-external-store/-/use-sync-external-store-1.5.0.tgz"
+  integrity sha512-Rb46I4cGGVBmjamjphe8L/UnvJD+uPPtTkNvX5mZgqdbavhI4EbgIWJiIHXJ8bc/i9EQGPRh4DwEURJ552Do0A==
+
 uuid@^11.1.0:
   version "11.1.0"
   resolved "https://registry.npmjs.org/uuid/-/uuid-11.1.0.tgz"

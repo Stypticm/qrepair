@@ -44,10 +44,7 @@ export async function GET(request: NextRequest) {
       sortedColors: sortedColors,
     })
 
-    return NextResponse.json({
-      success: true,
-      colors: sortedColors,
-    })
+    return NextResponse.json(sortedColors)
   } catch (error) {
     console.error('Error fetching device colors:', error)
     return NextResponse.json(

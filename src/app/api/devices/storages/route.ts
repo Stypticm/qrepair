@@ -57,10 +57,7 @@ export async function GET(request: NextRequest) {
       sortedStorages: sortedStorages,
     })
 
-    return NextResponse.json({
-      success: true,
-      storages: sortedStorages,
-    })
+    return NextResponse.json(sortedStorages)
   } catch (error) {
     console.error('Error fetching device storages:', error)
     return NextResponse.json(

@@ -134,32 +134,32 @@ function HomeContent() {
 
       const currentStep = draftData?.currentStep;
       if (currentStep) {
-        window.location.href = `/request/${currentStep}`;
+        router.push(`/request/${currentStep}`);
         return;
       }
 
       if (draftData?.deliveryMethod) {
         if (draftData.deliveryMethod === 'pickup' && draftData.pickupPoint) {
-          window.location.href = '/request/pickup-points';
+          router.push('/request/pickup-points');
         } else if (draftData.deliveryMethod === 'courier' && draftData.courierAddress && draftData.courierDate && draftData.courierTime) {
-          window.location.href = '/request/courier-booking';
+          router.push('/request/courier-booking');
         } else {
-          window.location.href = '/request/delivery-options';
+          router.push('/request/delivery-options');
         }
       } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber && useAppStore.getState().modelname && useAppStore.getState().deviceConditions && useAppStore.getState().additionalConditions) {
-        window.location.href = '/request/submit';
+        router.push('/request/submit');
       } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber && useAppStore.getState().modelname && useAppStore.getState().deviceConditions) {
-        window.location.href = '/request/additional-condition';
+        router.push('/request/additional-condition');
       } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber && useAppStore.getState().modelname) {
-        window.location.href = '/request/condition';
+        router.push('/request/condition');
       } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber) {
-        window.location.href = '/request/form';
+        router.push('/request/form');
       } else {
-        window.location.href = '/request/device-info';
+        router.push('/request/device-info');
       }
     } catch (error) {
       console.error('Ошибка проверки заявки:', error);
-      window.location.href = '/request/device-info';
+      router.push('/request/device-info');
     } finally {
       setIsLoading(false);
     }

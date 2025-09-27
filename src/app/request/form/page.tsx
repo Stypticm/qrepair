@@ -27,47 +27,30 @@ export default function FormPage() {
         setCurrentStep('form');
     }, [setCurrentStep]);
 
-    // Загружаем модели при инициализации
-    useEffect(() => {
-        devices.loadModels();
-    }, [devices]);
-
-    // Отладочная информация о загруженных моделях
-    useEffect(() => {
-    }, [devices.models, devices.loading]);
-
-    // Сбрасываем все состояния при загрузке страницы (только если это новая заявка)
-    useEffect(() => {
-        // Логируем для отладки
-
-        // Проверяем, есть ли сохраненные данные в sessionStorage
-        const savedData = sessionStorage.getItem('phoneSelection');
-        if (!savedData) {
-            // Только если нет сохраненных данных - сбрасываем состояния 
-            // Сбрасываем только основные состояния, не вызывая resetAllStates
-            setModel('Apple iPhone 11');
-            // Очищаем sessionStorage для новой заявки
-            sessionStorage.removeItem('phoneSelection');
-
-            // Приветственный экран теперь показывается на device-info странице
-        } else {
-        } 
-    }, [telegramId, setModel]); // Убрал isTelegramWebApp, так как он теперь в другом useEffect
-
     // Инициализируем состояние
-    const [selectedOptions, setSelectedOptions] = useState({
+    const [selectedOptions, setSelectedOptions] = useState<{
+        model: string;
+        variant: string | null;
+        storage: string;
+        color: string;
+    }>({
         model: '',
         variant: null, // Изменяем на null чтобы не было предвыбора
         storage: '',
         color: ''
     });
 
+    // Загружаем модели при инициализации
+    useEffect(() => {
+        devices.loadModels(); // Эта функция обернута в useCallback и не меняется
+    }, [devices.loadModels]);
+
     // Загружаем данные при изменении фильтров
     useEffect(() => {
         if (selectedOptions.model) {
             devices.loadVariants(selectedOptions.model);
         }
-    }, [selectedOptions.model, devices]);
+    }, [selectedOptions.model, devices.loadVariants]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined) {
@@ -76,7 +59,7 @@ export default function FormPage() {
                 variant: selectedOptions.variant
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, devices]);
+    }, [selectedOptions.model, selectedOptions.variant, devices.loadStorages]);
 
     useEffect(() => {
         if (selectedOptions.model && selectedOptions.variant !== null && selectedOptions.variant !== undefined && selectedOptions.storage) {
@@ -86,12 +69,8 @@ export default function FormPage() {
                 storage: selectedOptions.storage
             });
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices]);
-
-    // Убрали загрузку типов SIM
-
-    // Убрали загрузку стран
-
+    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices.loadColors]);
+    
     // Состояние для отображения текущего выбора в центре
     const [currentSelection, setCurrentSelection] = useState<string>('');
 
@@ -190,8 +169,7 @@ export default function FormPage() {
         if (type === 'model') {
             newOptions.variant = null;
             newOptions.storage = '';
-            newOptions.color = '';
-            devices.clearFilters();
+            newOptions.color = '';            devices.clearFilters();
         } else if (type === 'variant') {
             newOptions.storage = '';
             newOptions.color = '';
@@ -275,7 +253,7 @@ export default function FormPage() {
                 color: selectedOptions.color
             });
         }
-    }, [selectedOptions, devices, isAllOptionsSelected]);
+    }, [selectedOptions, devices.loadDevice, isAllOptionsSelected]);
 
     // Функция для сохранения модели в БД
     const saveModelToDB = useCallback(async (modelName: string) => {
@@ -424,7 +402,8 @@ export default function FormPage() {
                 }
             },
         });
-    }, [updateCurrentSelection, checkIfAllSelected, selectedOptions]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Инициализация Telegram WebApp при загрузке
     useEffect(() => {
@@ -632,7 +611,7 @@ export default function FormPage() {
 
 
                             {/* Секция выбора модели */}
-                            {true && (
+                            
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -640,7 +619,19 @@ export default function FormPage() {
                                     transition={{ duration: 0.2, ease: "easeOut" }}
                                     className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
                                 >
-                                    <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Модель</h3>
+                                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-lg">Модель</h3>
+                                    {devices.loading && devices.models.length === 0 && (
+                                        <div className="grid grid-cols-4 gap-1 animate-pulse">
+                                            {Array.from({ length: 8 }).map((_, i) => (
+                                                <div key={i} className="w-full h-7 rounded-lg bg-gray-200"></div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {!devices.loading && devices.models.length === 0 && (
+                                        <p className="text-center text-sm text-gray-500 py-2">
+                                            Не удалось загрузить модели. Попробуйте обновить страницу.
+                                        </p>
+                                    )}
                                     {devices.models.length > 0 && (
                                         <div className="grid grid-cols-4 gap-1">
                                             {devices.models.map((model: string) => (
@@ -669,7 +660,7 @@ export default function FormPage() {
                                         </div>
                                     )}
                                 </motion.div>
-                            )}
+                            
 
                             {/* Секция выбора варианта */}
                             {selectedOptions.model && devices.variants.length > 0 && (

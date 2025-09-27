@@ -42,10 +42,7 @@ export async function GET(request: NextRequest) {
       ? ['', ...nonEmptyVariants]
       : nonEmptyVariants
 
-    return NextResponse.json({
-      success: true,
-      variants: processedVariants,
-    })
+    return NextResponse.json(processedVariants)
   } catch (error) {
     console.error('Error fetching device variants:', error)
     return NextResponse.json(

@@ -17,28 +17,25 @@ export async function GET(request: NextRequest) {
         // X должен быть первым
         if (a === 'X') return -1
         if (b === 'X') return 1
-        
+
         // Извлекаем числовые значения
         const aNum = parseInt(a)
         const bNum = parseInt(b)
-        
+
         // Если оба числовые, сортируем по возрастанию
         if (!isNaN(aNum) && !isNaN(bNum)) {
           return aNum - bNum
         }
-        
+
         // Если один числовой, а другой нет, числовой идет первым
         if (!isNaN(aNum) && isNaN(bNum)) return -1
         if (isNaN(aNum) && !isNaN(bNum)) return 1
-        
+
         // Если оба не числовые, сортируем по алфавиту
         return a.localeCompare(b)
       })
 
-    return NextResponse.json({
-      success: true,
-      models: sortedModels,
-    })
+    return NextResponse.json(sortedModels)
   } catch (error) {
     console.error('Error fetching device models:', error)
     return NextResponse.json(
