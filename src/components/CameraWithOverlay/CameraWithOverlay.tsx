@@ -1,4 +1,3 @@
-'''
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -31,15 +30,15 @@ export const CameraWithOverlay = ({ onPhotoCapture, overlayImage }: CameraWithOv
       } catch (err) {
         console.error("Error accessing camera: ", err)
         if (err instanceof Error) {
-            if (err.name === 'NotAllowedError') {
-                setError('Доступ к камере запрещен. Пожалуйста, разрешите доступ в настройках браузера.')
-            } else if (err.name === 'NotFoundError') {
-                setError('Камера не найдена. Убедитесь, что она подключена и исправна.')
-            } else {
-                setError(`Ошибка доступа к камере: ${err.message}`)
-            }
+          if (err.name === 'NotAllowedError') {
+            setError('Доступ к камере запрещен. Пожалуйста, разрешите доступ в настройках браузера.')
+          } else if (err.name === 'NotFoundError') {
+            setError('Камера не найдена. Убедитесь, что она подключена и исправна.')
+          } else {
+            setError(`Ошибка доступа к камере: ${err.message}`)
+          }
         } else {
-            setError('Произошла неизвестная ошибка при доступе к камере.')
+          setError('Произошла неизвестная ошибка при доступе к камере.')
         }
       }
     }
@@ -112,4 +111,3 @@ export const CameraWithOverlay = ({ onPhotoCapture, overlayImage }: CameraWithOv
     </div>
   )
 }
-'''
