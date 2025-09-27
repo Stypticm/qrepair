@@ -11,7 +11,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, username, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice, setCurrentStep } = useAppStore();
+    const { telegramId, username, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice, setCurrentStep, clearCurrentStep } = useAppStore();
     const [dataLoaded, setDataLoaded] = useState(false);
     const [priceLoaded, setPriceLoaded] = useState(false);
     const [dbData, setDbData] = useState<any>(null);
@@ -187,19 +187,28 @@ const SubmitPage = () => {
 
     const handleReset = async () => {
         try {
-
             // Сбрасываем все состояния
             resetAllStates();
 
             // Сбрасываем навигацию
             setCurrentStep(null);
+            
+            // Принудительно очищаем currentStep в store
+            clearCurrentStep();
 
             // Сбрасываем состояние загрузки данных
             setDataLoaded(false);
 
-            // Очищаем sessionStorage
+            // Очищаем sessionStorage, но сохраняем telegramId и username, если они есть
             if (typeof window !== 'undefined') {
+                const tgId = sessionStorage.getItem('telegramId');
+                const tgUsername = sessionStorage.getItem('telegramUsername');
                 sessionStorage.clear();
+                if (tgId) sessionStorage.setItem('telegramId', tgId);
+                if (tgUsername) sessionStorage.setItem('telegramUsername', tgUsername);
+                
+                // Устанавливаем флаг для редиректа
+                sessionStorage.setItem('start-over', 'true');
             }
 
             // Очищаем данные в базе данных
@@ -213,12 +222,9 @@ const SubmitPage = () => {
                         body: JSON.stringify({ telegramId }),
                     });
 
-
                     if (!response.ok) {
                         const errorData = await response.text();
                         console.error('Ошибка очистки данных в БД:', response.status, errorData);
-                    } else {
-                        const result = await response.json();
                     }
                 } catch (fetchError) {
                     console.error('Ошибка при запросе к API clearDraft:', fetchError);
@@ -227,12 +233,12 @@ const SubmitPage = () => {
                 console.warn('No telegramId available for clearing draft');
             }
 
-            // Переходим к device-info (первая страница в новой структуре)
-            router.replace('/request/device-info');
+            // Переходим на главную страницу, заменяя текущую запись в истории
+            router.replace('/');
         } catch (error) {
             console.error('Ошибка при сбросе данных:', error);
-            // В случае ошибки всё равно переходим к device-info
-            router.replace('/request/device-info');
+            // В случае ошибки всё равно переходим на главную, заменяя текущую запись в истории
+            router.replace('/');
         }
     };
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
+import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useDevices, Device } from '@/hooks/useDevices';
@@ -10,6 +11,7 @@ import { useAppStore } from '@/stores/authStore';
 export default function DeviceConditionPage() {
     const { modelname, setModel, telegramId, username, setPrice } = useAppStore();
     const router = useRouter();
+    const { goBack } = useStepNavigation();
     const devices = useDevices();
 
     // Инициализируем состояние
@@ -23,29 +25,22 @@ export default function DeviceConditionPage() {
 
     // Загружаем данные при изменении фильтров
     useEffect(() => {
-        if (selectedOptions.model) {
-            devices.loadVariants(selectedOptions.model);
-        }
-    }, [selectedOptions.model, devices]);
+        const { model, variant, storage } = selectedOptions;
+        if (model) {
+            // Загружаем варианты, только если они еще не загружены для этой модели
+            if (devices.variants.length === 0) devices.loadVariants(model);
 
-    useEffect(() => {
-        if (selectedOptions.model && selectedOptions.variant) {
-            devices.loadStorages({
-                model: selectedOptions.model,
-                variant: selectedOptions.variant
-            });
-        }
-    }, [selectedOptions.model, selectedOptions.variant, devices]);
+            if (variant !== null && variant !== undefined) {
+                // Загружаем хранилища, только если они еще не загружены
+                if (devices.storages.length === 0) devices.loadStorages({ model, variant });
 
-    useEffect(() => {
-        if (selectedOptions.model && selectedOptions.variant && selectedOptions.storage) {
-            devices.loadColors({
-                model: selectedOptions.model,
-                variant: selectedOptions.variant,
-                storage: selectedOptions.storage
-            });
+                if (storage) {
+                    // Загружаем цвета, только если они еще не загружены
+                    if (devices.colors.length === 0) devices.loadColors({ model, variant, storage });
+                }
+            }
         }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices]);
+    }, [selectedOptions, devices]);
 
     // Проверяем, все ли опции выбраны
     const isAllOptionsSelected = useCallback(() => {
@@ -67,7 +62,7 @@ export default function DeviceConditionPage() {
     // Обработчик выбора опции
     const handleOptionSelect = (type: string, value: string) => {
         const newOptions = { ...selectedOptions };
-        
+
         if (type === 'model') {
             newOptions.model = value;
             newOptions.variant = null;
@@ -84,7 +79,7 @@ export default function DeviceConditionPage() {
         } else if (type === 'color') {
             newOptions.color = value;
         }
-        
+
         setSelectedOptions(newOptions);
     };
 
@@ -93,9 +88,9 @@ export default function DeviceConditionPage() {
         if (isAllOptionsSelected() && devices.selectedDevice) {
             const device = devices.selectedDevice;
             const fullModelName = `${device.model} ${device.variant} ${device.storage} ${device.color}`;
-                setModel(fullModelName);
+            setModel(fullModelName);
             setPrice(device.basePrice);
-            
+
             // Сохраняем выбор в sessionStorage
             sessionStorage.setItem('phoneSelection', JSON.stringify({
                 model: device.model,
@@ -104,35 +99,10 @@ export default function DeviceConditionPage() {
                 color: device.color,
                 basePrice: device.basePrice
             }));
-            
-                router.push('/request/phone-condition');
+
+            router.push('/request/phone-condition');
         }
     };
-
-    // Создаем заявку при загрузке страницы
-    useEffect(() => {
-        const createRequest = async () => {
-            try {
-                await fetch('/api/request/choose', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        telegramId,
-                        username,
-                        currentStep: 'device-condition'
-                    }),
-                });
-            } catch (error) {
-                console.error('Error creating request:', error);
-            }
-        };
-
-        if (telegramId && username) {
-            createRequest();
-        }
-    }, [telegramId, username]);
 
     // Восстанавливаем состояние из sessionStorage
     useEffect(() => {
@@ -183,7 +153,7 @@ export default function DeviceConditionPage() {
     };
 
     return (
-        <Page back={true}>
+        <Page back={goBack}>
             <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col overflow-hidden">
                 <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                     <div className="w-full max-w-md mx-auto space-y-4">
@@ -194,17 +164,16 @@ export default function DeviceConditionPage() {
                                     <div className="text-center py-4 text-gray-500">Загрузка моделей...</div>
                                 ) : (
                                     devices.models.map((model: string) => (
-                                    <Button
-                                        key={`model-${model}`}
-                                        onClick={() => handleOptionSelect('model', model)}
-                                        className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${
-                                            selectedOptions.model === model
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                        }`}
-                                    >
-                                        {model}
-                                    </Button>
+                                        <Button
+                                            key={`model-${model}`}
+                                            onClick={() => handleOptionSelect('model', model)}
+                                            className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${selectedOptions.model === model
+                                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                }`}
+                                        >
+                                            {model}
+                                        </Button>
                                     ))
                                 )}
                             </div>
@@ -217,18 +186,17 @@ export default function DeviceConditionPage() {
                                     <div className="text-center py-4 text-gray-500">Загрузка вариантов...</div>
                                 ) : (
                                     devices.variants.map((variant: string) => (
-                                    <Button
-                                        key={`variant-${variant}`}
-                                        onClick={() => handleOptionSelect('variant', variant)}
-                                        disabled={!selectedOptions.model}
-                                        className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${
-                                            selectedOptions.variant === variant
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                        }`}
-                                    >
-                                        {variant}
-                                    </Button>
+                                        <Button
+                                            key={`variant-${variant}`}
+                                            onClick={() => handleOptionSelect('variant', variant)}
+                                            disabled={!selectedOptions.model}
+                                            className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${selectedOptions.variant === variant
+                                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                }`}
+                                        >
+                                            {variant}
+                                        </Button>
                                     ))
                                 )}
                             </div>
@@ -241,18 +209,17 @@ export default function DeviceConditionPage() {
                                     <div className="text-center py-4 text-gray-500">Загрузка объемов...</div>
                                 ) : (
                                     devices.storages.map((storage: string) => (
-                                    <Button
-                                        key={`storage-${storage}`}
-                                        onClick={() => handleOptionSelect('storage', storage)}
-                                        disabled={!selectedOptions.model || !selectedOptions.variant}
-                                        className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${
-                                            selectedOptions.storage === storage
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                        }`}
-                                    >
-                                        {storage}
-                                    </Button>
+                                        <Button
+                                            key={`storage-${storage}`}
+                                            onClick={() => handleOptionSelect('storage', storage)}
+                                            disabled={!selectedOptions.model || !selectedOptions.variant}
+                                            className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${selectedOptions.storage === storage
+                                                    ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                }`}
+                                        >
+                                            {storage}
+                                        </Button>
                                     ))
                                 )}
                             </div>
@@ -265,18 +232,17 @@ export default function DeviceConditionPage() {
                                     <div className="text-center py-4 text-gray-500">Загрузка цветов...</div>
                                 ) : (
                                     devices.colors.map((color: string) => (
-                                    <Button
-                                        key={`color-${color}`}
-                                        onClick={() => handleOptionSelect('color', color)}
-                                        disabled={!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage}
-                                        className={`h-10 w-10 rounded-full p-0 transition-all duration-200 ${
-                                            selectedOptions.color === color
-                                                ? 'border-2 border-blue-500 bg-blue-50 shadow-md'
-                                                : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                                        }`}
-                                        style={{ backgroundColor: color.toLowerCase() }}
-                                        title={getColorLabel(color)}
-                                    />
+                                        <Button
+                                            key={`color-${color}`}
+                                            onClick={() => handleOptionSelect('color', color)}
+                                            disabled={!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage}
+                                            className={`h-10 w-10 rounded-full p-0 transition-all duration-200 ${selectedOptions.color === color
+                                                    ? 'border-2 border-blue-500 bg-blue-50 shadow-md'
+                                                    : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                                                }`}
+                                            style={{ backgroundColor: color.toLowerCase() }}
+                                            title={getColorLabel(color)}
+                                        />
                                     ))
                                 )}
                             </div>
@@ -290,12 +256,12 @@ export default function DeviceConditionPage() {
                                         Базовая цена: {devices.selectedDevice.basePrice.toLocaleString()} ₽
                                     </div>
                                 </div>
-                            <Button
-                                onClick={handleContinueToNext}
-                                className="w-full h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl shadow-lg transition-all duration-200 hover:shadow-xl"
-                            >
-                                Продолжить
-                            </Button>
+                                <Button
+                                    onClick={handleContinueToNext}
+                                    className="w-full h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl shadow-lg transition-all duration-200 hover:shadow-xl"
+                                >
+                                    Продолжить
+                                </Button>
                             </div>
                         )}
                     </div>

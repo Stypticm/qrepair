@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useSafeArea } from '@/hooks/useSafeArea';
 
 interface AdaptiveContainerProps {
@@ -35,13 +36,13 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   if (!isMounted) {
     return (
       <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white">
-        <div className="w-full max-w-md mx-auto text-center">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded mb-4"></div>
-            <div className="h-4 bg-gray-300 rounded mb-2"></div>
-            <div className="h-4 bg-gray-300 rounded"></div>
-          </div>
-        </div>
+        <Image
+          src="/animation_running.gif"
+          alt="Загрузка"
+          width={192}
+          height={192}
+          className="object-contain rounded-2xl"
+        />
       </div>
     );
   }
@@ -84,16 +85,13 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   if (isTelegram && !isReady) {
     return (
       <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
-          <p className="text-gray-600">Инициализация Telegram WebApp...</p>
-          <p className="text-sm text-gray-500 mt-2">
-            {safeArea.isMobile ? 'Мобильное устройство' : safeArea.isDesktop ? 'Десктоп' : 'Неизвестно'}
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Fullscreen: {isFullscreen ? 'Да' : 'Нет'}
-          </p>
-        </div>
+        <Image
+          src="/animation_running.gif"
+          alt="Загрузка"
+          width={192}
+          height={192}
+          className="object-contain rounded-2xl"
+        />
       </div>
     );
   }

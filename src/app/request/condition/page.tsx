@@ -14,7 +14,6 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
-import { useDevices, Device } from '@/hooks/useDevices';
 import { getConditionImages } from '@/core/lib/imageUtils';
 
 // Функция для поиска модели по названию
@@ -104,7 +103,6 @@ function findModelByName(modelname: string) {
 export default function ConditionPage() {
     const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice, setCurrentStep } = useAppStore();
     const router = useRouter();
-    const devices = useDevices();
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -581,10 +579,10 @@ export default function ConditionPage() {
         const getImageStyle = () => {
             if (type === 'side') {
                 // Боковые грани - такая же ширина как у передней и задней части, но узкие по высоте
-                return 'w-full h-6 rounded-lg';
+                return 'w-full h-4 rounded-lg';
             } else {
                 // Передняя и задняя панель - прямоугольные как телефон, большая высота для полной видимости без обрезки
-                return 'w-17 h-31 rounded-lg';
+                return 'w-12 h-20 rounded-lg';
             }
         };
 
@@ -593,10 +591,10 @@ export default function ConditionPage() {
         return (
             <div className="space-y-1">
                 {/* Заголовок секции */}
-                <h3 className="text-lg font-semibold text-center">
+                <h3 className="text-sm font-semibold text-center">
                     {type === 'front' ? 'Передняя часть' : type === 'back' ? 'Задняя панель' : 'Боковые грани'}
                     {!canSelectSection(type) && (
-                        <span className="block text-sm text-gray-500 font-normal mt-1">
+                        <span className="block text-xs text-gray-500 font-normal mt-0.5">
                             {type === 'back' ? 'Сначала выберите переднюю часть' : 'Сначала выберите переднюю и заднюю части'}
                         </span>
                     )}
@@ -626,7 +624,7 @@ export default function ConditionPage() {
                                         <span className="text-white text-xs font-bold">✓</span>
                                     </div>
                                 )}
-                                <CardContent className="p-1 pb-1 flex flex-col items-center justify-center">
+                                <CardContent className="p-0.5 pb-0.5 flex flex-col items-center justify-center">
                                     {/* Изображение - разные размеры для разных секций */}
                                     <motion.div 
                                         className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}
@@ -645,7 +643,7 @@ export default function ConditionPage() {
                                     </motion.div>
 
                                     {/* Название условия */}
-                                    <h4 className="text-xs font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
+                                    <h4 className="text-[10px] font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
                                         {condition.label}
                                     </h4>
 
@@ -665,9 +663,9 @@ export default function ConditionPage() {
     return (
         <Page back={true}>
             <ImagePreloader images={preloadImages} />
-            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
+            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                 {/* Прогресс-бар */}
-                <div className="pt-6 pb-2">
+                <div className="pt-2 pb-1">
                     <ProgressBar
                         currentStep={getCurrentStep()}
                         totalSteps={5}
@@ -675,8 +673,8 @@ export default function ConditionPage() {
                     />
                 </div>
 
-                <div className="flex-1 p-3 pt-2 flex items-start justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-8">
+                <div className="flex-1 p-2 pt-1 flex items-start justify-center overflow-y-auto">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
 
                         {/* Секция передней части экрана */}
                         {true && (
@@ -685,7 +683,7 @@ export default function ConditionPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
+                                className="p-1 border border-gray-200 rounded-xl bg-white shadow-sm"
                             >
                                 {renderConditionSection('front', frontConditions)}
                             </motion.div>
@@ -698,7 +696,7 @@ export default function ConditionPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
+                                className="p-1 rounded-xl shadow-sm bg-white"
                             >
                                 {renderConditionSection('back', backConditions)}
                             </motion.div>
@@ -711,7 +709,7 @@ export default function ConditionPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-2 rounded-xl shadow-sm bg-white"
+                                className="p-1 rounded-xl shadow-sm bg-white"
                             >
                                 {renderConditionSection('side', sideConditions)}
                             </motion.div>

@@ -41,6 +41,11 @@ export default function DeviceInfoPage() {
 
     useEffect(() => {
         setCurrentStep('device-info');
+        // Принудительно очищаем старые данные из sessionStorage
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('currentStep');
+            sessionStorage.setItem('currentStep', 'device-info');
+        }
         addDebugInfo('Страница device-info загружена');
         addDebugInfo(`telegramId: ${telegramId || 'НЕТ'}`);
         addDebugInfo(`username: ${username || 'НЕТ'}`);

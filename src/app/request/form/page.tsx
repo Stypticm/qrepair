@@ -4,6 +4,7 @@
 export const dynamic = 'force-dynamic';
 
 import { useRouter } from 'next/navigation';
+import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useAppStore } from '@/stores/authStore';
@@ -19,7 +20,8 @@ import Image from 'next/image';
 
 export default function FormPage() {
     const { modelname, setModel, telegramId, username, setPrice, setCurrentStep } = useAppStore();
-    const router = useRouter(); 
+    const router = useRouter();
+    const { goBack } = useStepNavigation();
     const devices = useDevices();
 
     // Устанавливаем текущий шаг при загрузке страницы
@@ -70,7 +72,7 @@ export default function FormPage() {
             });
         }
     }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices.loadColors]);
-    
+
     // Состояние для отображения текущего выбора в центре
     const [currentSelection, setCurrentSelection] = useState<string>('');
 
@@ -121,7 +123,7 @@ export default function FormPage() {
         if (!selectedOptions.variant) return 'variant';
         if (!selectedOptions.storage) return 'storage';
         if (!selectedOptions.color) return 'color';
-        
+
         return null; // все выбрано
     };
 
@@ -129,7 +131,10 @@ export default function FormPage() {
 
     // Состояние для диалогового окна
     const [showSummaryDialog, setShowSummaryDialog] = useState(false);
-    
+
+    // Состояние для отслеживания перехода на другую страницу
+    const [isNavigating, setIsNavigating] = useState(false);
+
     // Отладочный лог для состояния диалога
     useEffect(() => {
         console.log('🔍 Dialog state changed - showSummaryDialog:', showSummaryDialog);
@@ -169,13 +174,14 @@ export default function FormPage() {
         if (type === 'model') {
             newOptions.variant = null;
             newOptions.storage = '';
-            newOptions.color = '';            devices.clearFilters();
+            newOptions.color = '';
+            devices.clearFilters();
         } else if (type === 'variant') {
             newOptions.storage = '';
             newOptions.color = '';
         } else if (type === 'storage') {
             newOptions.color = '';
-        } 
+        }
 
         setSelectedOptions(newOptions);
 
@@ -233,7 +239,7 @@ export default function FormPage() {
 
         console.log('🔍 isAllOptionsSelected - selectedOptions:', selectedOptions);
         console.log('🔍 isAllOptionsSelected - allSelected:', allSelected);
-        
+
         return allSelected;
     }, [selectedOptions]);
 
@@ -284,7 +290,7 @@ export default function FormPage() {
 
     useEffect(() => {
         console.log('🔍 SelectedDevice useEffect - devices.selectedDevice:', devices.selectedDevice);
-        
+
         if (devices.selectedDevice) {
             console.log('🔍 SelectedDevice useEffect - Processing selected device...');
             const device = devices.selectedDevice;
@@ -312,8 +318,8 @@ export default function FormPage() {
                     let basePrice = 0; // цена по умолчанию
                     if (devices.selectedDevice) {
                         basePrice = devices.selectedDevice.basePrice;
-                        } else {
-                        }
+                    } else {
+                    }
 
                     // На form page всегда сохраняем базовую цену (без поломок)
                     // Это будет перезаписано на condition page с учетом поломок
@@ -424,7 +430,7 @@ export default function FormPage() {
     // Автоматически открываем диалог когда все поля заполнены
     useEffect(() => {
         const allSelected = isAllOptionsSelected();
-        
+
         console.log('🔍 Dialog useEffect - allSelected:', allSelected);
         console.log('🔍 Dialog useEffect - selectedOptions:', selectedOptions);
         console.log('🔍 Dialog useEffect - devices.selectedDevice:', devices.selectedDevice);
@@ -567,35 +573,69 @@ export default function FormPage() {
     };
 
     const handleContinueToNext = async () => {
+        // Если уже в процессе перехода, ничего не делаем
+        if (isNavigating) return;
+
         if (devices.selectedDevice) {
-            // Обновляем currentStep в БД перед переходом
+            const { model, variant, storage, color, basePrice } = devices.selectedDevice;
+            const fullModelName = `Apple iPhone ${model}${variant ? ` ${getVariantLabel(variant)}` : ''} ${storage} ${getColorLabel(color)}`;
+
+            // Немедленно начинаем процесс перехода
+            setIsNavigating(true);
+            setShowSummaryDialog(false);
+
+            // Обновляем все данные в БД одним запросом перед переходом
             if (telegramId) {
                 try {
                     await fetch('/api/request/choose', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             telegramId,
                             username: username || 'Unknown',
                             currentStep: 'condition',
-                        }),
+                            modelname: fullModelName,
+                            price: basePrice
+                        })
                     });
                 } catch (error) {
                     console.error('Ошибка обновления currentStep:', error);
+                    // Можно показать ошибку пользователю и остановить переход
+                    setIsNavigating(false); // Сбросить состояние загрузки
+                    return;
                 }
             }
 
             // Переходим на страницу выбора состояния
             router.push('/request/condition');
+            
+            // Сбрасываем состояние навигации после перехода
+            setTimeout(() => {
+                setIsNavigating(false);
+            }, 100);
         }
     };
 
     return (
         <LazyMotion features={domAnimation}>
-            <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
+            {/* Полноэкранный лоадер во время перехода */}
+            {isNavigating && (
+                <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="flex flex-col items-center">
+                        <Image
+                            src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+                            alt="Загрузка"
+                            width={192}
+                            height={192}
+                            className="object-contain rounded-2xl"
+                        />
+                        <p className="mt-4 text-lg font-semibold text-gray-700">Переходим к оценке...</p>
+                    </div>
+                </div>
+            )}
+
+            <Page back={goBack}>
+                <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                     {/* Прогресс-бар */}
                     <div className="pb-1">
                         <ProgressBar
@@ -611,56 +651,56 @@ export default function FormPage() {
 
 
                             {/* Секция выбора модели */}
-                            
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -20 }}
-                                    transition={{ duration: 0.2, ease: "easeOut" }}
-                                    className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
-                                >
-                                    <h3 className="text-center font-semibold text-gray-900 mb-2 text-lg">Модель</h3>
-                                    {devices.loading && devices.models.length === 0 && (
-                                        <div className="grid grid-cols-4 gap-1 animate-pulse">
-                                            {Array.from({ length: 8 }).map((_, i) => (
-                                                <div key={i} className="w-full h-7 rounded-lg bg-gray-200"></div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {!devices.loading && devices.models.length === 0 && (
-                                        <p className="text-center text-sm text-gray-500 py-2">
-                                            Не удалось загрузить модели. Попробуйте обновить страницу.
-                                        </p>
-                                    )}
-                                    {devices.models.length > 0 && (
-                                        <div className="grid grid-cols-4 gap-1">
-                                            {devices.models.map((model: string) => (
-                                                <motion.div
-                                                    key={model}
-                                                    whileHover={{ scale: 1.01 }}
-                                                    whileTap={{ scale: 0.99 }}
-                                                    transition={{ duration: 0.15 }}
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                className="p-2 border border-gray-200 rounded-xl bg-white shadow-sm"
+                            >
+                                <h3 className="text-center font-semibold text-gray-900 mb-2 text-lg">Модель</h3>
+                                {devices.loading && devices.models.length === 0 && (
+                                    <div className="grid grid-cols-4 gap-1 animate-pulse">
+                                        {Array.from({ length: 8 }).map((_, i) => (
+                                            <div key={i} className="w-full h-7 rounded-lg bg-gray-200"></div>
+                                        ))}
+                                    </div>
+                                )}
+                                {!devices.loading && devices.models.length === 0 && (
+                                    <p className="text-center text-sm text-gray-500 py-2">
+                                        Не удалось загрузить модели. Попробуйте обновить страницу.
+                                    </p>
+                                )}
+                                {devices.models.length > 0 && (
+                                    <div className="grid grid-cols-4 gap-1">
+                                        {devices.models.map((model: string) => (
+                                            <motion.div
+                                                key={model}
+                                                whileHover={{ scale: 1.01 }}
+                                                whileTap={{ scale: 0.99 }}
+                                                transition={{ duration: 0.15 }}
+                                            >
+                                                <Button
+                                                    onClick={() => handleOptionSelect('model', model)}
+                                                    className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.model === model
+                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                        }`}
                                                 >
-                                                    <Button
-                                                        onClick={() => handleOptionSelect('model', model)}
-                                                        className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.model === model
-                                                                ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                                            }`}
-                                                    >
-                                                        {selectedOptions.model === model && (
-                                                            <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                                                <span className="text-white text-xs font-bold">✓</span>
-                                                            </div>
-                                                        )}
-                                                        {model}
-                                                    </Button>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </motion.div>
-                            
+                                                    {selectedOptions.model === model && (
+                                                        <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
+                                                            <span className="text-white text-xs font-bold">✓</span>
+                                                        </div>
+                                                    )}
+                                                    {model}
+                                                </Button>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+
 
                             {/* Секция выбора варианта */}
                             {selectedOptions.model && devices.variants.length > 0 && (
@@ -678,8 +718,8 @@ export default function FormPage() {
                                                 key={variant}
                                                 onClick={() => handleOptionSelect('variant', variant)}
                                                 className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.variant === variant
-                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                                     }`}
                                             >
                                                 {selectedOptions.variant === variant && (
@@ -710,8 +750,8 @@ export default function FormPage() {
                                                 key={storage}
                                                 onClick={() => handleOptionSelect('storage', storage)}
                                                 className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.storage === storage
-                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                                     }`}
                                             >
                                                 {selectedOptions.storage === storage && (
@@ -729,8 +769,8 @@ export default function FormPage() {
                                                 key={storage}
                                                 onClick={() => handleOptionSelect('storage', storage)}
                                                 className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.storage === storage
-                                                        ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
-                                                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
+                                                    ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
                                                     }`}
                                             >
                                                 {selectedOptions.storage === storage && (
@@ -761,8 +801,8 @@ export default function FormPage() {
                                                 key={color}
                                                 onClick={() => handleOptionSelect('color', color)}
                                                 className={`h-8 w-8 rounded-full border-2 transition-all duration-200 relative group flex items-center justify-between p-0 ${selectedOptions.color === color
-                                                        ? 'border-[#2dc2c6] ring-2 ring-[#2dc2c6]/30 shadow-lg'
-                                                        : 'border-gray-200 hover:border-gray-300'
+                                                    ? 'border-[#2dc2c6] ring-2 ring-[#2dc2c6]/30 shadow-lg'
+                                                    : 'border-gray-200 hover:border-gray-300'
                                                     }`}
                                                 style={{
                                                     backgroundColor: getColorStyle(color),
@@ -822,7 +862,7 @@ export default function FormPage() {
 
                         </div>
                     </div>
-            </div>
+                </div>
             </Page>
         </LazyMotion>
     );

@@ -244,6 +244,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   goToPreviousStep: (router?: any) => {
     const { currentStep } = get()
     if (!currentStep) {
+      // Если нет текущего шага, идем на главную
+      if (typeof window !== 'undefined') {
+        if (router) {
+          router.push('/')
+        } else {
+          window.location.href = '/'
+        }
+      }
       return
     }
 
@@ -261,6 +269,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       }
     } else {
+      // Если мы на первом шаге, идем на главную
       if (typeof window !== 'undefined') {
         if (router) {
           router.push('/')
@@ -291,7 +300,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   // Reset
-  resetAllStates: () =>
+  resetAllStates: () => {
     set({
       modelname: 'Apple iPhone 11',
       comment: '',
@@ -317,7 +326,18 @@ export const useAppStore = create<AppState>((set, get) => ({
         pointId: 1,
         requestId: '',
       },
-    }),
+    })
+
+    // Очищаем sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('phoneSelection')
+      sessionStorage.removeItem('deviceConditions')
+      sessionStorage.removeItem('additionalConditions')
+      sessionStorage.removeItem('basePrice')
+      sessionStorage.removeItem('price')
+      sessionStorage.removeItem('currentStep')
+    }
+  },
 
   // Clear session storage
   clearSessionStorage: () => {

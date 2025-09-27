@@ -7,12 +7,11 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore } from '@/stores/authStore';
 
 export function Page({ children, back = true }: PropsWithChildren<{
-  back?: boolean;
+  back?: boolean | (() => void);
 }>) {
   const router = useRouter();
   const { safeAreaInsets, cssVars, isTelegram, isDesktop } = useSafeArea();
-  const { goToPreviousStep, currentStep } = useAppStore();
-  const canGoBack = currentStep !== null;
+  const { goToPreviousStep } = useAppStore();
 
   console.log('Page safeAreaInsets:', safeAreaInsets);
 
@@ -30,10 +29,21 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   useEffect(() => {
     const handleBackClick = () => {
-      if (canGoBack) {
-        goToPreviousStep(router);
+      if (typeof back === 'function') {
+        // Если передана кастомная функция, вызываем её
+        back();
       } else {
-        router.push('/');
+        // Проверяем, есть ли currentStep в store
+        const { currentStep } = useAppStore.getState();
+        console.log('🔍 Page handleBackClick - currentStep:', currentStep);
+        
+        if (!currentStep) {
+          // Если нет currentStep, идем на главную
+          router.push('/');
+        } else {
+          // Используем логику из стора для навигации
+          goToPreviousStep(router);
+        }
       }
     };
 
@@ -50,7 +60,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
         console.log('Error unbinding back button:', error);
       }
     };
-  }, [router, goToPreviousStep, canGoBack]);
+  }, [router, goToPreviousStep, back]);
 
   return (
     <section

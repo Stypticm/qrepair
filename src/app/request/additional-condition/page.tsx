@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
+import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { useEffect, useState, useCallback } from 'react'
 import { Page } from '@/components/Page';
 import { useAppStore } from '@/stores/authStore';
@@ -35,6 +36,7 @@ export default function AdditionalConditionPage() {
         setCurrentStep
     } = useAppStore();
     const router = useRouter();
+    const { goBack } = useStepNavigation();
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -487,7 +489,7 @@ export default function AdditionalConditionPage() {
     const preloadImages = getAdditionalConditionImages();
 
     return (
-        <Page back={true}>
+        <Page back={goBack}>
             <ImagePreloader images={preloadImages} />
             <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                 {/* Прогресс-бар */}

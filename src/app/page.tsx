@@ -31,6 +31,7 @@ function HomeContent() {
     setCurrentStep,
     initializeTelegram,
     addDebugInfo,
+    resetAllStates,
   } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
@@ -40,11 +41,13 @@ function HomeContent() {
   const testAdminIds = useMemo(() => ['1', '296925626', '531360988'], []);
 
   useEffect(() => {
-    const isMobileWidth = typeof window !== 'undefined' ? window.innerWidth < 768 : true;
-    if (!isFullscreen && window.Telegram?.WebApp && isInTelegram && isMobileWidth) {
-      forceFullscreen();
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem('start-over') === 'true') {
+        sessionStorage.removeItem('start-over');
+        router.push('/request/device-info');
+      }
     }
-  }, [isInTelegram, isFullscreen, forceFullscreen]);
+  }, [router]);
 
   useEffect(() => {
     if (!isLoading && isMaster(userId)) {
@@ -96,101 +99,32 @@ function HomeContent() {
 
   const handleStartForm = async () => {
     try {
-      setIsLoading(true);
-      let draftData = null;
-      if (useAppStore.getState().telegramId) {
-        const response = await fetch('/api/request/getDraft', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ telegramId: useAppStore.getState().telegramId }),
-        });
-        if (response.ok) {
-          draftData = await response.json();
-          if (draftData) {
-            if (draftData.modelname) setModel(draftData.modelname);
-            if (draftData.price) setPrice(draftData.price);
-            if (draftData.imei) setImei(draftData.imei);
-            if (draftData.sn) setSerialNumber(draftData.sn);
-            if (draftData.deviceConditions) setDeviceConditions(draftData.deviceConditions);
-            if (draftData.additionalConditions) setAdditionalConditions(draftData.additionalConditions);
-          }
-        }
-      }
-
-      if (draftData && draftData.status === 'submitted') {
-        if (window.Telegram?.WebApp) {
-          const confirmed = await new Promise((resolve) => {
-            window.Telegram.WebApp.showConfirm(
-              'У вас уже есть отправленная заявка. Хотите создать новую?',
-              (result: boolean) => resolve(result)
-            );
-          });
-          if (!confirmed) {
-            setIsLoading(false);
-            return;
-          }
-        }
-      }
-
-      const currentStep = draftData?.currentStep;
-      if (currentStep) {
-        router.push(`/request/${currentStep}`);
-        return;
-      }
-
-      if (draftData?.deliveryMethod) {
-        if (draftData.deliveryMethod === 'pickup' && draftData.pickupPoint) {
-          router.push('/request/pickup-points');
-        } else if (draftData.deliveryMethod === 'courier' && draftData.courierAddress && draftData.courierDate && draftData.courierTime) {
-          router.push('/request/courier-booking');
-        } else {
-          router.push('/request/delivery-options');
-        }
-      } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber && useAppStore.getState().modelname && useAppStore.getState().deviceConditions && useAppStore.getState().additionalConditions) {
-        router.push('/request/submit');
-      } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber && useAppStore.getState().modelname && useAppStore.getState().deviceConditions) {
-        router.push('/request/additional-condition');
-      } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber && useAppStore.getState().modelname) {
-        router.push('/request/condition');
-      } else if (useAppStore.getState().imei && useAppStore.getState().serialNumber) {
-        router.push('/request/form');
-      } else {
-        router.push('/request/device-info');
-      }
-    } catch (error) {
-      console.error('Ошибка проверки заявки:', error);
+      // Очищаем все данные перед началом новой заявки
+      resetAllStates();
+      
+      // Простая логика: всегда начинаем с device-info
+      setCurrentStep('device-info');
       router.push('/request/device-info');
-    } finally {
-      setIsLoading(false);
+      
+    } catch (error) {
+      console.error('Ошибка при переходе:', error);
+      router.push('/request/device-info');
     }
   };
 
-  if (isLoading || isInTelegram === null) {
+
+  if (isInTelegram === null) {
     return (
       <AdaptiveContainer>
         <div className="w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
-          <motion.div
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="w-48 h-48 mx-auto mb-6 flex items-center justify-center"
-          >
-            <Image
-              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-              alt="Загрузка"
-              width={192}
-              height={192}
-              className="object-contain rounded-2xl"
-            />
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6, ease: "easeOut" }}
-            className="text-gray-600 mt-4"
-          >
-            Проверяем сохраненные данные...
-          </motion.p>
+          <Image
+            src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+            alt="Загрузка"
+            width={192}
+            height={192}
+            className="object-contain rounded-2xl"
+          />
+          <p className="text-gray-600 mt-4">Инициализация...</p>
         </div>
       </AdaptiveContainer>
     );
@@ -382,7 +316,13 @@ function MarketplaceFeed() {
       {isLoadingMore && (
         <div className="flex justify-center items-center p-4">
           <span className="inline-flex items-center gap-2 text-gray-500">
-            <span className="inline-block w-4 h-4 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin" />
+            <Image
+              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+              alt="Загрузка"
+              width={32}
+              height={32}
+              className="object-contain"
+            />
             Загрузка...
           </span>
         </div>

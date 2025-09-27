@@ -41,7 +41,13 @@ export default function TelegramRedirectPage() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2dc2c6] mx-auto mb-4"></div>
+          <Image
+            src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+            alt="Загрузка"
+            width={192}
+            height={192}
+            className="object-contain rounded-2xl"
+          />
           <p className="text-gray-600">Проверяем...</p>
         </div>
       </div>
