@@ -17,11 +17,8 @@ export default function DeviceConditionPage() {
         model: '',
         variant: null as string | null,
         storage: '',
-        color: '',
-        country: '',
-        simType: ''
+        color: ''
     });
-
 
 
     // Загружаем данные при изменении фильтров
@@ -50,32 +47,9 @@ export default function DeviceConditionPage() {
         }
     }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, devices]);
 
-    useEffect(() => {
-        if (selectedOptions.model && selectedOptions.variant && selectedOptions.storage && selectedOptions.color) {
-            devices.loadCountries({
-                model: selectedOptions.model,
-                variant: selectedOptions.variant,
-                storage: selectedOptions.storage,
-                color: selectedOptions.color
-            });
-        }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, devices]);
-
-    useEffect(() => {
-        if (selectedOptions.model && selectedOptions.variant && selectedOptions.storage && selectedOptions.color && selectedOptions.country) {
-            devices.loadSimTypes({
-                model: selectedOptions.model,
-                variant: selectedOptions.variant,
-                storage: selectedOptions.storage,
-                color: selectedOptions.color,
-                country: selectedOptions.country
-            });
-        }
-    }, [selectedOptions.model, selectedOptions.variant, selectedOptions.storage, selectedOptions.color, selectedOptions.country, devices]);
-
     // Проверяем, все ли опции выбраны
     const isAllOptionsSelected = useCallback(() => {
-        return selectedOptions.model && selectedOptions.variant !== null && selectedOptions.storage && selectedOptions.color && selectedOptions.country && selectedOptions.simType;
+        return selectedOptions.model && selectedOptions.variant !== null && selectedOptions.storage && selectedOptions.color;
     }, [selectedOptions]);
 
     // Загружаем устройство и цену когда все выбрано
@@ -85,9 +59,7 @@ export default function DeviceConditionPage() {
                 model: selectedOptions.model,
                 variant: selectedOptions.variant || '',
                 storage: selectedOptions.storage,
-                color: selectedOptions.color,
-                country: selectedOptions.country,
-                simType: selectedOptions.simType
+                color: selectedOptions.color
             });
         }
     }, [selectedOptions, devices, isAllOptionsSelected]);
@@ -101,29 +73,16 @@ export default function DeviceConditionPage() {
             newOptions.variant = null;
             newOptions.storage = '';
             newOptions.color = '';
-            newOptions.country = '';
-            newOptions.simType = '';
             devices.clearFilters();
         } else if (type === 'variant') {
             newOptions.variant = value;
             newOptions.storage = '';
             newOptions.color = '';
-            newOptions.country = '';
-            newOptions.simType = '';
         } else if (type === 'storage') {
             newOptions.storage = value;
             newOptions.color = '';
-            newOptions.country = '';
-            newOptions.simType = '';
         } else if (type === 'color') {
             newOptions.color = value;
-            newOptions.country = '';
-            newOptions.simType = '';
-        } else if (type === 'country') {
-            newOptions.country = value;
-            newOptions.simType = '';
-        } else if (type === 'simType') {
-            newOptions.simType = value;
         }
         
         setSelectedOptions(newOptions);
@@ -133,7 +92,7 @@ export default function DeviceConditionPage() {
     const handleContinueToNext = () => {
         if (isAllOptionsSelected() && devices.selectedDevice) {
             const device = devices.selectedDevice;
-            const fullModelName = `${device.model} ${device.variant} ${device.storage} ${device.color} ${device.country} ${device.simType}`;
+            const fullModelName = `${device.model} ${device.variant} ${device.storage} ${device.color}`;
                 setModel(fullModelName);
             setPrice(device.basePrice);
             
@@ -143,8 +102,6 @@ export default function DeviceConditionPage() {
                 variant: device.variant,
                 storage: device.storage,
                 color: device.color,
-                country: device.country,
-                simType: device.simType,
                 basePrice: device.basePrice
             }));
             
@@ -238,7 +195,7 @@ export default function DeviceConditionPage() {
                                 ) : (
                                     devices.models.map((model: string) => (
                                     <Button
-                                        key={model}
+                                        key={`model-${model}`}
                                         onClick={() => handleOptionSelect('model', model)}
                                         className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${
                                             selectedOptions.model === model
@@ -261,7 +218,7 @@ export default function DeviceConditionPage() {
                                 ) : (
                                     devices.variants.map((variant: string) => (
                                     <Button
-                                        key={variant}
+                                        key={`variant-${variant}`}
                                         onClick={() => handleOptionSelect('variant', variant)}
                                         disabled={!selectedOptions.model}
                                         className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${
@@ -285,7 +242,7 @@ export default function DeviceConditionPage() {
                                 ) : (
                                     devices.storages.map((storage: string) => (
                                     <Button
-                                        key={storage}
+                                        key={`storage-${storage}`}
                                         onClick={() => handleOptionSelect('storage', storage)}
                                         disabled={!selectedOptions.model || !selectedOptions.variant}
                                         className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${
@@ -309,7 +266,7 @@ export default function DeviceConditionPage() {
                                 ) : (
                                     devices.colors.map((color: string) => (
                                     <Button
-                                        key={color}
+                                        key={`color-${color}`}
                                         onClick={() => handleOptionSelect('color', color)}
                                         disabled={!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage}
                                         className={`h-10 w-10 rounded-full p-0 transition-all duration-200 ${
@@ -320,54 +277,6 @@ export default function DeviceConditionPage() {
                                         style={{ backgroundColor: color.toLowerCase() }}
                                         title={getColorLabel(color)}
                                     />
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Тип SIM */}
-                        <div className={`p-3 rounded-xl border transition-all duration-200 ${!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage || !selectedOptions.color ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
-                            <div className="grid grid-cols-1 gap-1">
-                                {devices.loading.simTypes ? (
-                                    <div className="text-center py-4 text-gray-500">Загрузка типов SIM...</div>
-                                ) : (
-                                    devices.simTypes.map((simType: string) => (
-                                    <Button
-                                        key={simType}
-                                        onClick={() => handleOptionSelect('simType', simType)}
-                                        disabled={!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage || !selectedOptions.color}
-                                        className={`h-8 rounded-lg border transition-all duration-200 text-xs font-medium ${
-                                            selectedOptions.simType === simType
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                        }`}
-                                    >
-                                        {simType}
-                                    </Button>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Страна производитель */}
-                        <div className={`p-3 rounded-xl border transition-all duration-200 ${!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage || !selectedOptions.color || !selectedOptions.simType ? 'bg-gray-100 opacity-60' : 'bg-white'}`}>
-                            <div className="grid grid-cols-1 gap-1">
-                                {devices.loading.countries ? (
-                                    <div className="text-center py-4 text-gray-500">Загрузка стран...</div>
-                                ) : (
-                                    devices.countries.map((country: string) => (
-                                    <Button
-                                        key={country}
-                                        onClick={() => handleOptionSelect('country', country)}
-                                        disabled={!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage || !selectedOptions.color || !selectedOptions.simType}
-                                        className={`h-10 rounded-lg border transition-all duration-200 text-sm font-medium ${
-                                            selectedOptions.country === country
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
-                                                : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'
-                                        }`}
-                                    >
-                                        {country}
-                                    </Button>
                                     ))
                                 )}
                             </div>

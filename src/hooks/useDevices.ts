@@ -14,13 +14,20 @@ export const useDevices = () => {
   const [variants, setVariants] = useState<string[]>([])
   const [storages, setStorages] = useState<string[]>([])
   const [colors, setColors] = useState<string[]>([])
+  const [countries, setCountries] = useState<string[]>([])
   const [selectedDevice, setSelectedDevice] =
     useState<Device | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState({
+    models: false,
+    variants: false,
+    storages: false,
+    colors: false,
+    device: false,
+  })
   const [error, setError] = useState<string | null>(null)
 
   const loadModels = useCallback(async () => {
-    setLoading(true)
+    setLoading((prev) => ({ ...prev, models: true }))
     setError(null)
     try {
       const response = await fetch('/api/devices/models')
@@ -31,13 +38,13 @@ export const useDevices = () => {
     } catch (err: any) {
       setError(err.message)
     } finally {
-      setLoading(false)
+      setLoading((prev) => ({ ...prev, models: false }))
     }
   }, [])
 
   const loadVariants = useCallback(
     async (model: string) => {
-      setLoading(true)
+      setLoading((prev) => ({ ...prev, variants: true }))
       setError(null)
       setVariants([]) // Reset
       try {
@@ -51,7 +58,7 @@ export const useDevices = () => {
       } catch (err: any) {
         setError(err.message)
       } finally {
-        setLoading(false)
+        setLoading((prev) => ({ ...prev, variants: false }))
       }
     },
     []
@@ -65,7 +72,7 @@ export const useDevices = () => {
       model: string
       variant: string | null
     }) => {
-      setLoading(true)
+      setLoading((prev) => ({ ...prev, storages: true }))
       setError(null)
       setStorages([]) // Reset
       try {
@@ -81,7 +88,7 @@ export const useDevices = () => {
       } catch (err: any) {
         setError(err.message)
       } finally {
-        setLoading(false)
+        setLoading((prev) => ({ ...prev, storages: false }))
       }
     },
     []
@@ -97,7 +104,7 @@ export const useDevices = () => {
       variant: string | null
       storage: string
     }) => {
-      setLoading(true)
+      setLoading((prev) => ({ ...prev, colors: true }))
       setError(null)
       setColors([]) // Reset
       try {
@@ -113,7 +120,7 @@ export const useDevices = () => {
       } catch (err: any) {
         setError(err.message)
       } finally {
-        setLoading(false)
+        setLoading((prev) => ({ ...prev, colors: false }))
       }
     },
     []
@@ -131,7 +138,7 @@ export const useDevices = () => {
       storage: string
       color: string
     }) => {
-      setLoading(true)
+      setLoading((prev) => ({ ...prev, device: true }))
       setError(null)
       try {
         const response = await fetch(
@@ -146,7 +153,7 @@ export const useDevices = () => {
       } catch (err: any) {
         setError(err.message)
       } finally {
-        setLoading(false)
+        setLoading((prev) => ({ ...prev, device: false }))
       }
     },
     []
@@ -164,6 +171,7 @@ export const useDevices = () => {
     variants,
     storages,
     colors,
+    countries,
     selectedDevice,
     loading,
     error,
