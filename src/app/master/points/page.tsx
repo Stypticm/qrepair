@@ -258,56 +258,14 @@ export default function MasterPointsPage() {
                     </div>
                   </div>
 
-                  <div className="flex space-x-3">
+                  <div className="flex justify-center">
                     {request.status !== 'completed' && (
-                      <>
                         <Link
                           href={`/master/requests/${request.id}`}
-                          className="flex-1 bg-blue-600 text-black border-2 border-black px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
+                          className="bg-blue-600 text-black border-2 border-black px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
                         >
                           Просмотреть детали
                         </Link>
-                        <button
-                          onClick={async () => {
-                            if (request.status === 'in_progress') return
-                            const newStatus = request.status === 'submitted' ? 'in_progress' :
-                              request.status === 'inspected' ? 'completed' : 'submitted'
-                            setUpdatingStatus(request.id)
-                            try {
-                              const response = await fetch('/api/master/request-status', {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  requestId: request.id,
-                                  status: newStatus,
-                                  masterTelegramId: telegramId
-                                })
-                              })
-                              if (!response.ok) {
-                                const data = await response.json()
-                                throw new Error(data.error || 'Failed to update status')
-                              }
-                              console.log('Status updated for request:', request.id)
-                              await loadData()
-                            } catch (error) {
-                              console.error('Error updating request status:', error)
-                            } finally {
-                              setUpdatingStatus(null)
-                            }
-                          }}
-                          disabled={request.status === 'in_progress' || updatingStatus === request.id}
-                          className={`px-4 py-2 rounded-md transition-colors ${request.status === 'in_progress' || updatingStatus === request.id
-                            ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                            : 'bg-green-600 text-white hover:bg-green-700'
-                            }`}
-                        >
-                          {updatingStatus === request.id ? 'Обновляем...' :
-                            request.status === 'submitted' ? 'Взять в работу' :
-                              request.status === 'in_progress' ? 'На проверке' :
-                                request.status === 'inspected' ? 'Завершить' :
-                                  'Сбросить'}
-                        </button>
-                      </>
                     )}
                     {request.status === 'completed' && (
                       <div className="w-full bg-green-50 border-2 border-green-200 rounded-lg p-3 text-center">

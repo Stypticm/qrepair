@@ -1,1 +1,0 @@
-Invoke-WebRequest -Uri "https://qrepair-git-dev-stypticms-projects.vercel.app/api/send-photo-url" -Method POST -Headers @{"Content-Type"="application/json"} -Body '{"telegramId": "531360988", "imageUrl": "https://example.com/image.jpg", "caption": "Тестовая картинка"}'

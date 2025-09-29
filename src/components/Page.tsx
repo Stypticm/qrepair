@@ -76,7 +76,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
     >
       <div className="w-full h-full flex justify-center items-start">
         <div
-          className={`w-full max-w-md ${isDesktop && isTelegram ? 'md:w-[390px] h-[844px]' : 'h-full'} mx-auto bg-white ${isDesktop && isTelegram ? 'rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.10)]' : ''} px-4 box-border`}
+          className={`w-full max-w-md ${isDesktop && isTelegram ? 'md:w-[390px] h-[844px]' : 'h-full'} mx-auto bg-white ${isDesktop && isTelegram ? 'rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.10)]' : ''} px-4 box-border overflow-y-auto`}
         >
           {children}
         </div>

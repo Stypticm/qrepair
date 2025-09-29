@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/core/lib/prisma'
+import { SkupkaStatus } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
@@ -7,6 +8,15 @@ export async function GET(req: NextRequest) {
     const masterTelegramId = searchParams.get(
       'masterTelegramId'
     )
+    const page = parseInt(
+      searchParams.get('page') || '1',
+      10
+    )
+    const limit = parseInt(
+      searchParams.get('limit') || '10',
+      10
+    )
+    const skip = (page - 1) * limit
 
     if (!masterTelegramId) {
       return NextResponse.json(
@@ -15,7 +25,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Находим мастера
+    // Находим мастера по его Telegram ID
     const master = await prisma.master.findUnique({
       where: { telegramId: masterTelegramId },
     })
@@ -27,15 +37,30 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Получаем только заявки, назначенные этому мастеру
-    const requests = await prisma.skupka.findMany({
-      where: {
-        assignedMasterId: master.id,
+    const whereClause = {
+      assignedMasterId: master.id,
+      status: {
+        in: [
+          SkupkaStatus.submitted,
+          SkupkaStatus.in_progress,
+        ], // Use enum values
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    }
+
+    // Используем транзакцию для получения заявок и их общего количества
+    const [requests, total] = await prisma.$transaction([
+      prisma.skupka.findMany({
+        where: whereClause,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip: skip,
+        take: limit,
+      }),
+      prisma.skupka.count({
+        where: whereClause,
+      }),
+    ])
 
     console.log(
       '🔍 Master requests API - master.id:',
@@ -46,17 +71,14 @@ export async function GET(req: NextRequest) {
       requests.length
     )
     console.log(
-      '🔍 Master requests API - requests:',
-      requests.map((r) => ({
-        id: r.id,
-        status: r.status,
-        assignedMasterId: r.assignedMasterId,
-      }))
+      '🔍 Master requests API - total requests:',
+      total
     )
 
     return NextResponse.json({
       success: true,
       requests: requests,
+      total: total,
     })
   } catch (error) {
     console.error('Error fetching master requests:', error)
