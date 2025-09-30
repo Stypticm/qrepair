@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Upload, X } from 'lucide-react';
+import { X, AlertCircle, Upload } from 'lucide-react';
 import QrScanner from 'qr-scanner';
-import { qrScanner } from '@telegram-apps/sdk';
 
 interface QRScannerProps {
   onScanSuccess: (skupkaId: string) => void;
@@ -13,164 +12,84 @@ interface QRScannerProps {
 
 export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const qrScannerRef = useRef<QrScanner | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [isTelegramScanner, setIsTelegramScanner] = useState(false);
+  const [isScannerReady, setIsScannerReady] = useState(false);
+  const [isTelegram, setIsTelegram] = useState(false);
 
-  const handleScanResult = useCallback(
-    (result: QrScanner.ScanResult | string) => {
-      const scanData = typeof result === 'string' ? result : result.data;
-      console.log('Отсканирован QR:', scanData);
-      try {
-        // Парсим JSON из QR кода
-        const qrData = JSON.parse(scanData);
-        if (qrData.skupkaId) {
-          console.log('Успешно извлечён skupkaId:', qrData.skupkaId);
-          onScanSuccess(qrData.skupkaId);
-          qrScanner.close();
-          onClose();
-        } else {
-          setError('QR код не содержит ID заявки');
-        }
-      } catch (parseError) {
-        // Если не JSON, пробуем как простой ID
-        if (scanData && scanData.trim()) {
-          console.log('Успешно извлечён текстовый ID:', scanData.trim());
-          onScanSuccess(scanData.trim());
-          qrScanner.close();
-          onClose();
-        } else {
-          setError('Неверный формат QR кода');
-        }
-      }
-    },
-    [onScanSuccess, onClose]
-  );
-
-  const startTelegramScanner = useCallback(async () => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp && qrScanner.open.isAvailable()) {
-      console.log('Попытка открыть Telegram QR Scanner...');
-      setIsTelegramScanner(true);
-      try {
-        const result = await qrScanner.open({
-          text: 'Наведите камеру на QR код заявки',
-          capture: (qr: string) => {
-            console.log('Telegram QR Scanner: отсканирован QR:', qr);
-            handleScanResult(qr);
-            return true; // Закрываем попап после успешного сканирования
-          },
-        });
-        console.log('Telegram QR Scanner: результат:', result);
-        if (result === null) {
-          console.log('Telegram QR Scanner: попап закрыт без результата');
-          setIsTelegramScanner(false);
-          onClose();
-        }
-        return true;
-      } catch (err) {
-        console.error('Ошибка Telegram QR Scanner:', err);
-        setError('Не удалось открыть сканер Telegram. Попробуйте загрузить фото QR кода или использовать веб-сканер.');
-        setIsTelegramScanner(false);
-        return false;
-      }
-    } else {
-      console.warn('Telegram Web App или showScanQrPopup недоступны');
-      return false;
-    }
-  }, [handleScanResult, onClose]);
-
-  const startWebScanner = useCallback(async () => {
-    if (!videoRef.current) {
-      console.log('videoRef недоступен, ждём...');
-      setTimeout(startWebScanner, 100);
-      return;
-    }
+  const handleScanResult = useCallback((result: QrScanner.ScanResult | string) => {
+    const scanData = typeof result === 'string' ? result : result.data;
     try {
-      setError(null);
-      const hasCamera = await QrScanner.hasCamera();
-      if (!hasCamera) {
-        setError('Камера не найдена. Выберите фото QR из галереи.');
-        setHasPermission(false);
-        return;
-      }
-
-      // Проверка доступа к камере
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        stream.getTracks().forEach((track) => track.stop());
-        console.log('Доступ к камере получен');
-      } catch (err: any) {
-        console.error('Ошибка доступа к камере:', err);
-        setError('Доступ к камере запрещен. Используйте загрузку файла.');
-        setHasPermission(false);
-        return;
-      }
-
-      qrScannerRef.current = new QrScanner(
-        videoRef.current,
-        handleScanResult,
-        {
-          highlightScanRegion: true,
-          highlightCodeOutline: true,
-          preferredCamera: 'environment',
-        }
-      );
-
-      await qrScannerRef.current.start();
-      setIsScanning(true);
-      setHasPermission(true);
-      console.log('Веб-сканер успешно запущен');
-    } catch (err: any) {
-      console.error('Ошибка при запуске веб-сканера:', err);
-      if (err.name === 'NotAllowedError') {
-        setError('Доступ к камере запрещен. Используйте загрузку файла.');
-      } else if (err.name === 'NotFoundError') {
-        setError('Камера не найдена. Используйте загрузку файла.');
+      const qrData = JSON.parse(scanData);
+      if (qrData.skupkaId) {
+        onScanSuccess(qrData.skupkaId);
       } else {
-        setError(`Ошибка: ${err.message}. Используйте загрузку файла.`);
+        setError('QR-код не содержит необходимой информации.');
       }
-      setHasPermission(false);
+    } catch (parseError) {
+      if (scanData && scanData.trim()) {
+        onScanSuccess(scanData.trim());
+      } else {
+        setError('Неверный формат QR-кода.');
+      }
     }
-  }, [handleScanResult]);
+  }, [onScanSuccess]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      console.log('Инициализация Telegram Web App...');
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+    const telegramWebApp = typeof window !== 'undefined' && window.Telegram?.WebApp;
+    if (telegramWebApp && telegramWebApp.platform !== 'unknown') {
+        setIsTelegram(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isTelegram) {
+      window.Telegram.WebApp.showScanQrPopup({ text: 'Наведите камеру на QR-код' }, (text) => {
+        if (text) {
+          handleScanResult(text);
+          return true;
+        }
+        onClose();
+        return false;
+      });
+      return;
     }
 
-    startTelegramScanner().then((success) => {
-      if (!success) {
-        console.log('Telegram-сканер не запустился, переключаемся на веб-сканер');
-        startWebScanner();
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+
+    const qrScanner = new QrScanner(
+      videoElement,
+      (result) => handleScanResult(result),
+      {
+        highlightScanRegion: true,
+        highlightCodeOutline: true,
+        preferredCamera: 'environment',
+      }
+    );
+
+    const onVideoPlay = () => setIsScannerReady(true);
+    const onVideoError = () => setError('Ошибка камеры. Попробуйте перезагрузить страницу.');
+
+    videoElement.addEventListener('playing', onVideoPlay);
+    videoElement.addEventListener('error', onVideoError);
+
+    qrScanner.start().catch(err => {
+      console.error('QR Scanner start failed:', err);
+      if (err === 'Camera not found.') {
+          setError('Камера не найдена. Проверьте, подключена ли она.');
+      } else if (err === 'No camera permissions.'){
+          setError('Нет доступа к камере. Разрешите его в настройках браузера.');
+      } else {
+          setError('Не удалось запустить сканер. Попробуйте еще раз.');
       }
     });
 
     return () => {
-      console.log('Очистка QRScanner...');
-      if (qrScannerRef.current) {
-        qrScannerRef.current.destroy();
-      }
-      qrScanner.close();
+      videoElement.removeEventListener('playing', onVideoPlay);
+      videoElement.removeEventListener('error', onVideoError);
+      qrScanner.destroy();
     };
-  }, [startTelegramScanner, startWebScanner]);
-
-  const stopScanning = () => {
-    if (qrScannerRef.current) {
-      qrScannerRef.current.stop();
-    }
-    setIsScanning(false);
-  };
-
-  const handleClose = () => {
-    console.log('Закрытие QRScanner...');
-    stopScanning();
-    qrScanner.close();
-    onClose();
-  };
+  }, [isTelegram, handleScanResult, onClose]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -179,17 +98,15 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     try {
       setError(null);
       const result = await QrScanner.scanImage(file, { returnDetailedScanResult: true });
-      console.log('QR-код из файла:', result);
       handleScanResult(result);
     } catch (err: any) {
-      console.error('Ошибка при сканировании файла:', err);
-      setError('Не удалось распознать QR код в файле');
+      console.error('File Scan Error:', err);
+      setError('Не удалось распознать QR-код в файле.');
     }
   };
-
-  if (isTelegramScanner) {
-    console.log('Рендеринг Telegram-сканера, HTML не отображается');
-    return null; // Не рендерим ничего, если используется Telegram-сканер
+  
+  if (isTelegram) {
+    return null;
   }
 
   return (
@@ -199,20 +116,26 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         className="absolute inset-0 w-full h-full object-cover"
         playsInline
         muted
+        autoPlay
       />
-      <div className="absolute inset-0 bg-black bg-opacity-25" />
+      
+      {!isScannerReady && !error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black">
+              <p className="text-white text-lg">Запуск камеры...</p>
+          </div>
+      )}
 
-      {isScanning && (
+      {isScannerReady && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-64 h-64 border-4 border-white rounded-lg" style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }} />
         </div>
       )}
 
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-10">
         <Button
           variant="ghost"
           size="icon"
-          onClick={handleClose}
+          onClick={onClose}
           className="text-white bg-black bg-opacity-50 rounded-full w-12 h-12"
         >
           <X className="w-6 h-6" />
@@ -220,13 +143,15 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       </div>
 
       {error && (
-        <div className="absolute bottom-16 left-4 right-4 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span className="text-sm">{error}</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 p-4">
+            <div className="text-center">
+                <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <p className="text-white text-lg">{error}</p>
+            </div>
         </div>
       )}
 
-      <div className="absolute bottom-4 left-4 right-4">
+      <div className="absolute bottom-4 left-4 right-4 z-10">
         <label className="w-full">
           <input
             type="file"
@@ -236,12 +161,12 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           />
           <Button
             variant="outline"
-            className="w-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 border-none"
+            className="w-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 border-none py-6 text-base"
             asChild
           >
             <span>
-              <Upload className="w-4 h-4 mr-2" />
-              Загрузить фото QR кода
+              <Upload className="w-5 h-5 mr-2" />
+              Загрузить из галереи
             </span>
           </Button>
         </label>
