@@ -35,6 +35,7 @@ export default function MasterPointsPage() {
     : telegramId) as string | null
 
   const [requests, setRequests] = useState<Request[]>([])
+  const [availableRequests, setAvailableRequests] = useState<Request[]>([])
   const [masterPoints, setMasterPoints] = useState<Point[]>([])
   const [allPoints, setAllPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState<boolean>(true)
@@ -42,29 +43,41 @@ export default function MasterPointsPage() {
   const [typedId, setTypedId] = useState('')
 
   const loadData = useCallback(async () => {
-      if (!effectiveTelegramId) {
-          console.warn('No effectiveTelegramId, skipping loadData');
-          setLoading(false);
-          return;
+    if (!effectiveTelegramId) {
+      console.warn('No effectiveTelegramId, skipping loadData')
+      setLoading(false)
+      return
+    }
+    setLoading(true)
+    setError(null)
+    try {
+      const [dashboardRes, availableRes] = await Promise.all([
+        fetch(`/api/master/dashboard?telegramId=${effectiveTelegramId}`),
+        fetch(`/api/master/available-requests`),
+      ])
+
+      if (!dashboardRes.ok) {
+        const json = await dashboardRes.json()
+        throw new Error(json?.error || `HTTP ${dashboardRes.status}`)
       }
-      setLoading(true);
-      setError(null);
-      try {
-          const res = await fetch(`/api/master/dashboard?telegramId=${effectiveTelegramId}`);
-          if (!res.ok) {
-              const json = await res.json();
-              throw new Error(json?.error || `HTTP ${res.status}`);
-          }
-          const json = await res.json();
-          setRequests(json.requests || []);
-          setMasterPoints(json.points || []);
-          setAllPoints(json.allPoints || json.points || []);
-      } catch (e) {
-          console.error('Dashboard fetch error:', e instanceof Error ? e.message : String(e));
-          setError(e instanceof Error ? e.message : 'Failed to load data');
-      } finally {
-          setLoading(false);
+      if (!availableRes.ok) {
+        const json = await availableRes.json()
+        throw new Error(json?.error || `HTTP ${availableRes.status}`)
       }
+
+      const dashboardJson = await dashboardRes.json()
+      const availableJson = await availableRes.json()
+
+      setRequests(dashboardJson.requests || [])
+      setAvailableRequests(availableJson.requests || [])
+      setMasterPoints(dashboardJson.points || [])
+      setAllPoints(dashboardJson.allPoints || dashboardJson.points || [])
+    } catch (e) {
+      console.error('Dashboard fetch error:', e instanceof Error ? e.message : String(e))
+      setError(e instanceof Error ? e.message : 'Failed to load data')
+    } finally {
+      setLoading(false)
+    }
   }, [effectiveTelegramId]);
 
   useEffect(() => {
@@ -92,6 +105,25 @@ export default function MasterPointsPage() {
       await loadData()
     } catch (error) {
       console.error('Error adding request to master:', error)
+    }
+  }
+
+  const transferRequest = async (requestId: string) => {
+    try {
+      const response = await fetch('/api/master/transfer-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ requestId }),
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to transfer request')
+      }
+      await loadData()
+    } catch (error) {
+      console.error('Error transferring request:', error)
     }
   }
 
@@ -128,11 +160,10 @@ export default function MasterPointsPage() {
       <div className="min-h-screen bg-white">
         <div className="max-w-md mx-auto pt-16 px-4">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Панель мастера</h1>
           </div>
 
-          <div className="mb-8 space-y-4">
-            {/* QR scanning hidden. Keep only manual ID input. */}
+          {/* <div className="mb-8 space-y-4">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -164,18 +195,47 @@ export default function MasterPointsPage() {
                 Добавить
               </Button>
             </div>
-          </div>
+          </div> */}
+
+          {/* Available Requests Section */}
+          {!loading && availableRequests.length > 0 && (
+            <div className="mb-8 space-y-4">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Доступные заявки</h2>
+              {availableRequests.map((request) => (
+                <div key={request.id} className="bg-white rounded-lg shadow-md p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h4 className="text-md font-semibold text-gray-900">{request.modelname || 'Не указано'}</h4>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1"><strong>Клиент:</strong> @{request.username}</p>
+                      <p className="text-sm text-gray-600 mb-1"><strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}</p>
+                      <p className="text-sm text-gray-600"><strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button
+                      onClick={() => addRequestToMaster(request.id)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md text-center hover:bg-green-700 transition-colors"
+                    >
+                      Взять в работу
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {loading ? (
             <div className="space-y-3">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Доступные заявки</h2>
               <div className="w-full flex items-center justify-center py-6">
                 <div className="inline-block h-8 w-8 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />
               </div>
             </div>
           ) : requests.length > 0 ? (
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Мои заявки</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Мои заявки</h2>
               {requests.map((request) => (
                 <div key={request.id} className="bg-white rounded-lg shadow-md p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -192,13 +252,20 @@ export default function MasterPointsPage() {
                     </div>
                   </div>
 
-                  <div className="flex justify-center">
-                    <Link
-                      href={`/master/requests/${request.id}`}
-                      className="bg-blue-600 text-black border-2 border-black px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
+                  <div className="flex flex-col items-center space-y-2">
+                    <Button variant='outline' asChild className="w-full text-green-600 px-4 py-2 rounded-md text-center hover:bg-green-800 transition-colors">
+                      <Link href={`/master/requests/${request.id}`}>
+                        Просмотреть детали
+                      </Link>
+                    </Button>
+                    <Button
+                      onClick={() => transferRequest(request.id)}
+                      variant="outline"
+                      className="w-full text-slate-500 px-4 py-2 rounded-md text-center hover:bg-slate-700 transition-colors"
                     >
-                      Просмотреть детали
-                    </Link>
+                      Передать заявку
+                    </Button>
+
                   </div>
                 </div>
               ))}
@@ -210,13 +277,15 @@ export default function MasterPointsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Нет заявок</h3>
-              <p className="text-gray-500">Сканируйте QR код или введите ID заявки для начала работы</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Нет назначенных заявок</h3>
+              {availableRequests.length > 0 ? (
+                <p className="text-gray-500">Возьмите заявку из списка выше или введите ID вручную</p>
+              ) : (
+                <p className="text-gray-500">Ожидайте поступления новых заявок</p>
+              )}
             </div>
           )}
         </div>
-
-        {/* QRScanner modal removed */}
       </div>
     </Page>
   )
