@@ -47,10 +47,9 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         (text: string) => {
           if (text) {
             handleScanResult(text);
-            onClose(); // Закрываем компонент после сканирования
             return true;
           }
-          onClose(); // Закрываем, даже если сканирование отменено
+          onClose();
           return false;
         }
       );
@@ -107,7 +106,9 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       window.Telegram.WebApp.expand();
     }
 
-    if (!startTelegramScanner()) {
+    if (startTelegramScanner()) {
+        onClose();
+    } else {
       startWebScanner();
     }
 
@@ -116,7 +117,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         qrScannerRef.current.destroy();
       }
     };
-  }, [startTelegramScanner, startWebScanner]);
+  }, [startTelegramScanner, startWebScanner, onClose]);
 
   const stopScanning = () => {
     if (qrScannerRef.current) {
@@ -149,98 +150,59 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md bg-white">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-teal-500" />
-            Сканирование QR кода
-          </CardTitle>
+    <div className="fixed inset-0 bg-black z-50">
+      <video
+        ref={videoRef}
+        className="absolute inset-0 w-full h-full object-cover"
+        playsInline
+        muted
+      />
+      <div className="absolute inset-0 bg-black bg-opacity-25" />
+
+      {isScanning && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-64 h-64 border-4 border-white rounded-lg" style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }} />
+        </div>
+      )}
+
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClose}
+          className="text-white bg-black bg-opacity-50 rounded-full w-12 h-12"
+        >
+          <X className="w-6 h-6" />
+        </Button>
+      </div>
+
+      {error && (
+        <div className="absolute bottom-16 left-4 right-4 flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span className="text-sm">{error}</span>
+        </div>
+      )}
+
+      <div className="absolute bottom-4 left-4 right-4">
+        <label className="w-full">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="hidden"
+          />
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClose}
-            className="p-1 h-8 w-8"
+            variant="outline"
+            className="w-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 border-none"
+            asChild
           >
-            <X className="w-4 h-4" />
+            <span>
+              <Upload className="w-4 h-4 mr-2" />
+              Загрузить фото QR кода
+            </span>
           </Button>
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          <div className="relative w-full h-64 bg-black rounded-lg overflow-hidden">
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              playsInline
-              muted
-            />
-            {isScanning && (
-              <div className="absolute inset-0 border-2 border-teal-500 rounded-lg pointer-events-none">
-                <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-teal-500 rounded-tl-lg"></div>
-                <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-teal-500 rounded-tr-lg"></div>
-                <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-teal-500 rounded-bl-lg"></div>
-                <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-teal-500 rounded-br-lg"></div>
-              </div>
-            )}
-            {!isScanning && hasPermission !== false && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white bg-black bg-opacity-50">
-                    <QrCode className="w-12 h-12 text-gray-400 mb-4" />
-                    <p className="text-sm text-gray-300">Подготовка камеры…</p>
-                </div>
-            )}
-          </div>
-
-          {hasPermission === false && (
-            <div className="text-center space-y-2">
-              <Button
-                onClick={startWebScanner}
-                className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Попробовать снова
-              </Button>
-              <div className="text-center text-gray-500 text-sm">или</div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label className="w-full">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <Button
-                variant="outline"
-                className="w-full border-teal-500 text-teal-500 hover:bg-teal-50"
-                asChild
-              >
-                <span>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Загрузить фото QR кода
-                </span>
-              </Button>
-            </label>
-            {isScanning && (
-              <Button
-                onClick={stopScanning}
-                variant="outline"
-                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                Остановить
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        </label>
+      </div>
     </div>
   );
 }
