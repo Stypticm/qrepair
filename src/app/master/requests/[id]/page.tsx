@@ -537,14 +537,14 @@ export default function MasterRequestPage({ params }: PageProps) {
   return (
     <Page back={false}>
       {isCameraOpen ? (
-        <div className="fixed inset-0 bg-black z-50">
+        <div className="fixed inset-0 bg-transparent z-50">
           <CameraWithOverlay
             onPhotoCapture={handlePhotoCapture}
             overlayImage="front_master.png"
           />
           <Button
             onClick={() => setCameraOpen(false)}
-            className="absolute top-4 right-4 bg-black bg-opacity-50 text-white rounded-full w-12 h-12 p-0"
+            className="absolute top-4 right-4 bg-white/70 text-gray-900 rounded-full w-12 h-12 p-0 shadow"
             variant="ghost"
           >
             <X className="w-8 h-8" />

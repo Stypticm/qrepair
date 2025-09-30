@@ -90,17 +90,22 @@ export const CameraWithOverlay = ({ onPhotoCapture, overlayImage }: CameraWithOv
   }
 
   return (
-    <div className="w-full h-full relative bg-black flex items-center justify-center">
+    <div className="w-full h-full relative bg-transparent flex items-center justify-center">
       <video
         ref={videoRef}
         autoPlay
         playsInline
         className="w-full h-full object-cover"
       />
+      {/* Белая рамка поверх видео */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="w-[84%] h-[84%] border-4 border-white rounded-2xl" />
+      </div>
+      {/* Полупрозрачная подсказка-оверлей без затемнения фона */}
       <img
         src={getPictureUrl(overlayImage)}
         alt="Overlay"
-        className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none mix-blend-mode-lighten"
+        className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
       />
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2">
         <Button onClick={handleTakePhoto} className="w-20 h-20 rounded-full bg-white text-black border-4 border-gray-300 hover:bg-gray-200">
