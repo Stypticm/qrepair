@@ -191,23 +191,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       console.log('Telegram Platform:', pf);
     }
 
-    const pf = window?.Telegram?.WebApp?.platform;
-    if (pf === 'ios') {
-      // Сразу открываем системную камеру/галерею через input (надёжнее на iOS)
-      setTimeout(() => {
-        try { fileInputRef.current?.click(); } catch {}
-      }, 50);
-      setIsTelegramScanner(false);
-      setIsScanning(false);
-      setHasPermission(null);
-    } else {
-      startTelegramScanner().then((success) => {
-        if (!success) {
-          console.log('Telegram-сканер не запустился, переключаемся на веб-сканер');
-          startWebScanner();
-        }
-      });
-    }
+    // Не запускаем сканер автоматически: на iOS требуется явный пользовательский жест
 
     return () => {
       console.log('Очистка QRScanner...');
@@ -216,17 +200,10 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       }
       closeQrScanner();
     };
-  }, [startTelegramScanner, startWebScanner]);
+  }, []);
 
   // Фолбек: если мы не сканируем, нет ошибки и не открыт Telegram-сканер, один раз автоматически открываем системную камеру/галерею
-  useEffect(() => {
-    if (!isScanning && !error && !isTelegramScanner && !autoTriggered && platform === 'ios') {
-      setAutoTriggered(true);
-      setTimeout(() => {
-        try { fileInputRef.current?.click(); } catch {}
-      }, 50);
-    }
-  }, [isScanning, error, isTelegramScanner, autoTriggered, platform]);
+  // Больше не автозапускаем ничего: всё по клику пользователя
 
   const stopScanning = () => {
     if (qrScannerRef.current) {
