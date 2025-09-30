@@ -243,43 +243,80 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const inputEl = event.target;
+    const file = inputEl.files?.[0];
     if (!file) return;
+
+    // Сбрасываем value, чтобы повторный выбор того же файла снова вызывал onChange
+    setTimeout(() => { try { inputEl.value = ''; } catch {} }, 0);
 
     try {
       setError(null);
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          if (!ctx) throw new Error('Canvas 2D недоступен');
-          canvas.width = img.naturalWidth || img.width;
-          canvas.height = img.naturalHeight || img.height;
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
-          if (code && code.data) {
-            console.log('jsQR распознал:', code.data);
-            handleScanResult(code.data);
-          } else {
-            setError('Не удалось распознать QR. Попробуйте другое фото.');
-          }
-        } catch (e: any) {
-          console.error('Ошибка обработки изображения:', e);
-          setError('Ошибка обработки изображения');
+
+      // Попытка 1: createImageBitmap (лучше работает с HEIC/HEIF на iOS)
+      try {
+        const bitmap = await createImageBitmap(file as Blob);
+        const canvas = document.createElement('canvas');
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D недоступен');
+        ctx.drawImage(bitmap, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if (code?.data) {
+          console.log('jsQR(createImageBitmap) распознал:', code.data);
+          handleScanResult(code.data);
+          return;
         }
-      };
-      img.onerror = () => {
-        setError('Не удалось загрузить изображение');
-      };
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        img.src = String(e.target?.result);
-      };
-      reader.readAsDataURL(file);
+      } catch (e) {
+        console.warn('createImageBitmap не удался, пробуем Image+canvas:', e);
+      }
+
+      // Попытка 2: Image + FileReader
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error('Не удалось загрузить изображение'));
+        const reader = new FileReader();
+        reader.onload = (ev) => { i.src = String(ev.target?.result); };
+        reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+        reader.readAsDataURL(file);
+      });
+
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D недоступен');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+        if (code?.data) {
+          console.log('jsQR(Image) распознал:', code.data);
+          handleScanResult(code.data);
+          return;
+        }
+      } catch (e) {
+        console.warn('jsQR(Image) не распознал, пробуем fallback QrScanner.scanImage:', e);
+      }
+
+      // Попытка 3: fallback на QrScanner.scanImage
+      try {
+        const result = await QrScanner.scanImage(file, { returnDetailedScanResult: true });
+        if (result?.data) {
+          console.log('QrScanner.scanImage распознал:', result.data);
+          handleScanResult(result);
+          return;
+        }
+      } catch (e) {
+        console.warn('QrScanner.scanImage не распознал:', e);
+      }
+
+      setError('Не удалось распознать QR. Попробуйте ещё раз, при хорошем освещении.');
     } catch (err: any) {
-      console.error('Ошибка при сканировании файла (jsQR):', err);
+      console.error('Ошибка при обработке файла:', err);
       setError('Не удалось распознать QR код в файле');
     }
   };
@@ -347,7 +384,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*;capture=camera"
           capture="environment"
           onChange={handleFileUpload}
           className="hidden"
