@@ -29,6 +29,10 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       }
     }
 
+    // Автоматически запускаем сканирование при открытии
+    // (в Telegram используем встроенный сканер, в браузере — камеру)
+    startScanning();
+
     return () => {
       if (qrScannerRef.current) {
         qrScannerRef.current.destroy();
@@ -196,7 +200,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <QrCode className="w-5 h-5 text-teal-500" />
-            Загрузка QR кода
+            Сканирование QR кода
           </CardTitle>
           <Button
             variant="ghost"
@@ -260,9 +264,8 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
               <div className="w-48 h-48 mx-auto bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
                 <QrCode className="w-12 h-12 text-gray-400" />
               </div>
-              <p className="text-sm text-gray-600">
-                Загрузите фото QR кода заявки
-              </p>
+              <p className="text-sm text-gray-600">Подготовка камеры…</p>
+              <div className="text-center text-gray-500 text-sm">или</div>
               <label className="w-full">
                 <input
                   type="file"
@@ -271,12 +274,13 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
                   className="hidden"
                 />
                 <Button
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                  variant="outline"
+                  className="w-full border-teал-500 text-teal-500 hover:bg-teal-50"
                   asChild
                 >
                   <span>
                     <Upload className="w-4 h-4 mr-2" />
-                    Загрузить фото QR кода
+                    Загрузить фото
                   </span>
                 </Button>
               </label>
@@ -300,10 +304,26 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
                 </div>
               </div>
               
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-3">
-                  Наведите камеру на QR код
-                </p>
+              <div className="space-y-3">
+                <p className="text-center text-sm text-gray-600">Сканировать</p>
+                <label className="w-full block">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    className="w-full border-teal-500 text-teal-600 hover:bg-teal-50"
+                    asChild
+                  >
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Загрузить фото
+                    </span>
+                  </Button>
+                </label>
                 <Button
                   onClick={stopScanning}
                   variant="outline"

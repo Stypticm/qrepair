@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/stores/authStore'
 import { useMasterNotifications } from '@/hooks/useMasterNotifications'
 import Link from 'next/link'
@@ -63,6 +64,7 @@ interface PageProps {
 }
 
 export default function MasterRequestPage({ params }: PageProps) {
+  const router = useRouter()
   const [request, setRequest] = useState<Request | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -534,8 +536,25 @@ export default function MasterRequestPage({ params }: PageProps) {
     )
   }
 
+  const handleBackFromAssessment = () => {
+    if (isCameraOpen) {
+      setCameraOpen(false)
+      return
+    }
+    if (currentStep > 1) {
+      const newStep = currentStep - 1
+      setCurrentStep(newStep)
+      saveStepToStorage(newStep)
+      return
+    }
+    try { router.back() } catch {}
+    setTimeout(() => {
+      router.push('/internal')
+    }, 50)
+  }
+
   return (
-    <Page back={false}>
+    <Page back={handleBackFromAssessment}>
       {isCameraOpen ? (
         <Page back={() => setCameraOpen(false)}>
           <div className="fixed inset-0 bg-transparent z-50">
@@ -695,53 +714,31 @@ export default function MasterRequestPage({ params }: PageProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {/* Ответы клиента для сверки */}
-                    {(request.deviceConditions || request.additionalConditions) && (
-                      <div className="mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200">
-                        <p className="text-sm font-medium text-gray-800 mb-2">Ответы клиента (Оценка смартфона)</p>
-                        <div className="grid grid-cols-1 gap-2">
-                          {request.deviceConditions && (
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">Состояние устройства</p>
-                              <div className="flex flex-wrap gap-2">
-                                {Object.entries(request.deviceConditions).map(([key, value]) => (
-                                  <span key={key} className="px-2 py-1 rounded-md text-xs bg-white border border-gray-200 text-gray-700">
-                                    {key}: {String(value)}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {request.additionalConditions && (
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">Доп. сведения</p>
-                              <div className="flex flex-wrap gap-2">
-                                {Object.entries(request.additionalConditions).map(([key, value]) => (
-                                  <span key={key} className="px-2 py-1 rounded-md text-xs bg-white border border-gray-200 text-gray-700">
-                                    {key}: {String(value)}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Список тестов, выравнивание по сетке */}
+                    {/* Список тестов с интеграцией ответов клиента и вертикальными кнопками */}
                     <div className="space-y-3">
                       {functionalityTests.map((test) => {
                         const IconComponent = test.icon
+
+                        // Попытка сопоставить ответ клиента по ключу теста
+                        const clientValueRaw = (request.deviceConditions && (request.deviceConditions as any)[test.id])
+                          ?? (request.additionalConditions && (request.additionalConditions as any)[test.id]);
+                        const clientValue = clientValueRaw === undefined ? null : String(clientValueRaw);
+
                         return (
-                          <div key={test.id} className="grid grid-cols-[56px_1fr_auto] items-center gap-3 p-4 border border-gray-200 rounded-xl">
+                          <div key={test.id} className="grid grid-cols-[56px_1fr_auto] items-start gap-3 p-4 border border-gray-200 rounded-xl">
                             <div className="w-14 h-14 flex items-center justify-center bg-gray-50 rounded-lg">
                               <IconComponent className="w-8 h-8 text-gray-600" />
                             </div>
                             <div className="min-w-0">
-                              <p className="font-medium text-gray-900 leading-tight">{test.name}</p>
-                              <p className="text-sm text-gray-500 truncate">{test.description}</p>
+                              <p className="font-medium text-gray-900 leading-tight break-words">{test.name}</p>
+                              <p className="text-sm text-gray-500 break-words">{test.description}</p>
+                              {clientValue !== null && (
+                                <p className="mt-1 text-xs text-gray-600">
+                                  Ответ клиента: <span className="font-medium text-gray-800">{clientValue}</span>
+                                </p>
+                              )}
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-col items-stretch gap-2 w-28">
                               <Button
                                 variant={test.working === true ? "default" : "outline"}
                                 size="sm"
@@ -772,34 +769,10 @@ export default function MasterRequestPage({ params }: PageProps) {
               {/* Шаг 3: Расчет финальной цены */}
               {currentStep === 3 && (
                 <Card className="border-2 border-blue-200 bg-blue-50 animate-in slide-in-from-right-5 duration-300">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-semibold text-gray-900 flex items-center justify-between">
-                      <span>Шаг 3: Итоговая цена</span>
-                      <Button
-                        onClick={() => {
-                          const confirmed = confirm('Рассчитать итоговую цену на основе результатов проверки?')
-                          if (confirmed) {
-                            calculateFinalPrice()
-                            alert('Цена рассчитана! Переходим к завершению проверки.')
-                            // Автоматически переходим к шагу 4 (завершение)
-                            setTimeout(() => {
-                              setCurrentStep(4)
-                              // Убеждаемся, что цена рассчитана
-                              if (finalPrice === null) {
-                                calculateFinalPrice()
-                              }
-                            }, 1000)
-                          }
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
-                      >
-                        💰 Рассчитать цену
-                      </Button>
-                    </CardTitle>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg font-semibold text-gray-900">Шаг 3: Итоговая цена</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Предварительная цена:</span>
@@ -814,6 +787,24 @@ export default function MasterRequestPage({ params }: PageProps) {
                         </div>
                       </div>
                     </div>
+                    <Button
+                      onClick={() => {
+                        const confirmed = confirm('Рассчитать итоговую цену на основе результатов проверки?')
+                        if (confirmed) {
+                          calculateFinalPrice()
+                          alert('Цена рассчитана! Переходим к завершению проверки.')
+                          setTimeout(() => {
+                            setCurrentStep(4)
+                            if (finalPrice === null) {
+                              calculateFinalPrice()
+                            }
+                          }, 800)
+                        }
+                      }}
+                      className="w-full h-12 rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      💰 Рассчитать цену
+                    </Button>
                   </CardContent>
                 </Card>
               )}
