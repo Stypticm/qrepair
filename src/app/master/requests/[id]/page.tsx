@@ -547,10 +547,7 @@ export default function MasterRequestPage({ params }: PageProps) {
       saveStepToStorage(newStep)
       return
     }
-    try { router.back() } catch {}
-    setTimeout(() => {
-      router.push('/internal')
-    }, 50)
+    router.back();
   }
 
   return (

@@ -39,17 +39,8 @@ export function Page({ children, back = true }: PropsWithChildren<{
         console.log('🔍 Page handleBackClick - currentStep:', currentStep);
         
         if (!currentStep) {
-          // Если нет currentStep, определяем целевую страницу
-          if (pathname && pathname.startsWith('/master')) {
-            router.push('/internal');
-          } else {
-            // Пытаемся вернуться по истории, затем fallback на главную
-            try { router.back(); } catch {}
-            setTimeout(() => {
-              // Fallback на главную, если назад не сработал
-              router.push('/');
-            }, 50);
-          }
+          // Если нет currentStep, просто возвращаемся назад
+          router.back();
         } else {
           // Используем логику из стора для навигации
           goToPreviousStep(router);
