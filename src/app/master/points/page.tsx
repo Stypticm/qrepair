@@ -29,9 +29,7 @@ interface Point {
 }
 
 export default function MasterPointsPage() {
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [showQRScanner, setShowQRScanner] = useState(false)
-
   const { telegramId } = useAppStore()
   const urlTelegramId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('telegramId') : null
   const effectiveTelegramId = (typeof window !== 'undefined'
@@ -52,63 +50,29 @@ export default function MasterPointsPage() {
       }
       setLoading(true);
       setError(null);
-      console.log('Loading data with telegramId:', effectiveTelegramId);
       try {
-          const res = await fetch(`/api/master/dashboard?telegramId=${effectiveTelegramId}`, {
-              signal: AbortSignal.timeout(5000) // Таймаут 5 секунд
-          });
-          console.log('Dashboard API response status:', res.status);
+          const res = await fetch(`/api/master/dashboard?telegramId=${effectiveTelegramId}`);
           if (!res.ok) {
               const json = await res.json();
               throw new Error(json?.error || `HTTP ${res.status}`);
           }
           const json = await res.json();
-          console.log('Dashboard API response:', json);
           setRequests(json.requests || []);
           setMasterPoints(json.points || []);
           setAllPoints(json.allPoints || json.points || []);
       } catch (e) {
           console.error('Dashboard fetch error:', e instanceof Error ? e.message : String(e));
-          try {
-              const [reqRes, ptsRes] = await Promise.all([
-                  fetch(`/api/master/requests?masterTelegramId=${effectiveTelegramId}`),
-                  fetch(`/api/master/points?telegramId=${effectiveTelegramId}`),
-              ]);
-              console.log('Requests API status:', reqRes.status, 'Points API status:', ptsRes.status);
-              if (!reqRes.ok) {
-                  const json = await reqRes.json();
-                  throw new Error(json?.error || `Requests HTTP ${reqRes.status}`);
-              }
-              if (!ptsRes.ok) {
-                  const json = await ptsRes.json();
-                  throw new Error(json?.error || `Points HTTP ${ptsRes.status}`);
-              }
-              const [reqJson, ptsJson] = await Promise.all([reqRes.json(), ptsRes.json()]);
-              setRequests(reqJson.requests || []);
-              setMasterPoints(ptsJson.points || []);
-              setAllPoints(ptsJson.points || []);
-          } catch (e) {
-              setError(e instanceof Error ? e.message : 'Failed to load data');
-          }
+          setError(e instanceof Error ? e.message : 'Failed to load data');
       } finally {
-          console.log('loadData completed, setting loading to false');
           setLoading(false);
       }
   }, [effectiveTelegramId]);
 
   useEffect(() => {
     if (effectiveTelegramId) {
-      console.log('useEffect triggered with telegramId:', effectiveTelegramId)
       loadData()
-    } else {
-      console.warn('No effectiveTelegramId, skipping loadData')
-      setLoading(false)
     }
   }, [effectiveTelegramId, loadData])
-
-  const getPointInfo = (pointId: number) => {
-    return allPoints.find(point => point.id === pointId)
-  }
 
   const addRequestToMaster = async (requestId: string) => {
     try {
@@ -126,18 +90,20 @@ export default function MasterPointsPage() {
         const data = await response.json()
         throw new Error(data.error || 'Failed to add request to master')
       }
-      console.log('Request added successfully:', requestId)
       await loadData()
     } catch (error) {
       console.error('Error adding request to master:', error)
     }
   }
 
-  const handleQRScanSuccess = async (skupkaId: string) => {
-    console.log('QR code scanned, ID:', skupkaId)
+  const handleQRScanSuccess = useCallback(async (skupkaId: string) => {
     setShowQRScanner(false)
     await addRequestToMaster(skupkaId)
-  }
+  }, [addRequestToMaster]);
+
+  const handleCloseQRScanner = useCallback(() => {
+    setShowQRScanner(false);
+  }, []);
 
   if (!effectiveTelegramId) {
     return (
@@ -173,7 +139,6 @@ export default function MasterPointsPage() {
         <div className="max-w-md mx-auto pt-16 px-4">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
-            {/* <p className="text-gray-600">Загрузите QR код или введите ID заявки</p> */}
           </div>
 
           <div className="mb-8 space-y-4">
@@ -235,45 +200,23 @@ export default function MasterPointsPage() {
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h4 className="text-md font-semibold text-gray-900">{request.modelname || 'Не указано'}</h4>
-                        <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' :
-                          request.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                            request.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              'bg-gray-100 text-gray-800'
-                          }`}>
-                          {request.status === 'submitted' ? 'Новая' :
-                            request.status === 'in_progress' ? 'В работе' :
-                              request.status === 'completed' ? 'Завершена' :
-                                request.status}
+                        <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {request.status === 'submitted' ? 'Новая' : request.status}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        <strong>Клиент:</strong> @{request.username}
-                      </p>
-                      <p className="text-sm text-gray-600 mb-1">
-                        <strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}
-                      </p>
+                      <p className="text-sm text-gray-600 mb-1"><strong>Клиент:</strong> @{request.username}</p>
+                      <p className="text-sm text-gray-600 mb-1"><strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}</p>
+                      <p className="text-sm text-gray-600"><strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
                     </div>
                   </div>
 
                   <div className="flex justify-center">
-                    {request.status !== 'completed' && (
-                        <Link
-                          href={`/master/requests/${request.id}`}
-                          className="bg-blue-600 text-black border-2 border-black px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
-                        >
-                          Просмотреть детали
-                        </Link>
-                    )}
-                    {request.status === 'completed' && (
-                      <div className="w-full bg-green-50 border-2 border-green-200 rounded-lg p-3 text-center">
-                        <p className="text-green-700 font-semibold">✅ Заявка завершена</p>
-                        <p className="text-sm text-green-600">Все работы выполнены</p>
-                        <p className="text-sm text-yellow-600 font-medium mt-1">💰 Деньги переданы клиенту</p>
-                      </div>
-                    )}
+                    <Link
+                      href={`/master/requests/${request.id}`}
+                      className="bg-blue-600 text-black border-2 border-black px-4 py-2 rounded-md text-center hover:bg-blue-700 transition-colors"
+                    >
+                      Просмотреть детали
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -287,7 +230,6 @@ export default function MasterPointsPage() {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Нет заявок</h3>
               <p className="text-gray-500">Сканируйте QR код или введите ID заявки для начала работы</p>
-              <div className="mt-2 text-xs text-gray-400">debug: requests=0</div>
             </div>
           )}
         </div>
@@ -295,7 +237,7 @@ export default function MasterPointsPage() {
         {showQRScanner && (
           <QRScanner
             onScanSuccess={handleQRScanSuccess}
-            onClose={() => setShowQRScanner(false)}
+            onClose={handleCloseQRScanner}
           />
         )}
       </div>
