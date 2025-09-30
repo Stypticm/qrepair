@@ -20,6 +20,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isTelegramScanner, setIsTelegramScanner] = useState(false);
+  const [autoTriggered, setAutoTriggered] = useState(false);
 
   const handleScanResult = useCallback(
     (result: QrScanner.ScanResult | string) => {
@@ -213,6 +214,16 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       closeQrScanner();
     };
   }, [startTelegramScanner, startWebScanner]);
+
+  // Фолбек: если мы не сканируем, нет ошибки и не открыт Telegram-сканер, один раз автоматически открываем системную камеру/галерею
+  useEffect(() => {
+    if (!isScanning && !error && !isTelegramScanner && !autoTriggered) {
+      setAutoTriggered(true);
+      setTimeout(() => {
+        try { fileInputRef.current?.click(); } catch {}
+      }, 50);
+    }
+  }, [isScanning, error, isTelegramScanner, autoTriggered]);
 
   const stopScanning = () => {
     if (qrScannerRef.current) {
