@@ -5,7 +5,6 @@ import { useAppStore } from '@/stores/authStore'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
-import { QRScanner } from '@/components/QRScanner'
 
 interface Request {
   id: string
@@ -29,7 +28,6 @@ interface Point {
 }
 
 export default function MasterPointsPage() {
-  const [showQRScanner, setShowQRScanner] = useState(false)
   const { telegramId } = useAppStore()
   const urlTelegramId = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('telegramId') : null
   const effectiveTelegramId = (typeof window !== 'undefined'
@@ -41,6 +39,7 @@ export default function MasterPointsPage() {
   const [allPoints, setAllPoints] = useState<Point[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [typedId, setTypedId] = useState('')
 
   const loadData = useCallback(async () => {
       if (!effectiveTelegramId) {
@@ -96,15 +95,6 @@ export default function MasterPointsPage() {
     }
   }
 
-  const handleQRScanSuccess = useCallback(async (skupkaId: string) => {
-    setShowQRScanner(false)
-    await addRequestToMaster(skupkaId)
-  }, [addRequestToMaster]);
-
-  const handleCloseQRScanner = useCallback(() => {
-    setShowQRScanner(false);
-  }, []);
-
   if (!effectiveTelegramId) {
     return (
       <Page back={true}>
@@ -142,46 +132,53 @@ export default function MasterPointsPage() {
           </div>
 
           <div className="mb-8 space-y-4">
-            <button
-              onClick={() => setShowQRScanner(true)}
-              className="w-full bg-blue-600 text-white px-6 py-4 rounded-xl hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-              </svg>
-              <span>Сканировать QR код</span>
-            </button>
-
-            <div className="text-center text-gray-500 text-sm">или</div>
-
-            <div className="flex space-x-2">
+            {/* QR scanning hidden. Keep only manual ID input. */}
+            <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="Введите ID заявки"
+                value={typedId}
+                onChange={(e) => setTypedId(e.target.value.replace(/\s+/g, '').trim())}
+                inputMode="numeric"
                 className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 onKeyPress={async (e) => {
                   if (e.key === 'Enter') {
-                    const newId = (e.target as HTMLInputElement).value.trim();
+                    const newId = typedId.trim()
                     if (newId) {
-                      await addRequestToMaster(newId);
-                      (e.target as HTMLInputElement).value = '';
+                      await addRequestToMaster(newId)
+                      setTypedId('')
                     }
                   }
                 }}
               />
               <Button
+                variant="outline"
                 onClick={async () => {
-                  const input = document.querySelector('input[placeholder="Введите ID заявки"]') as HTMLInputElement
-                  const newId = input.value.trim()
-                  if (newId) {
-                    await addRequestToMaster(newId)
-                    input.value = ''
+                  try {
+                    const text = await navigator.clipboard.readText()
+                    if (text) setTypedId(text.replace(/\s+/g, '').trim())
+                  } catch (e) {
+                    alert('Нет доступа к буферу обмена. Скопируйте ID вручную.')
                   }
                 }}
+                className="whitespace-nowrap"
+              >
+                Вставить
+              </Button>
+              <Button
+                onClick={async () => {
+                  const newId = typedId.trim()
+                  if (newId) {
+                    await addRequestToMaster(newId)
+                    setTypedId('')
+                  }
+                }}
+                disabled={!typedId.trim()}
               >
                 Добавить
               </Button>
             </div>
+            <p className="text-xs text-gray-500">Подсказка: нажмите «Вставить», чтобы взять ID из буфера обмена, и затем «Добавить».</p>
           </div>
 
           {loading ? (
@@ -234,12 +231,7 @@ export default function MasterPointsPage() {
           )}
         </div>
 
-        {showQRScanner && (
-          <QRScanner
-            onScanSuccess={handleQRScanSuccess}
-            onClose={handleCloseQRScanner}
-          />
-        )}
+        {/* QRScanner modal removed */}
       </div>
     </Page>
   )
