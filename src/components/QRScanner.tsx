@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, Camera, X, AlertCircle, Upload } from 'lucide-react';
+import { AlertCircle, Upload, X } from 'lucide-react';
 import QrScanner from 'qr-scanner';
+import { qrScanner } from '@telegram-apps/sdk';
 
 interface QRScannerProps {
   onScanSuccess: (skupkaId: string) => void;
@@ -19,49 +19,71 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isTelegramScanner, setIsTelegramScanner] = useState(false);
 
-  const handleScanResult = (result: QrScanner.ScanResult | string) => {
-    const scanData = typeof result === 'string' ? result : result.data;
-    try {
-      // Парсим JSON из QR кода
-      const qrData = JSON.parse(scanData);
-      if (qrData.skupkaId) {
-        onScanSuccess(qrData.skupkaId);
-      } else {
-        setError('QR код не содержит ID заявки');
-      }
-    } catch (parseError) {
-      // Если не JSON, пробуем как простой ID
-      if (scanData && scanData.trim()) {
-        onScanSuccess(scanData.trim());
-      } else {
-        setError('Неверный формат QR кода');
-      }
-    }
-  };
-
-  const startTelegramScanner = useCallback(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp?.showScanQrPopup) {
-      setIsTelegramScanner(true);
-      window.Telegram.WebApp.showScanQrPopup(
-        { text: 'Наведите камеру на QR код заявки' },
-        (text: string) => {
-          if (text) {
-            handleScanResult(text);
-            return true;
-          }
+  const handleScanResult = useCallback(
+    (result: QrScanner.ScanResult | string) => {
+      const scanData = typeof result === 'string' ? result : result.data;
+      console.log('Отсканирован QR:', scanData);
+      try {
+        // Парсим JSON из QR кода
+        const qrData = JSON.parse(scanData);
+        if (qrData.skupkaId) {
+          console.log('Успешно извлечён skupkaId:', qrData.skupkaId);
+          onScanSuccess(qrData.skupkaId);
+          qrScanner.close();
           onClose();
-          return false;
+        } else {
+          setError('QR код не содержит ID заявки');
         }
-      );
-      return true;
+      } catch (parseError) {
+        // Если не JSON, пробуем как простой ID
+        if (scanData && scanData.trim()) {
+          console.log('Успешно извлечён текстовый ID:', scanData.trim());
+          onScanSuccess(scanData.trim());
+          qrScanner.close();
+          onClose();
+        } else {
+          setError('Неверный формат QR кода');
+        }
+      }
+    },
+    [onScanSuccess, onClose]
+  );
+
+  const startTelegramScanner = useCallback(async () => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp && qrScanner.open.isAvailable()) {
+      console.log('Попытка открыть Telegram QR Scanner...');
+      setIsTelegramScanner(true);
+      try {
+        const result = await qrScanner.open({
+          text: 'Наведите камеру на QR код заявки',
+          capture: (qr: string) => {
+            console.log('Telegram QR Scanner: отсканирован QR:', qr);
+            handleScanResult(qr);
+            return true; // Закрываем попап после успешного сканирования
+          },
+        });
+        console.log('Telegram QR Scanner: результат:', result);
+        if (result === null) {
+          console.log('Telegram QR Scanner: попап закрыт без результата');
+          setIsTelegramScanner(false);
+          onClose();
+        }
+        return true;
+      } catch (err) {
+        console.error('Ошибка Telegram QR Scanner:', err);
+        setError('Не удалось открыть сканер Telegram. Попробуйте загрузить фото QR кода или использовать веб-сканер.');
+        setIsTelegramScanner(false);
+        return false;
+      }
+    } else {
+      console.warn('Telegram Web App или showScanQrPopup недоступны');
+      return false;
     }
-    return false;
-  }, [onScanSuccess, onClose]);
+  }, [handleScanResult, onClose]);
 
   const startWebScanner = useCallback(async () => {
     if (!videoRef.current) {
-      console.log("videoRef is not available yet, waiting...");
-      // Дадим React время отрендерить video элемент
+      console.log('videoRef недоступен, ждём...');
       setTimeout(startWebScanner, 100);
       return;
     }
@@ -70,6 +92,18 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       const hasCamera = await QrScanner.hasCamera();
       if (!hasCamera) {
         setError('Камера не найдена. Выберите фото QR из галереи.');
+        setHasPermission(false);
+        return;
+      }
+
+      // Проверка доступа к камере
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        stream.getTracks().forEach((track) => track.stop());
+        console.log('Доступ к камере получен');
+      } catch (err: any) {
+        console.error('Ошибка доступа к камере:', err);
+        setError('Доступ к камере запрещен. Используйте загрузку файла.');
         setHasPermission(false);
         return;
       }
@@ -87,8 +121,9 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       await qrScannerRef.current.start();
       setIsScanning(true);
       setHasPermission(true);
+      console.log('Веб-сканер успешно запущен');
     } catch (err: any) {
-      console.error('Ошибка при запуске сканера:', err);
+      console.error('Ошибка при запуске веб-сканера:', err);
       if (err.name === 'NotAllowedError') {
         setError('Доступ к камере запрещен. Используйте загрузку файла.');
       } else if (err.name === 'NotFoundError') {
@@ -102,22 +137,26 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      console.log('Инициализация Telegram Web App...');
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
 
-    if (startTelegramScanner()) {
-        onClose();
-    } else {
-      startWebScanner();
-    }
+    startTelegramScanner().then((success) => {
+      if (!success) {
+        console.log('Telegram-сканер не запустился, переключаемся на веб-сканер');
+        startWebScanner();
+      }
+    });
 
     return () => {
+      console.log('Очистка QRScanner...');
       if (qrScannerRef.current) {
         qrScannerRef.current.destroy();
       }
+      qrScanner.close();
     };
-  }, [startTelegramScanner, startWebScanner, onClose]);
+  }, [startTelegramScanner, startWebScanner]);
 
   const stopScanning = () => {
     if (qrScannerRef.current) {
@@ -127,7 +166,9 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   };
 
   const handleClose = () => {
+    console.log('Закрытие QRScanner...');
     stopScanning();
+    qrScanner.close();
     onClose();
   };
 
@@ -138,6 +179,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     try {
       setError(null);
       const result = await QrScanner.scanImage(file, { returnDetailedScanResult: true });
+      console.log('QR-код из файла:', result);
       handleScanResult(result);
     } catch (err: any) {
       console.error('Ошибка при сканировании файла:', err);
@@ -146,7 +188,8 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   };
 
   if (isTelegramScanner) {
-    return null; // Не рендерим ничего, если используется сканер Telegram
+    console.log('Рендеринг Telegram-сканера, HTML не отображается');
+    return null; // Не рендерим ничего, если используется Telegram-сканер
   }
 
   return (
