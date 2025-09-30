@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Upload, X } from 'lucide-react';
 import QrScanner from 'qr-scanner';
-import { qrScanner } from '@telegram-apps/sdk';
+import { openQrScanner, closeQrScanner, isQrScannerOpened } from '@telegram-apps/sdk';
 
 interface QRScannerProps {
   onScanSuccess: (skupkaId: string) => void;
@@ -29,7 +29,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         if (qrData.skupkaId) {
           console.log('Успешно извлечён skupkaId:', qrData.skupkaId);
           onScanSuccess(qrData.skupkaId);
-          qrScanner.close();
+          closeQrScanner();
           onClose();
         } else {
           setError('QR код не содержит ID заявки');
@@ -39,7 +39,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         if (scanData && scanData.trim()) {
           console.log('Успешно извлечён текстовый ID:', scanData.trim());
           onScanSuccess(scanData.trim());
-          qrScanner.close();
+          closeQrScanner();
           onClose();
         } else {
           setError('Неверный формат QR кода');
@@ -50,11 +50,11 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   );
 
   const startTelegramScanner = useCallback(async () => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp && qrScanner.open.isAvailable()) {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp && openQrScanner.isAvailable()) {
       console.log('Попытка открыть Telegram QR Scanner...');
       setIsTelegramScanner(true);
       try {
-        const result = await qrScanner.open({
+        const result = await openQrScanner({
           text: 'Наведите камеру на QR код заявки',
           capture: (qr: string) => {
             console.log('Telegram QR Scanner: отсканирован QR:', qr);
@@ -76,7 +76,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         return false;
       }
     } else {
-      console.warn('Telegram Web App или showScanQrPopup недоступны');
+      console.warn('Telegram Web App или openQrScanner недоступны');
       return false;
     }
   }, [handleScanResult, onClose]);
@@ -155,7 +155,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       if (qrScannerRef.current) {
         qrScannerRef.current.destroy();
       }
-      qrScanner.close();
+      closeQrScanner();
     };
   }, [startTelegramScanner, startWebScanner]);
 
@@ -169,7 +169,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const handleClose = () => {
     console.log('Закрытие QRScanner...');
     stopScanning();
-    qrScanner.close();
+    closeQrScanner();
     onClose();
   };
 
