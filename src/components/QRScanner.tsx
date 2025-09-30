@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Upload, X } from 'lucide-react';
 import QrScanner from 'qr-scanner';
+import jsQR from 'jsqr';
 import { openQrScanner, closeQrScanner, isQrScannerOpened } from '@telegram-apps/sdk';
 
 interface QRScannerProps {
@@ -220,11 +221,38 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
 
     try {
       setError(null);
-      const result = await QrScanner.scanImage(file, { returnDetailedScanResult: true });
-      console.log('QR-код из файла:', result);
-      handleScanResult(result);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('Canvas 2D недоступен');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+          if (code && code.data) {
+            console.log('jsQR распознал:', code.data);
+            handleScanResult(code.data);
+          } else {
+            setError('Не удалось распознать QR. Попробуйте другое фото.');
+          }
+        } catch (e: any) {
+          console.error('Ошибка обработки изображения:', e);
+          setError('Ошибка обработки изображения');
+        }
+      };
+      img.onerror = () => {
+        setError('Не удалось загрузить изображение');
+      };
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = String(e.target?.result);
+      };
+      reader.readAsDataURL(file);
     } catch (err: any) {
-      console.error('Ошибка при сканировании файла:', err);
+      console.error('Ошибка при сканировании файла (jsQR):', err);
       setError('Не удалось распознать QR код в файле');
     }
   };
@@ -282,6 +310,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           <input
             type="file"
             accept="image/*"
+            capture="environment"
             onChange={handleFileUpload}
             className="hidden"
           />
