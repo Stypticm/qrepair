@@ -152,20 +152,6 @@ export default function MasterPointsPage() {
                 }}
               />
               <Button
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const text = await navigator.clipboard.readText()
-                    if (text) setTypedId(text.replace(/\s+/g, '').trim())
-                  } catch (e) {
-                    alert('Нет доступа к буферу обмена. Скопируйте ID вручную.')
-                  }
-                }}
-                className="whitespace-nowrap"
-              >
-                Вставить
-              </Button>
-              <Button
                 onClick={async () => {
                   const newId = typedId.trim()
                   if (newId) {
@@ -178,7 +164,6 @@ export default function MasterPointsPage() {
                 Добавить
               </Button>
             </div>
-            <p className="text-xs text-gray-500">Подсказка: нажмите «Вставить», чтобы взять ID из буфера обмена, и затем «Добавить».</p>
           </div>
 
           {loading ? (
