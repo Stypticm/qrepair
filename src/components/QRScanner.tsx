@@ -131,17 +131,27 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         return;
       }
 
+      // Сразу после предоставления разрешения открываем системную камеру/галерею
+      try {
+        fileInputRef.current?.click();
+      } catch {}
+      setIsScanning(false);
+      setHasPermission(null);
+      return;
+
       // Критичные атрибуты для мобильных WebView (iOS/Android)
       try {
-        videoRef.current.setAttribute('playsinline', 'true');
+        const videoEl = videoRef.current as HTMLVideoElement;
+        videoEl?.setAttribute('playsinline', 'true');
         // @ts-ignore
-        videoRef.current.setAttribute('webkit-playsinline', 'true');
-        videoRef.current.setAttribute('autoplay', 'true');
-        videoRef.current.muted = true;
+        videoEl?.setAttribute('webkit-playsinline', 'true');
+        videoEl?.setAttribute('autoplay', 'true');
+        if (videoEl) videoEl.muted = true;
       } catch {}
 
+      const videoEl2 = videoRef.current as HTMLVideoElement;
       qrScannerRef.current = new QrScanner(
-        videoRef.current,
+        videoEl2,
         handleScanResult,
         {
           highlightScanRegion: true,
@@ -150,9 +160,9 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         }
       );
 
-      await qrScannerRef.current.start();
+      await qrScannerRef.current!.start();
       // Явная попытка запустить воспроизведение (для некоторых WebView это обязательно)
-      try { await videoRef.current.play(); } catch (e) { console.warn('video.play() rejected:', e); }
+      try { await (videoRef.current as HTMLVideoElement).play(); } catch (e) { console.warn('video.play() rejected:', e); }
       setIsScanning(true);
       setHasPermission(true);
       console.log('Веб-сканер успешно запущен');
