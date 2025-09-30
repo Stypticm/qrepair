@@ -15,6 +15,7 @@ interface QRScannerProps {
 export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -177,20 +178,22 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     }
 
     const platform = window?.Telegram?.WebApp?.platform;
-    startTelegramScanner().then((success) => {
-      if (!success) {
-        if (platform === 'ios') {
-          // На iOS не пытаемся запускать веб-сканер из-за чёрного экрана — предлагаем только галерею
-          console.log('iOS: веб-сканер не используется. Доступна загрузка из галереи.');
-          setIsTelegramScanner(false);
-          setIsScanning(false);
-          setHasPermission(null);
-        } else {
+    if (platform === 'ios') {
+      // Сразу открываем системную камеру/галерею через input (надёжнее на iOS)
+      setTimeout(() => {
+        try { fileInputRef.current?.click(); } catch {}
+      }, 50);
+      setIsTelegramScanner(false);
+      setIsScanning(false);
+      setHasPermission(null);
+    } else {
+      startTelegramScanner().then((success) => {
+        if (!success) {
           console.log('Telegram-сканер не запустился, переключаемся на веб-сканер');
           startWebScanner();
         }
-      }
-    });
+      });
+    }
 
     return () => {
       console.log('Очистка QRScanner...');
@@ -313,6 +316,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
             capture="environment"
             onChange={handleFileUpload}
             className="hidden"
+            ref={fileInputRef}
           />
           <Button
             variant="outline"
