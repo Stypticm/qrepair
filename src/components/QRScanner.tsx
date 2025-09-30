@@ -21,6 +21,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isTelegramScanner, setIsTelegramScanner] = useState(false);
   const [autoTriggered, setAutoTriggered] = useState(false);
+  const [platform, setPlatform] = useState<string | null>(null);
 
   const handleScanResult = useCallback(
     (result: QrScanner.ScanResult | string) => {
@@ -185,11 +186,13 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       console.log('Инициализация Telegram Web App...');
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
-      console.log('Telegram Platform:', window.Telegram.WebApp.platform);
+      const pf = window.Telegram.WebApp.platform;
+      setPlatform(pf);
+      console.log('Telegram Platform:', pf);
     }
 
-    const platform = window?.Telegram?.WebApp?.platform;
-    if (platform === 'ios') {
+    const pf = window?.Telegram?.WebApp?.platform;
+    if (pf === 'ios') {
       // Сразу открываем системную камеру/галерею через input (надёжнее на iOS)
       setTimeout(() => {
         try { fileInputRef.current?.click(); } catch {}
@@ -217,13 +220,13 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
 
   // Фолбек: если мы не сканируем, нет ошибки и не открыт Telegram-сканер, один раз автоматически открываем системную камеру/галерею
   useEffect(() => {
-    if (!isScanning && !error && !isTelegramScanner && !autoTriggered) {
+    if (!isScanning && !error && !isTelegramScanner && !autoTriggered && platform === 'ios') {
       setAutoTriggered(true);
       setTimeout(() => {
         try { fileInputRef.current?.click(); } catch {}
       }, 50);
     }
-  }, [isScanning, error, isTelegramScanner, autoTriggered]);
+  }, [isScanning, error, isTelegramScanner, autoTriggered, platform]);
 
   const stopScanning = () => {
     if (qrScannerRef.current) {
@@ -288,24 +291,35 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
 
   return (
     <div className="fixed inset-0 bg-black z-50">
-      <video
-        ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover"
-        playsInline
-        muted
-        autoPlay
-      />
-      <div className="absolute inset-0 bg-black bg-opacity-25" />
+      {platform !== 'ios' && (
+        <>
+          <video
+            ref={videoRef}
+            className="absolute inset-0 w-full h-full object-cover"
+            playsInline
+            muted
+            autoPlay
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-25" />
+        </>
+      )}
 
-      {!isScanning && !error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
-          <p className="text-white text-lg">Запуск камеры...</p>
+      {platform !== 'ios' && isScanning && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-64 h-64 border-4 border-white rounded-lg" style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }} />
         </div>
       )}
 
-      {isScanning && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-64 h-64 border-4 border-white rounded-lg" style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }} />
+      {platform === 'ios' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+          <p className="text-white text-lg mb-4">Откройте камеру для сканирования QR</p>
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full max-w-sm bg-white text-black hover:bg-white/90"
+          >
+            Открыть камеру
+          </Button>
+          <p className="text-white/80 text-sm mt-3">или выберите фото из галереи</p>
         </div>
       )}
 
@@ -330,26 +344,22 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       )}
 
       <div className="absolute bottom-4 left-4 right-4 z-10">
-        <label className="w-full">
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFileUpload}
-            className="hidden"
-            ref={fileInputRef}
-          />
-          <Button
-            variant="outline"
-            className="w-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 border-none py-6 text-base"
-            asChild
-          >
-            <span>
-              <Upload className="w-5 h-5 mr-2" />
-              Загрузить из галереи
-            </span>
-          </Button>
-        </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+        <Button
+          variant="outline"
+          className="w-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 border-none py-6 text-base"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className="w-5 h-5 mr-2" />
+          Загрузить из галереи
+        </Button>
       </div>
     </div>
   );
