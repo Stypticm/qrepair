@@ -50,25 +50,46 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   );
 
   const startTelegramScanner = useCallback(async () => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp && openQrScanner.isAvailable()) {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       console.log('Попытка открыть Telegram QR Scanner...');
       setIsTelegramScanner(true);
       try {
-        const result = await openQrScanner({
-          text: 'Наведите камеру на QR код заявки',
-          capture: (qr: string) => {
-            console.log('Telegram QR Scanner: отсканирован QR:', qr);
-            handleScanResult(qr);
-            return true; // Закрываем попап после успешного сканирования
-          },
-        });
-        console.log('Telegram QR Scanner: результат:', result);
-        if (result === null) {
-          console.log('Telegram QR Scanner: попап закрыт без результата');
-          setIsTelegramScanner(false);
-          onClose();
+        let usedSdk = false;
+        if (openQrScanner.isAvailable()) {
+          const result = await openQrScanner({
+            text: 'Наведите камеру на QR код заявки',
+            capture: (qr: string) => {
+              console.log('Telegram QR Scanner: отсканирован QR:', qr);
+              handleScanResult(qr);
+              return true; // Закрываем попап после успешного сканирования
+            },
+          });
+          console.log('Telegram QR Scanner: результат:', result);
+          if (result === null) {
+            console.log('Telegram QR Scanner: попап закрыт без результата');
+            setIsTelegramScanner(false);
+            onClose();
+          }
+          usedSdk = true;
+          return true;
         }
-        return true;
+
+        // Fallback: нативный WebApp API
+        if (window.Telegram.WebApp.showScanQrPopup) {
+          window.Telegram.WebApp.showScanQrPopup(
+            { text: 'Наведите камеру на QR код заявки' },
+            (text: string) => {
+              console.log('WebApp.showScanQrPopup: отсканирован QR:', text);
+              handleScanResult(text);
+              return true as any;
+            }
+          );
+          return true;
+        }
+
+        // Ничего не доступно
+        setIsTelegramScanner(false);
+        return false;
       } catch (err) {
         console.error('Ошибка Telegram QR Scanner:', err);
         setError('Не удалось открыть сканер Telegram. Переключаемся на веб-сканер.');
@@ -154,10 +175,19 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       console.log('Telegram Platform:', window.Telegram.WebApp.platform);
     }
 
+    const platform = window?.Telegram?.WebApp?.platform;
     startTelegramScanner().then((success) => {
       if (!success) {
-        console.log('Telegram-сканер не запустился, переключаемся на веб-сканер');
-        startWebScanner();
+        if (platform === 'ios') {
+          // На iOS не пытаемся запускать веб-сканер из-за чёрного экрана — предлагаем только галерею
+          console.log('iOS: веб-сканер не используется. Доступна загрузка из галереи.');
+          setIsTelegramScanner(false);
+          setIsScanning(false);
+          setHasPermission(null);
+        } else {
+          console.log('Telegram-сканер не запустился, переключаемся на веб-сканер');
+          startWebScanner();
+        }
       }
     });
 
