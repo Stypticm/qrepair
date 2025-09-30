@@ -108,6 +108,15 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         return;
       }
 
+      // Критичные атрибуты для мобильных WebView (iOS/Android)
+      try {
+        videoRef.current.setAttribute('playsinline', 'true');
+        // @ts-ignore
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
+        videoRef.current.setAttribute('autoplay', 'true');
+        videoRef.current.muted = true;
+      } catch {}
+
       qrScannerRef.current = new QrScanner(
         videoRef.current,
         handleScanResult,
@@ -119,6 +128,8 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       );
 
       await qrScannerRef.current.start();
+      // Явная попытка запустить воспроизведение (для некоторых WebView это обязательно)
+      try { await videoRef.current.play(); } catch (e) { console.warn('video.play() rejected:', e); }
       setIsScanning(true);
       setHasPermission(true);
       console.log('Веб-сканер успешно запущен');
