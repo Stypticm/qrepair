@@ -71,7 +71,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         return;
       }
 
-      // Fallback для обычного браузера
+      // Fallback: пробуем напрямую спросить фото из галереи, если камера недоступна
       await new Promise(resolve => setTimeout(resolve, 100));
       
       if (!videoRef.current) {
@@ -83,7 +83,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       // Проверяем доступность камеры
       const hasCamera = await QrScanner.hasCamera();
       if (!hasCamera) {
-        setError('Камера не найдена на устройстве. Используйте загрузку файла.');
+        setError('Камера не найдена. Выберите фото QR из галереи.');
         setHasPermission(false);
         return;
       }

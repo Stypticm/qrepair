@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button'
 
 interface CameraWithOverlayProps {
   onPhotoCapture: (blob: Blob) => void
-  overlayImage: string
+  overlayImage?: string
+  frameVariant?: 'front' | 'back' | 'side'
 }
 
-export const CameraWithOverlay = ({ onPhotoCapture, overlayImage }: CameraWithOverlayProps) => {
+export const CameraWithOverlay = ({ onPhotoCapture, overlayImage, frameVariant = 'front' }: CameraWithOverlayProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
@@ -89,6 +90,22 @@ export const CameraWithOverlay = ({ onPhotoCapture, overlayImage }: CameraWithOv
     )
   }
 
+  const renderFrame = () => {
+    if (frameVariant === 'side') {
+      return (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="h-[86%] w-[26%] border-4 border-white rounded-xl" />
+        </div>
+      )
+    }
+    // front/back
+    return (
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="w-[80%] h-[80%] border-4 border-white rounded-2xl" />
+      </div>
+    )
+  }
+
   return (
     <div className="w-full h-full relative bg-transparent flex items-center justify-center">
       <video
@@ -97,16 +114,14 @@ export const CameraWithOverlay = ({ onPhotoCapture, overlayImage }: CameraWithOv
         playsInline
         className="w-full h-full object-cover"
       />
-      {/* Белая рамка поверх видео */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="w-[84%] h-[84%] border-4 border-white rounded-2xl" />
-      </div>
-      {/* Полупрозрачная подсказка-оверлей без затемнения фона */}
-      <img
-        src={getPictureUrl(overlayImage)}
-        alt="Overlay"
-        className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
-      />
+      {renderFrame()}
+      {overlayImage && (
+        <img
+          src={getPictureUrl(overlayImage)}
+          alt="Overlay"
+          className="absolute top-0 left-0 w-full h-full object-contain pointer-events-none"
+        />
+      )}
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2">
         <Button onClick={handleTakePhoto} className="w-20 h-20 rounded-full bg-white text-black border-4 border-gray-300 hover:bg-gray-200">
           Снять

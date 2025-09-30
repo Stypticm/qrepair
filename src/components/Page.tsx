@@ -2,7 +2,7 @@
 
 import { backButton } from '@telegram-apps/sdk-react';
 import { PropsWithChildren, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore } from '@/stores/authStore';
 
@@ -10,6 +10,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
   back?: boolean | (() => void);
 }>) {
   const router = useRouter();
+  const pathname = usePathname();
   const { safeAreaInsets, cssVars, isTelegram, isDesktop } = useSafeArea();
   const { goToPreviousStep } = useAppStore();
 
@@ -38,8 +39,17 @@ export function Page({ children, back = true }: PropsWithChildren<{
         console.log('🔍 Page handleBackClick - currentStep:', currentStep);
         
         if (!currentStep) {
-          // Если нет currentStep, идем на главную
-          router.push('/');
+          // Если нет currentStep, определяем целевую страницу
+          if (pathname && pathname.startsWith('/master')) {
+            router.push('/internal');
+          } else {
+            // Пытаемся вернуться по истории, затем fallback на главную
+            try { router.back(); } catch {}
+            setTimeout(() => {
+              // Fallback на главную, если назад не сработал
+              router.push('/');
+            }, 50);
+          }
         } else {
           // Используем логику из стора для навигации
           goToPreviousStep(router);

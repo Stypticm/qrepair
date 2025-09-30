@@ -537,19 +537,14 @@ export default function MasterRequestPage({ params }: PageProps) {
   return (
     <Page back={false}>
       {isCameraOpen ? (
-        <div className="fixed inset-0 bg-transparent z-50">
-          <CameraWithOverlay
-            onPhotoCapture={handlePhotoCapture}
-            overlayImage="front_master.png"
-          />
-          <Button
-            onClick={() => setCameraOpen(false)}
-            className="absolute top-4 right-4 bg-white/70 text-gray-900 rounded-full w-12 h-12 p-0 shadow"
-            variant="ghost"
-          >
-            <X className="w-8 h-8" />
-          </Button>
-        </div>
+        <Page back={() => setCameraOpen(false)}>
+          <div className="fixed inset-0 bg-transparent z-50">
+            <CameraWithOverlay
+              onPhotoCapture={handlePhotoCapture}
+              frameVariant={currentPhotoId === 'side' ? 'side' : currentPhotoId === 'back' ? 'back' : 'front'}
+            />
+          </div>
+        </Page>
       ) : (
         <div className="min-h-screen bg-white">
           <div className="max-w-4xl mx-auto pt-16">
@@ -665,10 +660,10 @@ export default function MasterRequestPage({ params }: PageProps) {
                           <div className="flex items-center gap-2">
                             {photo.uploaded ? (
                               <CheckCircle2 className="w-5 h-5 text-green-600" />
-                            ) : photo.file ? (
-                              <div className="flex items-center gap-2">
-                                <img src={URL.createObjectURL(photo.file)} alt="preview" className="w-16 h-16 rounded-md object-cover" />
-                                <Button onClick={() => openCamera(photo.id)} variant="outline" size="sm">Переснять</Button>
+                        ) : photo.file ? (
+                              <div className="grid grid-cols-1 gap-2">
+                                <img src={URL.createObjectURL(photo.file)} alt="preview" className="w-24 h-24 rounded-md object-cover mx-auto" />
+                                <Button onClick={() => openCamera(photo.id)} variant="outline" size="sm" className="justify-center">Переснять</Button>
                               </div>
                             ) : (
                               <Button onClick={() => openCamera(photo.id)} className="flex items-center gap-2">
@@ -694,26 +689,57 @@ export default function MasterRequestPage({ params }: PageProps) {
               {/* Шаг 2: Проверка функционала */}
               {currentStep === 2 && (
                 <Card className="border-2 border-gray-200 animate-in slide-in-from-right-5 duration-300">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
-                      <Smartphone className="w-5 h-5 mr-2" />
-                      Шаг 2: Проверка функционала
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-semibold text-gray-900 flex items-center justify-between">
+                      <span className="flex items-center"><Smartphone className="w-5 h-5 mr-2" />Шаг 2: Проверка функционала</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    {/* Ответы клиента для сверки */}
+                    {(request.deviceConditions || request.additionalConditions) && (
+                      <div className="mb-4 p-3 rounded-lg bg-gray-50 border border-gray-200">
+                        <p className="text-sm font-medium text-gray-800 mb-2">Ответы клиента (Оценка смартфона)</p>
+                        <div className="grid grid-cols-1 gap-2">
+                          {request.deviceConditions && (
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Состояние устройства</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(request.deviceConditions).map(([key, value]) => (
+                                  <span key={key} className="px-2 py-1 rounded-md text-xs bg-white border border-gray-200 text-gray-700">
+                                    {key}: {String(value)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {request.additionalConditions && (
+                            <div>
+                              <p className="text-xs text-gray-500 mb-1">Доп. сведения</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(request.additionalConditions).map(([key, value]) => (
+                                  <span key={key} className="px-2 py-1 rounded-md text-xs bg-white border border-gray-200 text-gray-700">
+                                    {key}: {String(value)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Список тестов, выравнивание по сетке */}
+                    <div className="space-y-3">
                       {functionalityTests.map((test) => {
                         const IconComponent = test.icon
                         return (
-                          <div key={test.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                            <div className="flex items-center">
-                              <div className="w-12 h-12 flex items-center justify-center mr-4">
-                                <IconComponent className="w-10 h-10 text-gray-600" />
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">{test.name}</p>
-                                <p className="text-sm text-gray-500">{test.description}</p>
-                              </div>
+                          <div key={test.id} className="grid grid-cols-[56px_1fr_auto] items-center gap-3 p-4 border border-gray-200 rounded-xl">
+                            <div className="w-14 h-14 flex items-center justify-center bg-gray-50 rounded-lg">
+                              <IconComponent className="w-8 h-8 text-gray-600" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-gray-900 leading-tight">{test.name}</p>
+                              <p className="text-sm text-gray-500 truncate">{test.description}</p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Button

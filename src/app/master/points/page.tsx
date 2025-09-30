@@ -173,7 +173,7 @@ export default function MasterPointsPage() {
         <div className="max-w-md mx-auto pt-16 px-4">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Все заявки</h1>
-            <p className="text-gray-600">Загрузите QR код или введите ID заявки</p>
+            {/* <p className="text-gray-600">Загрузите QR код или введите ID заявки</p> */}
           </div>
 
           <div className="mb-8 space-y-4">
