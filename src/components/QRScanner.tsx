@@ -17,6 +17,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [isTelegramScanner, setIsTelegramScanner] = useState(false);
 
   const handleScanResult = (result: QrScanner.ScanResult | string) => {
     const scanData = typeof result === 'string' ? result : result.data;
@@ -40,24 +41,29 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
 
   const startTelegramScanner = useCallback(() => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp?.showScanQrPopup) {
+      setIsTelegramScanner(true);
       window.Telegram.WebApp.showScanQrPopup(
         { text: 'Наведите камеру на QR код заявки' },
         (text: string) => {
           if (text) {
             handleScanResult(text);
-            return true; // Закрыть сканер после успешного сканирования
+            onClose(); // Закрываем компонент после сканирования
+            return true;
           }
-          return false; // Оставить сканер открытым, если ничего не отсканировано
+          onClose(); // Закрываем, даже если сканирование отменено
+          return false;
         }
       );
       return true;
     }
     return false;
-  }, [onScanSuccess]);
+  }, [onScanSuccess, onClose]);
 
   const startWebScanner = useCallback(async () => {
     if (!videoRef.current) {
       console.log("videoRef is not available yet, waiting...");
+      // Дадим React время отрендерить video элемент
+      setTimeout(startWebScanner, 100);
       return;
     }
     try {
@@ -96,18 +102,12 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   }, [handleScanResult]);
 
   useEffect(() => {
-    // Инициализируем Telegram WebApp
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
     }
 
-    if (startTelegramScanner()) {
-      // Если используется сканер Telegram, нам не нужно управлять видео-элементом
-      // Мы можем просто закрыть компонент, так как Telegram обработает UI
-      onClose();
-    } else {
-      // Если мы не в Telegram, запускаем сканер для браузера
+    if (!startTelegramScanner()) {
       startWebScanner();
     }
 
@@ -116,8 +116,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
         qrScannerRef.current.destroy();
       }
     };
-  }, [startTelegramScanner, startWebScanner, onClose]);
-
+  }, [startTelegramScanner, startWebScanner]);
 
   const stopScanning = () => {
     if (qrScannerRef.current) {
@@ -145,11 +144,8 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     }
   };
 
-  // Если мы используем Telegram сканер, этот компонент не должен ничего рендерить
-  if (typeof window !== 'undefined' && window.Telegram?.WebApp?.showScanQrPopup) {
-      // Можно вернуть null или минимальный лоадер, но лучше просто закрыть
-      // так как onClose() уже был вызван
-      return null;
+  if (isTelegramScanner) {
+    return null; // Не рендерим ничего, если используется сканер Telegram
   }
 
   return (
