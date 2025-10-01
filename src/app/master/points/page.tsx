@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import Link from 'next/link'
 import { Page } from '@/components/Page'
@@ -26,6 +26,8 @@ interface Request {
 export default function MasterPointsPage() {
   const { telegramId } = useAppStore()
   const queryClient = useQueryClient()
+  const [mutatingRequestId, setMutatingRequestId] = useState<string | null>(null);
+
   const effectiveTelegramId = (typeof window !== 'undefined' ? (telegramId || new URLSearchParams(window.location.search).get('telegramId') || sessionStorage.getItem('telegramId')) : telegramId) as string | null
 
   const { data: dashboardData, isLoading: isLoadingDashboard, error: dashboardError, refetch: refetchDashboard } = useQuery({
@@ -41,7 +43,11 @@ export default function MasterPointsPage() {
 
   const addRequestMutation = useMutation({
     mutationFn: addRequestToMaster,
-    onSuccess: () => {
+    onMutate: (variables) => {
+      setMutatingRequestId(variables.requestId);
+    },
+    onSettled: () => {
+      setMutatingRequestId(null);
       queryClient.invalidateQueries({ queryKey: ['masterDashboard', effectiveTelegramId] })
       queryClient.invalidateQueries({ queryKey: ['availableRequests'] })
     },
@@ -53,8 +59,13 @@ export default function MasterPointsPage() {
 
   const transferRequestMutation = useMutation({
     mutationFn: transferMasterRequest,
-    onSuccess: () => {
+    onMutate: (requestId) => {
+      setMutatingRequestId(requestId);
+    },
+    onSettled: () => {
+      setMutatingRequestId(null);
       queryClient.invalidateQueries({ queryKey: ['masterDashboard', effectiveTelegramId] })
+      queryClient.invalidateQueries({ queryKey: ['availableRequests'] })
     },
     onError: (error) => {
       console.error('Error transferring request:', error)
@@ -120,27 +131,30 @@ export default function MasterPointsPage() {
           ) : availableData?.requests?.length > 0 && (
             <div className="mb-8 space-y-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Доступные заявки</h2>
-              {availableData.requests.map((request: Request) => (
-                <div key={request.id} className="bg-white rounded-lg shadow-md p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h4 className="text-md font-semibold text-gray-900 mb-2">{request.modelname || 'Не указано'}</h4>
-                      <p className="text-sm text-gray-600 mb-1"><strong>Клиент:</strong> @{request.username}</p>
-                      <p className="text-sm text-gray-600 mb-1"><strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}</p>
-                      <p className="text-sm text-gray-600"><strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
+              {availableData.requests.map((request: Request) => {
+                const isAdding = addRequestMutation.isPending && mutatingRequestId === request.id;
+                return (
+                  <div key={request.id} className="bg-white rounded-lg shadow-md p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h4 className="text-md font-semibold text-gray-900 mb-2">{request.modelname || 'Не указано'}</h4>
+                        <p className="text-sm text-gray-600 mb-1"><strong>Клиент:</strong> @{request.username}</p>
+                        <p className="text-sm text-gray-600 mb-1"><strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}</p>
+                        <p className="text-sm text-gray-600"><strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => handleAddRequest(request.id)}
+                        disabled={addRequestMutation.isPending}
+                        className="bg-green-600 text-white px-4 py-2 rounded-md text-center hover:bg-green-700 transition-colors w-32"
+                      >
+                        {isAdding ? 'Загрузка...' : 'Взять в работу'}
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex justify-center">
-                    <Button
-                      onClick={() => handleAddRequest(request.id)}
-                      disabled={addRequestMutation.isPending}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md text-center hover:bg-green-700 transition-colors"
-                    >
-                      {addRequestMutation.isPending ? 'Загрузка...' : 'Взять в работу'}
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
@@ -154,38 +168,41 @@ export default function MasterPointsPage() {
           ) : dashboardData?.requests?.length > 0 ? (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold text-gray-900 mb-4 text-center">Мои заявки</h2>
-              {dashboardData.requests.map((request: Request) => (
-                <div key={request.id} className="bg-white rounded-lg shadow-md p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="text-md font-semibold text-gray-900">{request.modelname || 'Не указано'}</h4>
-                        <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {request.status === 'submitted' ? 'Новая' : request.status}
-                        </span>
+              {dashboardData.requests.map((request: Request) => {
+                const isTransferring = transferRequestMutation.isPending && mutatingRequestId === request.id;
+                return (
+                  <div key={request.id} className="bg-white rounded-lg shadow-md p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h4 className="text-md font-semibold text-gray-900">{request.modelname || 'Не указано'}</h4>
+                          <span className={`px-2 py-1 text-xs rounded-full ${request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {request.status === 'submitted' ? 'Новая' : request.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-1"><strong>Клиент:</strong> @{request.username}</p>
+                        <p className="text-sm text-gray-600 mb-1"><strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}</p>
+                        <p className="text-sm text-gray-600"><strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
                       </div>
-                      <p className="text-sm text-gray-600 mb-1"><strong>Клиент:</strong> @{request.username}</p>
-                      <p className="text-sm text-gray-600 mb-1"><strong>Цена:</strong> {request.price ? `${request.price.toLocaleString()} ₽` : 'Не указана'}</p>
-                      <p className="text-sm text-gray-600"><strong>Дата:</strong> {new Date(request.createdAt).toLocaleDateString('ru-RU')}</p>
+                    </div>
+                    <div className="flex flex-col items-center space-y-2">
+                      <Button variant='outline' asChild className="w-full text-green-600 px-4 py-2 rounded-md text-center hover:bg-green-800 transition-colors">
+                        <Link href={`/master/requests/${request.id}`}>
+                          Просмотреть детали
+                        </Link>
+                      </Button>
+                      <Button
+                        onClick={() => transferRequestMutation.mutate(request.id)}
+                        disabled={transferRequestMutation.isPending}
+                        variant="outline"
+                        className="w-full text-slate-500 px-4 py-2 rounded-md text-center hover:bg-slate-700 transition-colors"
+                      >
+                        {isTransferring ? 'Передача...' : 'Передать заявку'}
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex flex-col items-center space-y-2">
-                    <Button variant='outline' asChild className="w-full text-green-600 px-4 py-2 rounded-md text-center hover:bg-green-800 transition-colors">
-                      <Link href={`/master/requests/${request.id}`}>
-                        Просмотреть детали
-                      </Link>
-                    </Button>
-                    <Button
-                      onClick={() => transferRequestMutation.mutate(request.id)}
-                      disabled={transferRequestMutation.isPending}
-                      variant="outline"
-                      className="w-full text-slate-500 px-4 py-2 rounded-md text-center hover:bg-slate-700 transition-colors"
-                    >
-                      {transferRequestMutation.isPending ? 'Передача...' : 'Передать заявку'}
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="text-center py-16">
