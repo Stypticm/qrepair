@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/core/lib/prisma';
 
+const ADMIN_IDS = [1, 296925626, 531360988]; // The source of truth for admin IDs
+
 export async function POST(request: NextRequest) {
   try {
     const { requestId, masterId, adminTelegramId } = await request.json();
@@ -9,12 +11,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Optional: Verify admin privileges
-    const admin = await prisma.master.findUnique({
-      where: { telegramId: String(adminTelegramId) },
-    });
-
-    if (!admin || !admin.isAdmin) {
+    // Verify admin privileges by checking against the hardcoded list
+    if (!ADMIN_IDS.includes(parseInt(adminTelegramId))) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
