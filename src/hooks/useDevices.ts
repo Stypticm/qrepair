@@ -17,7 +17,8 @@ const fetchAllDevices = async (): Promise<Device[]> => {
   if (!response.ok) {
     throw new Error('Failed to fetch devices');
   }
-  return response.json();
+  const data = await response.json();
+  return data.devices; // Return the 'devices' property from the response
 };
 
 export const useDevices = () => {
