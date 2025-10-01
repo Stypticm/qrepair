@@ -27,28 +27,28 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
     (result: QrScanner.ScanResult | string) => {
       const scanData = typeof result === 'string' ? result : result.data;
       console.log('Отсканирован QR:', scanData);
-      try {
-        // Парсим JSON из QR кода
+            try {
+              // Парсим JSON из QR кода
         const qrData = JSON.parse(scanData);
-        if (qrData.skupkaId) {
+              if (qrData.skupkaId) {
           console.log('Успешно извлечён skupkaId:', qrData.skupkaId);
-          onScanSuccess(qrData.skupkaId);
+                onScanSuccess(qrData.skupkaId);
           closeQrScanner();
           onClose();
-        } else {
-          setError('QR код не содержит ID заявки');
-        }
-      } catch (parseError) {
-        // Если не JSON, пробуем как простой ID
+              } else {
+                setError('QR код не содержит ID заявки');
+              }
+            } catch (parseError) {
+              // Если не JSON, пробуем как простой ID
         if (scanData && scanData.trim()) {
           console.log('Успешно извлечён текстовый ID:', scanData.trim());
           onScanSuccess(scanData.trim());
           closeQrScanner();
           onClose();
-        } else {
-          setError('Неверный формат QR кода');
-        }
-      }
+              } else {
+                setError('Неверный формат QR кода');
+              }
+            }
     },
     [onScanSuccess, onClose]
   );
@@ -107,7 +107,7 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
   }, [handleScanResult, onClose]);
 
   const startWebScanner = useCallback(async () => {
-    if (!videoRef.current) {
+      if (!videoRef.current) {
       console.log('videoRef недоступен, ждём...');
       setTimeout(startWebScanner, 100);
       return;
@@ -177,8 +177,8 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       } else {
         setError(`Ошибка: ${err.message}. Используйте загрузку файла.`);
       }
-      setHasPermission(false);
-    }
+        setHasPermission(false);
+      }
   }, [handleScanResult]);
 
   useEffect(() => {
@@ -321,31 +321,31 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
       {platform !== 'ios' && isScanning && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-64 h-64 border-4 border-white rounded-lg" style={{ boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)' }} />
-        </div>
-      )}
+            </div>
+          )}
 
       {platform === 'ios' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-white text-lg mb-4">Откройте камеру для сканирования QR</p>
-          <Button
+                <Button
             onClick={() => fileInputRef.current?.click()}
             className="w-full max-w-sm bg-white text-black hover:bg-white/90"
-          >
+                >
             Открыть камеру
-          </Button>
+                </Button>
           <p className="text-white/80 text-sm mt-3">или выберите фото из галереи</p>
         </div>
       )}
 
       <div className="absolute top-4 right-4 z-10">
-        <Button
+                  <Button
           variant="ghost"
           size="icon"
           onClick={handleClose}
           className="text-white bg-black bg-opacity-50 rounded-full w-12 h-12"
         >
           <X className="w-6 h-6" />
-        </Button>
+                  </Button>
       </div>
 
       {error && (
@@ -353,28 +353,28 @@ export function QRScanner({ onScanSuccess, onClose }: QRScannerProps) {
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <p className="text-white text-lg">{error}</p>
-          </div>
-        </div>
-      )}
+              </div>
+            </div>
+          )}
 
       <div className="absolute bottom-4 left-4 right-4 z-10">
-        <input
+                <input
           ref={fileInputRef}
-          type="file"
+                  type="file"
           accept="image/*;capture=camera"
           capture="environment"
-          onChange={handleFileUpload}
-          className="hidden"
-        />
-        <Button
-          variant="outline"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
           className="w-full bg-white bg-opacity-20 text-white hover:bg-opacity-30 border-none py-6 text-base"
           onClick={() => fileInputRef.current?.click()}
-        >
+                >
           <Upload className="w-5 h-5 mr-2" />
           Загрузить из галереи
-        </Button>
-      </div>
+                </Button>
+              </div>
     </div>
   );
 }

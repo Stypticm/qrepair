@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import { Page } from '@/components/Page'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { fetchAdminData, transferRequest } from '@/lib/api'
 
+// Interfaces remain the same
 interface Request {
   id: string
   modelname: string
@@ -34,179 +37,80 @@ interface Point {
 }
 
 export default function AdminRequestsPage() {
-  const [requests, setRequests] = useState<Request[]>([])
-  const [masters, setMasters] = useState<Master[]>([])
-  const [points, setPoints] = useState<Point[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [accessDenied, setAccessDenied] = useState(false)
+  const [accessDenied, setAccessDenied] = useState(true); // Default to denied
   const [selectedPoints, setSelectedPoints] = useState<{ [requestId: string]: number }>({})
-
   const { telegramId } = useAppStore()
+  const queryClient = useQueryClient()
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true)
-
-      // Получаем все заявки
-      const requestsResponse = await fetch(`/api/admin/requests?adminTelegramId=${telegramId}`)
-      const requestsData = await requestsResponse.json()
-
-      if (!requestsResponse.ok) {
-        throw new Error(requestsData.error || 'Failed to fetch requests')
-      }
-
-      setRequests(requestsData.requests)
-
-      // Получаем всех мастеров
-      const mastersResponse = await fetch(`/api/admin/masters?adminTelegramId=${telegramId}`)
-      const mastersData = await mastersResponse.json()
-
-      if (!mastersResponse.ok) {
-        throw new Error(mastersData.error || 'Failed to fetch masters')
-      }
-
-      setMasters(mastersData.masters)
-
-      // Получаем все точки
-      const pointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`)
-      const pointsData = await pointsResponse.json()
-
-      if (!pointsResponse.ok) {
-        throw new Error(pointsData.error || 'Failed to fetch points')
-      }
-
-      setPoints(pointsData.points)
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      setError(error instanceof Error ? error.message : 'Unknown error')
-    } finally {
-      setLoading(false)
-    }
-  }, [telegramId])
-
-  // Проверяем права доступа
+  // Check access rights
   useEffect(() => {
-    console.log('Admin requests page - telegramId:', telegramId);
-    
-    const checkAccess = () => {
-      // Проверяем telegramId из store или sessionStorage
-      const currentTelegramId = telegramId || sessionStorage.getItem('telegramId');
-      
-      if (currentTelegramId) {
-        const adminIds = ['1', '296925626', '531360988'];
-        const isAdmin = adminIds.includes(currentTelegramId);
-        
-        console.log('Admin requests page - isAdmin:', isAdmin, 'telegramId:', currentTelegramId);
-        
-        if (isAdmin) {
-          setAccessDenied(false);
-          fetchData();
-        } else {
-          setAccessDenied(true);
-          setLoading(false);
+    const currentTelegramId = telegramId || sessionStorage.getItem('telegramId');
+    if (currentTelegramId) {
+      const adminIds = ['1', '296925626', '531360988'];
+      const isAdmin = adminIds.includes(currentTelegramId);
+      setAccessDenied(!isAdmin);
+    } else {
+      // If no ID is found after a delay, keep access denied
+      const timer = setTimeout(() => {
+        if (!telegramId && !sessionStorage.getItem('telegramId')) {
+            setAccessDenied(true);
         }
-        return true;
-      }
-      return false;
-    };
-
-    if (checkAccess()) {
-      return;
+      }, 1000)
+      return () => clearTimeout(timer)
     }
+  }, [telegramId]);
 
-    // Если telegramId еще не загружен, ждем дольше
-    const timer = setTimeout(() => {
-      console.log('Admin requests page - timeout, checking sessionStorage');
-      if (!checkAccess()) {
-        setAccessDenied(true);
-        setLoading(false);
-      }
-    }, 5000); // Увеличиваем до 5 секунд
-    
-    return () => clearTimeout(timer);
-  }, [telegramId, fetchData]);
+  // Fetching data with React Query
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['adminData', telegramId],
+    queryFn: () => fetchAdminData(telegramId!),
+    enabled: !accessDenied && !!telegramId, // Only run query if access is not denied and telegramId is available
+  });
+
+  const { requests = [], masters = [], points = [] } = data || {};
+
+  // Mutation for transferring a request
+  const transferMutation = useMutation({
+    mutationFn: transferRequest,
+    onSuccess: () => {
+      alert('Заявка передана');
+      queryClient.invalidateQueries({ queryKey: ['adminData', telegramId] });
+    },
+    onError: (error) => {
+      console.error('Error transferring request:', error);
+      alert(`Ошибка при передаче заявки: ${error.message}`);
+    }
+  });
 
   const handlePointSelect = (requestId: string, pointId: number) => {
-    setSelectedPoints(prev => ({
-      ...prev,
-      [requestId]: pointId
-    }))
+    setSelectedPoints(prev => ({ ...prev, [requestId]: pointId }))
   }
 
   const getMastersForPoint = (pointId: number) => {
-    return masters.filter(master => master.pointId === pointId)
+    return masters.filter((master: Master) => master.pointId === pointId)
   }
 
-  const handleMasterSelect = async (requestId: string, masterId: string) => {
+  const handleMasterSelect = (requestId: string, masterId: string) => {
     const selectedPointId = selectedPoints[requestId]
     if (!selectedPointId) {
       alert('Сначала выберите точку')
       return
     }
-
-    try {
-      const response = await fetch('/api/admin/transfer-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId,
-          newPointId: selectedPointId,
-          newMasterId: masterId,
-          adminTelegramId: telegramId
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to transfer request')
-      }
-
-      alert('Заявка передана')
-      // Очищаем выбор для этой заявки
-      setSelectedPoints(prev => {
-        const newSelected = { ...prev }
-        delete newSelected[requestId]
-        return newSelected
-      })
-      fetchData() // Обновляем данные
-    } catch (error) {
-      console.error('Error transferring request:', error)
-      alert('Ошибка при передаче заявки')
-    }
+    transferMutation.mutate({ 
+      requestId, 
+      newPointId: selectedPointId, 
+      newMasterId: masterId, 
+      adminTelegramId: telegramId! 
+    });
+    // Clear selection after attempting transfer
+    setSelectedPoints(prev => {
+      const newSelected = { ...prev };
+      delete newSelected[requestId];
+      return newSelected;
+    });
   }
 
-  const transferRequest = async (requestId: string, newPointId: number, newMasterId: string) => {
-    // Старая функция для совместимости, теперь не используется
-    try {
-      const response = await fetch('/api/admin/transfer-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId,
-          newPointId,
-          newMasterId,
-          adminTelegramId: telegramId
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to transfer request')
-      }
-
-      alert('Заявка передана')
-      fetchData() // Обновляем данные
-    } catch (error) {
-      console.error('Error transferring request:', error)
-      alert('Ошибка при передаче заявки')
-    }
-  }
-
-
-  if (loading) {
+  if (isLoading && !accessDenied) {
     return (
       <div className="min-h-screen bg-white">
         <Page back={true}>
@@ -246,9 +150,9 @@ export default function AdminRequestsPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <p className="text-red-600 mb-4">Ошибка: {error}</p>
+          <p className="text-red-600 mb-4">Ошибка: {error.message}</p>
           <button
-            onClick={fetchData}
+            onClick={() => refetch()}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Попробовать снова
@@ -262,14 +166,12 @@ export default function AdminRequestsPage() {
     <Page back={true}>
       <div className="min-h-screen bg-gray-50">
         <div className="mx-auto pt-16 px-4">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Управление заявками</h1>
-            {/* <p className="text-gray-600">Перемещайте заявки между точками и назначайте мастеров</p> */}
           </div>
 
           <div className="space-y-6">
-            {requests.map((request) => (
+            {requests.map((request: Request) => (
               <div key={request.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6">
                   <div className="mb-6">
@@ -297,6 +199,7 @@ export default function AdminRequestsPage() {
                   </div>
 
                   <div className="space-y-4 mb-6">
+                    {/* Device Info */}
                     <div className="flex items-start">
                       <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -307,6 +210,7 @@ export default function AdminRequestsPage() {
                       </div>
                     </div>
 
+                    {/* Price Info */}
                     <div className="flex items-start">
                       <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -317,6 +221,7 @@ export default function AdminRequestsPage() {
                       </div>
                     </div>
 
+                    {/* Client Info */}
                     <div className="flex items-start">
                       <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -327,6 +232,7 @@ export default function AdminRequestsPage() {
                       </div>
                     </div>
 
+                    {/* Assigned Master Info */}
                     {request.assignedMaster && (
                       <div className="flex items-start">
                         <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -339,7 +245,7 @@ export default function AdminRequestsPage() {
                       </div>
                     )}
 
-
+                    {/* Creation Time */}
                     <div className="flex items-start">
                       <svg className="w-5 h-5 text-gray-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

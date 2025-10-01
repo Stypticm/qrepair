@@ -1,185 +1,101 @@
-import { useState, useCallback } from 'react'
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
+// Define the interface for a single device variant
 export interface Device {
-  id: number
-  model: string
-  variant: string
-  storage: string
-  color: string
-  basePrice: number
+  id: number;
+  model: string;
+  variant: string;
+  storage: string;
+  color: string;
+  basePrice: number;
 }
 
+// Fetch function to get all devices
+const fetchAllDevices = async (): Promise<Device[]> => {
+  const response = await fetch('/api/devices/all');
+  if (!response.ok) {
+    throw new Error('Failed to fetch devices');
+  }
+  return response.json();
+};
+
 export const useDevices = () => {
-  const [models, setModels] = useState<string[]>([])
-  const [variants, setVariants] = useState<string[]>([])
-  const [storages, setStorages] = useState<string[]>([])
-  const [colors, setColors] = useState<string[]>([])
-  const [countries, setCountries] = useState<string[]>([])
-  const [selectedDevice, setSelectedDevice] =
-    useState<Device | null>(null)
-  const [loading, setLoading] = useState({
-    models: false,
-    variants: false,
-    storages: false,
-    colors: false,
-    device: false,
-  })
-  const [error, setError] = useState<string | null>(null)
+  const [selectedOptions, setSelectedOptions] = useState<{
+    model: string | null;
+    variant: string | null;
+    storage: string | null;
+    color: string | null;
+  }>({ model: null, variant: null, storage: null, color: null });
 
-  const loadModels = useCallback(async () => {
-    setLoading((prev) => ({ ...prev, models: true }))
-    setError(null)
-    try {
-      const response = await fetch('/api/devices/models')
-      if (!response.ok)
-        throw new Error('Failed to fetch models')
-      const data = await response.json()
-      setModels(data)
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading((prev) => ({ ...prev, models: false }))
-    }
-  }, [])
+  // Fetch all devices once and cache them indefinitely
+  const { data: allDevices = [], isLoading, error } = useQuery<Device[]>({ 
+    queryKey: ['allDevices'], 
+    queryFn: fetchAllDevices, 
+    staleTime: Infinity 
+  });
 
-  const loadVariants = useCallback(
-    async (model: string) => {
-      setLoading((prev) => ({ ...prev, variants: true }))
-      setError(null)
-      setVariants([]) // Reset
-      try {
-        const response = await fetch(
-          `/api/devices/variants?model=${model}`
-        )
-        if (!response.ok)
-          throw new Error('Failed to fetch variants')
-        const data = await response.json()
-        setVariants(data)
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading((prev) => ({ ...prev, variants: false }))
+  // Memoize derived lists to prevent re-computation on every render
+  const models = useMemo(() => {
+    return [...new Set(allDevices.map(d => d.model))].sort();
+  }, [allDevices]);
+
+  const variants = useMemo(() => {
+    if (!selectedOptions.model) return [];
+    return [...new Set(allDevices.filter(d => d.model === selectedOptions.model).map(d => d.variant))].sort();
+  }, [allDevices, selectedOptions.model]);
+
+  const storages = useMemo(() => {
+    if (!selectedOptions.model || !selectedOptions.variant) return [];
+    return [...new Set(allDevices.filter(d => d.model === selectedOptions.model && d.variant === selectedOptions.variant).map(d => d.storage))].sort((a, b) => parseInt(a) - parseInt(b));
+  }, [allDevices, selectedOptions.model, selectedOptions.variant]);
+
+  const colors = useMemo(() => {
+    if (!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage) return [];
+    return [...new Set(allDevices.filter(d => d.model === selectedOptions.model && d.variant === selectedOptions.variant && d.storage === selectedOptions.storage).map(d => d.color))];
+  }, [allDevices, selectedOptions.model, selectedOptions.variant, selectedOptions.storage]);
+
+  const selectedDevice = useMemo(() => {
+    if (!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage || !selectedOptions.color) return null;
+    return allDevices.find(d => 
+      d.model === selectedOptions.model &&
+      d.variant === selectedOptions.variant &&
+      d.storage === selectedOptions.storage &&
+      d.color === selectedOptions.color
+    ) || null;
+  }, [allDevices, selectedOptions]);
+
+  const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
+    setSelectedOptions(prev => {
+      const newOptions = { ...prev, [type]: value };
+      // Reset dependent options
+      if (type === 'model') {
+        newOptions.variant = null;
+        newOptions.storage = null;
+        newOptions.color = null;
+      } else if (type === 'variant') {
+        newOptions.storage = null;
+        newOptions.color = null;
+      } else if (type === 'storage') {
+        newOptions.color = null;
       }
-    },
-    []
-  )
-
-  const loadStorages = useCallback(
-    async ({
-      model,
-      variant,
-    }: {
-      model: string
-      variant: string | null
-    }) => {
-      setLoading((prev) => ({ ...prev, storages: true }))
-      setError(null)
-      setStorages([]) // Reset
-      try {
-        const response = await fetch(
-          `/api/devices/storages?model=${model}&variant=${
-            variant || ''
-          }`
-        )
-        if (!response.ok)
-          throw new Error('Failed to fetch storages')
-        const data = await response.json()
-        setStorages(data)
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading((prev) => ({ ...prev, storages: false }))
-      }
-    },
-    []
-  )
-
-  const loadColors = useCallback(
-    async ({
-      model,
-      variant,
-      storage,
-    }: {
-      model: string
-      variant: string | null
-      storage: string
-    }) => {
-      setLoading((prev) => ({ ...prev, colors: true }))
-      setError(null)
-      setColors([]) // Reset
-      try {
-        const response = await fetch(
-          `/api/devices/colors?model=${model}&variant=${
-            variant || ''
-          }&storage=${storage}`
-        )
-        if (!response.ok)
-          throw new Error('Failed to fetch colors')
-        const data = await response.json()
-        setColors(data)
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading((prev) => ({ ...prev, colors: false }))
-      }
-    },
-    []
-  )
-
-  const loadDevice = useCallback(
-    async ({
-      model,
-      variant,
-      storage,
-      color,
-    }: {
-      model: string
-      variant: string | null
-      storage: string
-      color: string
-    }) => {
-      setLoading((prev) => ({ ...prev, device: true }))
-      setError(null)
-      try {
-        const response = await fetch(
-          `/api/devices/device?model=${model}&variant=${
-            variant || ''
-          }&storage=${storage}&color=${color}`
-        )
-        if (!response.ok)
-          throw new Error('Failed to fetch device')
-        const data = await response.json()
-        setSelectedDevice(data)
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading((prev) => ({ ...prev, device: false }))
-      }
-    },
-    []
-  )
-
-  const clearFilters = useCallback(() => {
-    setVariants([])
-    setStorages([])
-    setColors([])
-    setSelectedDevice(null)
-  }, [])
+      return newOptions;
+    });
+  };
 
   return {
+    // Data
     models,
     variants,
     storages,
     colors,
-    countries,
     selectedDevice,
-    loading,
+    // State
+    selectedOptions,
+    // Actions
+    handleOptionSelect,
+    // Status
+    isLoading,
     error,
-    loadModels,
-    loadVariants,
-    loadStorages,
-    loadColors,
-    loadDevice,
-    clearFilters,
-  }
-}
+  };
+};
