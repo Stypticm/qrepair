@@ -103,7 +103,7 @@ export default function FormPage() {
     const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
     const getColorLabel = (color: string) => {
-        const colorMap: { [key: string]: string } = { 'G': 'Золотой', 'R': 'Красный', 'Bl': 'Синий', 'Wh': 'Белый', 'C': 'Черный' };
+        const colorMap: { [key: string]: string } = { 'G': 'Золотой', 'R': 'Красный', 'Bl': 'Синий', 'Wh': 'Белый', 'C': 'Черный', 'Bk': 'Черный', 'La': 'Лаванда', 'Mi': 'Туманный синий', 'Sa': 'Шалфей' };
         return colorMap[color] || color;
     };
 
@@ -114,7 +114,7 @@ export default function FormPage() {
     };
 
     const getColorStyle = (color: string) => {
-        const colorMap: { [key: string]: string } = { 'G': '#F5D76E', 'R': '#E74C3C', 'Bl': '#3498DB', 'Wh': '#F8F9FA', 'C': '#2C3E50' };
+        const colorMap: { [key: string]: string } = { 'G': '#F5D76E', 'R': '#E74C3C', 'Bl': '#3498DB', 'Wh': '#F8F9FA', 'C': '#2C3E50', 'Bk': '#000000', 'La': '#E6E6FA', 'Mi': '#B0C4DE', 'Sa': '#9DC183' };
         return colorMap[color] || '#808080';
     };
 
