@@ -103,7 +103,7 @@ export default function FormPage() {
     const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
     const getColorLabel = (color: string) => {
-        const colorMap: { [key: string]: string } = { 'G': 'Золотой', 'R': 'Красный', 'Bl': 'Синий', 'Wh': 'Белый', 'C': 'Черный', 'Bk': 'Черный', 'La': 'Лаванда', 'Mi': 'Туманный синий', 'Sa': 'Шалфей' };
+        const colorMap: { [key: string]: string } = { 'G': 'Золотой', 'R': 'Красный', 'Bl': 'Синий', 'Wh': 'Белый', 'C': 'Черный', 'Bk': 'Черный', 'La': 'Лаванда', 'Mi': 'Туманный синий', 'Sa': 'Шалфей', 'St': 'Стальной серый', 'Gr': 'Зеленый', 'Pu': 'Фиолетовый', 'Lb': 'Светло-голубой', 'Lg': 'Светло-золотой', 'Gy': 'Серый', 'Db': 'Темно-синий', 'Or': 'Оранжевый' };
         return colorMap[color] || color;
     };
 
@@ -114,7 +114,7 @@ export default function FormPage() {
     };
 
     const getColorStyle = (color: string) => {
-        const colorMap: { [key: string]: string } = { 'G': '#F5D76E', 'R': '#E74C3C', 'Bl': '#3498DB', 'Wh': '#F8F9FA', 'C': '#2C3E50', 'Bk': '#000000', 'La': '#E6E6FA', 'Mi': '#B0C4DE', 'Sa': '#9DC183' };
+        const colorMap: { [key: string]: string } = { 'G': '#F5D76E', 'R': '#E74C3C', 'Bl': '#3498DB', 'Wh': '#F8F9FA', 'C': '#2C3E50', 'Bk': '#000000', 'La': '#E6E6FA', 'Mi': '#B0C4DE', 'Sa': '#9DC183', 'St': '#808080', 'Gr': '#008000', 'Pu': '#800080', 'Lb': '#ADD8E6', 'Lg': '#F0E68C', 'Gy': '#808080', 'Db': '#00008B', 'Or': '#FFA500' };
         return colorMap[color] || '#808080';
     };
 
@@ -169,7 +169,7 @@ export default function FormPage() {
                                         {variants.map((variant: string) => (
                                             <Button key={variant} onClick={() => handleOptionSelect('variant', variant)} className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.variant === variant ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
                                                 {selectedOptions.variant === variant && <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>}
-                                                {getVariantLabel(variant) || 'Стандарт'}
+                                                {getVariantLabel(variant)}
                                             </Button>
                                         ))}
                                     </div>
