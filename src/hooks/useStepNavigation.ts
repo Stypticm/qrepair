@@ -7,10 +7,9 @@ import { useCallback } from 'react'
 const stepOrder: string[] = [
   '/', // Главная страница или начальная точка
   '/request/form',
-  '/request/condition', // Это device-condition
-  '/request/phone-condition',
-  '/request/additional-condition',
+  '/request/evaluation',
   '/request/submit',
+  '/request/final',
 ]
 
 export const useStepNavigation = () => {

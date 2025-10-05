@@ -226,8 +226,8 @@ const PickupPointsPage = () => {
     return (
         <Page back={true}>
             <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
-                <div className="flex-1 p-4 pt-8 flex items-start justify-center min-h-0">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-6 min-h-0 h-full">
+                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
+                    <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4">
                         {/* Заголовок */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -235,7 +235,7 @@ const PickupPointsPage = () => {
                             transition={{ duration: 0.3 }}
                             className="text-center"
                         >
-                            <h2 className="text-3xl font-bold text-gray-900 mb-2 font-sf-pro">
+                            <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                                 Наши точки приема
                             </h2>
                             <p className="text-apple-body text-gray-600 font-sf-pro">
@@ -253,7 +253,7 @@ const PickupPointsPage = () => {
                             <div className="text-center space-y-2">
                                 <p className="text-apple-body text-gray-600 font-sf-pro">Ваше устройство:</p>
                                 <p className="font-semibold text-gray-900 font-sf-pro">{getFullModelName()}</p>
-                                <p className="text-apple-body text-gray-600 font-sf-pro">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
+                                <p className="text-apple-body text-gray-600 font-sf-pro">Предварительная цена: <span className="text-xl font-bold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
                             </div>
                         </motion.div>
 

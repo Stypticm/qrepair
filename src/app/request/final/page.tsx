@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react'
 import { useAppStore } from '@/stores/authStore';
@@ -12,7 +12,7 @@ import { QRCodeGenerator } from '@/components/QRCodeGenerator';
 
 const FinalPage = () => {
     const router = useRouter();
-    const { telegramId, username, modelname, price, resetAllStates, setCurrentStep } = useAppStore();
+    const { telegramId, username, modelname, price, damagePercent, resetAllStates, setCurrentStep, setUserEvaluation, setDamagePercent } = useAppStore();
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [userTelegramId, setUserTelegramId] = useState('');
@@ -172,6 +172,13 @@ const FinalPage = () => {
                 if (result?.requestId) {
                     setCreatedRequestId(result.requestId);
                 }
+                // Очищаем выбор оценки после успешной отправки заявки
+                setUserEvaluation(null);
+                setDamagePercent(0);
+                if (typeof window !== 'undefined') {
+                    sessionStorage.removeItem('userEvaluation');
+                    sessionStorage.removeItem('damagePercent');
+                }
                 // Больше не редиректим автоматически, даём показать QR
             } else {
                 console.error('❌ Final submit - ошибка API:', response.status, response.statusText);
@@ -185,7 +192,8 @@ const FinalPage = () => {
         }
     };
 
-    const finalPrice = price || 48000;
+    // На предыдущих шагах цена уже учитывает состояние. Повторно не уменьшаем.
+    const finalPrice = price || 0;
 
     // Функция для формирования полной модели
     const getFullModelName = (): string => {
@@ -373,6 +381,9 @@ const FinalPage = () => {
                                 <div>
                                     <h3 className="font-semibold text-gray-900 mb-2">Предварительная цена:</h3>
                                     <p className="text-2xl font-bold text-green-600">{finalPrice.toLocaleString()} ₽</p>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Это предварительная стоимость, основанная на вашей оценке. Окончательная цена будет определена нашим специалистом после бесплатной диагностики. Если состояние телефона соответствует вашему описанию, цена не изменится.
+                                    </p>
                                 </div>
 
                                 {deliveryInfo && (

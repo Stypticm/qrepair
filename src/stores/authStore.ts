@@ -55,6 +55,8 @@ interface AppState {
   imei: string | null
   serialNumber: string | null
   price: number | null
+  userEvaluation: string | null
+  damagePercent: number
 
   // Device conditions
   deviceConditions: DeviceConditions
@@ -84,6 +86,8 @@ interface AppState {
   setImei: (imei: string | null) => void
   setSerialNumber: (sn: string | null) => void
   setPrice: (price: number | null) => void
+  setUserEvaluation: (evaluation: string | null) => void
+  setDamagePercent: (percent: number) => void
 
   // Conditions actions
   setDeviceConditions: (
@@ -158,6 +162,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   imei: null,
   serialNumber: null,
   price: null,
+  userEvaluation: null,
+  damagePercent: 0,
 
   // Device conditions
   deviceConditions: {
@@ -215,6 +221,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   setImei: (imei) => set({ imei }),
   setSerialNumber: (serialNumber) => set({ serialNumber }),
   setPrice: (price) => set({ price }),
+  setUserEvaluation: (userEvaluation) =>
+    set({ userEvaluation }),
+  setDamagePercent: (damagePercent) =>
+    set({ damagePercent }),
 
   // Conditions actions
   setDeviceConditions: (conditions) =>
@@ -307,6 +317,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       imei: null,
       serialNumber: null,
       price: null,
+      userEvaluation: null,
+      damagePercent: 0,
       deviceConditions: {
         front: null,
         back: null,
@@ -335,6 +347,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       sessionStorage.removeItem('additionalConditions')
       sessionStorage.removeItem('basePrice')
       sessionStorage.removeItem('price')
+      sessionStorage.removeItem('userEvaluation')
+      sessionStorage.removeItem('damagePercent')
       sessionStorage.removeItem('currentStep')
     }
   },

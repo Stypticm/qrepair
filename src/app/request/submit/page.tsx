@@ -15,7 +15,6 @@ const SubmitPage = () => {
     const [dataLoaded, setDataLoaded] = useState(false);
     const [priceLoaded, setPriceLoaded] = useState(false);
     const [dbData, setDbData] = useState<any>(null);
-    const [showResetDialog, setShowResetDialog] = useState(false);
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
     const [feedback, setFeedback] = useState('');
     const [selectedFeedback, setSelectedFeedback] = useState('');
@@ -150,10 +149,10 @@ const SubmitPage = () => {
         }
     }, [setModel, setPrice, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber, telegramId]);
 
-    // Проверяем, загружены ли все необходимые данные
+    // Проверяем, загружены ли все необходимые данные (не блокируем UI)
     useEffect(() => {
-        // Проверяем наличие основных данных
-        const hasBasicData = modelname && telegramId;
+        // Считаем базовые данные достаточными для отображения интерфейса
+        const hasBasicData = Boolean(modelname || telegramId);
 
         // Проверяем наличие данных о состояниях устройства
         const hasDeviceData = deviceConditions && (
@@ -170,17 +169,17 @@ const SubmitPage = () => {
             additionalConditions.battery
         );
 
-        // Данные считаются загруженными, если есть основная модель и хотя бы какие-то данные о состояниях
-        if (hasBasicData && (hasDeviceData || hasAdditionalData)) {
+        // Даем доступ к интерфейсу сразу при наличии базовых данных
+        if (hasBasicData) {
             setDataLoaded(true);
         }
 
-        // Добавляем таймаут для предотвращения зависания
+        // Ускоряем фолбэк, чтобы не ждать долго
         const timeout = setTimeout(() => {
             if (!dataLoaded) {
                 setDataLoaded(true);
             }
-        }, 5000); // 5 секунд
+        }, 800); // 0.8 секунды
 
         return () => clearTimeout(timeout);
     }, [modelname, telegramId, deviceConditions, additionalConditions, dataLoaded]);
@@ -401,7 +400,7 @@ const SubmitPage = () => {
                                 />
                                 <p className="text-gray-600">Загружаем данные заявки...</p>
                             </div>
-                        ) : !modelname ? (
+                        ) : !modelname && !telegramId ? (
                             <div className="w-full max-w-md text-center">
                                 <p className="text-red-600">Ошибка: данные заявки не найдены</p>
                                 <Button
@@ -441,16 +440,9 @@ const SubmitPage = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            {priceLoaded && finalPrice > 0 && (
-                                                <div className="mt-2 text-sm text-gray-600">
-                                                    <span>Цена с учетом состояния устройства</span>
-                                                    {dbData && dbData.damagePercent > 0 && (
-                                                        <div className="mt-1 text-xs text-orange-600">
-                                                            Скидка: {dbData.damagePercent.toFixed(1)}% (базовая цена: {dbData.basePrice?.toLocaleString()} ₽)
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className="mt-2 text-sm text-gray-600">
+                                                Окончательная стоимость будет подтверждена мастером после очного осмотра устройства.
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -480,20 +472,7 @@ const SubmitPage = () => {
                                     </Button>
                                 </motion.div>
 
-                                {/* Кнопка "Начать заново" */}
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: 0.2 }}
-                                >
-                                    <Button
-                                        onClick={() => setShowResetDialog(true)}
-                                        variant="outline"
-                                        className="w-full bg-white hover:bg-gray-50 text-gray-600 font-medium text-base py-3 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200"
-                                    >
-                                        Начать заново
-                                    </Button>
-                                </motion.div>
+                                
 
                                 {/* Подпись о цене */}
                                 <motion.div
@@ -512,42 +491,7 @@ const SubmitPage = () => {
                 </div>
             </div>
 
-            {/* Диалог подтверждения сброса */}
-            {showResetDialog && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl">
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-2xl">⚠️</span>
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                Начать заново?
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-6">
-                                Все введенные данные будут удалены. Это действие нельзя отменить.
-                            </p>
-                            <div className="flex space-x-3 gap-2">
-                                <Button
-                                    onClick={() => setShowResetDialog(false)}
-                                    variant="outline"
-                                    className="flex-1 py-2 text-sm"
-                                >
-                                    Отмена
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        setShowResetDialog(false);
-                                        handleReset();
-                                    }}
-                                    className="flex-1 py-2 text-sm bg-red-600 hover:bg-red-700 text-white"
-                                >
-                                    Да, начать заново
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            
 
             {/* Диалог для feedback */}
             {showFeedbackDialog && (

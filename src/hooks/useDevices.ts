@@ -47,17 +47,17 @@ export const useDevices = () => {
   }, [allDevices, selectedOptions.model]);
 
   const storages = useMemo(() => {
-    if (!selectedOptions.model || !selectedOptions.variant) return [];
+    if (!selectedOptions.model || selectedOptions.variant === null) return [];
     return [...new Set(allDevices.filter(d => d.model === selectedOptions.model && d.variant === selectedOptions.variant).map(d => d.storage))].sort((a, b) => parseInt(a) - parseInt(b));
   }, [allDevices, selectedOptions.model, selectedOptions.variant]);
 
   const colors = useMemo(() => {
-    if (!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage) return [];
+    if (!selectedOptions.model || selectedOptions.variant === null || !selectedOptions.storage) return [];
     return [...new Set(allDevices.filter(d => d.model === selectedOptions.model && d.variant === selectedOptions.variant && d.storage === selectedOptions.storage).map(d => d.color))];
   }, [allDevices, selectedOptions.model, selectedOptions.variant, selectedOptions.storage]);
 
   const selectedDevice = useMemo(() => {
-    if (!selectedOptions.model || !selectedOptions.variant || !selectedOptions.storage || !selectedOptions.color) return null;
+    if (!selectedOptions.model || selectedOptions.variant === null || !selectedOptions.storage || !selectedOptions.color) return null;
     return allDevices.find(d => 
       d.model === selectedOptions.model &&
       d.variant === selectedOptions.variant &&

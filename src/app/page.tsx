@@ -44,7 +44,7 @@ function HomeContent() {
     if (typeof window !== 'undefined') {
       if (sessionStorage.getItem('start-over') === 'true') {
         sessionStorage.removeItem('start-over');
-        router.push('/request/device-info');
+        router.push('/request/form');
       }
     }
   }, [router]);
@@ -102,13 +102,13 @@ function HomeContent() {
       // Очищаем все данные перед началом новой заявки
       resetAllStates();
       
-      // Простая логика: всегда начинаем с device-info
-      setCurrentStep('device-info');
-      router.push('/request/device-info');
+      // Простая логика: всегда начинаем с form
+      setCurrentStep('form');
+      router.push('/request/form');
       
     } catch (error) {
       console.error('Ошибка при переходе:', error);
-      router.push('/request/device-info');
+      router.push('/request/form');
     }
   };
 

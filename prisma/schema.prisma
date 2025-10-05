@@ -58,6 +58,8 @@ model Skupka {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  userEvaluation       String? // Оценка состояния телефона клиентом
+
   // Связи
   inspections DeviceInspection[]
 }
@@ -171,4 +173,3 @@ enum SkupkaStatus {
   paid
   completed
 }
-

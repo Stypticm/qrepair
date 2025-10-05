@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,7 +86,7 @@ export default function FormPage() {
                     body: JSON.stringify({
                         telegramId,
                         username: username || 'Unknown',
-                        currentStep: 'condition',
+                        currentStep: 'evaluation',
                         modelname: `Apple iPhone ${selectedDevice.model}${selectedDevice.variant ? ` ${getVariantLabel(selectedDevice.variant)}` : ''} ${selectedDevice.storage} ${getColorLabel(selectedDevice.color)}`,
                         price: selectedDevice.basePrice
                     })
@@ -97,7 +97,7 @@ export default function FormPage() {
                 return;
             }
         }
-        router.push('/request/condition');
+        router.push('/request/evaluation');
     };
 
     const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
@@ -136,7 +136,7 @@ export default function FormPage() {
             <Page back={goBack}>
                 <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
                     <div className="pb-1">
-                        <ProgressBar currentStep={2} totalSteps={5} steps={steps} />
+                        {/* <ProgressBar currentStep={2} totalSteps={5} steps={steps} /> */}
                     </div>
 
                     <div className="flex-1 p-3 pt-2 flex items-center justify-center">
@@ -180,7 +180,13 @@ export default function FormPage() {
                                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2, ease: "easeOut" }} className="p-2 rounded-xl shadow-sm bg-white">
                                     <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Объем памяти</h3>
                                     <div className="grid grid-cols-3 gap-1 max-w-xs mx-auto">
-                                        {storages.map((storage: string) => (
+                                        {([...storages].sort((a: string, b: string) => {
+                                            const toGb = (s: string) => {
+                                                const v = parseInt(s, 10)
+                                                return s.toUpperCase().includes('TB') ? v * 1024 : v
+                                            }
+                                            return toGb(a) - toGb(b)
+                                        })).map((storage: string) => (
                                             <Button key={storage} onClick={() => handleOptionSelect('storage', storage)} className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.storage === storage ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
                                                 {selectedOptions.storage === storage && <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>}
                                                 {storage}
