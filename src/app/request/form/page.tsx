@@ -169,7 +169,7 @@ export default function FormPage() {
                                         {variants.map((variant: string) => (
                                             <Button key={variant} onClick={() => handleOptionSelect('variant', variant)} className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.variant === variant ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
                                                 {selectedOptions.variant === variant && <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>}
-                                                {getVariantLabel(variant)}
+                                                {getVariantLabel(variant) || 'Стандарт'}
                                             </Button>
                                         ))}
                                     </div>

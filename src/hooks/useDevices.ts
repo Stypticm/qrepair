@@ -74,6 +74,12 @@ export const useDevices = () => {
         newOptions.variant = null;
         newOptions.storage = null;
         newOptions.color = null;
+
+        // Auto-select variant if there's only one
+        const modelVariants = [...new Set(allDevices.filter(d => d.model === value).map(d => d.variant))];
+        if (modelVariants.length === 1) {
+          newOptions.variant = modelVariants[0];
+        }
       } else if (type === 'variant') {
         newOptions.storage = null;
         newOptions.color = null;
