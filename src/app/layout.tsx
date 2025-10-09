@@ -32,6 +32,8 @@ export default function RootLayout({
         <meta httpEquiv="Expires" content="0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/logo2.png" />
       </head>
       <body style={{ backgroundColor: '#ffffff' }}>
         <ReactQueryProvider>
@@ -39,6 +41,20 @@ export default function RootLayout({
             <ClientLayoutContent>{children}</ClientLayoutContent>
           </I18nProvider>
         </ReactQueryProvider>
+        {/* Service worker registration (client-side) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function () {
+                  navigator.serviceWorker.register('/sw.js').catch(function (e) {
+                    console.log('SW registration failed:', e);
+                  });
+                });
+              }
+            `,
+          }}
+        />
         <Toaster position="top-center" richColors />
       </body>
     </html>

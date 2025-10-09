@@ -20,12 +20,6 @@ function HomeContent() {
   const {
     setRole,
     userId,
-    setModel,
-    setPrice,
-    setImei,
-    setSerialNumber,
-    setDeviceConditions,
-    setAdditionalConditions,
     setTelegramId,
     setUsername,
     setCurrentStep,
@@ -116,7 +110,7 @@ function HomeContent() {
   if (isInTelegram === null) {
     return (
       <AdaptiveContainer>
-        <div className="w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="mini-app-container w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
           <Image
             src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
             alt="Загрузка"

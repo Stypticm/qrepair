@@ -203,14 +203,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   setUsername: (username) => set({ username }),
   setTelegramId: (telegramId) => {
     set({ telegramId })
-    // Сохраняем в sessionStorage только если мы в Telegram WebApp
-    // Это предотвращает перезапись ID при переключении между пользователями
-    if (
-      typeof window !== 'undefined' &&
-      telegramId &&
-      window.Telegram?.WebApp
-    ) {
-      sessionStorage.setItem('telegramId', telegramId)
+    // В Telegram WebApp сохраняем в sessionStorage, в браузере/PWA — в localStorage
+    if (typeof window !== 'undefined' && telegramId) {
+      if (window.Telegram?.WebApp) {
+        sessionStorage.setItem('telegramId', telegramId)
+      } else {
+        try {
+          localStorage.setItem('telegramId', telegramId)
+        } catch {}
+      }
     }
   },
   setUserPhotoUrl: (userPhotoUrl) => set({ userPhotoUrl }),
@@ -389,12 +390,17 @@ export const useAppStore = create<AppState>((set, get) => ({
       return
     }
 
-    // Сначала пытаемся восстановить данные из sessionStorage
+    // Сначала пытаемся восстановить данные из sessionStorage/localStorage
     const savedTelegramId =
-      sessionStorage.getItem('telegramId')
-    const savedUsername = sessionStorage.getItem(
-      'telegramUsername'
-    )
+      sessionStorage.getItem('telegramId') ||
+      (typeof window !== 'undefined'
+        ? localStorage.getItem('telegramId')
+        : null)
+    const savedUsername =
+      sessionStorage.getItem('telegramUsername') ||
+      (typeof window !== 'undefined'
+        ? localStorage.getItem('telegramUsername')
+        : null)
 
     if (savedTelegramId && !get().telegramId) {
       addDebugInfo(
@@ -468,21 +474,28 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ role: 'client', userId: parseInt(tgId) })
       }
 
-      // Сохраняем в sessionStorage
+      // Сохраняем в sessionStorage и продублируем в localStorage для PWA
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('telegramId', tgId)
+        try {
+          localStorage.setItem('telegramId', tgId)
+        } catch {}
         if (tgUsername) {
           sessionStorage.setItem(
             'telegramUsername',
             tgUsername
           )
+          try {
+            localStorage.setItem(
+              'telegramUsername',
+              tgUsername
+            )
+          } catch {}
           addDebugInfo(
-            `💾 Сохранен username в sessionStorage: ${tgUsername}`
+            `💾 Сохранен username: ${tgUsername}`
           )
         } else {
-          addDebugInfo(
-            `⚠️ Username не сохранен в sessionStorage (null)`
-          )
+          addDebugInfo(`⚠️ Username не сохранен (null)`)
         }
       }
     } else if (hasTelegramWebApp) {
@@ -535,20 +548,29 @@ export const useAppStore = create<AppState>((set, get) => ({
           set({ role: 'client', userId: parseInt(tgId) })
         }
 
-        // Сохраняем в sessionStorage
+        // Сохраняем в sessionStorage и localStorage (для PWA повторных запусков)
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('telegramId', tgId)
+          try {
+            localStorage.setItem('telegramId', tgId)
+          } catch {}
           if (tgUsername) {
             sessionStorage.setItem(
               'telegramUsername',
               tgUsername
             )
+            try {
+              localStorage.setItem(
+                'telegramUsername',
+                tgUsername
+              )
+            } catch {}
             addDebugInfo(
-              `💾 Fallback - Сохранен username в sessionStorage: ${tgUsername}`
+              `💾 Fallback - Сохранен username: ${tgUsername}`
             )
           } else {
             addDebugInfo(
-              `⚠️ Fallback - Username не сохранен в sessionStorage (null)`
+              `⚠️ Fallback - Username не сохранен (null)`
             )
           }
         }
