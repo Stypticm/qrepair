@@ -110,7 +110,7 @@ function HomeContent() {
   if (isInTelegram === null) {
     return (
       <AdaptiveContainer>
-        <div className="mini-app-container w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
           <Image
             src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
             alt="Загрузка"

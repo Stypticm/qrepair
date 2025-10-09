@@ -39,9 +39,7 @@ export default function RootLayout({
         <ReactQueryProvider>
           <I18nProvider>
             <ClientLayoutContent>
-              <div className="mini-app-container w-[896px] h-[414px] mx-auto">
-                {children}
-              </div>
+              {children}
             </ClientLayoutContent>
           </I18nProvider>
         </ReactQueryProvider>
