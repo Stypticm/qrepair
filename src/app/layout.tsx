@@ -12,8 +12,8 @@ import './globals.css';
 const comicNeue = Comic_Neue({
   subsets: ['latin'],
   weight: ['400', '700'],
-  display: 'swap', // Улучшает FOUT (Flash of Unstyled Text)
-  preload: true,   // Предзагружает шрифт
+  display: 'swap',
+  preload: true,
 });
 
 export default function RootLayout({
