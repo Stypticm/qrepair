@@ -38,23 +38,13 @@ export default function RootLayout({
       <body style={{ backgroundColor: '#ffffff' }}>
         <ReactQueryProvider>
           <I18nProvider>
-            <ClientLayoutContent>{children}</ClientLayoutContent>
+            <ClientLayoutContent>
+              <div className="mini-app-container w-[896px] h-[414px] mx-auto">
+                {children}
+              </div>
+            </ClientLayoutContent>
           </I18nProvider>
         </ReactQueryProvider>
-        {/* Service worker registration (client-side) */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function () {
-                  navigator.serviceWorker.register('/sw.js').catch(function (e) {
-                    console.log('SW registration failed:', e);
-                  });
-                });
-              }
-            `,
-          }}
-        />
         <Toaster position="top-center" richColors />
       </body>
     </html>
