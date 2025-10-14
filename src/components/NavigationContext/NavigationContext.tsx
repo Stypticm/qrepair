@@ -40,8 +40,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const stepOrder = [
     'device-info',
     'form',
-    'condition', 
-    'additional-condition',
+    'evaluation',
     'submit',
     'delivery-options',
     'pickup-points',
@@ -71,11 +70,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         case 'form':
           router.push('/request/form');
           break;
-        case 'condition':
-          router.push('/request/condition');
-          break;
-        case 'additional-condition':
-          router.push('/request/additional-condition');
+        case 'evaluation':
+          router.push('/request/evaluation');
           break;
         case 'submit':
           router.push('/request/submit');
@@ -117,11 +113,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         case 'form':
           router.push('/request/form');
           break;
-        case 'condition':
-          router.push('/request/condition');
-          break;
-        case 'additional-condition':
-          router.push('/request/additional-condition');
+        case 'evaluation':
+          router.push('/request/evaluation');
           break;
         case 'submit':
           router.push('/request/submit');

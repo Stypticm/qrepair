@@ -9,23 +9,24 @@ export async function POST(request: NextRequest) {
     const {
       requestId,
       masterTelegramId,
-      functionalityTests,
+      functionalityTests = [],
       finalPrice,
-      totalPenalty,
+      totalPenalty = 0,
       photoUrls,
+      priceRange,
+      snVerification,
     } = body
 
-    if (
-      !requestId ||
-      !masterTelegramId ||
-      !functionalityTests ||
-      finalPrice === undefined
-    ) {
+    if (!requestId || !masterTelegramId || finalPrice === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
+
+    const normalizedTests = Array.isArray(functionalityTests)
+      ? functionalityTests
+      : []
 
     // Находим мастера по telegramId
     const master = await prisma.master.findUnique({
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Рассчитываем общий процент штрафа
-    const totalPenaltyPercent = functionalityTests.reduce(
+    const totalPenaltyPercent = normalizedTests.reduce(
       (total: number, test: any) => {
         if (test.working !== null) {
           const shouldApplyPenalty = test.isNegative
@@ -64,11 +65,14 @@ export async function POST(request: NextRequest) {
         finalPrice, // Финальная цена после вычета штрафов
         inspectionCompleted: true,
         inspection: {
-          functionalityTests,
+          functionalityTests: normalizedTests,
           totalPenalty,
           totalPenaltyPercent,
           masterTelegramId,
           inspectedAt: new Date().toISOString(),
+          priceRange: priceRange ?? null,
+          snVerification: snVerification ?? null,
+          photoUrls: Array.isArray(photoUrls) ? photoUrls : [],
         },
         status: 'inspected',
       },

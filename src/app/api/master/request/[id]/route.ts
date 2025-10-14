@@ -43,6 +43,7 @@ export async function GET(
         id: request.id,
         modelname: request.modelname,
         price: request.price,
+        finalPrice: request.finalPrice,
         username: request.username,
         status: request.status,
         createdAt: request.createdAt,

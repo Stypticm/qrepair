@@ -51,6 +51,27 @@ export default function DeviceInfoPage() {
         addDebugInfo(`username: ${username || 'НЕТ'}`);
     }, [setCurrentStep, telegramId, username]);
 
+    // Фиксируем шаг в БД при заходе на страницу
+    useEffect(() => {
+        const updateStep = async () => {
+            if (!telegramId) return;
+            try {
+                await fetch('/api/request/choose', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        telegramId,
+                        username: username || 'Unknown',
+                        currentStep: 'device-info',
+                    }),
+                });
+            } catch (error) {
+                console.error('Error updating currentStep (device-info):', error);
+            }
+        };
+        updateStep();
+    }, [telegramId, username]);
+
     useEffect(() => {
         if (inputRef.current) {
             const timer = setTimeout(() => {

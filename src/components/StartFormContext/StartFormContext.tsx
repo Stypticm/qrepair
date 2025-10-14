@@ -13,7 +13,7 @@ const getPathForStep = (step: string): string | null => {
         case 'form':
             return '/request/form';
         case 'condition':
-            return '/request/condition';
+            return '/request/evaluation';
         case 'additional-condition':
             return '/request/additional-condition';
         case 'submit':

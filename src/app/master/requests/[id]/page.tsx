@@ -1,24 +1,23 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppStore } from '@/stores/authStore'
 import { CameraWithOverlay } from '@/components/CameraWithOverlay/CameraWithOverlay'
 import { Page } from '@/components/Page'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import {
-  CheckCircle,
-  XCircle,
   Camera,
   Smartphone,
-  Battery,
-  Fingerprint,
-  Eye,
-  AlertTriangle,
   CheckCircle2,
-  X,
+  Eye,
+  Fingerprint,
+  Battery,
+  AlertTriangle,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -26,6 +25,7 @@ interface Request {
   id: string
   modelname: string
   price: number
+  finalPrice?: number
   username: string
   status: string
   createdAt: string
@@ -37,16 +37,6 @@ interface Request {
   phoneData?: any
   deviceData?: any
   pickupPoint?: string
-}
-
-interface FunctionalityTest {
-  id: string
-  name: string
-  description: string
-  icon: any
-  working: boolean | null
-  penaltyPercent: number
-  isNegative: boolean // true when a negative answer ("No") means the device is fine
 }
 
 interface PhotoUpload {
@@ -79,12 +69,32 @@ export default function MasterRequestPage({ params }: PageProps) {
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [finalPrice, setFinalPrice] = useState<number | null>(null)
-  const [totalPenalty, setTotalPenalty] = useState(0)
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number; midpoint?: number } | null>(null)
+  const [snVerification, setSnVerification] = useState<'match' | 'mismatch' | null>(null)
+  const [snComment, setSnComment] = useState('')
+  const [observedSn, setObservedSn] = useState('')
   const [currentStep, setCurrentStep] = useState(1) // шаги: 1 — фото, 2 — проверки, 3 — оценка, 4 — итог
   const [isCameraOpen, setCameraOpen] = useState(false)
   const [currentPhotoId, setCurrentPhotoId] = useState<string | null>(null)
+  const photoButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
 
   const { telegramId, initializeTelegram } = useAppStore()
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 }).format(value)
+
+  const resolveFinalPrice = () => {
+    if (finalPrice !== null) {
+      return finalPrice
+    }
+    if (typeof request?.finalPrice === 'number') {
+      return request.finalPrice
+    }
+    if (priceRange) {
+      return priceRange.midpoint ?? Math.round((priceRange.min + priceRange.max) / 2)
+    }
+    return request?.price ?? 0
+  }
 
   const saveStepToStorage = (step: number) => {
     if (typeof window !== 'undefined') {
@@ -227,6 +237,172 @@ export default function MasterRequestPage({ params }: PageProps) {
     }
   }, [requestId])
 
+  const saveInspection = async () => {
+    if (!request) return
+
+    if (!priceRange) {
+      alert('Диапазон цены недоступен для этой заявки.')
+      return
+    }
+
+    if (finalPrice === null || finalPrice < priceRange.min || finalPrice > priceRange.max) {
+      alert('Укажите финальную сумму в пределах диапазона.')
+      return
+    }
+
+    if (!snVerification) {
+      alert('Отметьте результат сверки серийного номера.')
+      return
+    }
+
+    if (snVerification === 'mismatch') {
+      if (observedSn.trim().length === 0 || snComment.trim().length === 0) {
+        alert('Добавьте фактический S/N и комментарий по расхождению.')
+        return
+      }
+    }
+
+    try {
+      setSaving(true)
+
+      const response = await fetch('/api/master/save-inspection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId: request.id,
+          masterTelegramId: telegramId,
+          functionalityTests: [],
+          finalPrice,
+          totalPenalty: 0,
+          priceRange,
+          snVerification: {
+            status: snVerification,
+            expected: request.sn ?? null,
+            observed: observedSn.trim() || null,
+            comment: snComment.trim() || null,
+          },
+          photoUrls: photoUploads.filter((p) => p.uploaded).map((p) => p.url),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Не получилось сохранить проверку')
+      }
+
+      alert('Результаты проверки сохранены!')
+      await updateRequestStatus('inspected')
+      setRequest((prev) =>
+        prev
+          ? { ...prev, status: 'inspected', finalPrice }
+          : prev
+      )
+    } catch (error) {
+      console.error('Error saving inspection:', error)
+      alert('Не получилось сохранить проверку. Попробуйте ещё раз.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!request) return
+
+    if (['inspected', 'paid', 'completed'].includes(request.status)) {
+      setCurrentStep(4)
+      saveStepToStorage(4)
+    }
+  }, [request])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !requestId) return
+
+    const snDraft = window.localStorage.getItem(`master_sn_${requestId}`)
+    if (snDraft) {
+      try {
+        const parsed = JSON.parse(snDraft) as { status?: 'match' | 'mismatch'; comment?: string; observed?: string }
+        if (parsed.status === 'match' || parsed.status === 'mismatch') {
+          setSnVerification(parsed.status)
+        }
+        if (typeof parsed.comment === 'string') {
+          setSnComment(parsed.comment)
+        }
+        if (typeof parsed.observed === 'string') {
+          setObservedSn(parsed.observed)
+        }
+      } catch (error) {
+        console.error('Failed to parse saved SN verification', error)
+      }
+    }
+
+    const storedPrice = window.localStorage.getItem(`master_final_price_${requestId}`)
+    if (storedPrice) {
+      const parsedPrice = Number(storedPrice)
+      if (!Number.isNaN(parsedPrice)) {
+        setFinalPrice(parsedPrice)
+      }
+    }
+  }, [requestId])
+
+  useEffect(() => {
+    if (!request) return
+
+    const pricing = (request.deviceData as any)?.pricing
+    if (pricing && typeof pricing.min === 'number' && typeof pricing.max === 'number') {
+      const midpoint =
+        typeof pricing.midpoint === 'number'
+          ? pricing.midpoint
+          : Math.round((pricing.min + pricing.max) / 2)
+
+      setPriceRange((prev) => {
+        if (prev && prev.min === pricing.min && prev.max === pricing.max && prev.midpoint === midpoint) {
+          return prev
+        }
+        return { min: pricing.min, max: pricing.max, midpoint }
+      })
+
+      setFinalPrice((prev) => {
+        if (prev === null) {
+          return midpoint
+        }
+        return prev
+      })
+    }
+  }, [request])
+
+  useEffect(() => {
+    if (!priceRange || finalPrice === null) return
+
+    if (finalPrice < priceRange.min) {
+      setFinalPrice(priceRange.min)
+    } else if (finalPrice > priceRange.max) {
+      setFinalPrice(priceRange.max)
+    }
+  }, [priceRange, finalPrice])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !requestId) return
+
+    const payload = {
+      status: snVerification,
+      comment: snComment,
+      observed: observedSn,
+    }
+    window.localStorage.setItem(`master_sn_${requestId}`, JSON.stringify(payload))
+  }, [snVerification, snComment, observedSn, requestId])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !requestId) return
+
+    if (finalPrice === null) {
+      window.localStorage.removeItem(`master_final_price_${requestId}`)
+      return
+    }
+
+    window.localStorage.setItem(`master_final_price_${requestId}`, String(finalPrice))
+  }, [finalPrice, requestId])
+
   const fetchRequest = async () => {
     if (!requestId) return
 
@@ -310,15 +486,30 @@ export default function MasterRequestPage({ params }: PageProps) {
   }
 
   const handlePhotoCapture = (blob: Blob) => {
-    if (currentPhotoId) {
-      const file = new File([blob], `${currentPhotoId}.jpg`, { type: 'image/jpeg' })
+    const capturedId = currentPhotoId
+
+    if (capturedId) {
+      const file = new File([blob], `${capturedId}.jpg`, { type: 'image/jpeg' })
       setPhotoUploads((prev) =>
         prev.map((photo) =>
-          photo.id === currentPhotoId ? { ...photo, file, uploaded: false } : photo
+          photo.id === capturedId ? { ...photo, file, uploaded: false } : photo
         )
       )
     }
+
     setCameraOpen(false)
+
+    if (capturedId) {
+      const currentIndex = photoUploads.findIndex((photo) => photo.id === capturedId)
+      for (let i = currentIndex + 1; i < photoUploads.length; i += 1) {
+        const nextButton = photoButtonRefs.current[photoUploads[i].id]
+        if (nextButton) {
+          nextButton.focus()
+          break
+        }
+      }
+    }
+
     setCurrentPhotoId(null)
   }
 
@@ -328,124 +519,27 @@ export default function MasterRequestPage({ params }: PageProps) {
     )
   }
 
-  const calculateFinalPrice = () => {
-    if (!request) return
 
-    let totalPenaltyPercent = 0
-
-    functionalityTests.forEach((test) => {
-      if (test.working !== null) {
-        const shouldApplyPenalty = test.isNegative ? !test.working : test.working === false
-        if (shouldApplyPenalty) {
-          totalPenaltyPercent += test.penaltyPercent
-        }
-      }
-    })
-
-    const penaltyAmount = (request.price * totalPenaltyPercent) / 100
-    const calculatedFinalPrice = Math.max(0, request.price - penaltyAmount)
-
-    setTotalPenalty(penaltyAmount)
-    setFinalPrice(calculatedFinalPrice)
-
-    if (functionalityTests.every((test) => test.working !== null) && currentStep === 2) {
-      setTimeout(() => {
-        setCurrentStep(3)
-        saveStepToStorage(3)
-      }, 500)
-    }
-  }
-
-  const saveInspection = async () => {
-    if (!request) return
-
-    try {
-      setSaving(true)
-
-      let calculatedFinalPrice = finalPrice
-      let calculatedTotalPenalty = totalPenalty
-
-      if (calculatedFinalPrice === null) {
-        let totalPenaltyPercent = 0
-
-        functionalityTests.forEach((test) => {
-          if (test.working !== null) {
-            const shouldApplyPenalty = test.isNegative ? !test.working : test.working === false
-            if (shouldApplyPenalty) {
-              totalPenaltyPercent += test.penaltyPercent
-            }
-          }
-        })
-
-        calculatedTotalPenalty = (request.price * totalPenaltyPercent) / 100
-        calculatedFinalPrice = Math.max(0, request.price - calculatedTotalPenalty)
-      }
-
-      const response = await fetch('/api/master/save-inspection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requestId: request.id,
-          masterTelegramId: telegramId,
-          functionalityTests: functionalityTests.map((test) => ({
-            id: test.id,
-            working: test.working,
-            penaltyPercent: test.penaltyPercent,
-            isNegative: test.isNegative,
-          })),
-          finalPrice: calculatedFinalPrice,
-          totalPenalty: calculatedTotalPenalty,
-          photoUrls: photoUploads.filter((p) => p.uploaded).map((p) => p.url),
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Не удалось сохранить проверку')
-      }
-
-      alert('Проверка успешно сохранена!')
-      await updateRequestStatus('inspected')
-      if (request) {
-        setRequest({ ...request, status: 'inspected' })
-      }
-    } catch (error) {
-      console.error('Error saving inspection:', error)
-      alert('Не удалось сохранить проверку. Попробуйте ещё раз.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  useEffect(() => {
-    calculateFinalPrice()
-  }, [functionalityTests, request])
-
-  const nextStep = () => {
-    if (currentStep < 4) {
-      const newStep = currentStep + 1
-      setCurrentStep(newStep)
-      saveStepToStorage(newStep)
-    }
-  }
-
-  const prevStep = () => {
-    if (currentStep > 1) {
-      const newStep = currentStep - 1
-      setCurrentStep(newStep)
-      saveStepToStorage(newStep)
-    }
-  }
 
   const canProceedToNextStep = () => {
     switch (currentStep) {
-      case 1: // Фото
+      case 1:
         return photoUploads.every((photo) => photo.uploaded)
-      case 2: // Проверка
-        return functionalityTests.every((test) => test.working !== null)
-      case 3: // Оценка
-        return finalPrice !== null
+      case 2: {
+        if (snVerification === 'match') {
+          return true
+        }
+        if (snVerification === 'mismatch') {
+          return observedSn.trim().length > 0 && snComment.trim().length > 0
+        }
+        return false
+      }
+      case 3: {
+        if (!priceRange || finalPrice === null) {
+          return false
+        }
+        return finalPrice >= priceRange.min && finalPrice <= priceRange.max
+      }
       default:
         return true
     }
@@ -585,6 +679,7 @@ export default function MasterRequestPage({ params }: PageProps) {
                 </CardContent>
               </Card> */}
 
+              {request?.status !== 'inspected' && request?.status !== 'paid' && request?.status !== 'completed' && (
               <Card className="rounded-3xl border border-white/60 bg-white/90 shadow-sm backdrop-blur-sm">
                 <CardContent className="space-y-2 p-5">
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -637,6 +732,7 @@ export default function MasterRequestPage({ params }: PageProps) {
                 </CardContent>
               </Card>
 
+              )}
               {currentStep === 1 && (
                 <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
                   <CardHeader className="pb-4">
@@ -694,6 +790,9 @@ export default function MasterRequestPage({ params }: PageProps) {
                             </div>
                             <div className="mt-4 grid gap-2">
                               <Button
+                                ref={(el) => {
+                                  photoButtonRefs.current[photo.id] = el
+                                }}
                                 type="button"
                                 variant="outline"
                                 onClick={() => openCamera(photo.id)}
@@ -723,126 +822,180 @@ export default function MasterRequestPage({ params }: PageProps) {
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-900">
                       <Smartphone className="h-5 w-5 text-slate-500" />
-                      Шаг 2 — Проверка функций
+                      Шаг 2 — Сверка данных
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-6">
                     <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                      Отметьте результат каждого теста. При необходимости можно вернуться к предыдущим шагам.
+                      Убедитесь, что серийный номер на устройстве совпадает с тем, что указал клиент.
                     </div>
-                    <div className="space-y-3">
-                      {functionalityTests.map((test) => {
-                        const IconComponent = test.icon
-                        const clientValueRaw =
-                          (request.deviceConditions && request.deviceConditions[test.id]) ??
-                          (request.additionalConditions && request.additionalConditions[test.id])
-                        const clientValue = clientValueRaw === undefined ? null : String(clientValueRaw)
-
-                        const baseButton = 'w-full rounded-xl border px-3 py-2 text-sm font-semibold transition'
-                        const positiveActive = test.working === true
-                        const negativeActive = test.working === false
-                        const positiveClass = positiveActive
-                          ? 'border-transparent bg-emerald-600 text-white hover:bg-emerald-700'
-                          : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
-                        const negativeClass = negativeActive
-                          ? 'border-transparent bg-rose-600 text-white hover:bg-rose-700'
-                          : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100'
-
-                        return (
-                          <div
-                            key={test.id}
-                            className="grid items-start gap-4 rounded-2xl border border-white/70 bg-white p-4 shadow-sm sm:grid-cols-[56px_1fr_auto]"
-                          >
-                            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100">
-                              <IconComponent className="h-7 w-7 text-slate-600" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-semibold text-slate-900">{test.name}</p>
-                              <p className="text-sm text-slate-500">{test.description}</p>
-                              {clientValue !== null && (
-                                <p className="mt-1 text-xs text-slate-500">
-                                  Клиент: <span className="font-medium text-slate-900">{clientValue}</span>
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex flex-col gap-2 sm:w-44">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => updateFunctionalityTest(test.id, true)}
-                                className={`${baseButton} justify-center ${positiveClass}`}
-                              >
-                                <CheckCircle className="mr-1 h-4 w-4" />
-                                {test.isNegative ? 'Нет' : 'Работает'}
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => updateFunctionalityTest(test.id, false)}
-                                className={`${baseButton} justify-center ${negativeClass}`}
-                              >
-                                <XCircle className="mr-1 h-4 w-4" />
-                                {test.isNegative ? 'Есть' : 'Не работает'}
-                              </Button>
-                            </div>
-                          </div>
-                        )
-                      })}
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
+                        <p className="text-xs uppercase tracking-[0.3em] text-slate-400">От клиента</p>
+                        <p className="mt-2 break-all font-semibold text-slate-900">{request?.sn ?? '—'}</p>
+                      </div>
+                      <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
+                        <label
+                          htmlFor="observed-sn"
+                          className="text-xs uppercase tracking-[0.3em] text-slate-400"
+                        >
+                          На устройстве
+                        </label>
+                        <Input
+                          id="observed-sn"
+                          value={observedSn}
+                          onChange={(event) => setObservedSn(event.target.value)}
+                          placeholder="Введите S/N"
+                          className="mt-2"
+                        />
+                      </div>
                     </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Button
+                        type="button"
+                        onClick={() => setSnVerification('match')}
+                        variant={snVerification === 'match' ? 'default' : 'outline'}
+                        className={
+                          snVerification === 'match'
+                            ? 'h-12 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700'
+                            : 'h-12 rounded-2xl border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }
+                      >
+                        Совпадает
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setSnVerification('mismatch')}
+                        variant={snVerification === 'mismatch' ? 'default' : 'outline'}
+                        className={
+                          snVerification === 'mismatch'
+                            ? 'h-12 rounded-2xl bg-rose-600 text-white hover:bg-rose-700'
+                            : 'h-12 rounded-2xl border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }
+                      >
+                        Не совпадает
+                      </Button>
+                    </div>
+                    {snVerification === 'mismatch' && (
+                      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                        <p className="text-sm font-medium text-rose-700">
+                          Укажите, что именно не совпало, и как договорились с клиентом.
+                        </p>
+                        <Textarea
+                          value={snComment}
+                          onChange={(event) => setSnComment(event.target.value)}
+                          className="mt-3 min-h-[120px]"
+                          placeholder="Комментарий мастера"
+                        />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
-
-              {currentStep === 3 && (
+{currentStep === 3 && (
                 <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg font-semibold text-slate-900">Шаг 3 — Оценка</CardTitle>
+                    <CardTitle className="text-lg font-semibold text-slate-900">Шаг 3 — Итоговая сумма</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-5">
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="text-xs uppercase tracking-wider text-slate-500">Первоначальная цена</p>
-                        <p className="mt-2 text-2xl font-semibold text-slate-900">
-                          {request.price.toLocaleString()} RUB
-                        </p>
-                      </div>
-                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p className="text-xs uppercase tracking-wider text-slate-500">Сумма удержаний</p>
-                        <p className="mt-2 text-xl font-semibold text-slate-900">
-                          {totalPenalty ? totalPenalty.toLocaleString() : '0'} RUB
-                        </p>
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center">
-                      <p className="text-sm text-emerald-600">Предложение клиенту</p>
-                      <p className="mt-2 text-3xl font-bold text-emerald-700">
-                        {(finalPrice !== null ? finalPrice : request.price).toLocaleString()} RUB
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => {
-                        const confirmed = confirm('Зафиксировать расчёт с текущими результатами тестов?')
-                        if (confirmed) {
-                          calculateFinalPrice()
-                          alert('Оценка зафиксирована. Итог — на следующем шаге.')
-                          setTimeout(() => {
+                  <CardContent className="space-y-6">
+                    {priceRange ? (
+                      <>
+                        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center">
+                          <p className="text-xs uppercase tracking-[0.3em] text-emerald-600">Диапазон выкупа</p>
+                          <p className="mt-3 text-3xl font-bold text-emerald-700">
+                            {formatCurrency(priceRange.min)} — {formatCurrency(priceRange.max)} ₽
+                          </p>
+                          <p className="mt-1 text-sm text-emerald-700/80">
+                            Среднее значение: {formatCurrency(priceRange.midpoint ?? Math.round((priceRange.min + priceRange.max) / 2))} ₽
+                          </p>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-sm">
+                            <label className="text-xs uppercase tracking-[0.3em] text-slate-400" htmlFor="final-price">
+                              Финальная сумма
+                            </label>
+                            <Input
+                              id="final-price"
+                              type="number"
+                              inputMode="numeric"
+                              value={finalPrice ?? ''}
+                              onChange={(event) => {
+                                const nextValue = event.target.value
+                                if (nextValue === '') {
+                                  setFinalPrice(null)
+                                  return
+                                }
+                                const parsed = Number(nextValue)
+                                if (!Number.isNaN(parsed)) {
+                                  setFinalPrice(Math.round(parsed))
+                                }
+                              }}
+                              className="mt-2"
+                            />
+                            <p className="mt-2 text-xs text-slate-500">
+                              Диапазон: {formatCurrency(priceRange.min)} — {formatCurrency(priceRange.max)} ₽
+                            </p>
+                            {finalPrice !== null && (finalPrice < priceRange.min || finalPrice > priceRange.max) && (
+                              <p className="mt-1 text-xs text-rose-600">Сумма должна быть в пределах диапазона.</p>
+                            )}
+                          </div>
+                          <div className="grid gap-3 md:grid-cols-3">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-12 rounded-2xl"
+                              onClick={() => setFinalPrice(priceRange.min)}
+                            >
+                              Минимум
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-12 rounded-2xl"
+                              onClick={() =>
+                                setFinalPrice(
+                                  priceRange.midpoint ?? Math.round((priceRange.min + priceRange.max) / 2)
+                                )
+                              }
+                            >
+                              Среднее
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-12 rounded-2xl"
+                              onClick={() => setFinalPrice(priceRange.max)}
+                            >
+                              Максимум
+                            </Button>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          disabled={
+                            finalPrice === null ||
+                            finalPrice < priceRange.min ||
+                            finalPrice > priceRange.max
+                          }
+                          onClick={() => {
+                            if (!priceRange || finalPrice === null) return
                             setCurrentStep(4)
                             saveStepToStorage(4)
-                            if (finalPrice === null) {
-                              calculateFinalPrice()
-                            }
-                          }, 600)
-                        }
-                      }}
-                      className="h-12 w-full rounded-2xl bg-slate-900 text-white shadow-sm transition hover:bg-slate-800"
-                    >
-                      Зафиксировать оценку
-                    </Button>
+                          }}
+                          className="h-12 w-full rounded-2xl bg-slate-900 text-white shadow-sm transition hover:bg-slate-800 disabled:bg-slate-300 disabled:text-slate-500"
+                        >
+                          Перейти к завершению
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+                        Диапазон цены не был сохранён на стороне клиента. Проверьте заявку или свяжитесь с поддержкой.
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
-
-              {currentStep === 4 && (
+{currentStep === 4 && (
                 <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
                   <CardContent className="space-y-6 pt-6">
                     <div className="space-y-3 text-center">
@@ -863,26 +1016,7 @@ export default function MasterRequestPage({ params }: PageProps) {
                           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center">
                             <p className="text-sm text-emerald-600">Предложение готово к оплате</p>
                             <p className="mt-2 text-3xl font-bold text-emerald-700">
-                              {(() => {
-                                if (finalPrice === null) {
-                                  let totalPenaltyPercent = 0
-                                  functionalityTests.forEach((test) => {
-                                    if (test.working !== null) {
-                                      const shouldApplyPenalty = test.isNegative
-                                        ? !test.working
-                                        : test.working === false
-                                      if (shouldApplyPenalty) {
-                                        totalPenaltyPercent += test.penaltyPercent
-                                      }
-                                    }
-                                  })
-                                  const penaltyAmount = (request.price * totalPenaltyPercent) / 100
-                                  const calculatedPrice = Math.max(0, request.price - penaltyAmount)
-                                  return calculatedPrice.toLocaleString()
-                                }
-                                return finalPrice.toLocaleString()
-                              })()}{' '}
-                              RUB
+                              {formatCurrency(resolveFinalPrice())} ₽
                             </p>
                           </div>
                           <Button
@@ -915,63 +1049,22 @@ export default function MasterRequestPage({ params }: PageProps) {
                       {request.status === 'in_progress' && (
                         <div className="space-y-4">
                           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center">
-                            <p className="text-sm text-slate-600">Черновик предложения</p>
+                            <p className="text-sm text-slate-600">Предварительная сумма</p>
                             <p className="mt-2 text-3xl font-bold text-slate-900">
-                              {(() => {
-                                if (finalPrice === null) {
-                                  let totalPenaltyPercent = 0
-                                  functionalityTests.forEach((test) => {
-                                    if (test.working !== null) {
-                                      const shouldApplyPenalty = test.isNegative
-                                        ? !test.working
-                                        : test.working === false
-                                      if (shouldApplyPenalty) {
-                                        totalPenaltyPercent += test.penaltyPercent
-                                      }
-                                    }
-                                  })
-                                  const penaltyAmount = (request.price * totalPenaltyPercent) / 100
-                                  const calculatedPrice = Math.max(0, request.price - penaltyAmount)
-                                  return calculatedPrice.toLocaleString()
-                                }
-                                return finalPrice.toLocaleString()
-                              })()}{' '}
-                              RUB
+                              {formatCurrency(resolveFinalPrice())} ₽
                             </p>
                           </div>
                           <Button
-                            onClick={async () => {
-                              try {
-                                const response = await fetch('/api/master/request-status', {
-                                  method: 'PATCH',
-                                  headers: { 'Content-Type': 'application/json' },
-                                  body: JSON.stringify({
-                                    requestId: request.id,
-                                    status: 'inspected',
-                                    masterTelegramId: telegramId,
-                                  }),
-                                })
-
-                                const data = await response.json()
-
-                                if (!response.ok) {
-                                  throw new Error(data.error || 'Не удалось обновить статус')
-                                }
-
-                                setRequest((prev) => (prev ? { ...prev, status: 'inspected' } : prev))
-                                alert('Проверка сохранена. Заявка готова к оплате.')
-                              } catch (statusError) {
-                                console.error('Error completing inspection:', statusError)
-                              }
-                            }}
-                            className="h-12 w-full rounded-2xl bg-slate-900 text-white shadow-sm transition hover:bg-slate-800"
+                            onClick={saveInspection}
+                            disabled={saving}
+                            className="h-12 w-full rounded-2xl bg-slate-900 text-white shadow-sm transition hover:bg-slate-800 disabled:bg-slate-400"
                           >
-                            Отправить на оплату
+                            {saving ? 'Сохраняем...' : 'Сохранить и перейти к оплате'}
                           </Button>
                         </div>
                       )}
 
-                      {request.status !== 'in_progress' &&
+{request.status !== 'in_progress' &&
                         request.status !== 'inspected' &&
                         request.status !== 'paid' &&
                         request.status !== 'completed' && (
