@@ -899,6 +899,18 @@ export default function MasterRequestPage({ params }: PageProps) {
                         />
                       </div>
                     )}
+                    
+                    <Button
+                      type="button"
+                      disabled={!canProceedToNextStep()}
+                      onClick={() => {
+                        setCurrentStep(3)
+                        saveStepToStorage(3)
+                      }}
+                      className="h-12 w-full rounded-2xl bg-slate-900 text-white shadow-sm transition hover:bg-slate-800 disabled:bg-slate-300 disabled:text-slate-500"
+                    >
+                      Далее
+                    </Button>
                   </CardContent>
                 </Card>
               )}
