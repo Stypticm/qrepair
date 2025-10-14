@@ -1,24 +1,67 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-// Define the interface for a single device variant
-export interface Device {
+type DeviceResponse = {
   id: number;
   model: string;
   variant: string;
   storage: string;
   color: string;
   basePrice: number;
-}
+};
 
-// Fetch function to get all devices
-const fetchAllDevices = async (): Promise<Device[]> => {
-  const response = await fetch('/api/devices/all');
+const fetchJSON = async <T,>(url: string): Promise<T> => {
+  const response = await fetch(url);
   if (!response.ok) {
-    throw new Error('Failed to fetch devices');
+    const message = await response.text();
+    throw new Error(message || `Request failed: ${response.status}`);
   }
-  const data = await response.json();
-  return data.devices; // Return the 'devices' property from the response
+  return response.json();
+};
+
+const fetchModels = () => fetchJSON<string[]>('/api/devices/models');
+
+const fetchVariants = (model: string) =>
+  fetchJSON<string[]>(`/api/devices/variants?model=${encodeURIComponent(model)}`);
+
+const fetchStorages = (model: string, variant: string | null) => {
+  const params = new URLSearchParams({ model });
+  if (variant !== null && variant !== undefined) {
+    params.set('variant', variant);
+  }
+  return fetchJSON<string[]>(`/api/devices/storages?${params.toString()}`);
+};
+
+const fetchColors = (
+  model: string,
+  variant: string | null,
+  storage: string | null
+) => {
+  const params = new URLSearchParams({ model });
+  if (variant !== null && variant !== undefined) {
+    params.set('variant', variant);
+  }
+  if (storage) {
+    params.set('storage', storage);
+  }
+  return fetchJSON<string[]>(`/api/devices/colors?${params.toString()}`);
+};
+
+const fetchDevice = (
+  model: string,
+  variant: string | null,
+  storage: string,
+  color: string
+) => {
+  const params = new URLSearchParams({
+    model,
+    storage,
+    color,
+  });
+  if (variant !== null && variant !== undefined) {
+    params.set('variant', variant);
+  }
+  return fetchJSON<DeviceResponse>(`/api/devices/device?${params.toString()}`);
 };
 
 export const useDevices = () => {
@@ -29,42 +72,164 @@ export const useDevices = () => {
     color: string | null;
   }>({ model: null, variant: null, storage: null, color: null });
 
-  // Fetch all devices once and cache them indefinitely
-  const { data: allDevices = [], isLoading, error } = useQuery<Device[]>({ 
-    queryKey: ['allDevices'], 
-    queryFn: fetchAllDevices, 
-    staleTime: Infinity 
+  const modelsQuery = useQuery<string[]>({
+    queryKey: ['device-models'],
+    queryFn: fetchModels,
+    staleTime: Infinity,
   });
 
-  // Memoize derived lists to prevent re-computation on every render
-  const models = useMemo(() => {
-    return [...new Set(allDevices.map(d => d.model))].sort();
-  }, [allDevices]);
+  const variantsQuery = useQuery<string[]>({
+    queryKey: ['device-variants', selectedOptions.model],
+    queryFn: () => fetchVariants(selectedOptions.model as string),
+    enabled: Boolean(selectedOptions.model),
+    staleTime: Infinity,
+  });
 
-  const variants = useMemo(() => {
-    if (!selectedOptions.model) return [];
-    return [...new Set(allDevices.filter(d => d.model === selectedOptions.model).map(d => d.variant))].sort();
-  }, [allDevices, selectedOptions.model]);
+  const storagesQuery = useQuery<string[]>({
+    queryKey: [
+      'device-storages',
+      selectedOptions.model,
+      selectedOptions.variant ?? '',
+    ],
+    queryFn: () =>
+      fetchStorages(
+        selectedOptions.model as string,
+        selectedOptions.variant
+      ),
+    enabled: Boolean(selectedOptions.model),
+    staleTime: Infinity,
+  });
 
-  const storages = useMemo(() => {
-    if (!selectedOptions.model || selectedOptions.variant === null) return [];
-    return [...new Set(allDevices.filter(d => d.model === selectedOptions.model && d.variant === selectedOptions.variant).map(d => d.storage))].sort((a, b) => parseInt(a) - parseInt(b));
-  }, [allDevices, selectedOptions.model, selectedOptions.variant]);
+  const colorsQuery = useQuery<string[]>({
+    queryKey: [
+      'device-colors',
+      selectedOptions.model,
+      selectedOptions.variant ?? '',
+      selectedOptions.storage ?? '',
+    ],
+    queryFn: () =>
+      fetchColors(
+        selectedOptions.model as string,
+        selectedOptions.variant,
+        selectedOptions.storage
+      ),
+    enabled: Boolean(
+      selectedOptions.model && selectedOptions.storage
+    ),
+    staleTime: Infinity,
+  });
 
-  const colors = useMemo(() => {
-    if (!selectedOptions.model || selectedOptions.variant === null || !selectedOptions.storage) return [];
-    return [...new Set(allDevices.filter(d => d.model === selectedOptions.model && d.variant === selectedOptions.variant && d.storage === selectedOptions.storage).map(d => d.color))];
-  }, [allDevices, selectedOptions.model, selectedOptions.variant, selectedOptions.storage]);
+  const deviceQuery = useQuery<DeviceResponse>({
+    queryKey: [
+      'device-detail',
+      selectedOptions.model,
+      selectedOptions.variant ?? '',
+      selectedOptions.storage ?? '',
+      selectedOptions.color ?? '',
+    ],
+    queryFn: () =>
+      fetchDevice(
+        selectedOptions.model as string,
+        selectedOptions.variant,
+        selectedOptions.storage as string,
+        selectedOptions.color as string
+      ),
+    enabled: Boolean(
+      selectedOptions.model &&
+        selectedOptions.storage &&
+        selectedOptions.color
+    ),
+    staleTime: Infinity,
+  });
 
-  const selectedDevice = useMemo(() => {
-    if (!selectedOptions.model || selectedOptions.variant === null || !selectedOptions.storage || !selectedOptions.color) return null;
-    return allDevices.find(d => 
-      d.model === selectedOptions.model &&
-      d.variant === selectedOptions.variant &&
-      d.storage === selectedOptions.storage &&
-      d.color === selectedOptions.color
-    ) || null;
-  }, [allDevices, selectedOptions]);
+  useEffect(() => {
+    const variantList = variantsQuery.data ?? [];
+    if (!selectedOptions.model) return;
+
+    if (
+      selectedOptions.variant &&
+      !variantList.includes(selectedOptions.variant)
+    ) {
+      setSelectedOptions((prev) => ({
+        ...prev,
+        variant: variantList[0] ?? null,
+        storage: null,
+        color: null,
+      }));
+      return;
+    }
+
+    if (
+      !selectedOptions.variant &&
+      variantList.length === 1
+    ) {
+      setSelectedOptions((prev) => ({
+        ...prev,
+        variant: variantList[0] ?? null,
+      }));
+    }
+  }, [selectedOptions.model, selectedOptions.variant, variantsQuery.data]);
+
+  useEffect(() => {
+    const storageList = storagesQuery.data ?? [];
+    if (!selectedOptions.model) return;
+
+    if (
+      selectedOptions.storage &&
+      !storageList.includes(selectedOptions.storage)
+    ) {
+      setSelectedOptions((prev) => ({
+        ...prev,
+        storage: storageList[0] ?? null,
+        color: null,
+      }));
+      return;
+    }
+
+    if (
+      !selectedOptions.storage &&
+      storageList.length === 1
+    ) {
+      setSelectedOptions((prev) => ({
+        ...prev,
+        storage: storageList[0] ?? null,
+      }));
+    }
+  }, [
+    selectedOptions.model,
+    selectedOptions.variant,
+    selectedOptions.storage,
+    storagesQuery.data,
+  ]);
+
+  useEffect(() => {
+    const colorList = colorsQuery.data ?? [];
+    if (!selectedOptions.model || !selectedOptions.storage) return;
+
+    if (
+      selectedOptions.color &&
+      !colorList.includes(selectedOptions.color)
+    ) {
+      setSelectedOptions((prev) => ({
+        ...prev,
+        color: colorList[0] ?? null,
+      }));
+      return;
+    }
+
+    if (!selectedOptions.color && colorList.length === 1) {
+      setSelectedOptions((prev) => ({
+        ...prev,
+        color: colorList[0] ?? null,
+      }));
+    }
+  }, [
+    selectedOptions.model,
+    selectedOptions.variant,
+    selectedOptions.storage,
+    selectedOptions.color,
+    colorsQuery.data,
+  ]);
 
   const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
     setSelectedOptions(prev => {
@@ -75,11 +240,6 @@ export const useDevices = () => {
         newOptions.storage = null;
         newOptions.color = null;
 
-        // Auto-select variant if there's only one
-        const modelVariants = [...new Set(allDevices.filter(d => d.model === value).map(d => d.variant))];
-        if (modelVariants.length === 1) {
-          newOptions.variant = modelVariants[0];
-        }
       } else if (type === 'variant') {
         newOptions.storage = null;
         newOptions.color = null;
@@ -92,17 +252,27 @@ export const useDevices = () => {
 
   return {
     // Data
-    models,
-    variants,
-    storages,
-    colors,
-    selectedDevice,
+    models: modelsQuery.data ?? [],
+    variants: variantsQuery.data ?? [],
+    storages: storagesQuery.data ?? [],
+    colors: colorsQuery.data ?? [],
+    selectedDevice: deviceQuery.data ?? null,
     // State
     selectedOptions,
     // Actions
     handleOptionSelect,
     // Status
-    isLoading,
-    error,
+    isLoading:
+      modelsQuery.isLoading ||
+      variantsQuery.isLoading ||
+      storagesQuery.isLoading ||
+      colorsQuery.isLoading ||
+      deviceQuery.isLoading,
+    error:
+      modelsQuery.error ||
+      variantsQuery.error ||
+      storagesQuery.error ||
+      colorsQuery.error ||
+      deviceQuery.error,
   };
 };

@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/core/lib/prisma'
+import { isAdminTelegramId } from '@/core/lib/admin'
 
 export async function POST(req: NextRequest) {
   try {
-    const { masterId, pointId, adminTelegramId } =
-      await req.json()
+    const { masterId, pointId, adminTelegramId } = await req.json()
 
     if (!masterId || !pointId || !adminTelegramId) {
       return NextResponse.json(
@@ -15,27 +13,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Проверяем, что пользователь является админом
-    const admin = await prisma.master.findUnique({
-      where: { telegramId: adminTelegramId },
-    })
-
-    if (
-      !admin ||
-      (admin.telegramId !== '1' &&
-        admin.telegramId !== '531360988' &&
-        admin.telegramId !== '296925626')
-    ) {
-      // Только главные админы
+    if (!isAdminTelegramId(adminTelegramId)) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
       )
     }
 
-    // Проверяем, что точка существует
     const point = await prisma.point.findUnique({
-      where: { id: parseInt(pointId) },
+      where: { id: Number(pointId) },
     })
 
     if (!point) {
@@ -45,40 +31,28 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Назначаем мастера на точку
     const master = await prisma.master.update({
       where: { id: masterId },
-      data: { pointId: parseInt(pointId) },
+      data: { pointId: Number(pointId) },
     })
 
-    // Отправляем уведомление мастеру об изменении точки
     try {
-      const { sendTelegramMessage } = await import(
-        '@/core/lib/sendTelegramMessage'
-      )
+      const { sendTelegramMessage } = await import('@/core/lib/sendTelegramMessage')
 
-      const notificationMessage = `📍 <b>Изменение рабочей точки</b>
+      const notificationMessage = `📍 <b>Обновлён пункт приёма</b>
 
-Ваша рабочая точка была изменена администратором.
+Новый пункт приёма был назначен администратором.
 
-🏢 <b>Новая точка:</b> ${point.address}
-🕒 <b>Режим работы:</b> ${point.workingHours}
+🏠 <b>Адрес пункта:</b> ${point.address}
+🕒 <b>График работы:</b> ${point.workingHours}
 
-Проверьте новые заявки в приложении.`
+Пожалуйста, уточните детали в переписке.`
 
-      await sendTelegramMessage(
-        master.telegramId,
-        notificationMessage,
-        {
-          parse_mode: 'HTML',
-        }
-      )
+      await sendTelegramMessage(master.telegramId, notificationMessage, {
+        parse_mode: 'HTML',
+      })
     } catch (notificationError) {
-      console.error(
-        'Error sending point change notification:',
-        notificationError
-      )
-      // Не прерываем выполнение если не удалось отправить уведомление
+      console.error('Error sending point change notification:', notificationError)
     }
 
     return NextResponse.json({ success: true, master })

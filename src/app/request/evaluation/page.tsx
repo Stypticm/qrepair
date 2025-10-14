@@ -1,45 +1,230 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useAppStore } from '@/stores/authStore';
-import { Page } from '@/components/Page';
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
-const evaluationOptions = [
-  { label: 'Идеальное (Как новый)', description: 'Телефон в идеальном состоянии, без царапин и следов использования. Все функции работают.', percentage: 0 },
-  { label: 'Отличное', description: 'Минимальные следы использования, почти незаметные царапины. Все функции работают.', percentage: 5 },
-  { label: 'Очень хорошее', description: 'Небольшие, но заметные царапины на корпусе или экране. Все функции работают.', percentage: 10 },
-  { label: 'Хорошее', description: 'Заметные царапины, возможно небольшие сколы на корпусе. Экран без трещин. Все функции работают.', percentage: 15 },
-  { label: 'Удовлетворительное', description: 'Множественные царапины и/или сколы. Возможны небольшие трещины на задней панели. Экран целый. Все функции работают.', percentage: 25 },
-  { label: 'Проблемное', description: 'Есть проблемы с одной из функций (например, Face ID, Touch ID, камера) ИЛИ есть трещины на экране.', percentage: 40 },
-  { label: 'Плохое', description: 'Множественные проблемы с функциями И/ИЛИ серьезные повреждения (разбитый экран и задняя панель).', percentage: 60 },
-  { label: 'Нерабочее', description: 'Телефон не включается или не функционирует.', percentage: 80 },
+import { Page } from '@/components/Page';
+import { Button } from '@/components/ui/button';
+import { getPictureUrl } from '@/core/lib/assets';
+import { useAppStore } from '@/stores/authStore';
+
+type EvaluationOption = {
+  id: string;
+  label: string;
+  description: string;
+  percentage: number;
+  image: string;
+  accent: 'mint' | 'sea' | 'amber' | 'rose';
+};
+
+const evaluationOptions: EvaluationOption[] = [
+  {
+    id: 'perfect',
+    label: 'Идеальное (как новое)',
+    description:
+      'Корпус и дисплей без следов использования, полностью как из коробки. Все функции работают безупречно.',
+    percentage: 0,
+    image: 'display_front_new',
+    accent: 'mint',
+  },
+  {
+    id: 'light-wear',
+    label: 'Отличное',
+    description:
+      'Минимальные следы эксплуатации: едва заметные микроцарапины. Все функции работают штатно.',
+    percentage: 5,
+    image: 'display_front',
+    accent: 'mint',
+  },
+  {
+    id: 'moderate',
+    label: 'Очень хорошее',
+    description:
+      'Есть лёгкие потертости или пара царапин по корпусу, при этом технически всё исправно.',
+    percentage: 10,
+    image: 'display_front',
+    accent: 'sea',
+  },
+  {
+    id: 'visible-wear',
+    label: 'Хорошее',
+    description:
+      'Заметные следы износа: локальные царапины или сколы на корпусе, экран целый. Работает стабильно.',
+    percentage: 15,
+    image: 'display_front_have_scratches',
+    accent: 'sea',
+  },
+  {
+    id: 'heavy-wear',
+    label: 'Удовлетворительное',
+    description:
+      'Множественные царапины или сколы. Возможны потертости на рамке и задней панели, но без трещин дисплея.',
+    percentage: 25,
+    image: 'display_front_scratches',
+    accent: 'amber',
+  },
+  {
+    id: 'feature-failure',
+    label: 'Проблемы с функциями',
+    description:
+      'Не работает одна из ключевых функций (Face ID, Touch ID, камера, кнопки) или есть трещина на экране.',
+    percentage: 40,
+    image: 'display_back_have_scratches',
+    accent: 'amber',
+  },
+  {
+    id: 'needs-repair',
+    label: 'Требуется ремонт',
+    description:
+      'Есть несколько неисправностей или серьёзные повреждения корпуса, потребуется замена деталей.',
+    percentage: 60,
+    image: 'display_back_scratches',
+    accent: 'rose',
+  },
+  {
+    id: 'not-working',
+    label: 'Не включается',
+    description:
+      'Устройство не запускается или не реагирует на зарядку, необходима полная диагностика и восстановление.',
+    percentage: 80,
+    image: 'display_front_scratches',
+    accent: 'rose',
+  },
 ];
+
+const accentGradient: Record<EvaluationOption['accent'], string> = {
+  mint: 'from-emerald-200/60 via-teal-200/40 to-slate-50/40',
+  sea: 'from-cyan-200/60 via-sky-200/40 to-slate-50/40',
+  amber: 'from-amber-200/60 via-orange-200/40 to-slate-50/40',
+  rose: 'from-rose-200/60 via-pink-200/40 to-slate-50/40',
+};
 
 export default function EvaluationPage() {
   const router = useRouter();
-  const { telegramId, setUserEvaluation, setDamagePercent } = useAppStore();
+  const { telegramId, setUserEvaluation, setDamagePercent, price, setPrice } = useAppStore();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [basePrice, setBasePrice] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const handleOptionSelect = useCallback((option: EvaluationOption) => {
+    setSelectedId((previous) => {
+      if (previous === option.id) {
+        return previous;
+      }
+
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('userEvaluationId', option.id);
+        sessionStorage.setItem('userEvaluation', option.label);
+        sessionStorage.setItem('damagePercent', String(option.percentage));
+      }
+
+      return option.id;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let hasSelection = false;
+    const savedId = sessionStorage.getItem('userEvaluationId');
+    const savedLabel = sessionStorage.getItem('userEvaluation');
+
+    if (savedId) {
+      const exists = evaluationOptions.some((option) => option.id === savedId);
+      if (exists) {
+        setSelectedId(savedId);
+        hasSelection = true;
+      }
+    } else if (savedLabel) {
+      const matched = evaluationOptions.find((option) => option.label === savedLabel);
+      if (matched) {
+        setSelectedId(matched.id);
+        hasSelection = true;
+      }
+    }
+
+    if (!hasSelection) {
+      handleOptionSelect(evaluationOptions[0]);
+    }
+
+    const storedBase = sessionStorage.getItem('basePrice');
+    if (storedBase) {
+      const parsed = Number(storedBase);
+      if (!Number.isNaN(parsed)) {
+        setBasePrice(parsed);
+      }
+    }
+  }, [handleOptionSelect]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    sectionRefs.current = sectionRefs.current.slice(0, evaluationOptions.length);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (visible) {
+          const index = Number(visible.target.getAttribute('data-index') || 0);
+          const option = evaluationOptions[index];
+          if (option) {
+            handleOptionSelect(option);
+          }
+        }
+      },
+      { threshold: [0.25, 0.5, 0.75], rootMargin: '-20% 0px -30% 0px' }
+    );
+
+    sectionRefs.current.forEach((section) => {
+      if (section) observer.observe(section);
+    });
+
+    return () => observer.disconnect();
+  }, [handleOptionSelect]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('userEvaluation');
-      if (saved) setSelectedLabel(saved);
+      window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }, []);
 
-  const handleSelectOption = async (option: typeof evaluationOptions[0]) => {
-    setSubmitting(true);
-    setUserEvaluation(option.label);
-    setDamagePercent(option.percentage);
-    setSelectedLabel(option.label);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('userEvaluation', option.label);
-      sessionStorage.setItem('damagePercent', String(option.percentage));
+  const selectedOption = useMemo(() => {
+    return evaluationOptions.find((option) => option.id === selectedId) ?? evaluationOptions[0];
+  }, [selectedId]);
+
+  const heroImage = getPictureUrl(`${selectedOption.image}.png`);
+
+  const estimatedPrice = useMemo(() => {
+    const source = basePrice ?? price;
+    if (!source) return null;
+
+    const discount = selectedOption.percentage / 100;
+    const result = Math.max(source * (1 - discount), source * 0.5);
+
+    return Math.round(result);
+  }, [basePrice, price, selectedOption]);
+
+  useEffect(() => {
+    if (estimatedPrice && estimatedPrice > 0) {
+      setPrice(estimatedPrice);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('price', JSON.stringify(estimatedPrice));
+      }
     }
+  }, [estimatedPrice, setPrice]);
+
+  const handleContinue = async () => {
+    if (!selectedOption) return;
+
+    setSubmitting(true);
+    setUserEvaluation(selectedOption.label);
+    setDamagePercent(selectedOption.percentage);
 
     try {
       await fetch('/api/request/save-evaluation', {
@@ -47,44 +232,96 @@ export default function EvaluationPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           telegramId,
-          userEvaluation: option.label,
-          damagePercent: option.percentage,
+          userEvaluation: selectedOption.label,
+          damagePercent: selectedOption.percentage,
         }),
       });
     } catch (error) {
       console.error('Error saving evaluation:', error);
     } finally {
+      setSubmitting(false);
       router.push('/request/submit');
     }
   };
 
   return (
     <Page back={true}>
-      <div className="w-full h-full bg-gradient-to-b from-white to-gray-50 flex flex-col pt-24">
-        <div className="text-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Оценка состояния</h2>
-          <p className="text-sm text-gray-600">Как бы вы оценили состояние вашего телефона?</p>
-        </div>
-        <div className="flex-1 p-2 pt-2 flex flex-col items-center gap-2 overflow-y-auto">
-          {evaluationOptions.map((option, index) => (
+      <div className="relative min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-100">
+        <div className="mx-auto flex max-w-4xl flex-col px-4 pb-28 pt-10 md:px-8">
+          <div className="sticky top-8 z-20">
             <motion.div
-              key={option.label}
-              initial={{ opacity: 0, y: 20 }}
+              key={selectedOption.id}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="w-full max-w-md"
+              transition={{ duration: 0.25 }}
+              className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur"
             >
-              <Button
-                variant={selectedLabel === option.label ? 'default' : 'outline'}
-                className={`w-full h-auto p-2 text-left flex flex-col items-start ${selectedLabel === option.label ? 'bg-[#2dc2c6] text-white hover:bg-[#25a8ac] border-transparent' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
-                onClick={() => handleSelectOption(option)}
-                disabled={submitting}
-              >
-                <p className={`font-semibold text-sm ${selectedLabel === option.label ? 'text-white' : 'text-gray-900'}`}>{option.label}</p>
-                <p className={`text-xs ${selectedLabel === option.label ? 'text-white/90' : 'text-gray-600'} text-wrap`}>{option.description}</p>
-              </Button>
+              <div className="flex flex-col gap-6 text-center">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Сводка</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-900 md:text-3xl">
+                    {selectedOption.label}
+                  </h2>
+                  <p className="mt-3 text-sm text-slate-500 md:text-base">
+                    {selectedOption.description}
+                  </p>
+                  <p className="mt-4 text-xs uppercase tracking-[0.3em] text-slate-400/80">
+                    Прокрутите страницу, чтобы выбрать состояние
+                  </p>
+                </div>
+
+                <div
+                  className={`relative overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-b ${accentGradient[selectedOption.accent]} p-5 shadow-inner md:p-6`}
+                >
+                  <div className="relative mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-[24px] border border-white/40 bg-white/60 md:max-w-[240px]">
+                    <Image
+                      src={heroImage}
+                      alt={selectedOption.label}
+                      width={320}
+                      height={560}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-sm text-slate-500">
+                  <span className="font-semibold text-slate-900">-{selectedOption.percentage}%</span>
+                  <span className="mx-2 text-slate-400">/</span>
+                  {estimatedPrice ? (
+                    <span className="font-semibold text-slate-900">
+                      ≈ {estimatedPrice.toLocaleString('ru-RU')} ₽
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">оценка уточняется</span>
+                  )}
+                </div>
+
+                <div className="mt-auto flex justify-center">
+                  <Button
+                    type="button"
+                    disabled={!selectedOption || submitting}
+                    onClick={handleContinue}
+                    className="h-12 rounded-full bg-slate-900 px-10 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+                  >
+                    Продолжить
+                  </Button>
+                </div>
+              </div>
             </motion.div>
-          ))}
+          </div>
+
+          <div className="relative w-full">
+            {evaluationOptions.map((option, index) => (
+              <div
+                key={option.id}
+                data-index={index}
+                ref={(el) => { sectionRefs.current[index] = el; }}
+                className="pointer-events-none select-none"
+                style={{ height: '120vh' }}
+                aria-hidden="true"
+              />
+            ))}
+          </div>
         </div>
       </div>
     </Page>

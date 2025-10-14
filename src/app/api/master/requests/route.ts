@@ -31,10 +31,7 @@ export async function GET(req: NextRequest) {
     })
 
     if (!master) {
-      return NextResponse.json(
-        { error: 'Master not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ success: true, requests: [], total: 0 })
     }
 
     const whereClause = {

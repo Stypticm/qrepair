@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/core/lib/prisma'
+import { isAdminTelegramId } from '@/core/lib/admin'
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const adminTelegramId = searchParams.get(
-      'adminTelegramId'
-    )
+    const adminTelegramId = searchParams.get('adminTelegramId')
 
     if (!adminTelegramId) {
       return NextResponse.json(
@@ -17,25 +14,13 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Проверяем, что пользователь является админом
-    const admin = await prisma.master.findUnique({
-      where: { telegramId: adminTelegramId },
-    })
-
-    if (
-      !admin ||
-      (admin.telegramId !== '1' &&
-        admin.telegramId !== '531360988' &&
-        admin.telegramId !== '296925626')
-    ) {
-      // Только главные админы
+    if (!isAdminTelegramId(adminTelegramId)) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
       )
     }
 
-    // Получаем всех мастеров с их точками
     const masters = await prisma.master.findMany({
       include: { point: true },
       orderBy: { createdAt: 'desc' },

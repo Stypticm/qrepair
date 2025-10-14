@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/core/lib/prisma'
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,20 +13,15 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Получаем мастера с его точкой
     const master = await prisma.master.findUnique({
       where: { telegramId },
       include: { point: true },
     })
 
     if (!master) {
-      return NextResponse.json(
-        { error: 'Master not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ points: [] })
     }
 
-    // Возвращаем точки мастера (мастер может быть привязан только к одной точке)
     const points = master.point ? [master.point] : []
 
     return NextResponse.json({ points })

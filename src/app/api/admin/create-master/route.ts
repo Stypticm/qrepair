@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/core/lib/prisma'
+import { isAdminTelegramId } from '@/core/lib/admin'
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,25 +19,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Проверяем, что пользователь является админом
-    const admin = await prisma.master.findUnique({
-      where: { telegramId: adminTelegramId },
-    })
-
-    if (
-      !admin ||
-      (admin.telegramId !== '1' &&
-        admin.telegramId !== '531360988' &&
-        admin.telegramId !== '296925626')
-    ) {
-      // Только главные админы
+    if (!isAdminTelegramId(adminTelegramId)) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
       )
     }
 
-    // Проверяем обязательные поля
     if (!telegramId || !username || !name) {
       return NextResponse.json(
         {
@@ -49,7 +36,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Проверяем, что мастер с таким telegramId не существует
     const existingMaster = await prisma.master.findUnique({
       where: { telegramId },
     })
@@ -57,17 +43,15 @@ export async function POST(req: NextRequest) {
     if (existingMaster) {
       return NextResponse.json(
         {
-          error:
-            'Master with this Telegram ID already exists',
+          error: 'Master with this Telegram ID already exists',
         },
         { status: 400 }
       )
     }
 
-    // Проверяем, что точка существует (если указана)
     if (pointId) {
       const point = await prisma.point.findUnique({
-        where: { id: parseInt(pointId) },
+        where: { id: Number(pointId) },
       })
 
       if (!point) {
@@ -78,14 +62,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Создаем мастера
     const master = await prisma.master.create({
       data: {
         telegramId,
         username,
         name,
         isActive: true,
-        pointId: pointId ? parseInt(pointId) : null,
+        pointId: pointId ? Number(pointId) : null,
       },
       include: { point: true },
     })

@@ -1,20 +1,40 @@
 'use client'
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Page } from '@/components/Page';
 
 import { useAppStore } from '@/stores/authStore';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { ConditionOption, frontConditions, backConditions, sideConditions } from '@/core/lib/condition';
 import { getPictureUrl } from '@/core/lib/assets';
-import { Tooltip } from '@/components/ui/tooltip';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
 import { getConditionImages } from '@/core/lib/imageUtils';
+
+const SURFACE_ORDER = ['front', 'back', 'side'] as const;
+type SurfaceKey = typeof SURFACE_ORDER[number];
+
+const SURFACE_META: Record<SurfaceKey, { title: string; subtitle: string; accent: string }> = {
+    front: {
+        title: 'Лицевая сторона',
+        subtitle: 'Экран и рамка дисплея',
+        accent: 'Front',
+    },
+    back: {
+        title: 'Задняя часть',
+        subtitle: 'Спинка и блок камер',
+        accent: 'Back',
+    },
+    side: {
+        title: 'Грани и кнопки',
+        subtitle: 'Боковые поверхности',
+        accent: 'Sides',
+    },
+};
 
 // Функция для поиска модели по названию
 function findModelByName(modelname: string) {
@@ -101,7 +121,17 @@ function findModelByName(modelname: string) {
 }
 
 export default function ConditionPage() {
-    const { modelname, telegramId, deviceConditions, setDeviceConditions, username, setModel, setPrice, setCurrentStep } = useAppStore();
+    const {
+        modelname,
+        telegramId,
+        deviceConditions,
+        setDeviceConditions,
+        username,
+        setModel,
+        setPrice,
+        setCurrentStep,
+        price,
+    } = useAppStore();
     const router = useRouter();
 
     // Устанавливаем текущий шаг при загрузке страницы
@@ -110,6 +140,29 @@ export default function ConditionPage() {
     }, [setCurrentStep]);
 
     // Состояние для отслеживания изменений
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const storedBasePrice = sessionStorage.getItem('basePrice');
+        if (!storedBasePrice) return;
+        const parsedBase = Number(storedBasePrice);
+        if (!Number.isNaN(parsedBase)) {
+            setBasePrice(parsedBase);
+        }
+    }, []);
+
+    useEffect(() => {
+        setIsAllSelected(checkIfAllSelected(deviceConditions));
+
+        if (hasUserInteracted) {
+            return;
+        }
+
+        const nextSurface = SURFACE_ORDER.find((surface) => !deviceConditions[surface]);
+        if (nextSurface && nextSurface !== activeSurface) {
+            setActiveSurface(nextSurface);
+        }
+    }, [deviceConditions, checkIfAllSelected, hasUserInteracted, activeSurface]);
+
     const [hasChanges, setHasChanges] = useState(false);
 
     // Флаг для отслеживания загрузки состояний из БД
@@ -125,6 +178,92 @@ export default function ConditionPage() {
     const checkIfAllSelected = useCallback((conditions: typeof deviceConditions) => {
         return conditions.front && conditions.back && conditions.side;
     }, []);
+
+    const initialSurface: SurfaceKey =
+        !deviceConditions.front
+            ? 'front'
+            : !deviceConditions.back
+                ? 'back'
+                : !deviceConditions.side
+                    ? 'side'
+                    : 'front';
+
+    const [activeSurface, setActiveSurface] = useState<SurfaceKey>(initialSurface);
+    const [hasUserInteracted, setHasUserInteracted] = useState(false);
+    const [basePrice, setBasePrice] = useState<number | null>(null);
+
+    const handleSurfaceChange = (surface: SurfaceKey) => {
+        setActiveSurface(surface);
+        setHasUserInteracted(true);
+    };
+
+    const getOptionsBySurface = useCallback(
+        (surface: SurfaceKey): ConditionOption[] => {
+            switch (surface) {
+                case 'front':
+                    return frontConditions;
+                case 'back':
+                    return backConditions;
+                case 'side':
+                    return sideConditions;
+                default:
+                    return frontConditions;
+            }
+        },
+        []
+    );
+
+    const getOptionByLabel = useCallback(
+        (surface: SurfaceKey, label: string | null) => {
+            if (!label) return null;
+            return (
+                getOptionsBySurface(surface).find(
+                    (option) => getConditionText(option.id) === label
+                ) || null
+            );
+        },
+        [getOptionsBySurface]
+    );
+
+    const currentOptions = useMemo(
+        () => getOptionsBySurface(activeSurface),
+        [activeSurface, getOptionsBySurface]
+    );
+
+    const currentSelection = useMemo(() => {
+        const existing = getOptionByLabel(activeSurface, deviceConditions[activeSurface]);
+        if (existing) return existing;
+        return currentOptions[0] ?? null;
+    }, [activeSurface, currentOptions, deviceConditions, getOptionByLabel]);
+
+    const previewImage = useMemo(() => {
+        const imageKey = currentSelection?.image ?? currentOptions[0]?.image;
+        return imageKey ? getPictureUrl(`${imageKey}.png`) : '';
+    }, [currentSelection, currentOptions]);
+
+    const totalPenalty = useMemo(() => calculateTotalPenalty(), [deviceConditions]);
+
+    const estimatedPrice = useMemo(() => {
+        if (price && price > 0) return price;
+        if (basePrice && basePrice > 0) {
+            return calculateFinalPrice(basePrice, deviceConditions);
+        }
+        return null;
+    }, [basePrice, deviceConditions, price]);
+
+    const priceFormatter = useMemo(
+        () =>
+            new Intl.NumberFormat('ru-RU', {
+                style: 'currency',
+                currency: 'RUB',
+                maximumFractionDigits: 0,
+            }),
+        []
+    );
+
+    const isReadyToContinue = Boolean(
+        deviceConditions.front && deviceConditions.back && deviceConditions.side
+    );
 
     // Загрузка сохраненных состояний из sessionStorage или БД
     const loadSavedConditions = useCallback(async () => {
@@ -252,14 +391,6 @@ export default function ConditionPage() {
     const [showDialog, setShowDialog] = useState(false);
 
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
-    useEffect(() => {
-        if (isAllConditionsSelected() && hasChanges) {
-            setShowDialog(true);
-            
-            // Устанавливаем флаг "все выбрано"
-            setIsAllSelected(true);
-        }
-    }, [deviceConditions, isAllConditionsSelected, hasChanges]);
 
     // Создаем заявку при загрузке страницы (если её еще нет)
     useEffect(() => {
@@ -373,6 +504,8 @@ export default function ConditionPage() {
         if ('vibrate' in navigator) {
             navigator.vibrate(50);
         }
+
+        setHasUserInteracted(true)
 
         // Получаем текстовое описание состояния
         const conditionText = getConditionText(conditionId);
@@ -564,215 +697,304 @@ export default function ConditionPage() {
     };
 
     // Проверяем, можно ли выбрать секцию
-    const canSelectSection = (type: 'front' | 'back' | 'side'): boolean => {
-        if (type === 'front') return true; // Передняя часть всегда доступна
-        if (type === 'back') return !!deviceConditions.front; // Задняя только после выбора передней
-        if (type === 'side') return !!deviceConditions.front && !!deviceConditions.back; // Боковые только после выбора обеих панелей
-        return false;
-    };
 
-
-
-    // Рендерим секцию выбора условий
-    const renderConditionSection = (type: 'front' | 'back' | 'side', conditions: ConditionOption[]) => {
-        // Разные размеры изображений для разных секций
-        const getImageStyle = () => {
-            if (type === 'side') {
-                // Боковые грани - такая же ширина как у передней и задней части, но узкие по высоте
-                return 'w-full h-4 rounded-lg';
-            } else {
-                // Передняя и задняя панель - прямоугольные как телефон, большая высота для полной видимости без обрезки
-                return 'w-12 h-20 rounded-lg';
-            }
-        };
-
-
-
-        return (
-            <div className="space-y-1">
-                {/* Заголовок секции */}
-                <h3 className="text-sm font-semibold text-center">
-                    {type === 'front' ? 'Передняя часть' : type === 'back' ? 'Задняя панель' : 'Боковые грани'}
-                    {!canSelectSection(type) && (
-                        <span className="block text-xs text-gray-500 font-normal mt-0.5">
-                            {type === 'back' ? 'Сначала выберите переднюю часть' : 'Сначала выберите переднюю и заднюю части'}
-                        </span>
-                    )}
-                </h3>
-
-                {/* Сетка вариантов */}
-                <div className="grid grid-cols-4 gap-2">
-                    {conditions.map((condition) => (
-                        <motion.div
-                            key={condition.id}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            transition={{ duration: 0.1 }}
-                        >
-                            <Card
-                                className={`transition-all duration-200 relative border-0 shadow-none ${deviceConditions[type] === getConditionText(condition.id)
-                                        ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10'
-                                        : ''
-                                    } ${canSelectSection(type)
-                                        ? 'cursor-pointer hover:shadow-md'
-                                        : 'cursor-not-allowed opacity-50'
-                                    }`}
-                                onClick={() => canSelectSection(type) && handleConditionSelect(type, condition.id)}
-                            >
-                                {deviceConditions[type] === getConditionText(condition.id) && (
-                                    <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10">
-                                        <span className="text-white text-xs font-bold">✓</span>
-                                    </div>
-                                )}
-                                <CardContent className="p-0.5 pb-0.5 flex flex-col items-center justify-center">
-                                    {/* Изображение - разные размеры для разных секций */}
-                                    <motion.div 
-                                        className={`relative ${getImageStyle()} overflow-hidden bg-gray-100`}
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ duration: 0.3, delay: 0.1 }}
-                                    >
-                                        <Image
-                                            src={getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}
-                                            alt={condition.label}
-                                            fill
-                                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-105"
-                                            loading="eager"
-                                            priority={false}
-                                        />
-                                    </motion.div>
-
-                                    {/* Название условия */}
-                                    <h4 className="text-[10px] font-medium text-gray-900 text-center leading-tight whitespace-pre-line mt-0.5">
-                                        {condition.label}
-                                    </h4>
-
-
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    ))}
-                </div>
-            </div>
-        );
-    };
-
-    // Список изображений для предзагрузки (только те, что не были предзагружены на главной)
+    
     const preloadImages = getConditionImages();
 
     return (
         <Page back={true}>
             <ImagePreloader images={preloadImages} />
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-12 overflow-hidden">
-                {/* Прогресс-бар */}
-                <div className="pt-2 pb-1">
-                    <ProgressBar
-                        currentStep={getCurrentStep()}
-                        totalSteps={5}
-                        steps={steps}
-                    />
-                </div>
-
-                <div className="flex-1 p-2 pt-1 flex items-start justify-center overflow-y-auto">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-1 pb-4">
-
-                        {/* Секция передней части экрана */}
-                        {true && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-1 border border-gray-200 rounded-xl bg-white shadow-sm"
-                            >
-                                {renderConditionSection('front', frontConditions)}
-                            </motion.div>
-                        )}
-
-                        {/* Секция задней панели */}
-                        {deviceConditions.front && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-1 rounded-xl shadow-sm bg-white"
-                            >
-                                {renderConditionSection('back', backConditions)}
-                            </motion.div>
-                        )}
-
-                        {/* Секция боковых граней */}
-                        {deviceConditions.back && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 0.2, ease: "easeOut" }}
-                                className="p-1 rounded-xl shadow-sm bg-white"
-                            >
-                                {renderConditionSection('side', sideConditions)}
-                            </motion.div>
-                        )}
+            <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-white to-slate-100">
+                <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 pb-10 pt-12 md:px-8">
+                    <div className="mb-6">
+                        <ProgressBar
+                            currentStep={getCurrentStep()}
+                            totalSteps={5}
+                            steps={steps}
+                        />
                     </div>
-                </div>
 
-            {/* Диалоговое окно с итоговой информацией */}
-            <Dialog open={showDialog} onOpenChange={handleEdit}>
-                <DialogContent
-                    className="bg-white cursor-pointer w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
-                    onClick={handleContinue}
-                    showCloseButton={false}
-                >
-                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35 }}
+                        className="mb-8 space-y-3 text-center md:text-left"
+                    >
+                        <span className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                            Оценка состояния
+                        </span>
+                        <h1 className="text-3xl font-semibold text-slate-900 md:text-4xl">
+                            Как выглядит ваш Iphone сегодня
+                        </h1>
+                        <p className="text-sm text-slate-500 md:text-base">
+                            ??Оценка состояния ????Не выбрано ? ?Не выбрано ??? Оценка состояния? ??Оценка состояния.
+                        </p>
+                    </motion.div>
 
-                    </DialogTitle>
-
-                    <div className="text-center">
-                        {/* Рамка для выбранных условий */}
-                        <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
-                            <div className="space-y-3">
-                                {deviceConditions.front && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">Передняя панель:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                            {deviceConditions.front}
-                                        </span>
-                                    </div>
-                                )}
-                                {deviceConditions.back && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">Задняя панель:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                            {deviceConditions.back}
-                                        </span>
-                                    </div>
-                                )}
-                                {deviceConditions.side && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600 font-medium">Боковые грани:</span>
-                                        <span className="font-semibold text-gray-900 text-right break-words">
-                                            {deviceConditions.side}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
+                    <div className="flex flex-1 flex-col gap-6 lg:flex-row">
+                        <div className="grid grid-cols-1 gap-4 lg:w-[280px]">
+                            {SURFACE_ORDER.map((surface) => {
+                                const option = getOptionByLabel(surface, deviceConditions[surface]);
+                                const isActive = activeSurface === surface;
+                                const isComplete = Boolean(option);
+                                return (
+                                    <button
+                                        key={surface}
+                                        type="button"
+                                        onClick={() => handleSurfaceChange(surface)}
+                                        className={`group rounded-2xl border px-4 py-4 text-left transition-all duration-200 ${
+                                            isActive
+                                                ? 'border-slate-900 bg-slate-900 text-white shadow-[0_24px_60px_-30px_rgba(15,23,42,0.6)]'
+                                                : 'border-white/70 bg-white/70 text-slate-900 shadow-sm hover:border-slate-200 hover:shadow-md'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div>
+                                                <span className={`text-[10px] uppercase tracking-[0.25em] ${
+                                                    isActive ? 'text-white/70' : 'text-slate-400'
+                                                }`}>
+                                                    {SURFACE_META[surface].accent}
+                                                </span>
+                                                <p className="mt-1 text-sm font-medium">
+                                                    {SURFACE_META[surface].title}
+                                                </p>
+                                            </div>
+                                            <span
+                                                className={`ml-2 flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${
+                                                    isComplete
+                                                        ? isActive
+                                                            ? 'border-white/40 bg-white/20 text-white'
+                                                            : 'border-slate-200 bg-white text-slate-700'
+                                                        : 'border-amber-200 bg-amber-50 text-amber-600'
+                                                }`}
+                                            >
+                                                {isComplete ? 'OK' : '!'}
+                                            </span>
+                                        </div>
+                                        <p className={`mt-3 text-xs leading-5 ${
+                                            isActive ? 'text-white/80' : 'text-slate-500'
+                                        }`}>
+                                            {option ? getConditionText(option.id) : 'Не выбрано'}
+                                        </p>
+                                    </button>
+                                );
+                            })}
                         </div>
 
-                        {/* Показываем выбранные условия */}
+                        <div className="flex-1 space-y-6">
+                            <motion.div
+                                key={activeSurface}
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur"
+                            >
+                                <div className="flex flex-wrap items-start justify-between gap-4">
+                                    <div>
+                                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">
+                                            {SURFACE_META[activeSurface].accent}
+                                        </span>
+                                        <h2 className="mt-2 text-2xl font-semibold text-slate-900 md:text-3xl">
+                                            {SURFACE_META[activeSurface].title}
+                                        </h2>
+                                        <p className="mt-2 text-sm text-slate-500">
+                                            {SURFACE_META[activeSurface].subtitle}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 rounded-full border border-white/80 bg-white/80 p-1 shadow-sm">
+                                        {SURFACE_ORDER.map((surface) => {
+                                            const isActiveTab = activeSurface === surface;
+                                            const completed = Boolean(deviceConditions[surface]);
+                                            return (
+                                                <button
+                                                    key={`${surface}-tab`}
+                                                    type="button"
+                                                    onClick={() => handleSurfaceChange(surface)}
+                                                    className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                                                        isActiveTab
+                                                            ? 'bg-slate-900 text-white shadow-[0_18px_36px_-24px_rgba(15,23,42,0.55)]'
+                                                            : 'text-slate-500 hover:text-slate-900'
+                                                    }`}
+                                                >
+                                                    <span>{SURFACE_META[surface].accent}</span>
+                                                    <span
+                                                        className={`h-2 w-2 rounded-full ${
+                                                            completed
+                                                                ? isActiveTab
+                                                                    ? 'bg-emerald-300'
+                                                                    : 'bg-emerald-500/70'
+                                                                : 'bg-amber-400'
+                                                        }`}
+                                                    />
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
 
+                                <div className="mt-6 flex flex-col items-center gap-6 md:flex-row md:items-end">
+                                    <div className="relative flex w-full justify-center md:w-1/2">
+                                        {previewImage ? (
+                                            <div className="relative aspect-[9/16] w-full max-w-[260px] overflow-hidden rounded-[32px] border border-white/70 bg-gradient-to-b from-white via-slate-100 to-slate-200 shadow-inner">
+                                                <Image
+                                                    src={previewImage}
+                                                    alt={currentSelection ? getConditionText(currentSelection.id) : '?Оценка состояния Оценка??'}
+                                                    width={320}
+                                                    height={560}
+                                                    priority={activeSurface === 'front'}
+                                                    className="h-full w-full object-contain"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="aspect-[9/16] w-full max-w-[260px] rounded-[32px] border border-dashed border-slate-300 bg-white/60" />
+                                        )}
+                                    </div>
+                                    <div className="w-full md:w-1/2">
+                                        <div className="rounded-2xl border border-white/80 bg-white/70 p-4 shadow-inner backdrop-blur">
+                                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">?Оценка состояния</p>
+                                            <h3 className="mt-2 text-lg font-semibold text-slate-900">
+                                                {currentSelection ? getConditionText(currentSelection.id) : 'Не выбрано'}
+                                            </h3>
+                                            <p className="mt-3 text-sm text-slate-500">
+                                                {currentSelection?.penalty === 0
+                                                    ? '??Не выбрано?? ?Не выбрано??.'
+                                                    : `Оценка?Оценка состояния: ${currentSelection?.penalty}%`}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
 
-
-                        <p className="text-center text-sm text-gray-600 mt-3">
-                            👆 Нажмите на окно для перехода к следующему шагу
-                        </p>
-                        <p className="text-center text-sm text-gray-600 mt-1">
-                            ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
-                        </p>
+                            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                                {currentOptions.map((option) => {
+                                    const optionLabel = getConditionText(option.id);
+                                    const isSelected = deviceConditions[activeSurface] === optionLabel;
+                                    const penaltyLabel = option.penalty === 0 ? '0%' : `${option.penalty}%`;
+                                    const imageSrc = getPictureUrl(`${option.image}.png`);
+                                    return (
+                                        <button
+                                            key={option.id}
+                                            type="button"
+                                            onClick={() => handleConditionSelect(activeSurface, option.id)}
+                                            className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 ${
+                                                isSelected
+                                                    ? 'border-slate-900 bg-slate-900 text-white shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]'
+                                                    : 'border-white/70 bg-white text-slate-900 shadow-sm hover:border-slate-200 hover:shadow-md'
+                                            }`}
+                                        >
+                                            <div className="relative flex flex-col items-center gap-3 px-3 py-4">
+                                                <div className={`relative flex h-28 w-full items-center justify-center overflow-hidden rounded-2xl border transition ${
+                                                    isSelected
+                                                        ? 'border-white/30 bg-white/10'
+                                                        : 'border-slate-200 bg-slate-100'
+                                                }`}>
+                                                    <Image
+                                                        src={imageSrc}
+                                                        alt={optionLabel}
+                                                        width={200}
+                                                        height={200}
+                                                        className="h-full w-full object-contain"
+                                                    />
+                                                    <span className={`absolute left-3 top-3 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${
+                                                        isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
+                                                    }`}>
+                                                        {penaltyLabel}
+                                                    </span>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                                                        {optionLabel}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
+
+                    <div className="mt-8 flex flex-col gap-4 border-t border-white/70 pt-6 md:flex-row md:items-center md:justify-between">
+                        <div className="rounded-2xl border border-white/70 bg-white/80 px-5 py-4 shadow-sm backdrop-blur">
+                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">??Оценка состояния????</p>
+                            <div className="mt-2 flex items-baseline gap-3">
+                                <span className="text-2xl font-semibold text-slate-900">
+                                    {totalPenalty > 0 ? `+${totalPenalty}%` : `${totalPenalty}%`}
+                                </span>
+                                {estimatedPrice ? (
+                                    <span className="text-sm text-slate-500">
+                                        ? {priceFormatter.format(estimatedPrice)}
+                                    </span>
+                                ) : null}
+                            </div>
+                            {basePrice && estimatedPrice ? (
+                                <p className="mt-2 text-xs text-slate-500">
+                                    Оценка? ???? {priceFormatter.format(basePrice)}
+                                </p>
+                            ) : null}
+                        </div>
+                        <Button
+                            type="button"
+                            disabled={!isReadyToContinue}
+                            onClick={() => setShowDialog(true)}
+                            className="h-12 w-full rounded-full bg-slate-900 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none md:w-auto md:px-10"
+                        >
+                            Оценка????
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <Dialog open={showDialog} onOpenChange={setShowDialog}>
+                <DialogContent className="max-w-md rounded-3xl border border-white/80 bg-white/95 p-6 shadow-2xl backdrop-blur">
+                    <DialogHeader className="space-y-2">
+                        <DialogTitle className="text-center text-2xl font-semibold text-slate-900">
+                            Оценка?? ?????
+                        </DialogTitle>
+                        <p className="text-center text-sm text-slate-500">
+                            ?Не выбрано??Не выбрано?. Оценка? ? ОценкаНе выбрано?
+                        </p>
+                    </DialogHeader>
+                    <div className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 text-sm text-slate-600">
+                        {SURFACE_ORDER.map((surface) => {
+                            const option = getOptionByLabel(surface, deviceConditions[surface]);
+                            return (
+                                <div key={`${surface}-review`} className="flex items-center justify-between gap-3">
+                                    <span className="font-medium text-slate-500">{SURFACE_META[surface].title}</span>
+                                    <span className="text-slate-900">
+                                        {option ? getConditionText(option.id) : 'Не выбрано'}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {estimatedPrice && basePrice ? (
+                        <div className="mt-3 flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm">
+                            <span className="text-slate-500">Оценка</span>
+                            <span className="font-semibold text-slate-900">
+                                {priceFormatter.format(estimatedPrice)}
+                            </span>
+                        </div>
+                    ) : null}
+                    <DialogFooter className="mt-6 flex flex-col gap-2 sm:flex-row">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="h-11 flex-1 rounded-full border-slate-200 text-slate-700"
+                            onClick={() => setShowDialog(false)}
+                        >
+                            Оценка??
+                        </Button>
+                        <Button
+                            type="button"
+                            className="h-11 flex-1 rounded-full bg-slate-900 text-white shadow-[0_20px_45px_-20px_rgba(15,23,42,0.65)] transition hover:bg-slate-800"
+                            onClick={handleContinue}
+                        >
+                            Оценка????
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
-            </div>
         </Page>
     );
 }
