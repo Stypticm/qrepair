@@ -46,3 +46,4 @@ certificates
 
 # Python parser (local development only)
 python-parser/
+.cursor/
