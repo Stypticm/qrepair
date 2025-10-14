@@ -34,7 +34,9 @@ export async function POST(req: NextRequest) {
     const pricingPayload =
       priceRange || price !== undefined
         ? {
-            ...(priceRange as PriceRangePayload | undefined),
+            ...(priceRange as
+              | PriceRangePayload
+              | undefined),
             midpoint:
               priceRange?.midpoint ??
               (typeof price === 'number' ? price : null),
@@ -44,18 +46,26 @@ export async function POST(req: NextRequest) {
 
     if (draft) {
       const baseDeviceData =
-        draft.deviceData && typeof draft.deviceData === 'object'
-          ? { ...(draft.deviceData as Record<string, unknown>) }
+        draft.deviceData &&
+        typeof draft.deviceData === 'object'
+          ? {
+              ...(draft.deviceData as Record<
+                string,
+                unknown
+              >),
+            }
           : {}
 
       const existingPricing =
         baseDeviceData &&
-        typeof (baseDeviceData as { pricing?: unknown }).pricing === 'object'
+        typeof (baseDeviceData as { pricing?: unknown })
+          .pricing === 'object'
           ? {
-              ...(
-                (baseDeviceData as { pricing?: Record<string, unknown> })
-                  .pricing as Record<string, unknown>
-              ),
+              ...((
+                baseDeviceData as {
+                  pricing?: Record<string, unknown>
+                }
+              ).pricing as Record<string, unknown>),
             }
           : {}
 
@@ -78,7 +88,7 @@ export async function POST(req: NextRequest) {
           currentStep: 'submit',
           ...(typeof price === 'number' ? { price } : {}),
           ...(pricingPayload !== undefined
-            ? { deviceData: updatedDeviceData }
+            ? { deviceData: updatedDeviceData as any }
             : {}),
         },
       })
@@ -93,7 +103,11 @@ export async function POST(req: NextRequest) {
           currentStep: 'submit',
           ...(typeof price === 'number' ? { price } : {}),
           ...(pricingPayload !== undefined
-            ? { deviceData: { pricing: pricingPayload } }
+            ? {
+                deviceData: {
+                  pricing: pricingPayload,
+                } as any,
+              }
             : {}),
         },
       })

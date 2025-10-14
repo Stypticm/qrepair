@@ -47,6 +47,16 @@ interface PhotoUpload {
   url?: string
 }
 
+interface FunctionalityTest {
+  id: string
+  name: string
+  description: string
+  icon: any
+  working: boolean | null
+  penaltyPercent: number
+  isNegative: boolean
+}
+
 interface PageProps {
   params: Promise<{
     id: string
