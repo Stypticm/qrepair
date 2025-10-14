@@ -96,13 +96,13 @@ function HomeContent() {
       // Очищаем все данные перед началом новой заявки
       resetAllStates();
       
-      // Простая логика: всегда начинаем с form
-      setCurrentStep('form');
-      router.push('/request/form');
+      // Начинаем с device-info (ввод серийного номера)
+      setCurrentStep('device-info');
+      router.push('/request/device-info');
       
     } catch (error) {
       console.error('Ошибка при переходе:', error);
-      router.push('/request/form');
+      router.push('/request/device-info');
     }
   };
 

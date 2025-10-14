@@ -9,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { ProgressBar } from '@/components/ui/progress-bar';
 import { WelcomeModal } from '@/components/ui/welcome-modal';
 import { getPictureUrl } from '@/core/lib/assets';
 
@@ -137,11 +136,6 @@ export default function DeviceInfoPage() {
         }
     }, [serialNumber]);
 
-    const steps = ['Серийный номер', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
-
-    const getCurrentStep = (): number => {
-        return 1;
-    };
 
     const validateSerialNumber = (sn: string): boolean => {
         if (sn.length < 10 || sn.length > 12) {
@@ -228,86 +222,72 @@ export default function DeviceInfoPage() {
 
     return (
         <Page back={true}>
-            <div className="w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full pt-6">
-                {/* ProgressBar */}
-                <div className="pt-18 pb-2">
-                    <ProgressBar
-                        currentStep={getCurrentStep()}
-                        totalSteps={5}
-                        steps={steps}
-                    />
-                </div>
-
-                <div className="flex-1 p-2 pt-0 flex flex-col">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-2">
-                        {/* Instruction Card */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <Card className="bg-blue-50 border-blue-200">
-                                <CardContent className="p-2">
-                                    <div className="flex flex-col items-center space-y-2">
-                                        <div className="w-full max-w-xs mx-auto mb-2">
-                                            <Image
-                                                src={getPictureUrl('animation.gif') || '/animation.gif'}
-                                                alt="Инструкция по поиску серийного номера"
-                                                width={300}
-                                                height={120}
-                                                className="w-full h-auto rounded-lg border border-blue-200"
-                                            />
-                                        </div>
-                                        <div className="text-[10px] text-blue-800 space-y-1">
-                                            <p><strong>Где найти:</strong> Настройки → Основные → Об этом устройстве</p>
-                                            <p><strong>Что делать:</strong> Скопируйте серийный номер и вставьте в поле ниже</p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-
-                        {/* Input Card */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2, delay: 0.1 }}
-                        >
-                            <Card className="bg-white border-gray-200">
-                                <CardContent className="p-2">
-                                    <div className="space-y-1">
-                                        <label className="block text-[11px] font-medium text-gray-700">
-                                            Серийный номер
-                                        </label>
-                                        <input
-                                            ref={inputRef}
-                                            type="text"
-                                            value={manualSerialNumber}
-                                            onChange={(e) => handleInputChange(e.target.value.toUpperCase())}
-                                            placeholder="Введите серийный номер"
-                                            className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-[11px]"
-                                            maxLength={12}
+            <div className="w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full justify-center items-center min-h-screen">
+                <div className="w-full max-w-md mx-auto flex flex-col gap-2 px-4">
+                    {/* Instruction Card */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <Card className="bg-blue-50 border-blue-200">
+                            <CardContent className="p-2">
+                                <div className="flex flex-col items-center space-y-2">
+                                    <div className="w-full max-w-xs mx-auto mb-2">
+                                        <Image
+                                            src={getPictureUrl('animation.gif') || '/animation.gif'}
+                                            alt="Инструкция по поиску серийного номера"
+                                            width={300}
+                                            height={120}
+                                            className="w-full h-auto rounded-lg border border-blue-200"
                                         />
                                     </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
+                                    <div className="text-[10px] text-blue-800 space-y-1">
+                                        <p><strong>Где найти:</strong> Настройки → Основные → Об этом устройстве</p>
+                                        <p><strong>Что делать:</strong> Скопируйте серийный номер и вставьте в поле ниже</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
 
-                        {/* Confirm Button */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2, delay: 0.2 }}
+                    {/* Input Card */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2, delay: 0.1 }}
+                    >
+                        <Card className="bg-white border-gray-200">
+                            <CardContent className="p-2">
+                                <div className="space-y-1">
+                                    <input
+                                        ref={inputRef}
+                                        type="text"
+                                        value={manualSerialNumber}
+                                        onChange={(e) => handleInputChange(e.target.value.toUpperCase())}
+                                        placeholder="Введите серийный номер"
+                                        className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-[11px]"
+                                        maxLength={12}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+
+                    {/* Confirm Button */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2, delay: 0.2 }}
+                    >
+                        <Button
+                            onClick={handleConfirm}
+                            disabled={!manualSerialNumber}
+                            className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]"
                         >
-                            <Button
-                                onClick={handleConfirm}
-                                disabled={!manualSerialNumber}
-                                className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]"
-                            >
-                                Продолжить
-                            </Button>
-                        </motion.div>
-                    </div>
+                            Продолжить
+                        </Button>
+                    </motion.div>
                 </div>
             </div>
 
