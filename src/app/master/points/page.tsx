@@ -105,7 +105,11 @@ export default function MasterPointsPage() {
       setScannerError(null)
 
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       })
 
@@ -128,7 +132,16 @@ export default function MasterPointsPage() {
       }
 
       const videoElement = await ensureVideoElement()
-      const detector = BarcodeDetector ? new BarcodeDetector({ formats: ['qr_code'] }) : null
+      let detector: any = null
+      if (BarcodeDetector) {
+        try {
+          detector = new BarcodeDetector({ formats: ['qr_code', 'qr', 'aztec', 'data_matrix', 'pdf417'] })
+        } catch (e) {
+          try {
+            detector = new BarcodeDetector()
+          } catch {}
+        }
+      }
 
       videoElement.srcObject = stream
       await videoElement.play()

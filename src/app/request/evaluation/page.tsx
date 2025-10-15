@@ -128,6 +128,8 @@ export default function EvaluationPage() {
   const wheelLockRef = useRef<boolean>(false);
   const lastWheelTsRef = useRef<number>(0);
   const touchStartYRef = useRef<number | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
+  const gestureAxisRef = useRef<'x' | 'y' | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -271,17 +273,20 @@ export default function EvaluationPage() {
         setShowOnboarding(false);
         try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {}
       }
+      // Только горизонтальная прокрутка (трекпады). Вертикальную игнорируем полностью
+      const absX = Math.abs(e.deltaX);
+      const absY = Math.abs(e.deltaY);
+      if (absX < 24 || absX <= absY) return;
       if (showScrollHint) setShowScrollHint(false);
       const now = Date.now();
-      if (wheelLockRef.current && now - lastWheelTsRef.current < 350) {
+      if (wheelLockRef.current && now - lastWheelTsRef.current < 300) {
         e.preventDefault();
         return;
       }
-      if (Math.abs(e.deltaY) < 24) return; // ignore tiny deltas
       e.preventDefault();
       wheelLockRef.current = true;
       lastWheelTsRef.current = now;
-      const dir = e.deltaY > 0 ? 1 : -1;
+      const dir = e.deltaX > 0 ? 1 : -1; // вправо/влево
       setCurrentIndex((prev) => {
         const next = wrapIndex(prev + dir);
         setPreviewId(evaluationOptions[next].id);
@@ -289,7 +294,7 @@ export default function EvaluationPage() {
       });
       setTimeout(() => {
         wheelLockRef.current = false;
-      }, 320);
+      }, 260);
     };
 
     const touchStart = (e: TouchEvent) => {
@@ -300,29 +305,53 @@ export default function EvaluationPage() {
       if (showScrollHint) setShowScrollHint(false);
       if (e.touches && e.touches.length > 0) {
         touchStartYRef.current = e.touches[0].clientY;
+        touchStartXRef.current = e.touches[0].clientX;
+        gestureAxisRef.current = null;
       }
     };
     const touchMove = (e: TouchEvent) => {
-      if (touchStartYRef.current == null) return;
-      const delta = touchStartYRef.current - e.touches[0].clientY;
-      if (Math.abs(delta) < 30) return;
+      if (touchStartXRef.current == null) return;
+      const dx = e.touches[0].clientX - touchStartXRef.current;
+      const dy = e.touches[0].clientY - (touchStartYRef.current ?? e.touches[0].clientY);
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+
+      // Определяем ось жеста один раз
+      if (gestureAxisRef.current === null) {
+        if (absDx >= 24) {
+          gestureAxisRef.current = 'x';
+        } else if (absDy >= 24) {
+          gestureAxisRef.current = 'y';
+        } else {
+          return;
+        }
+      }
+
+      // Если вертикальная ось — ничего не делаем (не переключаем)
+      if (gestureAxisRef.current === 'y') {
+        // Обновим точки отсчёта, но без переключения
+        touchStartXRef.current = e.touches[0].clientX;
+        touchStartYRef.current = e.touches[0].clientY;
+        return;
+      }
+
+      // Горизонтальная навигация
       if (showScrollHint) setShowScrollHint(false);
-      // Только свайп вверх (delta > 0) меняет состояние, вниз игнорируем
-      if (delta > 0) {
-        e.preventDefault();
-        touchStartYRef.current = e.touches[0].clientY; // step-by-step swipe
+      e.preventDefault();
+      if (absDx >= 24) {
         setCurrentIndex((prev) => {
-          const next = wrapIndex(prev + 1);
+          const next = wrapIndex(prev + (dx < 0 ? 1 : -1));
           setPreviewId(evaluationOptions[next].id);
           return next;
         });
-      } else {
-        // Обновляем позицию, но не переключаем
+        touchStartXRef.current = e.touches[0].clientX;
         touchStartYRef.current = e.touches[0].clientY;
       }
     };
     const touchEnd = () => {
       touchStartYRef.current = null;
+      touchStartXRef.current = null;
+      gestureAxisRef.current = null;
     };
 
     // Add non-passive listeners to allow preventDefault
@@ -374,7 +403,7 @@ export default function EvaluationPage() {
   return (
     <Page back={true}>
       <div className="min-h-screen overflow-hidden flex items-center">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 pb-10 pt-10 md:px-6">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 pb-6 pt-6 md:px-6">
           {showOnboarding && (
             <div
               className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
@@ -385,7 +414,7 @@ export default function EvaluationPage() {
               <div className="mx-6 w-full max-w-sm rounded-2xl bg-white/95 p-5 text-center shadow-xl">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700">↕️</div>
                 <div className="text-base font-semibold text-slate-900">Выберите состояние</div>
-                <div className="mt-1 text-sm text-slate-600">Свайпните вверх, чтобы листать варианты по кругу, затем нажмите «Продолжить»</div>
+                <div className="mt-1 text-sm text-slate-600">Свайпайте влево/вправо, чтобы листать варианты по кругу, затем нажмите «Продолжить»</div>
                 <div className="mt-4 text-xs text-slate-400">Начните свайпать</div>
               </div>
             </div>
@@ -394,51 +423,40 @@ export default function EvaluationPage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur"
+            className="rounded-[32px] border border-white/70 bg-white/80 p-4 md:p-6 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur"
           >
             <div className="flex flex-col items-center gap-6">
-              <div className="text-center md:text-left">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Состояние</p>
-                <h1 className="mt-2 text-xl font-semibold text-slate-900 md:text-xl">{previewOption.label}</h1>
-                <p className="mt-3 text-sm text-slate-500 md:text-base">{previewOption.description}</p>
+              <div className="text-center md:text-left h-[100px] md:h-[112px] flex flex-col justify-start overflow-hidden">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">Состояние</p>
+                <h2 className="mt-1 text-3xl font-semibold text-slate-900">{previewOption.label}</h2>
+                {/* <p className="mt-2 text-sm leading-snug text-slate-500 md:text-base md:leading-snug max-h-[40px] md:max-h-[48px] overflow-hidden">
+                  {previewOption.description}
+                </p> */}
               </div>
 
-              <div className={`relative overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-b ${accentGradient[previewOption.accent]} p-5 shadow-inner md:p-6`}>
-                <div className="relative mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-[24px] border border-white/40 bg-white/60 md:max-w-[240px]">
-                  <Image
-                    src={getPictureUrl(`${previewOption.image}.png`)}
-                    alt={previewOption.label}
-                    width={320}
-                    height={560}
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-                {/* Small hint removed - onboarding covers this */}
-                {/* Pagination dots */}
-                <div className="absolute inset-x-0 -bottom-2 md:bottom-2 flex items-center justify-center gap-1.5 md:gap-2">
-                  {evaluationOptions.map((opt, idx) => {
-                    const active = (evaluationOptions[currentIndex]?.id ?? previewId) === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        aria-label={`Перейти к: ${opt.label}`}
-                        className={`h-1.5 md:h-2 rounded-full transition-all ${active ? 'w-6 md:w-8 bg-slate-800' : 'w-2 md:w-2.5 bg-slate-300 hover:bg-slate-400'}`}
-                        onClick={() => {
-                          const idxTo = evaluationOptions.findIndex(o => o.id === opt.id);
-                          if (idxTo >= 0) {
-                            setCurrentIndex(idxTo);
-                            setPreviewId(opt.id);
-                            setShowScrollHint(false);
-                          }
-                        }}
-                      />
-                    );
-                  })}
+              <div className={`relative overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-b ${accentGradient[previewOption.accent]} p-4 md:p-5 shadow-inner`}>
+                <div className="relative mx-auto w-full max-w-none">
+                  <div className="mx-auto flex items-center justify-center">
+                    <div className="rounded-[20px] border border-white/40 bg-white/80 backdrop-blur-sm">
+                      <div className="relative w-[90vw] max-w-[420px] md:w-[400px] md:max-w-none h-[44vh] md:h-[46vh]">
+                        <Image
+                          src={getPictureUrl(`${previewOption.image}.png`)}
+                          alt={previewOption.label}
+                          fill
+                          sizes="(max-width: 768px) 90vw, 400px"
+                          className="object-contain"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
+              <p className="mt-2 text-sm text-slate-600 md:text-base text-center md:text-left px-1">
+                {previewOption.description}
+              </p>
+
+              <div className="flex flex-col items-center justify-between gap-3 md:flex-row mt-2">
                 <div className="flex flex-col items-center gap-1 md:items-start">
                   <div className="text-sm text-slate-500">
                     <span className="font-semibold text-slate-900">-{previewOption.percentage}%</span>
@@ -456,7 +474,7 @@ export default function EvaluationPage() {
                   type="button"
                   disabled={!priceRange || submitting}
                   onClick={handleContinue}
-                  className="h-12 w-full rounded-full bg-slate-900 px-10 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 md:w-auto"
+                  className="h-11 md:h-12 w-full md:w-auto rounded-full bg-slate-900 px-8 md:px-10 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
                   Продолжить
                 </Button>
