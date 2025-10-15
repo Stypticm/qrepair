@@ -146,10 +146,7 @@ export default function EvaluationPage() {
     }
 
     // First visit onboarding overlay (shown once per device)
-    const seen = localStorage.getItem("seenEvalOnboarding");
-    if (!seen) {
-      setShowOnboarding(true);
-    }
+    setShowOnboarding(true);
   }, []);
 
   // Автоскрытие подсказки скролла через несколько секунд
@@ -376,8 +373,8 @@ export default function EvaluationPage() {
 
   return (
     <Page back={true}>
-      <div className="h-screen overflow-hidden">
-        <div className="mx-auto flex h-full max-w-4xl flex-col gap-8 px-4 pb-10 pt-10 md:px-6">
+      <div className="min-h-screen overflow-hidden flex items-center">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 pb-10 pt-10 md:px-6">
           {showOnboarding && (
             <div
               className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"

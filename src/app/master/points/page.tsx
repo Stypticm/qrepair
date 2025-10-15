@@ -92,8 +92,8 @@ export default function MasterPointsPage() {
 
     const BarcodeDetector = (window as any).BarcodeDetector
     if (!BarcodeDetector) {
-      setScannerError('Сканирование QR-кодов не поддерживается на этом устройстве. Введите ID вручную.')
-      return
+      // Не прерываемся: всё равно откроем камеру, чтобы показать пользователю разрешение и превью
+      setScannerError('Авто-распознавание QR недоступно в этом браузере. Камера откроется, при необходимости введите ID вручную или используйте поддерживаемый браузер (Chrome/Edge).')
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -128,32 +128,34 @@ export default function MasterPointsPage() {
       }
 
       const videoElement = await ensureVideoElement()
-      const detector = new BarcodeDetector({ formats: ['qr_code'] })
+      const detector = BarcodeDetector ? new BarcodeDetector({ formats: ['qr_code'] }) : null
 
       videoElement.srcObject = stream
       await videoElement.play()
 
-      const scan = async () => {
-        if (!videoRef.current || !isScannerOpenRef.current) return
+      if (detector) {
+        const scan = async () => {
+          if (!videoRef.current || !isScannerOpenRef.current) return
 
-        try {
-          const barcodes = await detector.detect(videoElement)
-          const code = barcodes?.[0]?.rawValue?.trim()
+          try {
+            const barcodes = await detector.detect(videoElement)
+            const code = barcodes?.[0]?.rawValue?.trim()
 
-          if (code) {
-            setClaimId(code)
-            setScannerError(null)
-            stopScanner()
-            return
+            if (code) {
+              setClaimId(code)
+              setScannerError(null)
+              stopScanner()
+              return
+            }
+          } catch (error) {
+            console.error('QR detection error:', error)
           }
-        } catch (error) {
-          console.error('QR detection error:', error)
+
+          animationRef.current = requestAnimationFrame(scan)
         }
 
         animationRef.current = requestAnimationFrame(scan)
       }
-
-      animationRef.current = requestAnimationFrame(scan)
     } catch (error) {
       console.error('Error starting scanner:', error)
       setScannerError('Не удалось запустить камеру. Проверьте разрешения.')

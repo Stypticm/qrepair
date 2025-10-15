@@ -121,16 +121,14 @@ interface AppState {
 // ID админов из кода
 const ADMIN_IDS = [1, 296925626, 531360988] // Реальные ID админов
 
-// Порядок шагов
+// Порядок шагов (клиентская воронка)
 const stepOrder = [
   'device-info',
   'form',
-  'condition',
-  'additional-condition',
+  'evaluation',
   'submit',
   'delivery-options',
   'pickup-points',
-  'courier-booking',
   'final',
 ]
 
