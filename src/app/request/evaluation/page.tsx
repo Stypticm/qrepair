@@ -261,10 +261,10 @@ export default function EvaluationPage() {
   }, [previewId, selectedOption]);
 
   // Virtual scroll handlers (wheel/touch) to cycle through options without real page scroll
-  const clampIndex = useCallback((i: number) => {
-    if (i < 0) return 0;
-    if (i >= evaluationOptions.length) return evaluationOptions.length - 1;
-    return i;
+  const wrapIndex = useCallback((i: number) => {
+    const len = evaluationOptions.length;
+    if (len === 0) return 0;
+    return ((i % len) + len) % len;
   }, []);
 
   useEffect(() => {
@@ -286,7 +286,7 @@ export default function EvaluationPage() {
       lastWheelTsRef.current = now;
       const dir = e.deltaY > 0 ? 1 : -1;
       setCurrentIndex((prev) => {
-        const next = clampIndex(prev + dir);
+        const next = wrapIndex(prev + dir);
         setPreviewId(evaluationOptions[next].id);
         return next;
       });
@@ -310,14 +310,19 @@ export default function EvaluationPage() {
       const delta = touchStartYRef.current - e.touches[0].clientY;
       if (Math.abs(delta) < 30) return;
       if (showScrollHint) setShowScrollHint(false);
-      e.preventDefault();
-      const dir = delta > 0 ? 1 : -1;
-      touchStartYRef.current = e.touches[0].clientY; // step-by-step swipe
-      setCurrentIndex((prev) => {
-        const next = clampIndex(prev + dir);
-        setPreviewId(evaluationOptions[next].id);
-        return next;
-      });
+      // Только свайп вверх (delta > 0) меняет состояние, вниз игнорируем
+      if (delta > 0) {
+        e.preventDefault();
+        touchStartYRef.current = e.touches[0].clientY; // step-by-step swipe
+        setCurrentIndex((prev) => {
+          const next = wrapIndex(prev + 1);
+          setPreviewId(evaluationOptions[next].id);
+          return next;
+        });
+      } else {
+        // Обновляем позицию, но не переключаем
+        touchStartYRef.current = e.touches[0].clientY;
+      }
     };
     const touchEnd = () => {
       touchStartYRef.current = null;
@@ -335,7 +340,7 @@ export default function EvaluationPage() {
       container.removeEventListener('touchmove', touchMove as any);
       container.removeEventListener('touchend', touchEnd as any);
     };
-  }, [clampIndex]);
+  }, [wrapIndex]);
 
   const previewOption = useMemo(() => {
     return evaluationOptions.find((o) => o.id === previewId) ?? selectedOption;
@@ -383,7 +388,7 @@ export default function EvaluationPage() {
               <div className="mx-6 w-full max-w-sm rounded-2xl bg-white/95 p-5 text-center shadow-xl">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700">↕️</div>
                 <div className="text-base font-semibold text-slate-900">Выберите состояние</div>
-                <div className="mt-1 text-sm text-slate-600">Свайпните вверх или вниз, чтобы выбрать состояние, затем нажмите «Продолжить»</div>
+                <div className="mt-1 text-sm text-slate-600">Свайпните вверх, чтобы листать варианты по кругу, затем нажмите «Продолжить»</div>
                 <div className="mt-4 text-xs text-slate-400">Начните свайпать</div>
               </div>
             </div>

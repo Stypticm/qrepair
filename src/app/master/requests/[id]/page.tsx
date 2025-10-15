@@ -87,6 +87,7 @@ export default function MasterRequestPage({ params }: PageProps) {
   const [isCameraOpen, setCameraOpen] = useState(false)
   const [currentPhotoId, setCurrentPhotoId] = useState<string | null>(null)
   const photoButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const stepRefs = useRef<Record<number, HTMLDivElement | null>>({})
 
   const { telegramId, initializeTelegram } = useAppStore()
 
@@ -515,6 +516,7 @@ export default function MasterRequestPage({ params }: PageProps) {
         const nextButton = photoButtonRefs.current[photoUploads[i].id]
         if (nextButton) {
           nextButton.focus()
+          try { nextButton.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
           break
         }
       }
@@ -552,6 +554,22 @@ export default function MasterRequestPage({ params }: PageProps) {
       }
       default:
         return true
+    }
+  }
+
+  // Collapsing logic: collapse earlier steps when progressing
+  const isStepCollapsed = (stepId: number) => {
+    if (currentStep >= 4) return stepId < 4
+    if (currentStep >= 3) return stepId < 3
+    return false
+  }
+
+  const goToStep = (stepId: number) => {
+    setCurrentStep(stepId)
+    saveStepToStorage(stepId)
+    const el = stepRefs.current[stepId]
+    if (el) {
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }) } catch {}
     }
   }
 
@@ -620,8 +638,8 @@ export default function MasterRequestPage({ params }: PageProps) {
           />
         </div>
       ) : (
-        <div className="min-h-screen bg-slate-50">
-          <div className="mx-auto max-w-5xl px-2 pb-10 pt-10 lg:pt-16">
+        <div className="w-full h-full">
+          <div className="mx-auto max-w-5xl pb-10 pt-10 lg:pt-16">
             <div className="mb-2 text-center">
               <h1 className="text-3xl font-semibold text-slate-900 md:text-4xl">Вторичная оценка</h1>
               {/* <p className="mt-1 text-sm text-slate-500">Заявка #{request.id}</p> */}
@@ -743,6 +761,7 @@ export default function MasterRequestPage({ params }: PageProps) {
               </Card>
 
               )}
+              <div ref={(el) => { if (el) stepRefs.current[1] = el }}>
               {currentStep === 1 && (
                 <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
                   <CardHeader className="pb-4">
@@ -826,7 +845,17 @@ export default function MasterRequestPage({ params }: PageProps) {
                   </CardContent>
                 </Card>
               )}
+              {currentStep !== 1 && currentStep >= 3 && (
+                <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
+                  <CardHeader className="flex flex-row items-center justify-between pb-3">
+                    <CardTitle className="text-lg font-semibold text-slate-900">Шаг 1 — Фотографии</CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => goToStep(1)}>Развернуть</Button>
+                  </CardHeader>
+                </Card>
+              )}
+              </div>
 
+              <div ref={(el) => { if (el) stepRefs.current[2] = el }}>
               {currentStep === 2 && (
                 <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
                   <CardHeader className="pb-4">
@@ -914,6 +943,15 @@ export default function MasterRequestPage({ params }: PageProps) {
                   </CardContent>
                 </Card>
               )}
+              {currentStep !== 2 && currentStep >= 3 && (
+                <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
+                  <CardHeader className="flex flex-row items-center justify-between pb-3">
+                    <CardTitle className="text-lg font-semibold text-slate-900">Шаг 2 — Сверка данных</CardTitle>
+                    <Button variant="outline" size="sm" onClick={() => goToStep(2)}>Развернуть</Button>
+                  </CardHeader>
+                </Card>
+              )}
+              </div>
 {currentStep === 3 && (
                 <Card className="rounded-3xl border border-white/60 bg-white shadow-sm backdrop-blur-sm">
                   <CardHeader className="pb-3">
