@@ -132,17 +132,21 @@ export default function EvaluationPage() {
   const touchStartXRef = useRef<number | null>(null);
   const gestureAxisRef = useRef<'x' | 'y' | null>(null);
 
-  // Disable vertical swipes using Telegram Apps SDK swipe behavior
+  // Disable vertical swipes using Telegram Apps SDK swipe behavior (per docs)
   useEffect(() => {
     let destroy: (() => void) | undefined
     try {
       if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
         init();
         const manager = swipeBehavior;
-        if (manager?.isSupported?.()) {
-          manager.disableVertical?.();
-          destroy = () => manager.enableVertical?.();
-        }
+        try { manager?.mount?.(); } catch {}
+        try {
+          manager?.disableVertical?.();
+          destroy = () => {
+            try { manager?.enableVertical?.(); } catch {}
+            try { manager?.unmount?.(); } catch {}
+          }
+        } catch {}
       }
     } catch {}
     // Hard UI fallback to reduce vertical gestures: constrain to horizontal pan on this page

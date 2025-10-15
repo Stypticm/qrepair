@@ -113,6 +113,7 @@ export default function FormPage() {
                 return;
             }
         }
+        try { sessionStorage.setItem('previousStepPath', '/request/form'); } catch {}
         router.push('/request/evaluation');
     };
 

@@ -17,6 +17,25 @@ export const useStepNavigation = () => {
   const pathname = usePathname()
 
   const goBack = useCallback(() => {
+    // Override for cases when user skipped form and came from device-info
+    try {
+      if (
+        typeof window !== 'undefined' &&
+        pathname === '/request/evaluation'
+      ) {
+        const override = window.sessionStorage.getItem(
+          'previousStepPath'
+        )
+        if (override) {
+          window.sessionStorage.removeItem(
+            'previousStepPath'
+          )
+          router.push(override)
+          return
+        }
+      }
+    } catch {}
+
     const currentIndex = stepOrder.indexOf(pathname)
 
     // Если текущая страница найдена в списке и это не первая страница

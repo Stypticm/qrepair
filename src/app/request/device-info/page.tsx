@@ -449,20 +449,34 @@ export default function DeviceInfoPage() {
                                     sessionStorage.setItem('phoneSelection', JSON.stringify(prefill));
                                 } catch {}
 
-                                // 2) Пытаемся заранее получить устройство и цену
+                                // 2) Пытаемся заранее получить устройство и цену (с фоллбэками по цвету/варианту)
                                 try {
-                                    const params = new URLSearchParams({
-                                        model: prefill.model,
-                                        storage: prefill.storage,
-                                        color: prefill.color,
-                                    });
-                                    if (prefill.variant) params.set('variant', prefill.variant);
-                                    const res = await fetch(`/api/devices/device?${params.toString()}`, { method: 'GET' });
-                                    if (res.ok) {
-                                        const device = await res.json();
-                                        if (device?.basePrice) {
-                                            try { sessionStorage.setItem('basePrice', String(device.basePrice)); } catch {}
+                                    const attemptFetch = async (m: string, v: string, s: string, c: string) => {
+                                        const p = new URLSearchParams({ model: m, storage: s, color: c });
+                                        if (v) p.set('variant', v);
+                                        const r = await fetch(`/api/devices/device?${p.toString()}`, { method: 'GET' });
+                                        if (!r.ok) return null;
+                                        return r.json();
+                                    }
+
+                                    const primary = await attemptFetch(prefill.model, prefill.variant, prefill.storage, prefill.color);
+                                    let device = primary;
+
+                                    // Фоллбек по цвету: C ↔ Bl (разные кодировки чёрного для XR)
+                                    if (!device) {
+                                        const altColor = prefill.color === 'C' ? 'Bl' : (prefill.color === 'Bl' ? 'C' : '');
+                                        if (altColor) {
+                                            device = await attemptFetch(prefill.model, prefill.variant, prefill.storage, altColor);
                                         }
+                                    }
+
+                                    // Фоллбек по варианту: убрать вариант, если не найдено
+                                    if (!device && prefill.variant) {
+                                        device = await attemptFetch(prefill.model, '', prefill.storage, prefill.color);
+                                    }
+
+                                    if (device?.basePrice) {
+                                        try { sessionStorage.setItem('basePrice', String(device.basePrice)); } catch {}
                                     }
                                 } catch {}
 
@@ -490,6 +504,7 @@ export default function DeviceInfoPage() {
                                 } catch {}
 
                                 setShowCheckDialog(false);
+                                try { sessionStorage.setItem('previousStepPath', '/request/device-info'); } catch {}
                                 router.push('/request/evaluation');
                             }}
                         >
