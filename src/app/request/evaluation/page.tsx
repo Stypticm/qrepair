@@ -115,7 +115,7 @@ const formatMoney = (value: number) =>
 
 export default function EvaluationPage() {
   const router = useRouter();
-  const { telegramId, setUserEvaluation, setDamagePercent, price, setPrice } = useAppStore();
+  const { telegramId, setUserEvaluation, setDamagePercent, price, setPrice, setCurrentStep } = useAppStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -160,6 +160,11 @@ export default function EvaluationPage() {
       ;(document.body.style as any).overscrollBehaviorY = prevOverscrollY
     };
   }, []);
+
+  // Ensure store knows we're on the evaluation step for correct back navigation
+  useEffect(() => {
+    try { setCurrentStep('evaluation'); sessionStorage.setItem('currentStep', 'evaluation'); } catch {}
+  }, [setCurrentStep]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
