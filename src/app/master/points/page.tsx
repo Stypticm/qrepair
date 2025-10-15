@@ -142,8 +142,11 @@ export default function MasterPointsPage() {
             const code = barcodes?.[0]?.rawValue?.trim()
 
             if (code) {
-              setClaimId(code)
+              const id = extractRequestId(code) || code
+              setClaimId(id)
               setScannerError(null)
+              // Автодобавление заявки
+              claimRequestMutation.mutate({ requestId: id })
               stopScanner()
               return
             }
@@ -196,6 +199,24 @@ export default function MasterPointsPage() {
     },
   })
 
+  const extractRequestId = useCallback((input: string): string | null => {
+    try {
+      const str = input.trim()
+      if (/^rq_[A-Za-z0-9_-]+$/.test(str)) return str
+      if (/^[A-Za-z0-9_-]{6,}$/.test(str)) return str
+      const url = new URL(str)
+      const qp = url.searchParams
+      const byRequestId = qp.get('requestId') || qp.get('id') || qp.get('rq')
+      if (byRequestId) return byRequestId
+      const segments = url.pathname.split('/').filter(Boolean)
+      const idx = segments.findIndex(s => s.toLowerCase() === 'requests')
+      if (idx >= 0 && segments[idx + 1]) return segments[idx + 1]
+      return null
+    } catch {
+      return input.trim() || null
+    }
+  }, [])
+
   const handleClaim = useCallback(() => {
     if (!effectiveTelegramId) {
       setClaimError('Не найден Telegram ID.')
@@ -210,8 +231,13 @@ export default function MasterPointsPage() {
     }
 
     setClaimError(null)
-    claimRequestMutation.mutate({ requestId: trimmed })
-  }, [claimId, claimRequestMutation, effectiveTelegramId])
+    const extracted = extractRequestId(trimmed)
+    if (!extracted) {
+      setClaimError('Не удалось распознать ID из QR. Введите вручную.')
+      return
+    }
+    claimRequestMutation.mutate({ requestId: extracted })
+  }, [claimId, claimRequestMutation, effectiveTelegramId, extractRequestId])
 
   const { data: dashboardData, isLoading, error, refetch } = useQuery({
     queryKey: ['masterDashboard', effectiveTelegramId],
