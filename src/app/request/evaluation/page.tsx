@@ -9,6 +9,7 @@ import { Page } from "@/components/Page";
 import { Button } from "@/components/ui/button";
 import { getPictureUrl } from "@/core/lib/assets";
 import { useAppStore } from "@/stores/authStore";
+import { init, swipeBehavior } from '@telegram-apps/sdk';
 
 type EvaluationOption = {
   id: string;
@@ -131,21 +132,21 @@ export default function EvaluationPage() {
   const touchStartXRef = useRef<number | null>(null);
   const gestureAxisRef = useRef<'x' | 'y' | null>(null);
 
-  // Disable vertical swipes in Telegram WebApp to avoid collapsing the app tray
+  // Disable vertical swipes using Telegram Apps SDK swipe behavior
   useEffect(() => {
+    let destroy: (() => void) | undefined
     try {
-      const wa: any = (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) || null;
-      if (wa?.disableVerticalSwipes) {
-        wa.disableVerticalSwipes();
+      if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+        init();
+        const manager = swipeBehavior;
+        if (manager?.isSupported?.()) {
+          manager.disableVertical?.();
+          destroy = () => manager.enableVertical?.();
+        }
       }
     } catch {}
     return () => {
-      try {
-        const wa: any = (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) || null;
-        if (wa?.enableVerticalSwipes) {
-          wa.enableVerticalSwipes();
-        }
-      } catch {}
+      try { destroy?.(); } catch {}
     };
   }, []);
 
