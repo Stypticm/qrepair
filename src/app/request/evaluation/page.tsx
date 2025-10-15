@@ -145,8 +145,15 @@ export default function EvaluationPage() {
         }
       }
     } catch {}
+    // Hard UI fallback to reduce vertical gestures: constrain to horizontal pan on this page
+    const prevTouchAction = document.body.style.touchAction
+    const prevOverscrollY = (document.body.style as any).overscrollBehaviorY
+    document.body.style.touchAction = 'pan-x'
+    ;(document.body.style as any).overscrollBehaviorY = 'contain'
     return () => {
       try { destroy?.(); } catch {}
+      document.body.style.touchAction = prevTouchAction
+      ;(document.body.style as any).overscrollBehaviorY = prevOverscrollY
     };
   }, []);
 
