@@ -93,13 +93,16 @@ function HomeContent() {
 
   const handleStartForm = async () => {
     try {
-      // Очищаем все данные перед началом новой заявки
+      const savedStep = sessionStorage.getItem('currentStep');
+      if (savedStep) {
+        router.push(`/request/${savedStep}`);
+        return;
+      }
+
+      // Нет сохраненного шага — начинаем новую заявку
       resetAllStates();
-      
-      // Начинаем с device-info (ввод серийного номера)
       setCurrentStep('device-info');
       router.push('/request/device-info');
-      
     } catch (error) {
       console.error('Ошибка при переходе:', error);
       router.push('/request/device-info');
