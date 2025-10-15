@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,7 @@ const FinalPage = () => {
     const [telegramUsername, setTelegramUsername] = useState('');
     const [showThankYou, setShowThankYou] = useState(false);
     const [createdRequestId, setCreatedRequestId] = useState<string | null>(null);
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number; midpoint: number } | null>(null);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -137,6 +138,23 @@ const FinalPage = () => {
         loadDeliveryData();
     }, [telegramId]);
 
+    // Загружаем диапазон цены из sessionStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedPriceRange = sessionStorage.getItem('priceRange');
+            if (savedPriceRange) {
+                try {
+                    const parsed = JSON.parse(savedPriceRange);
+                    if (parsed && typeof parsed.min === 'number' && typeof parsed.max === 'number') {
+                        setPriceRange(parsed);
+                    }
+                } catch (e) {
+                    console.error('Error parsing priceRange:', e);
+                }
+            }
+        }
+    }, []);
+
 
     const handleFinalSubmit = async () => {
         if (!userTelegramId.trim()) {
@@ -154,6 +172,8 @@ const FinalPage = () => {
                 username: telegramUsername,
                 modelname: getFullModelName(),
                 price: finalPrice,
+                priceRange,
+                formattedPriceRange: formattedRange || null,
                 deliveryData,
             };
 
@@ -193,7 +213,12 @@ const FinalPage = () => {
     };
 
     // На предыдущих шагах цена уже учитывает состояние. Повторно не уменьшаем.
-    const finalPrice = price || 0;
+    const finalPrice = price || priceRange?.midpoint || 0;
+    const formattedRange = useMemo(() => {
+        if (!priceRange) return null;
+        const fmt = (n: number) => n.toLocaleString('ru-RU');
+        return `${fmt(priceRange.min)} — ${fmt(priceRange.max)} ₽`;
+    }, [priceRange]);
 
     // Функция для формирования полной модели
     const getFullModelName = (): string => {
@@ -379,10 +404,10 @@ const FinalPage = () => {
                                 </div>
 
                                 <div>
-                                    <h3 className="font-semibold text-gray-900 mb-2">Предварительная цена:</h3>
-                                    <p className="text-2xl font-bold text-green-600">{finalPrice.toLocaleString()} ₽</p>
+                                    <h3 className="font-semibold text-gray-900 mb-2">Диапазон цены:</h3>
+                                    <p className="text-2xl font-bold text-green-600">{formattedRange || 'уточняется'}</p>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        Это предварительная стоимость, основанная на вашей оценке. Окончательная цена будет определена нашим специалистом после бесплатной диагностики. Если состояние телефона соответствует вашему описанию, цена не изменится.
+                                        Это ориентировочный диапазон цены. Точную цену назовём после бесплатной диагностики. Если состояние соответствует описанию, цена будет в пределах указанного диапазона.
                                     </p>
                                 </div>
 

@@ -53,7 +53,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       if (isDesktop) {
         return {
           container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-          main: 'w-[390px] h-[844px] overflow-hidden bg-white rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.10)]',
+          main: 'w-[390px] h-[844px] overflow-hidden',
           wrapper: 'w-[390px] h-[844px] mx-auto',
         };
       } else if (isMobile) {
@@ -68,7 +68,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     if (isDesktop) {
       return {
         container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-        main: 'w-[390px] h-[844px] overflow-hidden bg-white rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.10)]',
+        main: 'w-[390px] h-[844px] overflow-hidden my-auto-center',
         wrapper: 'w-[390px] h-[844px] mx-auto p-0',
       };
     } else {

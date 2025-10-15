@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -22,6 +22,7 @@ const SubmitPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [agreeLoading, setAgreeLoading] = useState(false);
     const [buttonsDisabled, setButtonsDisabled] = useState(false);
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number; midpoint: number } | null>(null);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -91,6 +92,18 @@ const SubmitPage = () => {
                         setPrice(priceValue);
                         setPriceLoaded(true);
                     } else {
+                    }
+                } catch (e) {
+                }
+            }
+
+            // Подтягиваем диапазон цены, сохранённый на шаге оценки
+            const savedPriceRange = sessionStorage.getItem('priceRange');
+            if (savedPriceRange) {
+                try {
+                    const parsed = JSON.parse(savedPriceRange);
+                    if (parsed && typeof parsed.min === 'number' && typeof parsed.max === 'number') {
+                        setPriceRange(parsed);
                     }
                 } catch (e) {
                 }
@@ -330,8 +343,13 @@ const SubmitPage = () => {
         }
     };
 
-    // Используем цену из контекста или цену по умолчанию
-    const finalPrice = price || 0;
+    // Используем цену из контекста или midpoint из диапазона
+    const finalPrice = price || priceRange?.midpoint || 0;
+    const formattedRange = useMemo(() => {
+        if (!priceRange) return null;
+        const fmt = (n: number) => n.toLocaleString('ru-RU');
+        return `${fmt(priceRange.min)} — ${fmt(priceRange.max)} ₽`;
+    }, [priceRange]);
 
     // Функция для формирования полной модели из данных sessionStorage
     const getFullModelName = (): string => {
@@ -428,11 +446,11 @@ const SubmitPage = () => {
                                             <span className="font-semibold text-gray-900 break-words text-lg">{getFullModelName()}</span>
                                         </div>
 
-                                        <div className="border-t border-gray-200 pt-4">
+                                        <div className="border-t border-gray-200 pt-4 space-y-2">
                                             <div className="flex justify-between items-center">
-                                                <span className="font-semibold text-gray-900">Предварительная цена:</span>
+                                                <span className="font-semibold text-gray-900">Диапазон цены:</span>
                                                 {priceLoaded ? (
-                                                    <span className="font-bold text-2xl text-green-600">{finalPrice.toLocaleString()} ₽</span>
+                                                    <span className="font-bold text-xl text-green-600">{formattedRange || 'уточняется'}</span>
                                                 ) : (
                                                     <div className="flex items-center space-x-2">
                                                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-600"></div>
@@ -440,8 +458,8 @@ const SubmitPage = () => {
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="mt-2 text-sm text-gray-600">
-                                                Окончательная стоимость будет подтверждена мастером после очного осмотра устройства.
+                                            <div className="text-sm text-gray-600">
+                                                Это ориентировочнный диапазон цены. Точную цену назовём после бесплатной диагностики.
                                             </div>
                                         </div>
                                     </div>
@@ -475,7 +493,7 @@ const SubmitPage = () => {
                                 
 
                                 {/* Подпись о цене */}
-                                <motion.div
+                                {/* <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.3, delay: 0.3 }}
@@ -484,7 +502,7 @@ const SubmitPage = () => {
                                     <p className="text-xs text-gray-500 leading-relaxed">
                                         * Цена может быть изменена при вторичном осмотре устройства нашим специалистом
                                     </p>
-                                </motion.div>
+                                </motion.div> */}
                             </>
                         )}
                     </div>

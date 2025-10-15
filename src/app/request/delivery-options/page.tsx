@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ const DeliveryOptionsPage = () => {
     const router = useRouter();
     const { telegramId, modelname, price, setCurrentStep } = useAppStore();
     const [selectedOption, setSelectedOption] = useState<'pickup' | null>(null);
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number; midpoint: number } | null>(null);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -31,6 +32,17 @@ const DeliveryOptionsPage = () => {
                     sessionStorage.removeItem('deliveryOptionsData');
                 }
             }
+            const savedPriceRange = sessionStorage.getItem('priceRange');
+            if (savedPriceRange) {
+                try {
+                    const parsed = JSON.parse(savedPriceRange);
+                    if (parsed && typeof parsed.min === 'number' && typeof parsed.max === 'number') {
+                        setPriceRange(parsed);
+                    }
+                } catch (e) {
+                    console.error('Ошибка при восстановлении priceRange:', e);
+                }
+            }
         }
     }, []);
 
@@ -48,7 +60,12 @@ const DeliveryOptionsPage = () => {
         router.push('/request/pickup-points');
     };
 
-    const finalPrice = price || 48000;
+    const finalPrice = price || priceRange?.midpoint || 48000;
+    const formattedRange = useMemo(() => {
+        if (!priceRange) return null;
+        const fmt = (n: number) => n.toLocaleString('ru-RU');
+        return `${fmt(priceRange.min)} — ${fmt(priceRange.max)} ₽`;
+    }, [priceRange]);
 
     // Функция для формирования полной модели
     const getFullModelName = (): string => {
@@ -128,7 +145,12 @@ const DeliveryOptionsPage = () => {
                             <div className="text-center space-y-2">
                                 <p className="text-base text-gray-700">Ваше устройство:</p>
                                 <p className="text-xl font-semibold text-gray-900">{getFullModelName()}</p>
-                                <p className="text-lg text-gray-700">Предварительная цена: <span className="font-semibold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
+                                <p className="text-lg text-gray-700">Диапазон цены: {formattedRange ? (
+                                    <span className="font-semibold text-green-600">{formattedRange}</span>
+                                ) : (
+                                    <span className="text-gray-500">уточняется</span>
+                                )}
+                                </p>
                             </div>
                         </motion.div>
 

@@ -118,6 +118,8 @@ export default function EvaluationPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState<boolean>(true);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const listRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Record<string, HTMLElement | null>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -142,6 +144,18 @@ export default function EvaluationPage() {
     if (storedSelection) {
       setSelectedId(storedSelection);
     }
+
+    // First visit onboarding overlay (shown once per device)
+    const seen = localStorage.getItem("seenEvalOnboarding");
+    if (!seen) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  // Автоскрытие подсказки скролла через несколько секунд
+  useEffect(() => {
+    const timer = setTimeout(() => setShowScrollHint(false), 4000);
+    return () => clearTimeout(timer);
   }, []);
 
   const selectedOption = useMemo(() => {
@@ -256,6 +270,11 @@ export default function EvaluationPage() {
   useEffect(() => {
     const container = document;
     const wheelHandler = (e: WheelEvent) => {
+      if (showOnboarding) {
+        setShowOnboarding(false);
+        try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {}
+      }
+      if (showScrollHint) setShowScrollHint(false);
       const now = Date.now();
       if (wheelLockRef.current && now - lastWheelTsRef.current < 350) {
         e.preventDefault();
@@ -277,6 +296,11 @@ export default function EvaluationPage() {
     };
 
     const touchStart = (e: TouchEvent) => {
+      if (showOnboarding) {
+        setShowOnboarding(false);
+        try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {}
+      }
+      if (showScrollHint) setShowScrollHint(false);
       if (e.touches && e.touches.length > 0) {
         touchStartYRef.current = e.touches[0].clientY;
       }
@@ -285,6 +309,7 @@ export default function EvaluationPage() {
       if (touchStartYRef.current == null) return;
       const delta = touchStartYRef.current - e.touches[0].clientY;
       if (Math.abs(delta) < 30) return;
+      if (showScrollHint) setShowScrollHint(false);
       e.preventDefault();
       const dir = delta > 0 ? 1 : -1;
       touchStartYRef.current = e.touches[0].clientY; // step-by-step swipe
@@ -346,18 +371,33 @@ export default function EvaluationPage() {
 
   return (
     <Page back={true}>
-      <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="h-screen overflow-hidden">
         <div className="mx-auto flex h-full max-w-4xl flex-col gap-8 px-4 pb-10 pt-10 md:px-6">
+          {showOnboarding && (
+            <div
+              className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => { setShowOnboarding(false); try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {} }}
+              onTouchStart={() => { setShowOnboarding(false); try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {} }}
+              onWheel={() => { setShowOnboarding(false); try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {} }}
+            >
+              <div className="mx-6 w-full max-w-sm rounded-2xl bg-white/95 p-5 text-center shadow-xl">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700">↕️</div>
+                <div className="text-base font-semibold text-slate-900">Выберите состояние</div>
+                <div className="mt-1 text-sm text-slate-600">Свайпните вверх или вниз, чтобы выбрать состояние, затем нажмите «Продолжить»</div>
+                <div className="mt-4 text-xs text-slate-400">Начните свайпать</div>
+              </div>
+            </div>
+          )}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
             className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur"
           >
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-6">
               <div className="text-center md:text-left">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Сводка</p>
-                <h1 className="mt-2 text-2xl font-semibold text-slate-900 md:text-3xl">{previewOption.label}</h1>
+                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Состояние</p>
+                <h1 className="mt-2 text-xl font-semibold text-slate-900 md:text-xl">{previewOption.label}</h1>
                 <p className="mt-3 text-sm text-slate-500 md:text-base">{previewOption.description}</p>
               </div>
 
@@ -370,6 +410,29 @@ export default function EvaluationPage() {
                     height={560}
                     className="h-full w-full object-contain"
                   />
+                </div>
+                {/* Small hint removed - onboarding covers this */}
+                {/* Pagination dots */}
+                <div className="absolute inset-x-0 -bottom-2 md:bottom-2 flex items-center justify-center gap-1.5 md:gap-2">
+                  {evaluationOptions.map((opt, idx) => {
+                    const active = (evaluationOptions[currentIndex]?.id ?? previewId) === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        aria-label={`Перейти к: ${opt.label}`}
+                        className={`h-1.5 md:h-2 rounded-full transition-all ${active ? 'w-6 md:w-8 bg-slate-800' : 'w-2 md:w-2.5 bg-slate-300 hover:bg-slate-400'}`}
+                        onClick={() => {
+                          const idxTo = evaluationOptions.findIndex(o => o.id === opt.id);
+                          if (idxTo >= 0) {
+                            setCurrentIndex(idxTo);
+                            setPreviewId(opt.id);
+                            setShowScrollHint(false);
+                          }
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
 

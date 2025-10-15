@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
       username,
       modelname,
       price,
+      priceRange,
+      formattedPriceRange,
       deliveryData,
     } = requestBody
 
@@ -137,7 +139,21 @@ export async function POST(request: NextRequest) {
     telegramMessage += `🆔 ID заявки: <b>${requestId}</b>\n`
     telegramMessage += `👤 Пользователь: @${username}\n`
     telegramMessage += `📱 Устройство: ${modelname}\n`
-    telegramMessage += `💰 Предварительная цена: ${price?.toLocaleString()} ₽\n\n`
+    if (formattedPriceRange) {
+      telegramMessage += `💰 Диапазон цены: ${formattedPriceRange}\n\n`
+    } else if (
+      priceRange &&
+      typeof priceRange.min === 'number' &&
+      typeof priceRange.max === 'number'
+    ) {
+      const fmt = (n: number) =>
+        Number(n).toLocaleString('ru-RU')
+      telegramMessage += `💰 Диапазон цены: ${fmt(
+        priceRange.min
+      )} — ${fmt(priceRange.max)} ₽\n\n`
+    } else {
+      telegramMessage += `💰 Предварительная цена: ${price?.toLocaleString()} ₽\n\n`
+    }
 
     const deliveryMethod =
       deliveryData?.deliveryMethod || 'pickup'

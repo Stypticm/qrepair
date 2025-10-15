@@ -78,7 +78,7 @@
   }
 
   /* Стили для полноэкранного режима */
-  .telegram-fullscreen {
+  /* .telegram-fullscreen {
     min-height: 100dvh !important;
     width: 100vw !important;
     max-width: 100vw !important;
@@ -89,7 +89,7 @@
     left: 0 !important;
     z-index: 9999 !important;
     background-color: #ffffff;
-  }
+  } */
 
   /* Скрытие BottomSheet Telegram */
   .tg-bottom-sheet,

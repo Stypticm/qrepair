@@ -37,7 +37,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
         // Проверяем, есть ли currentStep в store
         const { currentStep } = useAppStore.getState();
         console.log('🔍 Page handleBackClick - currentStep:', currentStep);
-        
+
         if (!currentStep) {
           // Если нет currentStep, просто возвращаемся назад
           router.back();
@@ -64,24 +64,8 @@ export function Page({ children, back = true }: PropsWithChildren<{
   }, [router, goToPreviousStep, back]);
 
   return (
-    <section
-      className="w-full h-dvh bg-white text-black"
-      style={{
-        ...cssVars as React.CSSProperties,
-        paddingTop: isTelegram ? `${safeAreaInsets.top}px` : '0px',
-        paddingBottom: isTelegram ? `${safeAreaInsets.bottom}px` : '0px',
-        paddingLeft: isTelegram ? `${safeAreaInsets.left}px` : '0px',
-        paddingRight: isTelegram ? `${safeAreaInsets.right}px` : '0px',
-        boxSizing: 'border-box',
-      }}
-    >
-      <div className="w-full h-full flex justify-center items-start">
-        <div
-          className={`w-full max-w-md ${isDesktop && isTelegram ? 'md:w-[390px] h-[844px]' : 'h-full'} mx-auto bg-white ${isDesktop && isTelegram ? 'rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.10)]' : ''} px-4 box-border overflow-y-auto`}
-        >
-          {children}
-        </div>
-      </div>
-    </section>
+    <div className="w-full h-full flex justify-center items-start">
+      {children}
+    </div>
   );
 }

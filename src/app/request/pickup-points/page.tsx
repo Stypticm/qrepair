@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useAppStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ const PickupPointsPage = () => {
     const [buttonsDisabled, setButtonsDisabled] = useState(false);
     const [pickupPoints, setPickupPoints] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [priceRange, setPriceRange] = useState<{ min: number; max: number; midpoint: number } | null>(null);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -87,6 +88,17 @@ const PickupPointsPage = () => {
                 } catch (e) {
                     console.error('Ошибка при восстановлении данных приема:', e);
                     sessionStorage.removeItem('pickupPointsData');
+                }
+            }
+            const savedPriceRange = sessionStorage.getItem('priceRange');
+            if (savedPriceRange) {
+                try {
+                    const parsed = JSON.parse(savedPriceRange);
+                    if (parsed && typeof parsed.min === 'number' && typeof parsed.max === 'number') {
+                        setPriceRange(parsed);
+                    }
+                } catch (e) {
+                    console.error('Ошибка при восстановлении priceRange:', e);
                 }
             }
         }
@@ -173,7 +185,12 @@ const PickupPointsPage = () => {
         }
     };
 
-    const finalPrice = price || 48000;
+    const finalPrice = price || priceRange?.midpoint || 48000;
+    const formattedRange = useMemo(() => {
+        if (!priceRange) return null;
+        const fmt = (n: number) => n.toLocaleString('ru-RU');
+        return `${fmt(priceRange.min)} — ${fmt(priceRange.max)} ₽`;
+    }, [priceRange]);
 
     // Функция для формирования полной модели
     const getFullModelName = (): string => {
@@ -253,7 +270,12 @@ const PickupPointsPage = () => {
                             <div className="text-center space-y-2">
                                 <p className="text-apple-body text-gray-600 font-sf-pro">Ваше устройство:</p>
                                 <p className="font-semibold text-gray-900 font-sf-pro">{getFullModelName()}</p>
-                                <p className="text-apple-body text-gray-600 font-sf-pro">Предварительная цена: <span className="text-xl font-bold text-green-600">{finalPrice.toLocaleString()} ₽</span></p>
+                                <p className="text-apple-body text-gray-600 font-sf-pro">Диапазон цены: {formattedRange ? (
+                                    <span className="text-xl font-bold text-green-600">{formattedRange}</span>
+                                ) : (
+                                    <span className="text-gray-500">уточняется</span>
+                                )}
+                                </p>
                             </div>
                         </motion.div>
 
