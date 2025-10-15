@@ -18,8 +18,12 @@ export async function GET(request: NextRequest) {
     }
 
     const whereClause: any = { model }
-    if (variant !== undefined) {
-      // Обрабатываем пустую строку как пустой вариант
+    if (
+      variant !== null &&
+      variant !== undefined &&
+      variant !== ''
+    ) {
+      // Обрабатываем пустую строку как пустой вариант только если явно пришла пустая строка
       whereClause.variant = variant
     }
 

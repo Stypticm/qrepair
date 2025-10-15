@@ -14,8 +14,6 @@ export function Page({ children, back = true }: PropsWithChildren<{
   const { safeAreaInsets, cssVars, isTelegram, isDesktop } = useSafeArea();
   const { goToPreviousStep } = useAppStore();
 
-  console.log('Page safeAreaInsets:', safeAreaInsets);
-
   useEffect(() => {
     try {
       if (back) {

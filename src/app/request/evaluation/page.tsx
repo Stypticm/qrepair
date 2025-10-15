@@ -131,6 +131,24 @@ export default function EvaluationPage() {
   const touchStartXRef = useRef<number | null>(null);
   const gestureAxisRef = useRef<'x' | 'y' | null>(null);
 
+  // Disable vertical swipes in Telegram WebApp to avoid collapsing the app tray
+  useEffect(() => {
+    try {
+      const wa: any = (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) || null;
+      if (wa?.disableVerticalSwipes) {
+        wa.disableVerticalSwipes();
+      }
+    } catch {}
+    return () => {
+      try {
+        const wa: any = (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) || null;
+        if (wa?.enableVerticalSwipes) {
+          wa.enableVerticalSwipes();
+        }
+      } catch {}
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -429,9 +447,6 @@ export default function EvaluationPage() {
               <div className="text-center md:text-left h-[100px] md:h-[112px] flex flex-col justify-start overflow-hidden">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">Состояние</p>
                 <h2 className="mt-1 text-3xl font-semibold text-slate-900">{previewOption.label}</h2>
-                {/* <p className="mt-2 text-sm leading-snug text-slate-500 md:text-base md:leading-snug max-h-[40px] md:max-h-[48px] overflow-hidden">
-                  {previewOption.description}
-                </p> */}
               </div>
 
               <div className={`relative overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-b ${accentGradient[previewOption.accent]} p-4 md:p-5 shadow-inner`}>

@@ -347,7 +347,7 @@ const SubmitPage = () => {
     const finalPrice = price || priceRange?.midpoint || 0;
     const formattedRange = useMemo(() => {
         if (!priceRange) return null;
-        const fmt = (n: number) => n.toLocaleString('ru-RU');
+        const fmt = (n: number) => n.toLocaleString('ru-RU', { useGrouping: false });
         return `${fmt(priceRange.min)} — ${fmt(priceRange.max)} ₽`;
     }, [priceRange]);
 
@@ -374,9 +374,10 @@ const SubmitPage = () => {
                         const colorMap: { [key: string]: string } = {
                             'G': 'Золотой',
                             'R': 'Красный',
-                            'Bl': 'Синий',
+                            'Bl': 'Черный', // XR: Bl трактуем как Black
                             'Wh': 'Белый',
-                            'C': 'Черный'
+                            'C': 'Черный',
+                            'Bk': 'Черный'
                         };
                         const colorLabel = colorMap[parsed.color] || parsed.color;
                         fullModel += ` ${colorLabel}`;

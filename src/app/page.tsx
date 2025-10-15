@@ -94,13 +94,22 @@ function HomeContent() {
   const handleStartForm = async () => {
     try {
       const savedStep = sessionStorage.getItem('currentStep');
-      if (savedStep) {
+      const hasSerial = !!sessionStorage.getItem('serialNumber');
+      const hasSelection = !!sessionStorage.getItem('phoneSelection');
+
+      // Режим резюме: только если есть реальные данные выбора и шаг не device-info
+      if (savedStep && savedStep !== 'device-info' && (hasSerial || hasSelection)) {
         router.push(`/request/${savedStep}`);
         return;
       }
 
-      // Нет сохраненного шага — начинаем новую заявку
+      // Иначе начинаем заново с device-info
       resetAllStates();
+      // подчистим возможные хвосты
+      sessionStorage.removeItem('currentStep');
+      sessionStorage.removeItem('phoneSelection');
+      sessionStorage.removeItem('priceRange');
+      sessionStorage.removeItem('prefillSelection');
       setCurrentStep('device-info');
       router.push('/request/device-info');
     } catch (error) {

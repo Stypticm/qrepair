@@ -31,6 +31,10 @@ export default function DeviceInfoPage() {
     const [showDialog, setShowDialog] = useState(false);
     const [showErrorDialog, setShowErrorDialog] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [checkResult, setCheckResult] = useState<null | { model?: string; variant?: string; storage?: string; color?: string; image?: string; raw?: any }>(null);
+  const [showCheckDialog, setShowCheckDialog] = useState(false);
+  const [isTestLoading, setIsTestLoading] = useState(false);
 
     const addDebugInfo = (message: string) => {
         const timestamp = new Date().toLocaleTimeString();
@@ -182,39 +186,106 @@ export default function DeviceInfoPage() {
 
     const handleContinue = async () => {
         setShowDialog(false);
+        setChecking(true);
         try {
-            addDebugInfo('Начинаем сохранение данных');
             setSerialNumber(manualSerialNumber);
-            const requestBody = {
-                telegramId,
-                username: username || 'Unknown',
-                serialNumber: manualSerialNumber,
-            };
-
-            addDebugInfo('Отправляем запрос в API...');
-            const response = await fetch('/api/request/device-info', {
+            // Try Reincubate (via ZenRows HTML parse) first
+            const reRes = await fetch('/api/serial-check/reincubate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody),
+                body: JSON.stringify({ sn: manualSerialNumber })
             });
-
-            addDebugInfo(`Ответ API: ${response.status} ${response.statusText}`);
-            if (!response.ok) {
-                const errorText = await response.text();
-                addDebugInfo(`❌ Ошибка API: ${errorText}`);
-                throw new Error(`Ошибка сохранения данных: ${response.status} ${response.statusText}`);
+            if (reRes.ok) {
+                const reData = await reRes.json();
+                const normalized = reData?.normalized;
+                const parsed = normalized ? {
+                    model: normalized.model || '',
+                    variant: normalized.variant || '',
+                    storage: normalized.storage || '',
+                    color: normalized.color || '',
+                    raw: reData,
+                } : normalizeFromRaw(reData);
+                setCheckResult(parsed);
+            } else {
+                // Fallback to imei.info proxy
+                const snRes = await fetch('/api/serial-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sn: manualSerialNumber })
+                });
+                if (!snRes.ok) {
+                    console.error('SN check failed:', snRes.status, snRes.statusText);
+                    router.push('/request/form');
+                    return;
+                }
+                const snData = await snRes.json();
+                const parsed = normalizeFromRaw(snData);
+                setCheckResult(parsed);
             }
 
-            addDebugInfo('✅ Данные успешно сохранены');
-            addDebugInfo('Переходим на /request/form');
-            router.push('/request/form');
+            // Save serial to DB (non-blocking)
+            fetch('/api/request/device-info', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ telegramId, username: username || 'Unknown', serialNumber: manualSerialNumber }),
+            }).catch(() => {});
+
+            setShowCheckDialog(true);
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            addDebugInfo(`❌ Ошибка: ${errorMessage}`);
-            setError(`Ошибка сохранения данных: ${errorMessage}. Попробуйте еще раз.`);
-            setShowErrorDialog(true);
+            console.error('SN flow error:', error);
+            router.push('/request/form');
+        } finally {
+            setChecking(false);
         }
     };
+
+    // TEST: показать диалог без реальных запросов, с мок-данными
+    const handleTest = () => {
+        setIsTestLoading(true)
+        setTimeout(() => {
+            // Префилл под структуру формы: model='X', variant='R' (XR), storage='128GB', color='Black'
+            setCheckResult({
+                model: 'X',
+                variant: 'R',
+                storage: '128GB',
+                color: 'Black',
+                image: 'https://sources.imeicheck.net/images/64664f0891ea173f2986918043423f9e.png',
+                raw: { sample: true },
+            })
+            setIsTestLoading(false)
+            setShowCheckDialog(true)
+        }, 1000)
+    }
+
+    const normalizeFromRaw = (snData: any) => {
+        // Best-effort normalization. Adjust when actual API format is known
+        const raw = snData?.data || snData?.raw || snData;
+        const text = typeof raw === 'string' ? raw : JSON.stringify(raw);
+        const out: any = { raw };
+        // naive heuristics
+        const modelMatch = text.match(/iPhone\s?(\d+\s?(Pro\s?Max|Pro|Plus|mini)?)/i);
+        if (modelMatch) {
+            out.model = modelMatch[1].replace(/\s+/g, ' ').trim();
+            if (/Pro Max/i.test(modelMatch[2] || '')) out.variant = 'Pro Max';
+            else if (/Pro/i.test(modelMatch[2] || '')) out.variant = 'Pro';
+            else if (/Plus/i.test(modelMatch[2] || '')) out.variant = 'Plus';
+            else if (/mini/i.test(modelMatch[2] || '')) out.variant = 'mini';
+        }
+        const storageMatch = text.match(/(\d+\s?GB|\d+\s?TB)/i);
+        if (storageMatch) out.storage = storageMatch[1].replace(/\s+/g, '').toUpperCase();
+        const colorMap: Record<string,string> = { 'GOLD':'G', 'RED':'R', 'BLUE':'Bl', 'WHITE':'Wh', 'BLACK':'C', 'PURPLE':'Pu', 'GREEN':'Gr', 'SILVER':'St' };
+        const colorMatch = text.match(/color\W+([A-Za-z]+)/i);
+        if (colorMatch) {
+            const c = colorMatch[1].toUpperCase();
+            out.color = c;
+        }
+        return out;
+    }
+
+    const mapColorToCode = (label: string) => {
+        const map: Record<string,string> = { 'GOLD':'G', 'RED':'R', 'BLUE':'Bl', 'WHITE':'Wh', 'BLACK':'C', 'PURPLE':'Pu', 'GREEN':'Gr', 'SILVER':'St' };
+        return map[label.toUpperCase?.() || label] || '';
+    }
 
     const handleEdit = () => {
         setShowDialog(false);
@@ -287,6 +358,16 @@ export default function DeviceInfoPage() {
                         >
                             Продолжить
                         </Button>
+                        <div className="mt-2">
+                            <Button
+                                variant="outline"
+                                onClick={handleTest}
+                                className="w-full text-[11px]"
+                                disabled={isTestLoading}
+                            >
+                                {isTestLoading ? 'Проверяем данные…' : 'Тест (показать пример без запроса)'}
+                            </Button>
+                        </div>
                     </motion.div>
                 </div>
             </div>
@@ -323,6 +404,110 @@ export default function DeviceInfoPage() {
                         <p className="text-center text-sm text-gray-600 mt-1">
                             ✏️ Нажмите вне поля, если хотите отредактировать свой выбор
                         </p>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* SN parsed confirm dialog */}
+            <Dialog open={showCheckDialog} onOpenChange={setShowCheckDialog}>
+                <DialogContent className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg" showCloseButton={false}>
+                    <DialogTitle className="text-center text-base font-semibold text-gray-900 mb-2">
+                        Найдено устройство
+                    </DialogTitle>
+                    <div className="text-sm text-gray-800 space-y-2">
+                        {checkResult?.image ? (
+                            <div className="w-full flex justify-center mb-2">
+                                <Image
+                                    src={checkResult.image}
+                                    alt={checkResult.model || 'device'}
+                                    width={200}
+                                    height={200}
+                                    className="rounded-md border"
+                                />
+                            </div>
+                        ) : null}
+                        <div className="flex justify-between"><span className="text-gray-500">Модель</span><span className="font-semibold">{checkResult?.model || '—'}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Вариант</span><span className="font-semibold">{checkResult?.variant || '—'}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Память</span><span className="font-semibold">{checkResult?.storage || '—'}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Цвет</span><span className="font-semibold">{checkResult?.color || '—'}</span></div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                        <Button
+                            className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white text-sm"
+                            onClick={async () => {
+                                if (!checkResult) return;
+                                // 1) Сохраняем префилл для совместимости
+                                const prefill = {
+                                    model: checkResult.model || '',
+                                    variant: checkResult.variant || '',
+                                    storage: checkResult.storage || '',
+                                    color: mapColorToCode(checkResult.color || ''),
+                                };
+                                try {
+                                    sessionStorage.setItem('prefillSelection', JSON.stringify(prefill));
+                                    // Также сохраняем как phoneSelection, чтобы страница submit корректно вывела цвет/память без прохождения form
+                                    sessionStorage.setItem('phoneSelection', JSON.stringify(prefill));
+                                } catch {}
+
+                                // 2) Пытаемся заранее получить устройство и цену
+                                try {
+                                    const params = new URLSearchParams({
+                                        model: prefill.model,
+                                        storage: prefill.storage,
+                                        color: prefill.color,
+                                    });
+                                    if (prefill.variant) params.set('variant', prefill.variant);
+                                    const res = await fetch(`/api/devices/device?${params.toString()}`, { method: 'GET' });
+                                    if (res.ok) {
+                                        const device = await res.json();
+                                        if (device?.basePrice) {
+                                            try { sessionStorage.setItem('basePrice', String(device.basePrice)); } catch {}
+                                        }
+                                    }
+                                } catch {}
+
+                                // 3) Фиксируем шаг и переходим сразу к оценке
+                                try {
+                                    // Подготовим modelname с правильной локалью цвета
+                                    const colorLabelMap: Record<string, string> = {
+                                        G: 'Золотой', R: 'Красный', Bl: 'Черный', Wh: 'Белый', C: 'Черный', Bk: 'Черный',
+                                        La: 'Лаванда', Mi: 'Туманный синий', Sa: 'Шалфей', St: 'Стальной серый', Gr: 'Зеленый', Pu: 'Фиолетовый',
+                                        Lb: 'Светло-голубой', Lg: 'Светло-золотой', Gy: 'Серый', Db: 'Темно-синий', Or: 'Оранжевый'
+                                    }
+                                    const colorLabel = colorLabelMap[prefill.color] || prefill.color
+                                    const variantLabel = prefill.variant ? ` ${prefill.variant}` : ''
+                                    const modelname = `Apple iPhone ${prefill.model}${variantLabel} ${prefill.storage} ${colorLabel}`.trim()
+                                    await fetch('/api/request/choose', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            telegramId,
+                                            username: username || 'Unknown',
+                                            currentStep: 'evaluation',
+                                            modelname,
+                                        }),
+                                    });
+                                } catch {}
+
+                                setShowCheckDialog(false);
+                                router.push('/request/evaluation');
+                            }}
+                        >
+                            Данные совпадают
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="text-sm"
+                            onClick={() => {
+                                setShowCheckDialog(false);
+                                router.push('/request/form');
+                            }}
+                        >
+                            Выбрать вручную
+                        </Button>
+                    </div>
+                    <div className="mt-2">
+                        <p className="text-[10px] text-gray-500 break-words">SN: {manualSerialNumber}</p>
                     </div>
                 </DialogContent>
             </Dialog>

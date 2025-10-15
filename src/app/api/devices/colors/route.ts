@@ -19,7 +19,13 @@ export async function GET(request: NextRequest) {
     }
 
     const whereClause: any = { model }
-    if (variant !== undefined) whereClause.variant = variant
+    if (
+      variant !== null &&
+      variant !== undefined &&
+      variant !== ''
+    ) {
+      whereClause.variant = variant
+    }
     if (storage) whereClause.storage = storage
 
     console.log('🔍 Colors API - whereClause:', whereClause)

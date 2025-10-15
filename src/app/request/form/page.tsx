@@ -39,6 +39,22 @@ export default function FormPage() {
         setCurrentStep('form');
     }, [setCurrentStep]);
 
+  // Apply prefill from device-info SN check if present
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const prefillRaw = sessionStorage.getItem('prefillSelection');
+      if (!prefillRaw) return;
+      const prefill = JSON.parse(prefillRaw);
+      if (prefill?.model) handleOptionSelect('model', prefill.model);
+      if (prefill?.variant) handleOptionSelect('variant', prefill.variant);
+      if (prefill?.storage) handleOptionSelect('storage', prefill.storage);
+      if (prefill?.color) handleOptionSelect('color', prefill.color);
+      // clear so it doesn't reapply
+      sessionStorage.removeItem('prefillSelection');
+    } catch {}
+  }, [handleOptionSelect]);
+
     // Save selection to session storage for quick recovery
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -103,7 +119,7 @@ export default function FormPage() {
     const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение'];
 
     const getColorLabel = (color: string) => {
-        const colorMap: { [key: string]: string } = { 'G': 'Золотой', 'R': 'Красный', 'Bl': 'Синий', 'Wh': 'Белый', 'C': 'Черный', 'Bk': 'Черный', 'La': 'Лаванда', 'Mi': 'Туманный синий', 'Sa': 'Шалфей', 'St': 'Стальной серый', 'Gr': 'Зеленый', 'Pu': 'Фиолетовый', 'Lb': 'Светло-голубой', 'Lg': 'Светло-золотой', 'Gy': 'Серый', 'Db': 'Темно-синий', 'Or': 'Оранжевый' };
+        const colorMap: { [key: string]: string } = { 'G': 'Золотой', 'R': 'Красный', 'Bl': 'Черный', 'Wh': 'Белый', 'C': 'Черный', 'Bk': 'Черный', 'La': 'Лаванда', 'Mi': 'Туманный синий', 'Sa': 'Шалфей', 'St': 'Стальной серый', 'Gr': 'Зеленый', 'Pu': 'Фиолетовый', 'Lb': 'Светло-голубой', 'Lg': 'Светло-золотой', 'Gy': 'Серый', 'Db': 'Темно-синий', 'Or': 'Оранжевый' };
         return colorMap[color] || color;
     };
 
@@ -114,7 +130,7 @@ export default function FormPage() {
     };
 
     const getColorStyle = (color: string) => {
-        const colorMap: { [key: string]: string } = { 'G': '#F5D76E', 'R': '#E74C3C', 'Bl': '#3498DB', 'Wh': '#F8F9FA', 'C': '#2C3E50', 'Bk': '#000000', 'La': '#E6E6FA', 'Mi': '#B0C4DE', 'Sa': '#9DC183', 'St': '#808080', 'Gr': '#008000', 'Pu': '#800080', 'Lb': '#ADD8E6', 'Lg': '#F0E68C', 'Gy': '#808080', 'Db': '#00008B', 'Or': '#FFA500' };
+        const colorMap: { [key: string]: string } = { 'G': '#F5D76E', 'R': '#E74C3C', 'Bl': '#000000', 'Wh': '#F8F9FA', 'C': '#2C3E50', 'Bk': '#000000', 'La': '#E6E6FA', 'Mi': '#B0C4DE', 'Sa': '#9DC183', 'St': '#808080', 'Gr': '#008000', 'Pu': '#800080', 'Lb': '#ADD8E6', 'Lg': '#F0E68C', 'Gy': '#808080', 'Db': '#00008B', 'Or': '#FFA500' };
         return colorMap[color] || '#808080';
     };
 
