@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getPictureUrl } from "@/core/lib/assets";
 import { useAppStore } from "@/stores/authStore";
 import { init, swipeBehavior } from '@telegram-apps/sdk';
+import { Carousel_003 } from "@/components/v1/skiper49";
 
 type EvaluationOption = {
   id: string;
@@ -142,6 +143,8 @@ export default function EvaluationPage() {
         try { manager?.mount?.(); } catch {}
         try {
           manager?.disableVertical?.();
+          try { (window as any).Telegram.WebApp.expand(); } catch {}
+          try { (window as any).Telegram.WebApp.enableClosingConfirmation(); } catch {}
           destroy = () => {
             try { manager?.enableVertical?.(); } catch {}
             try { manager?.unmount?.(); } catch {}
@@ -152,12 +155,40 @@ export default function EvaluationPage() {
     // Hard UI fallback to reduce vertical gestures: constrain to horizontal pan on this page
     const prevTouchAction = document.body.style.touchAction
     const prevOverscrollY = (document.body.style as any).overscrollBehaviorY
+    const prevHtmlOverscrollY = (document.documentElement.style as any).overscrollBehaviorY
+    const prevOverflow = document.body.style.overflow
+    const prevHeight = document.body.style.height
     document.body.style.touchAction = 'pan-x'
     ;(document.body.style as any).overscrollBehaviorY = 'contain'
+    ;(document.documentElement.style as any).overscrollBehaviorY = 'contain'
+    document.body.style.overflow = 'hidden'
+    document.body.style.height = '100dvh'
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartYRef.current = e.touches[0].clientY;
+        touchStartXRef.current = e.touches[0].clientX;
+      }
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchStartXRef.current == null) return;
+      const dx = e.touches[0].clientX - touchStartXRef.current;
+      const dy = e.touches[0].clientY - (touchStartYRef.current ?? e.touches[0].clientY);
+      if (Math.abs(dy) > Math.abs(dx)) {
+        // prevent vertical swipe-to-dismiss in Telegram shell
+        e.preventDefault();
+      }
+    }
+    document.addEventListener('touchstart', onTouchStart, { passive: false })
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
     return () => {
       try { destroy?.(); } catch {}
       document.body.style.touchAction = prevTouchAction
       ;(document.body.style as any).overscrollBehaviorY = prevOverscrollY
+      ;(document.documentElement.style as any).overscrollBehaviorY = prevHtmlOverscrollY
+      document.body.style.overflow = prevOverflow
+      document.body.style.height = prevHeight
+      document.removeEventListener('touchstart', onTouchStart as any)
+      document.removeEventListener('touchmove', onTouchMove as any)
     };
   }, []);
 
@@ -294,114 +325,7 @@ export default function EvaluationPage() {
     }
   }, [previewId, selectedOption]);
 
-  // Virtual scroll handlers (wheel/touch) to cycle through options without real page scroll
-  const wrapIndex = useCallback((i: number) => {
-    const len = evaluationOptions.length;
-    if (len === 0) return 0;
-    return ((i % len) + len) % len;
-  }, []);
-
-  useEffect(() => {
-    const container = document;
-    const wheelHandler = (e: WheelEvent) => {
-      if (showOnboarding) {
-        setShowOnboarding(false);
-        try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {}
-      }
-      // Только горизонтальная прокрутка (трекпады). Вертикальную игнорируем полностью
-      const absX = Math.abs(e.deltaX);
-      const absY = Math.abs(e.deltaY);
-      if (absX < 24 || absX <= absY) return;
-      if (showScrollHint) setShowScrollHint(false);
-      const now = Date.now();
-      if (wheelLockRef.current && now - lastWheelTsRef.current < 300) {
-        e.preventDefault();
-        return;
-      }
-      e.preventDefault();
-      wheelLockRef.current = true;
-      lastWheelTsRef.current = now;
-      const dir = e.deltaX > 0 ? 1 : -1; // вправо/влево
-      setCurrentIndex((prev) => {
-        const next = wrapIndex(prev + dir);
-        setPreviewId(evaluationOptions[next].id);
-        return next;
-      });
-      setTimeout(() => {
-        wheelLockRef.current = false;
-      }, 260);
-    };
-
-    const touchStart = (e: TouchEvent) => {
-      if (showOnboarding) {
-        setShowOnboarding(false);
-        try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {}
-      }
-      if (showScrollHint) setShowScrollHint(false);
-      if (e.touches && e.touches.length > 0) {
-        touchStartYRef.current = e.touches[0].clientY;
-        touchStartXRef.current = e.touches[0].clientX;
-        gestureAxisRef.current = null;
-      }
-    };
-    const touchMove = (e: TouchEvent) => {
-      if (touchStartXRef.current == null) return;
-      const dx = e.touches[0].clientX - touchStartXRef.current;
-      const dy = e.touches[0].clientY - (touchStartYRef.current ?? e.touches[0].clientY);
-      const absDx = Math.abs(dx);
-      const absDy = Math.abs(dy);
-
-      // Определяем ось жеста один раз
-      if (gestureAxisRef.current === null) {
-        if (absDx >= 24) {
-          gestureAxisRef.current = 'x';
-        } else if (absDy >= 24) {
-          gestureAxisRef.current = 'y';
-        } else {
-          return;
-        }
-      }
-
-      // Если вертикальная ось — ничего не делаем (не переключаем)
-      if (gestureAxisRef.current === 'y') {
-        // Обновим точки отсчёта, но без переключения
-        touchStartXRef.current = e.touches[0].clientX;
-        touchStartYRef.current = e.touches[0].clientY;
-        return;
-      }
-
-      // Горизонтальная навигация
-      if (showScrollHint) setShowScrollHint(false);
-      e.preventDefault();
-      if (absDx >= 24) {
-        setCurrentIndex((prev) => {
-          const next = wrapIndex(prev + (dx < 0 ? 1 : -1));
-          setPreviewId(evaluationOptions[next].id);
-          return next;
-        });
-        touchStartXRef.current = e.touches[0].clientX;
-        touchStartYRef.current = e.touches[0].clientY;
-      }
-    };
-    const touchEnd = () => {
-      touchStartYRef.current = null;
-      touchStartXRef.current = null;
-      gestureAxisRef.current = null;
-    };
-
-    // Add non-passive listeners to allow preventDefault
-    container.addEventListener('wheel', wheelHandler, { passive: false });
-    container.addEventListener('touchstart', touchStart, { passive: false });
-    container.addEventListener('touchmove', touchMove, { passive: false });
-    container.addEventListener('touchend', touchEnd, { passive: false });
-
-    return () => {
-      container.removeEventListener('wheel', wheelHandler as any);
-      container.removeEventListener('touchstart', touchStart as any);
-      container.removeEventListener('touchmove', touchMove as any);
-      container.removeEventListener('touchend', touchEnd as any);
-    };
-  }, [wrapIndex]);
+  // Swiper will handle gestures; keep index/preview in sync via callbacks
 
   const previewOption = useMemo(() => {
     return evaluationOptions.find((o) => o.id === previewId) ?? selectedOption;
@@ -466,21 +390,32 @@ export default function EvaluationPage() {
                 <h2 className="mt-1 text-3xl font-semibold text-slate-900">{previewOption.label}</h2>
               </div>
 
-              <div className={`relative overflow-hidden rounded-[28px] border border-white/60 bg-gradient-to-b ${accentGradient[previewOption.accent]} p-4 md:p-5 shadow-inner`}>
+              <div className="relative overflow-hidden rounded-[28px] border border-white/60 bg-transparent p-3 md:p-4">
                 <div className="relative mx-auto w-full max-w-none">
-                  <div className="mx-auto flex items-center justify-center">
-                    <div className="rounded-[20px] border border-white/40 bg-white/80 backdrop-blur-sm">
-                      <div className="relative w-[90vw] max-w-[420px] md:w-[400px] md:max-w-none h-[44vh] md:h-[46vh]">
-                        <Image
-                          src={getPictureUrl(`${previewOption.image}.png`)}
-                          alt={previewOption.label}
-                          fill
-                          sizes="(max-width: 768px) 90vw, 400px"
-                          className="object-contain"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <Carousel_003
+                    className="mx-auto"
+                    images={evaluationOptions.map(o => ({ src: getPictureUrl(`${o.image}.png`), alt: o.label }))}
+                    showPagination
+                    loop
+                    autoplay={false}
+                    spaceBetween={0}
+                    initialIndex={currentIndex}
+                    heightPx={400}
+                    heightPxMd={480}
+                    slideWidthPx={300}
+                    slideWidthPxMd={360}
+                    onIndexChange={(idx) => {
+                      const option = evaluationOptions[idx];
+                      if (!option) return;
+                      if (showOnboarding) {
+                        setShowOnboarding(false);
+                        try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {}
+                      }
+                      if (showScrollHint) setShowScrollHint(false);
+                      setCurrentIndex(idx);
+                      setPreviewId(option.id);
+                    }}
+                  />
                 </div>
               </div>
 
