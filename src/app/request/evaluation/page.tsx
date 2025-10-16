@@ -387,7 +387,7 @@ export default function EvaluationPage() {
             <div className="flex flex-col items-center gap-6">
               <div className="text-center md:text-left h-[100px] md:h-[112px] flex flex-col justify-start overflow-hidden">
                 <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">Состояние</p>
-                <h2 className="mt-1 text-3xl font-semibold text-slate-900">{previewOption.label}</h2>
+                <h2 className="mt-1 text-3xl font-semibold text-slate-900 truncate">{previewOption.label}</h2>
               </div>
 
               <div className="relative overflow-hidden rounded-[28px] border border-white/60 bg-transparent p-3 md:p-4">
@@ -419,9 +419,9 @@ export default function EvaluationPage() {
                 </div>
               </div>
 
-              <p className="mt-2 text-sm text-slate-600 md:text-base text-center md:text-left px-1">
+              <div className="mt-2 text-sm text-slate-600 md:text-base text-center md:text-left px-1 min-h-[64px] md:min-h-[80px] overflow-hidden">
                 {previewOption.description}
-              </p>
+              </div>
 
               <div className="flex flex-col items-center justify-between gap-3 md:flex-row mt-2">
                 <div className="flex flex-col items-center gap-1 md:items-start">
