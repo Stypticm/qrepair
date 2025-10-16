@@ -132,6 +132,7 @@ export default function EvaluationPage() {
   const touchStartYRef = useRef<number | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const gestureAxisRef = useRef<'x' | 'y' | null>(null);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
 
   // Disable vertical swipes using Telegram Apps SDK swipe behavior (per docs)
   useEffect(() => {
@@ -189,6 +190,33 @@ export default function EvaluationPage() {
       document.body.style.height = prevHeight
       document.removeEventListener('touchstart', onTouchStart as any)
       document.removeEventListener('touchmove', onTouchMove as any)
+    };
+  }, []);
+
+  // Локальная блокировка вертикального свайпа поверх карусели
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    let sx: number | null = null;
+    let sy: number | null = null;
+    const onStart = (e: TouchEvent) => {
+      if (!e.touches?.length) return;
+      sx = e.touches[0].clientX;
+      sy = e.touches[0].clientY;
+    };
+    const onMove = (e: TouchEvent) => {
+      if (sx == null || sy == null) return;
+      const dx = e.touches[0].clientX - sx;
+      const dy = e.touches[0].clientY - sy;
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) {
+        e.preventDefault();
+      }
+    };
+    el.addEventListener('touchstart', onStart, { passive: false });
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onStart as any);
+      el.removeEventListener('touchmove', onMove as any);
     };
   }, []);
 
@@ -391,7 +419,7 @@ export default function EvaluationPage() {
               </div>
 
               <div className="relative overflow-hidden rounded-[28px] border border-white/60 bg-transparent p-3 md:p-4">
-                <div className="relative mx-auto w-full max-w-none">
+                <div ref={carouselRef} className="relative mx-auto w-full max-w-none touch-pan-x select-none">
                   <Carousel_003
                     className="mx-auto"
                     images={evaluationOptions.map(o => ({ src: getPictureUrl(`${o.image}.png`), alt: o.label }))}
