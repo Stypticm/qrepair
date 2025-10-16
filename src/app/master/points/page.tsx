@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import QrScanner from 'qr-scanner'
 import Link from 'next/link'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -39,6 +40,7 @@ export default function MasterPointsPage() {
   const streamRef = useRef<MediaStream | null>(null)
   const animationRef = useRef<number>()
   const isScannerOpenRef = useRef(false)
+  const qrScannerRef = useRef<QrScanner | null>(null)
 
   const effectiveTelegramId = (typeof window !== 'undefined'
     ? (telegramId ||
@@ -57,6 +59,11 @@ export default function MasterPointsPage() {
   }, [isScannerOpen])
 
   const stopScanner = useCallback(() => {
+    if (qrScannerRef.current) {
+      try { qrScannerRef.current.stop(); } catch {}
+      try { qrScannerRef.current.destroy(); } catch {}
+      qrScannerRef.current = null
+    }
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current)
       animationRef.current = undefined
@@ -92,8 +99,51 @@ export default function MasterPointsPage() {
 
     const BarcodeDetector = (window as any).BarcodeDetector
     if (!BarcodeDetector) {
-      // Не прерываемся: всё равно откроем камеру, чтобы показать пользователю разрешение и превью
-      setScannerError('Авто-распознавание QR недоступно в этом браузере. Камера откроется, при необходимости введите ID вручную или используйте поддерживаемый браузер (Chrome/Edge).')
+      // Фоллбек на библиотеку QrScanner (работает в WebView/старых браузерах)
+      try {
+        setScannerError(null)
+        isScannerOpenRef.current = true
+        setIsScannerOpen(true)
+        const ensureVideoElement = async (): Promise<HTMLVideoElement> => {
+          for (let attempt = 0; attempt < 10; attempt += 1) {
+            if (videoRef.current) return videoRef.current
+            await new Promise<void>((resolve) => { requestAnimationFrame(() => resolve()) })
+          }
+          throw new Error('Видеоэлемент не успел отрендериться.')
+        }
+        const videoElement = await ensureVideoElement()
+        qrScannerRef.current = new QrScanner(
+          videoElement,
+          (result) => {
+            try {
+              const raw = typeof result === 'string' ? result : (result as any).data || String(result)
+              const trimmed = raw?.trim()
+              if (!trimmed) return
+              let id: string | null = null
+              try {
+                const asJson = JSON.parse(trimmed)
+                id = asJson?.skupkaId || asJson?.requestId || null
+              } catch {}
+              id = id || extractRequestId(trimmed)
+              id = id || trimmed
+              if (id) {
+                setClaimId(id)
+                setScannerError(null)
+                claimRequestMutation.mutate({ requestId: id })
+                stopScanner()
+              }
+            } catch {}
+          },
+          { preferredCamera: 'environment', returnDetailedScanResult: true, highlightScanRegion: true, highlightCodeOutline: true }
+        )
+        await qrScannerRef.current.start()
+        return
+      } catch (e) {
+        console.error('QrScanner fallback failed:', e)
+        setScannerError('Не удалось запустить сканер. Проверьте разрешения на камеру.')
+        stopScanner()
+        return
+      }
     }
 
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -171,6 +221,39 @@ export default function MasterPointsPage() {
         }
 
         animationRef.current = requestAnimationFrame(scan)
+      } else {
+        // Если detector не создался, фоллбек на QrScanner даже если API присутствует, но не работает
+        try {
+          qrScannerRef.current = new QrScanner(
+            videoElement,
+            (result) => {
+              try {
+                const raw = typeof result === 'string' ? result : (result as any).data || String(result)
+                const trimmed = raw?.trim()
+                if (!trimmed) return
+                let id: string | null = null
+                try {
+                  const asJson = JSON.parse(trimmed)
+                  id = asJson?.skupkaId || asJson?.requestId || null
+                } catch {}
+                id = id || extractRequestId(trimmed)
+                id = id || trimmed
+                if (id) {
+                  setClaimId(id)
+                  setScannerError(null)
+                  claimRequestMutation.mutate({ requestId: id })
+                  stopScanner()
+                }
+              } catch {}
+            },
+            { preferredCamera: 'environment', returnDetailedScanResult: true, highlightScanRegion: true, highlightCodeOutline: true }
+          )
+          await qrScannerRef.current.start()
+        } catch (e) {
+          console.error('QrScanner secondary fallback failed:', e)
+          setScannerError('Не удалось запустить сканер. Попробуйте в другом браузере или в приложении Telegram.')
+          stopScanner()
+        }
       }
     } catch (error) {
       console.error('Error starting scanner:', error)
