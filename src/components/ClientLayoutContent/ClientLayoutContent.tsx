@@ -71,6 +71,29 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         document.addEventListener('touchstart', onTouchStart, { passive: false });
         document.addEventListener('touchmove', onTouchMove, { passive: false });
 
+        // Блокируем вертикальные колесо/трекпад скролл (оставляем горизонтальный)
+        const onWheel = (e: WheelEvent) => {
+          const absX = Math.abs(e.deltaX);
+          const absY = Math.abs(e.deltaY);
+          if (absY > absX && absY > 2) {
+            e.preventDefault();
+          }
+        };
+        document.addEventListener('wheel', onWheel, { passive: false });
+
+        // Переинициализация при смене видимости/фокуса/размера
+        const rearm = () => {
+          try {
+            const wa: any = window.Telegram?.WebApp;
+            wa?.expand?.();
+            manager?.disableVertical?.();
+          } catch {}
+        };
+        const onVisibility = () => { if (document.visibilityState === 'visible') rearm(); };
+        window.addEventListener('focus', rearm, { passive: true });
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('resize', rearm, { passive: true });
+
         return () => {
           try { restore?.(); } catch {}
           document.body.style.touchAction = prevTouchAction;
@@ -80,6 +103,10 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
           document.body.style.height = prevHeight;
           document.removeEventListener('touchstart', onTouchStart as any);
           document.removeEventListener('touchmove', onTouchMove as any);
+          document.removeEventListener('wheel', onWheel as any);
+          window.removeEventListener('focus', rearm as any);
+          document.removeEventListener('visibilitychange', onVisibility as any);
+          window.removeEventListener('resize', rearm as any);
         };
       } catch (error) {
         console.error('❌ ClientLayoutContent - Error initializing Telegram SDK:', error);
