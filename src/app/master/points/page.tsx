@@ -129,6 +129,11 @@ export default function MasterPointsPage() {
               if (id) {
                 setClaimId(id)
                 setScannerError(null)
+                if (isAlreadyAdded(id)) {
+                  setClaimError('Заявка уже добавлена')
+                  stopScanner()
+                  return
+                }
                 claimRequestMutation.mutate({ requestId: id })
                 stopScanner()
               }
@@ -208,7 +213,12 @@ export default function MasterPointsPage() {
               const id = extractRequestId(code) || code
               setClaimId(id)
               setScannerError(null)
-              // Автодобавление заявки
+              // Автодобавление заявки (с проверкой на дубликат)
+              if (isAlreadyAdded(id)) {
+                setClaimError('Заявка уже добавлена')
+                stopScanner()
+                return
+              }
               claimRequestMutation.mutate({ requestId: id })
               stopScanner()
               return
@@ -313,6 +323,18 @@ export default function MasterPointsPage() {
     }
   }, [])
 
+  const { data: dashboardData, isLoading, error, refetch } = useQuery({
+    queryKey: ['masterDashboard', effectiveTelegramId],
+    queryFn: () => fetchMasterDashboard(effectiveTelegramId!),
+    enabled: !!effectiveTelegramId,
+  })
+
+  const isAlreadyAdded = useCallback((id: string | null | undefined) => {
+    if (!id) return false
+    const list: any[] = (dashboardData as any)?.requests || []
+    return list.some((r) => r?.id === id)
+  }, [dashboardData])
+
   const handleClaim = useCallback(() => {
     if (!effectiveTelegramId) {
       setClaimError('Не найден Telegram ID.')
@@ -332,14 +354,14 @@ export default function MasterPointsPage() {
       setClaimError('Не удалось распознать ID из QR. Введите вручную.')
       return
     }
+    if (isAlreadyAdded(extracted)) {
+      setClaimError('Заявка уже добавлена')
+      return
+    }
     claimRequestMutation.mutate({ requestId: extracted })
-  }, [claimId, claimRequestMutation, effectiveTelegramId, extractRequestId])
+  }, [claimId, claimRequestMutation, effectiveTelegramId, extractRequestId, isAlreadyAdded])
 
-  const { data: dashboardData, isLoading, error, refetch } = useQuery({
-    queryKey: ['masterDashboard', effectiveTelegramId],
-    queryFn: () => fetchMasterDashboard(effectiveTelegramId!),
-    enabled: !!effectiveTelegramId,
-  })
+  
 
   const transferRequestMutation = useMutation({
     mutationFn: transferMasterRequest,

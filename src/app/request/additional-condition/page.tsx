@@ -18,6 +18,7 @@ import {
 } from '@/core/lib/additionalCondition';
 import { getPictureUrl } from '@/core/lib/assets';
 import { Tooltip } from '@/components/ui/tooltip';
+import { calculatePriceRange, DeviceConditions, AdditionalConditions } from "@/core/lib/priceCalculation";
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
@@ -185,90 +186,42 @@ export default function AdditionalConditionPage() {
 
             // Получаем deviceConditions из sessionStorage
             const deviceConditions = sessionStorage.getItem('deviceConditions');
-            let deviceConditionsData: {
-                front?: string;
-                back?: string;
-                side?: string;
-            } = {};
+            let deviceConditionsData: DeviceConditions = {};
             if (deviceConditions) {
                 deviceConditionsData = JSON.parse(deviceConditions);
             }
 
-            // Рассчитываем штрафы за состояние устройства
-            let totalPenalty = 0;
+            // Получаем модель устройства
+            const modelName = modelname; // Модель всегда валидна из БД
 
-            // Штрафы за состояние экрана (из condition page)
-            if (deviceConditionsData.front) {
-                const frontCondition = getAdditionalConditionText(deviceConditionsData.front);
-                if (frontCondition === 'Новый') totalPenalty += 0;
-                else if (frontCondition === 'Очень хорошее') totalPenalty += -3;
-                else if (frontCondition === 'Заметные царапины') totalPenalty += -8;
-                else if (frontCondition === 'Трещины') totalPenalty += -15;
+            // Нормализуем дополнительные условия (null -> undefined) под тип AdditionalConditions
+            const normalizedAdditional: AdditionalConditions = {
+                faceId: additionalConditions.faceId ?? undefined,
+                touchId: additionalConditions.touchId ?? undefined,
+                backCamera: additionalConditions.backCamera ?? undefined,
+                battery: additionalConditions.battery ?? undefined,
             }
 
-            if (deviceConditionsData.back) {
-                const backCondition = getAdditionalConditionText(deviceConditionsData.back);
-                if (backCondition === 'Новый') totalPenalty += 0;
-                else if (backCondition === 'Очень хорошее') totalPenalty += -3;
-                else if (backCondition === 'Заметные царапины') totalPenalty += -8;
-                else if (backCondition === 'Трещины') totalPenalty += -15;
-            }
+            // Используем новую формулу расчёта диапазона цен
+            const priceRange = calculatePriceRange(
+                basePrice,
+                modelName,
+                deviceConditionsData,
+                normalizedAdditional
+            );
 
-            if (deviceConditionsData.side) {
-                const sideCondition = getAdditionalConditionText(deviceConditionsData.side);
-                if (sideCondition === 'Новый') totalPenalty += 0;
-                else if (sideCondition === 'Очень хорошее') totalPenalty += -3;
-                else if (sideCondition === 'Заметные царапины') totalPenalty += -8;
-                else if (sideCondition === 'Трещины') totalPenalty += -15;
-            }
-
-            // Штрафы за дополнительные условия
-            if (additionalConditions.faceId) {
-                if (additionalConditions.faceId === 'Работает') totalPenalty += 0;
-                else if (additionalConditions.faceId === 'Не работает') totalPenalty += -10;
-            }
-
-            if (additionalConditions.touchId) {
-                if (additionalConditions.touchId === 'Работает') totalPenalty += 0;
-                else if (additionalConditions.touchId === 'Не работает') totalPenalty += -8;
-            }
-
-            if (additionalConditions.backCamera) {
-                if (additionalConditions.backCamera === 'Новый') totalPenalty += 0;
-                else if (additionalConditions.backCamera === 'Очень хорошее') totalPenalty += -3;
-                else if (additionalConditions.backCamera === 'Заметные царапины') totalPenalty += -8;
-                else if (additionalConditions.backCamera === 'Трещины') totalPenalty += -15;
-            }
-
-            if (additionalConditions.battery) {
-                if (additionalConditions.battery === '95%') totalPenalty += 0;
-                else if (additionalConditions.battery === '90%') totalPenalty += -2;
-                else if (additionalConditions.battery === '85%') totalPenalty += -5;
-                else if (additionalConditions.battery === '75%') totalPenalty += -10;
-            }
-
-            // Ограничиваем максимальный вычет 50%
-            if (totalPenalty < -50) totalPenalty = -50;
-
-            // Рассчитываем финальную цену
-            const finalPrice = basePrice * (1 + totalPenalty / 100);
-
-            // Ограничиваем минимальную цену 50% от базовой
-            const minPrice = basePrice * 0.5;
-            const result = Math.max(finalPrice, minPrice);
-
-
-            // Обновляем цену в контексте
-            setPrice(result);
+            // Обновляем цену в контексте (используем midpoint)
+            setPrice(priceRange.midpoint);
 
             // Сохраняем в sessionStorage
-            sessionStorage.setItem('price', JSON.stringify(result));
-            sessionStorage.setItem('calculatedPrice', JSON.stringify(result));
+            sessionStorage.setItem('price', JSON.stringify(priceRange.midpoint));
+            sessionStorage.setItem('calculatedPrice', JSON.stringify(priceRange.midpoint));
+            sessionStorage.setItem('priceRange', JSON.stringify(priceRange));
 
         } catch (error) {
             console.error('Ошибка при расчете цены:', error);
         }
-    }, [additionalConditions, setPrice]);
+    }, [additionalConditions, setPrice, modelname]);
 
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {

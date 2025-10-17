@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import prisma from '@/core/lib/prisma'
+import { uploadImageToSupabase } from '@/core/lib/uploadImageToSupabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,11 +16,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Конвертируем файл в base64 для простоты (в продакшене лучше использовать S3 или подобный сервис)
-    const bytes = await photo.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const base64 = buffer.toString('base64')
-    const photoUrl = `data:${photo.type};base64,${base64}`
+    // Загружаем фото в Supabase Storage и получаем публичный URL
+    const photoUrl = await uploadImageToSupabase(photo)
 
     // Сохраняем URL фотографии в базе данных
     await prisma.skupka.update({
@@ -33,10 +29,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({
-      success: true,
-      photoUrl,
-    })
+    return NextResponse.json({ success: true, photoUrl })
   } catch (error) {
     console.error('Error uploading photo:', error)
     return NextResponse.json(

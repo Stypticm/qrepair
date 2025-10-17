@@ -11,6 +11,7 @@ import { getPictureUrl } from "@/core/lib/assets";
 import { useAppStore } from "@/stores/authStore";
 import { init, swipeBehavior } from '@telegram-apps/sdk';
 import { Carousel_003 } from "@/components/v1/skiper49";
+import { calculatePriceRange, DeviceConditions, AdditionalConditions } from "@/core/lib/priceCalculation";
 
 type EvaluationOption = {
   id: string;
@@ -103,9 +104,7 @@ const accentGradient: Record<EvaluationOption["accent"], string> = {
   rose: "from-rose-200/60 via-pink-200/40 to-slate-50/40",
 };
 
-const floorToHundreds = (value: number) => Math.max(0, Math.floor(value / 100) * 100);
-const ceilToHundreds = (value: number) => Math.max(0, Math.ceil(value / 100) * 100);
-const roundToHundreds = (value: number) => Math.max(0, Math.round(value / 100) * 100);
+// Эти функции больше не используются - логика округления перенесена в priceCalculation.ts
 
 const formatMoney = (value: number) =>
   new Intl.NumberFormat("ru-RU", {
@@ -116,7 +115,7 @@ const formatMoney = (value: number) =>
 
 export default function EvaluationPage() {
   const router = useRouter();
-  const { telegramId, setUserEvaluation, setDamagePercent, price, setPrice, setCurrentStep } = useAppStore();
+  const { telegramId, modelname, setUserEvaluation, setDamagePercent, price, setPrice, setCurrentStep } = useAppStore();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [basePrice, setBasePrice] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -283,56 +282,35 @@ export default function EvaluationPage() {
     const base = basePrice ?? price;
     if (!base) return null;
 
-    const discount = (evaluationOptions.find((o) => o.id === previewId)?.percentage ?? selectedOption.percentage) / 100;
-    const anchor = Math.max(base * (1 - discount), base * 0.5);
-    const rawMax = Math.min(anchor * 0.97, base * 0.95);
-    const rawMin = Math.max(anchor * 0.82, base * 0.55);
-    const absoluteFloor = floorToHundreds(base * 0.45);
-    const absoluteMinFallback = floorToHundreds(base * 0.35);
-    const absoluteCeil = ceilToHundreds(base * 0.95);
-
-    let min = floorToHundreds(rawMin);
-    let max = ceilToHundreds(rawMax);
-
-    if (min < absoluteFloor) {
-      min = absoluteFloor;
+    // Получаем данные о состоянии устройства из sessionStorage
+    const deviceConditionsData = sessionStorage.getItem('deviceConditions');
+    const additionalConditionsData = sessionStorage.getItem('additionalConditions');
+    
+    let deviceConditions: DeviceConditions = {};
+    let additionalConditions: AdditionalConditions = {};
+    
+    if (deviceConditionsData) {
+      try {
+        deviceConditions = JSON.parse(deviceConditionsData);
+      } catch (e) {
+        console.error('Ошибка парсинга deviceConditions:', e);
+      }
     }
-
-    if (max > absoluteCeil) {
-      max = absoluteCeil;
-    }
-
-    if (max - min < 1000) {
-      min = floorToHundreds(Math.max(absoluteFloor, max - 1000));
-    }
-
-    if (max - min < 1000) {
-      max = Math.min(absoluteCeil, ceilToHundreds(min + 1000));
-    }
-
-    if (max - min < 1000) {
-      min = floorToHundreds(Math.max(absoluteFloor, max - 1000));
-    }
-
-    if (max <= min) {
-      max = ceilToHundreds(min + 1000);
-    }
-
-    if (max > absoluteCeil) {
-      max = absoluteCeil;
-      if (max - min < 1000) {
-        min = floorToHundreds(Math.max(absoluteFloor, max - 1000));
+    
+    if (additionalConditionsData) {
+      try {
+        additionalConditions = JSON.parse(additionalConditionsData);
+      } catch (e) {
+        console.error('Ошибка парсинга additionalConditions:', e);
       }
     }
 
-    if (max - min < 1000) {
-      min = floorToHundreds(Math.max(absoluteMinFallback, max - 1000));
-    }
-
-    const midpoint = roundToHundreds((min + max) / 2);
-
-    return { min, max, midpoint };
-  }, [basePrice, price, selectedOption, previewId]);
+    // Используем новую формулу расчёта диапазона цен
+    const modelName = modelname; // Модель всегда валидна из БД
+    const range = calculatePriceRange(base, modelName, deviceConditions, additionalConditions);
+    
+    return range;
+  }, [basePrice, price, selectedOption, previewId, modelname]);
 
   useEffect(() => {
     if (!priceRange) return;

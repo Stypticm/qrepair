@@ -14,6 +14,7 @@ import { ExpandButton } from '@/components/ExpandButton';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore, isMaster } from '@/stores/authStore';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
+import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 
 function HomeContent() {
   const initDataState = useSignal(_initDataState);
@@ -30,9 +31,46 @@ function HomeContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
+  
+  // Состояние для marketplace
+  const [marketplaceItems, setMarketplaceItems] = useState<Array<{ id: string; title: string; price: number | null; date: string; cover: string | null }>>([]);
+  const [marketplaceOffset, setMarketplaceOffset] = useState(0);
+  const [marketplaceHasMore, setMarketplaceHasMore] = useState(true);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  
   const router = useRouter();
   const { forceFullscreen, isFullscreen } = useSafeArea();
   const testAdminIds = useMemo(() => ['1', '296925626', '531360988'], []);
+
+  // Функция загрузки marketplace данных
+  const loadMoreMarketplaceItems = useCallback(async () => {
+    if (marketplaceLoading) return;
+    
+    setMarketplaceLoading(true);
+    try {
+      const limit = 12;
+      const res = await fetch(`/api/market/feed?limit=${limit}&offset=${marketplaceOffset}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to load feed');
+      
+      const newItems = Array.isArray(data.items) ? data.items : [];
+      setMarketplaceItems((prev) => [...prev, ...newItems]);
+      setMarketplaceOffset(prev => prev + (newItems.length || 0));
+      setMarketplaceHasMore((newItems.length || 0) === limit);
+    } catch (e) {
+      console.error('Feed load error', e);
+      setMarketplaceHasMore(false);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  }, [marketplaceLoading, marketplaceOffset]);
+
+  // Загружаем данные при инициализации
+  useEffect(() => {
+    if (!isLoading) {
+      loadMoreMarketplaceItems();
+    }
+  }, [isLoading, loadMoreMarketplaceItems]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -169,7 +207,13 @@ function HomeContent() {
             >
               Оценить смартфон
             </Button>
-            <MarketplaceFeed />
+            <AdaptiveDeviceFeed 
+              items={marketplaceItems}
+              isLoading={marketplaceLoading}
+              onLoadMore={loadMoreMarketplaceItems}
+              hasMore={marketplaceHasMore}
+              mode="auto"
+            />
             {!isLoading && !isInTelegram && (
               <Button
                 variant="outline"
@@ -211,7 +255,31 @@ function HomeContent() {
                   className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
                   onSelect={() => router.push('/my-devices')}
                 >
-                  Мои устройства
+                  📱 Мои устройства
+                </MenubarItem>
+                <MenubarItem
+                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                  onSelect={() => router.push('/market')}
+                >
+                  🛒 Маркетплейс
+                </MenubarItem>
+                <MenubarItem
+                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                  onSelect={() => router.push('/favorites')}
+                >
+                  ❤️ Избранное
+                </MenubarItem>
+                <MenubarItem
+                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                  onSelect={() => router.push('/profile')}
+                >
+                  👤 Профиль
+                </MenubarItem>
+                <MenubarItem
+                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                  onSelect={() => router.push('/help')}
+                >
+                  ❓ Помощь
                 </MenubarItem>
               </MenubarContent>
             </Menubar>
@@ -224,115 +292,4 @@ function HomeContent() {
 
 export default function Home() {
   return <HomeContent />;
-}
-
-function MarketplaceFeed() {
-  const [visibleCount, setVisibleCount] = useState(6);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const router = useRouter();
-  const observer = useRef<IntersectionObserver | null>(null);
-
-  const items = useMemo(() => Array.from({ length: 24 }).map((_, i) => ({
-    id: i + 1,
-    title: `iPhone ${i + 8}`,
-    price: `${(49990 + i * 1000).toLocaleString('ru-RU')} ₽`,
-    image: '/logo3.png',
-    isNew: i % 4 === 0,
-    hasDiscount: i % 3 === 0,
-  })), []);
-
-  const loadMoreItems = useCallback(() => {
-    if (isLoadingMore || visibleCount >= items.length) return;
-
-    setIsLoadingMore(true);
-    setTimeout(() => {
-      setVisibleCount((prevCount) => Math.min(prevCount + 6, items.length));
-      setIsLoadingMore(false);
-    }, 500);
-  }, [isLoadingMore, visibleCount, items.length]);
-
-  const lastItemRef = useCallback((node: HTMLDivElement) => {
-    if (isLoadingMore) return;
-    if (observer.current) observer.current.disconnect();
-
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && visibleCount < items.length) {
-        loadMoreItems();
-      }
-    });
-
-    if (node) observer.current.observe(node);
-  }, [isLoadingMore, loadMoreItems, visibleCount, items.length]);
-
-  const visibleItems = items.slice(0, visibleCount);
-
-  return (
-    <div className="w-full">
-      <div className="grid grid-cols-2 gap-2">
-        {visibleItems.map((item, index) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: (index % 6) * 0.05 }}
-            className="bg-white rounded-2xl border border-gray-200
-            shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_20px_rgba(0,0,0,0.06)] transition hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_10px_24px_rgba(0,0,0,0.10)]"
-            role="button"
-            tabIndex={0}
-            onClick={() => router.push(`/market/${item.id}`)}
-            ref={index === visibleItems.length - 1 ? lastItemRef : null}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                router.push(`/market/${item.id}`);
-              }
-            }}
-          >
-            <div className="relative w-full h-20 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
-              <Image
-                src={item.image}
-                alt={item.title}
-                width={160}
-                height={80}
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mN8/wcAAgAB/epv2AAAAABJRU5ErkJggg=="
-                className="object-contain w-full h-full p-3"
-                priority={index < 6}
-              />
-            </div>
-            <div className="p-2 text-left">
-              <div className="text-[11px] font-semibold text-gray-900 tracking-[-0.01em] truncate">
-                {item.title}
-              </div>
-              <div className="text-[10px] text-gray-500 mt-0.5">
-                {item.price}
-              </div>
-              <div className="mt-1 flex items-center justify-end gap-1">
-                {item.hasDiscount && (
-                  <span className="inline-flex items-center px-1 h-4 rounded-full text-[8px] font-medium bg-red-50 text-red-700 border border-red-100">Скидка</span>
-                )}
-                {item.isNew && (
-                  <span className="inline-flex items-center px-1 h-4 rounded-full text-[8px] font-medium bg-blue-50 text-blue-700 border border-blue-100">Новый</span>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-      {isLoadingMore && (
-        <div className="flex justify-center items-center p-4">
-          <span className="inline-flex items-center gap-2 text-gray-500">
-            <Image
-              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-              alt="Загрузка"
-              width={32}
-              height={32}
-              className="object-contain"
-            />
-            Загрузка...
-          </span>
-        </div>
-      )}
-    </div>
-  );
 }

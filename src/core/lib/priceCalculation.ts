@@ -1,0 +1,333 @@
+/**
+ * Адаптированная формула расчёта цен на основе второго промта
+ * Реализует систему диапазона цен с защитой прибыли и факторами риска
+ */
+
+export interface DeviceConditions {
+  front?: string
+  back?: string
+  side?: string
+}
+
+export interface AdditionalConditions {
+  faceId?: string
+  touchId?: string
+  backCamera?: string
+  battery?: string
+}
+
+export interface PriceRange {
+  min: number
+  max: number
+  midpoint: number
+}
+
+/**
+ * Факторы риска по моделям устройств
+ * Чем новее модель - тем меньше риск
+ */
+export const MODEL_RISK_FACTORS: Record<string, number> = {
+  // iPhone 15 серия - минимальный риск
+  'iPhone 15': 0.05,
+  'iPhone 15 Plus': 0.05,
+  'iPhone 15 Pro': 0.05,
+  'iPhone 15 Pro Max': 0.05,
+
+  // iPhone 14 серия - низкий риск
+  'iPhone 14': 0.07,
+  'iPhone 14 Plus': 0.07,
+  'iPhone 14 Pro': 0.07,
+  'iPhone 14 Pro Max': 0.07,
+
+  // iPhone 13 серия - средний риск
+  'iPhone 13': 0.1,
+  'iPhone 13 mini': 0.1,
+  'iPhone 13 Pro': 0.1,
+  'iPhone 13 Pro Max': 0.1,
+
+  // iPhone 12 серия - повышенный риск
+  'iPhone 12': 0.12,
+  'iPhone 12 mini': 0.12,
+  'iPhone 12 Pro': 0.12,
+  'iPhone 12 Pro Max': 0.12,
+
+  // iPhone 11 серия - высокий риск
+  'iPhone 11': 0.15,
+  'iPhone 11 Pro': 0.15,
+  'iPhone 11 Pro Max': 0.15,
+
+  // iPhone X серия - очень высокий риск
+  'iPhone X': 0.18,
+  'iPhone XR': 0.18,
+  'iPhone XS': 0.18,
+  'iPhone XS Max': 0.18,
+
+  // iPhone 8 и старше - максимальный риск
+  'iPhone 8': 0.2,
+  'iPhone 8 Plus': 0.2,
+  'iPhone SE': 0.2,
+
+  // По умолчанию для неизвестных моделей
+  default: 0.15,
+}
+
+/**
+ * Константы для расчёта цен
+ */
+export const PRICE_CONSTANTS = {
+  // Базовая маржа компании (15% вместо 25% из промта)
+  COMPANY_MARGIN: 0.15,
+
+  // Минимальная цена относительно базовой (50%)
+  MIN_PRICE_RATIO: 0.5,
+
+  // Максимальная цена относительно базовой (95%)
+  MAX_PRICE_RATIO: 0.95,
+
+  // Минимальный диапазон цен (1000 рублей)
+  MIN_RANGE: 1000,
+}
+
+/**
+ * Получить фактор риска для модели устройства
+ */
+export function getModelRiskFactor(
+  modelName: string
+): number {
+  // Ищем точное совпадение
+  if (MODEL_RISK_FACTORS[modelName]) {
+    return MODEL_RISK_FACTORS[modelName]
+  }
+
+  // Ищем частичное совпадение (например, "iPhone 13 Pro" содержит "iPhone 13")
+  for (const [model, risk] of Object.entries(
+    MODEL_RISK_FACTORS
+  )) {
+    if (modelName.includes(model) && model !== 'default') {
+      return risk
+    }
+  }
+
+  // Возвращаем значение по умолчанию для неизвестных моделей
+  console.warn(
+    `Неизвестная модель устройства: ${modelName}, используем фактор риска по умолчанию`
+  )
+  return MODEL_RISK_FACTORS.default
+}
+
+/**
+ * Рассчитать общий дисконт за дефекты
+ * Адаптирует существующую логику из проекта
+ */
+export function calculateDefectDiscount(
+  deviceConditions: DeviceConditions,
+  additionalConditions: AdditionalConditions
+): number {
+  let totalDiscount = 0
+
+  // Штрафы за состояние экрана (из существующей логики)
+  if (deviceConditions.front) {
+    if (deviceConditions.front === 'Новый')
+      totalDiscount += 0
+    else if (deviceConditions.front === 'Очень хорошее')
+      totalDiscount += 0.03
+    else if (deviceConditions.front === 'Заметные царапины')
+      totalDiscount += 0.08
+    else if (deviceConditions.front === 'Трещины')
+      totalDiscount += 0.15
+  }
+
+  if (deviceConditions.back) {
+    if (deviceConditions.back === 'Новый')
+      totalDiscount += 0
+    else if (deviceConditions.back === 'Очень хорошее')
+      totalDiscount += 0.03
+    else if (deviceConditions.back === 'Заметные царапины')
+      totalDiscount += 0.08
+    else if (deviceConditions.back === 'Трещины')
+      totalDiscount += 0.15
+  }
+
+  if (deviceConditions.side) {
+    if (deviceConditions.side === 'Новый')
+      totalDiscount += 0
+    else if (deviceConditions.side === 'Очень хорошее')
+      totalDiscount += 0.03
+    else if (deviceConditions.side === 'Заметные царапины')
+      totalDiscount += 0.08
+    else if (deviceConditions.side === 'Трещины')
+      totalDiscount += 0.15
+  }
+
+  // Штрафы за дополнительные условия
+  if (additionalConditions.faceId) {
+    if (additionalConditions.faceId === 'Не работает')
+      totalDiscount += 0.1
+  }
+
+  if (additionalConditions.touchId) {
+    if (additionalConditions.touchId === 'Не работает')
+      totalDiscount += 0.08
+  }
+
+  if (additionalConditions.backCamera) {
+    if (additionalConditions.backCamera === 'Очень хорошее')
+      totalDiscount += 0.03
+    else if (
+      additionalConditions.backCamera ===
+      'Заметные царапины'
+    )
+      totalDiscount += 0.08
+    else if (additionalConditions.backCamera === 'Трещины')
+      totalDiscount += 0.15
+  }
+
+  if (additionalConditions.battery) {
+    if (additionalConditions.battery === '90%')
+      totalDiscount += 0.02
+    else if (additionalConditions.battery === '85%')
+      totalDiscount += 0.05
+    else if (additionalConditions.battery === '75%')
+      totalDiscount += 0.1
+  }
+
+  // Ограничиваем максимальный дисконт 50%
+  return Math.min(totalDiscount, 0.5)
+}
+
+/**
+ * Адаптированная формула расчёта диапазона цен из второго промта
+ *
+ * P_max = R × (1 - D)           // Максимальная цена (без учёта рисков)
+ * P_min = P_max × (1 - 0.15 - Rm)  // Минимальная цена (с маржей + рисками)
+ *
+ * Где:
+ * R - базовая цена устройства
+ * D - дисконт за дефекты
+ * Rm - фактор риска модели
+ * 0.15 - маржа компании (15%)
+ */
+export function calculatePriceRange(
+  basePrice: number,
+  modelName: string,
+  deviceConditions: DeviceConditions,
+  additionalConditions: AdditionalConditions
+): PriceRange {
+  // Рассчитываем дисконт за дефекты
+  const defectDiscount = calculateDefectDiscount(
+    deviceConditions,
+    additionalConditions
+  )
+
+  // Получаем фактор риска модели
+  const modelRiskFactor = getModelRiskFactor(modelName)
+
+  // Рассчитываем максимальную цену (без учёта рисков и маржи)
+  const maxPrice = basePrice * (1 - defectDiscount)
+
+  // Рассчитываем минимальную цену (с учётом маржи и рисков)
+  const minPrice =
+    maxPrice *
+    (1 - PRICE_CONSTANTS.COMPANY_MARGIN - modelRiskFactor)
+
+  // Ограничиваем минимальную цену
+  const finalMinPrice = Math.max(
+    minPrice,
+    basePrice * PRICE_CONSTANTS.MIN_PRICE_RATIO
+  )
+
+  // Ограничиваем максимальную цену
+  const finalMaxPrice = Math.min(
+    maxPrice,
+    basePrice * PRICE_CONSTANTS.MAX_PRICE_RATIO
+  )
+
+  // Округляем до сотен
+  const min = Math.floor(finalMinPrice / 100) * 100
+  const max = Math.ceil(finalMaxPrice / 100) * 100
+
+  // Проверяем минимальный диапазон
+  let finalMin = min
+  let finalMax = max
+
+  if (finalMax - finalMin < PRICE_CONSTANTS.MIN_RANGE) {
+    // Если диапазон слишком мал, расширяем его
+    const center = (finalMin + finalMax) / 2
+    finalMin =
+      Math.floor(
+        (center - PRICE_CONSTANTS.MIN_RANGE / 2) / 100
+      ) * 100
+    finalMax =
+      Math.ceil(
+        (center + PRICE_CONSTANTS.MIN_RANGE / 2) / 100
+      ) * 100
+  }
+
+  // Рассчитываем среднюю цену
+  const midpoint =
+    Math.round((finalMin + finalMax) / 2 / 100) * 100
+
+  return {
+    min: finalMin,
+    max: finalMax,
+    midpoint,
+  }
+}
+
+/**
+ * Получить объяснение диапазона цен для клиента
+ */
+export function getPriceRangeExplanation(
+  priceRange: PriceRange
+): string {
+  const rangePercent = Math.round(
+    ((priceRange.max - priceRange.min) / priceRange.max) *
+      100
+  )
+
+  return `Диапазон цен: от ${priceRange.min.toLocaleString()}₽ до ${priceRange.max.toLocaleString()}₽
+
+Верхняя цена - при идеальном состоянии устройства.
+Нижняя цена - с учётом возможных скрытых проблем и нашей маржи.
+
+Разница составляет ${rangePercent}% от максимальной цены.`
+}
+
+/**
+ * Пример использования новой формулы
+ */
+export function exampleUsage() {
+  const basePrice = 60000 // iPhone 13 Pro 128GB
+  const modelName = 'iPhone 13 Pro'
+
+  const deviceConditions: DeviceConditions = {
+    front: 'Заметные царапины',
+    back: 'Очень хорошее',
+    side: 'Новый',
+  }
+
+  const additionalConditions: AdditionalConditions = {
+    faceId: 'Работает',
+    touchId: 'Работает',
+    backCamera: 'Очень хорошее',
+    battery: '85%',
+  }
+
+  const priceRange = calculatePriceRange(
+    basePrice,
+    modelName,
+    deviceConditions,
+    additionalConditions
+  )
+
+  console.log('Пример расчёта:', {
+    basePrice,
+    modelName,
+    deviceConditions,
+    additionalConditions,
+    priceRange,
+    explanation: getPriceRangeExplanation(priceRange),
+  })
+
+  return priceRange
+}
