@@ -126,27 +126,27 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                         exit={{ opacity: 0 }}
                         className="space-y-4"
                       >
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
                           {active.model && (
-                            <div className="bg-gray-50 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-2">
                               <span className="text-gray-500">Модель</span>
                               <div className="font-medium text-gray-900">{active.model}</div>
                             </div>
                           )}
                           {active.storage && (
-                            <div className="bg-gray-50 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-2">
                               <span className="text-gray-500">Память</span>
                               <div className="font-medium text-gray-900">{active.storage}</div>
                             </div>
                           )}
                           {active.color && (
-                            <div className="bg-gray-50 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-2">
                               <span className="text-gray-500">Цвет</span>
                               <div className="font-medium text-gray-900">{active.color}</div>
                             </div>
                           )}
                           {active.condition && (
-                            <div className="bg-gray-50 rounded-lg p-3">
+                            <div className="bg-gray-50 rounded-lg p-2">
                               <span className="text-gray-500">Состояние</span>
                               <div className="font-medium text-gray-900">{active.condition}</div>
                             </div>
@@ -157,7 +157,7 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                           <div className="grid grid-cols-2 gap-3">
                             <motion.button
                               layoutId={`button-${active.id}-${id}`}
-                              className="w-full px-5 py-3 text-base font-semibold rounded-2xl bg-[#2dc2c6] hover:bg-[#25a8ac] text-white transition-colors duration-200 flex items-center justify-center gap-2"
+                              className="w-full px-5 py-3 text-base font-semibold rounded-2xl bg-[#ff9800] hover:bg-[#fb8c00] text-white transition-colors duration-200 flex items-center justify-center gap-2"
                             >
                               <ShoppingCart className="w-5 h-5" />
                               Купить
@@ -229,10 +229,10 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
           >
             <div className="relative">
               <motion.div layoutId={`image-${card.id}-${id}`}>
-                <div className={`w-full ${isSingle ? 'h-64' : 'h-16'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center`}>
+                <div className={`w-full ${isSingle ? 'h-72' : 'h-16'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center`}>
                   <Image
-                    width={160}
-                    height={300}
+                    width={176}
+                    height={320}
                     src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
                     alt={card.title}
                     className="object-contain w-full h-full p-2"
@@ -256,7 +256,7 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
               </motion.p>
               <motion.div
                 layoutId={`price-${card.id}-${id}`}
-                className="text-lg font-bold text-gray-900"
+                className="text-[18px] font-extrabold text-gray-900"
               >
                 {formatPrice(card.price)}
               </motion.div>

@@ -17,6 +17,7 @@ import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-r
 import { postEvent } from '@telegram-apps/sdk';
 import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen } from '@telegram-apps/sdk';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
+import { Smartphone } from 'lucide-react';
 
 function HomeContent() {
   const initDataState = useSignal(_initDataState);
@@ -244,10 +245,13 @@ function HomeContent() {
                   <div className="w-full flex justify-center">
                     <Button
                       variant="outline"
-                      className="w-[80%] h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                      className="group w-[82%] h-14 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200 animate-pulse"
                       onClick={handleStartForm}
                     >
-                      Оценить смартфон
+                      <span className="inline-flex items-center gap-2">
+                        <Smartphone className="w-5 h-5" />
+                        Оценить смартфон
+                      </span>
                     </Button>
                   </div>
                   <AdaptiveDeviceFeed
@@ -257,11 +261,6 @@ function HomeContent() {
                     hasMore={marketplaceHasMore}
                     mode="auto"
                   />
-                  <div className="mt-3 flex flex-col gap-2">
-                    <div className="w-full h-20 rounded-xl border border-dashed border-gray-300 bg-white text-gray-500 text-sm grid place-items-center">
-                      место для рекламы
-                    </div>
-                  </div>
                   {!isLoading && !isInTelegram && (
                     <Button
                       variant="outline"

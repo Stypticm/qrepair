@@ -121,13 +121,14 @@ const MyDevices = () => {
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1 pr-4">
-                            <CardTitle className="text-lg font-semibold text-gray-900">
+                            <CardTitle className="text-base font-semibold text-gray-900">
                               {device.modelname
                                 ? (device.modelname.length > 50
                                   ? device.modelname.substring(0, 50) + '...'
                                   : device.modelname)
                                 : 'Неизвестная модель'}
                             </CardTitle>
+                            {/* ID перенесён в блок с ценой ниже */}
                           </div>
                           <div className="flex flex-col items-end gap-2">
                             <Badge className={`${getStatusColor(device.status)} text-white px-3 py-1 text-sm font-medium`}>
@@ -157,31 +158,24 @@ const MyDevices = () => {
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
                             className="overflow-hidden"
                           >
-                            <CardContent className="pt-0 space-y-4">
-                              <div className="grid grid-cols-1 gap-3 text-sm">
-                                <div className="space-y-3 mb-4">
-                                  <div className="flex items-center gap-2">
-                                    <Smartphone className="w-4 h-4 text-gray-500" />
-                                    <span className="font-semibold text-gray-600">ID заявки:</span>
-                                    <span className="font-mono text-gray-800">#{device.id}</span>
+                            <CardContent className="pt-0 space-y-2">
+                              <div className="grid grid-cols-1 gap-2 text-sm">
+                                <div className="bg-green-50 p-2.5 rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-green-800 font-bold text-base">
+                                      Цена:
+                                      {device.price != null ? (
+                                        <span className="ml-1">
+                                          {Math.round(device.price * 0.95)}–{Math.round(device.price * 1.05)} ₽
+                                        </span>
+                                      ) : (
+                                        <span className="ml-1 text-green-700 font-semibold">Диапазон недоступен</span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-gray-500" />
-                                    <span className="font-semibold text-gray-600">Дата:</span>
-                                    <span className="text-gray-800">{new Date(device.createdAt).toLocaleDateString('ru-RU')}</span>
+                                  <div className="mt-1 text-xs text-gray-600">
+                                    ID: <span className="font-mono font-semibold text-gray-800">#{device.id}</span>
                                   </div>
-                                </div>
-
-                                {device.price && (
-                                  <div className="bg-green-50 p-3 rounded-lg">
-                                    <span className="font-semibold text-gray-600">Цена:</span>
-                                    <div className="text-green-600 font-semibold text-lg">{device.price} ₽</div>
-                                  </div>
-                                )}
-
-                                <div>
-                                  <span className="font-semibold text-gray-600">Полная модель:</span>
-                                  <div className="text-gray-800 break-words bg-gray-50 p-2 rounded-lg">{device.modelname || '—'}</div>
                                 </div>
 
                                 {device.comment && (
@@ -219,14 +213,8 @@ const MyDevices = () => {
 
                                 {device.status === 'submitted' && (
                                   <div className="border-t pt-4">
-                                    <div className="text-center">
-                                      <p className="text-sm text-gray-600 mb-2">
-                                        ID заявки: <span className="font-mono font-bold text-teal-600">#{device.id}</span>
-                                      </p>
-                                      <p className="text-sm text-gray-600 mb-4">
-                                        Покажите этот QR-код мастеру
-                                      </p>
-                                      <QRCodeGenerator skupkaId={device.id} pointId={1} />
+                                  <div className="text-center">
+                                      <QRCodeGenerator skupkaId={device.id} pointId={1} showHeader={false} showId={false} />
                                     </div>
                                   </div>
                                 )}
