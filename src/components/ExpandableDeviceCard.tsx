@@ -229,14 +229,16 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
           >
             <div className="relative">
               <motion.div layoutId={`image-${card.id}-${id}`}>
-                <div className={`w-full ${isSingle ? 'h-72' : 'h-16'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center`}>
-                  <Image
-                    width={176}
-                    height={320}
-                    src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
-                    alt={card.title}
-                    className="object-contain w-full h-full p-2"
-                  />
+                <div className={`w-full ${isSingle ? 'h-60' : 'h-16'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden`}>
+                  <div className="w-[100%] h-[180%] -mb-[80%]">
+                    <Image
+                      width={220}
+                      height={380}
+                      src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
+                      alt={card.title}
+                      className="object-cover object-top w-full h-full"
+                    />
+                  </div>
                 </div>
               </motion.div>
             </div>

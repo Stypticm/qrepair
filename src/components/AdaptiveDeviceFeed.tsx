@@ -373,12 +373,13 @@ export function AdaptiveDeviceFeed({
             </div>
           )}
 
-          {/* Кнопка все товары под каруселью */}
+          {/* Кнопка все товары под каруселью (ещё заметнее) */}
           <div className="text-center">
             <button
               onClick={switchToGrid}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white text-sm font-bold shadow-md active:scale-[0.98] transition"
             >
+              <List className="w-4 h-4" />
               Все товары
             </button>
           </div>
