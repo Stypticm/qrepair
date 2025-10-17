@@ -141,6 +141,7 @@ export function AdaptiveDeviceFeed({
               height={48}
               className="object-contain w-full h-full"
               priority
+              unoptimized
             />
           </div>
           <div className="text-center">
@@ -238,7 +239,7 @@ export function AdaptiveDeviceFeed({
 
           {/* Карусель с ручным свайпом */}
           <div
-            className="relative overflow-hidden outline-none flex justify-center"
+            className="relative overflow-hidden outline-none flex justify-center min-h-[560px]"
             role="region"
             aria-label="Карусель устройств"
             tabIndex={0}
@@ -292,6 +293,7 @@ export function AdaptiveDeviceFeed({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="h-full w-full"
               >
                 <ExpandableDeviceCard cards={currentItems} />
               </motion.div>
