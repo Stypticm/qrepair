@@ -14,6 +14,7 @@ import { ExpandButton } from '@/components/ExpandButton';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore, isMaster } from '@/stores/authStore';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
+import { postEvent } from '@telegram-apps/sdk';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 
 function HomeContent() {
@@ -105,6 +106,13 @@ function HomeContent() {
 
       if (inTelegram) {
         initializeTelegram(initDataState);
+        // Запрещаем вертикальный свайп для закрытия мини‑приложения
+        try {
+          postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false });
+          addDebugInfo('Swipe behavior: allow_vertical_swipe=false применён');
+        } catch (e) {
+          console.error('Не удалось применить web_app_setup_swipe_behavior', e);
+        }
       } else {
         addDebugInfo('Браузерный режим - используем fallback ID');
         const testId = testAdminIds[testAdminIndex];
