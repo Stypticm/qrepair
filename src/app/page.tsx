@@ -122,8 +122,6 @@ function HomeContent() {
       };
       detectDesktop();
       window.addEventListener('resize', detectDesktop);
-      // cleanup
-      return () => window.removeEventListener('resize', detectDesktop);
 
       if (inTelegram) {
         initializeTelegram(initDataState);
@@ -158,6 +156,8 @@ function HomeContent() {
         setTelegramId(testId);
         setRole('master', parseInt(testId));
       }
+      // cleanup
+      return () => window.removeEventListener('resize', detectDesktop);
     }
   }, [initializeTelegram, setTelegramId, setRole, testAdminIndex, addDebugInfo, initDataState, testAdminIds]);
 
