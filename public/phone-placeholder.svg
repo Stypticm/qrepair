@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="300" height="600" viewBox="0 0 300 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#eef2f7"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f3f4f6"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="300" height="600" fill="url(#bg)"/>
+  <!-- phone body -->
+  <rect x="55" y="30" rx="36" ry="36" width="190" height="540" fill="#0f172a"/>
+  <!-- screen -->
+  <rect x="65" y="80" rx="24" ry="24" width="170" height="450" fill="url(#screen)"/>
+  <!-- notch -->
+  <rect x="120" y="60" rx="8" ry="8" width="60" height="12" fill="#0f172a"/>
+  <!-- home indicator -->
+  <rect x="125" y="550" rx="4" ry="4" width="50" height="6" fill="#111827" opacity=".25"/>
+</svg>
+

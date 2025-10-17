@@ -4,6 +4,7 @@ import React, { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "@/hooks/use-outside-click";
 import Image from "next/image";
+import { getPictureUrl } from "@/core/lib/assets";
 import { Page } from "@/components/Page";
 import { Heart, ShoppingCart, Share2, Star } from "lucide-react";
 
@@ -189,13 +190,13 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
           >
             <div className="relative">
               <motion.div layoutId={`image-${card.id}-${id}`}>
-                <div className="w-full h-16 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
+                <div className={`w-full ${isSingle ? 'h-64' : 'h-16'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center`}>
                   <Image
-                    width={120}
-                    height={80}
-                    src={card.cover || '/logo3.png'}
+                    width={160}
+                    height={300}
+                    src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
                     alt={card.title}
-                    className="object-contain w-full h-full p-3"
+                    className="object-contain w-full h-full p-2"
                   />
                 </div>
               </motion.div>

@@ -203,15 +203,17 @@ function HomeContent() {
             transition={{ type: "spring", stiffness: 70, damping: 12, duration: 2.2 }}
             className="w-full"
           >
-            <div className="w-full max-w-md mx-auto">
-              <Image
-                src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
-                alt="Логотип"
-                width={320}
-                height={120}
-                className="w-full h-[110px] object-contain mx-auto rounded-2xl shadow-lg"
-                priority
-              />
+            <div className="w-full max-w-md mx-auto flex justify-center">
+              <div className="w-[120px] h-[120px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden">
+                <Image
+                  src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
+                  alt="Логотип"
+                  width={96}
+                  height={96}
+                  className="w-[96px] h-[96px] object-contain bg-white"
+                  priority
+                />
+              </div>
             </div>
           </motion.div>
 
