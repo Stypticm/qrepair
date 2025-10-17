@@ -133,13 +133,16 @@ export function AdaptiveDeviceFeed({
     return (
       <div className="w-full">
         <div className="flex flex-col justify-center items-center h-64 space-y-4">
-          <Image
-            src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-            alt="Загрузка"
-            width={48}
-            height={48}
-            className="object-contain"
-          />
+          <div className="relative w-12 h-12">
+            <Image
+              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+              alt="Загрузка"
+              width={48}
+              height={48}
+              className="object-contain w-full h-full"
+              priority
+            />
+          </div>
           <div className="text-center">
             <p className="text-gray-600 font-medium">Загружаем товары...</p>
             <p className="text-gray-400 text-sm">Пожалуйста, подождите</p>

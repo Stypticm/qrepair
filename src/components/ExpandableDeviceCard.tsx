@@ -323,14 +323,15 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
             key={`card-${card.id}-${id}`}
             onClick={() => setActive(card)}
             className={
-              "bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_10px_24px_rgba(0,0,0,0.10)] transition-all duration-200 cursor-pointer overflow-hidden " +
+              "bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_10px_24px_rgba(0,0,0,0.10)] transition-all duration-200 cursor-pointer overflow-hidden flex flex-col " +
+              (isSingle ? " h-[300px]" : " h-[360px]") +
               (isSingle ? " w-[88%] max-w-[360px]" : "")
             }
           >
             <div className="relative">
               <motion.div layoutId={`image-${card.id}-${id}`}>
-                <div className={`w-full ${isSingle ? 'h-60' : 'h-16'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden`}>
-                  <div className="w-[100%] h-[180%] -mb-[80%]">
+                <div className={`w-full ${isSingle ? 'h-56' : 'h-56'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0`}>
+                  <div className="w-[100%] h-[280%] -mb-[60%]">
                     <Image
                       width={220}
                       height={380}
@@ -343,7 +344,7 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
               </motion.div>
             </div>
             
-            <div className="p-3">
+            <div className="p-3 flex-1 flex flex-col justify-between">
               <motion.h3
                 layoutId={`title-${card.id}-${id}`}
                 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2"
@@ -356,12 +357,14 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
               >
                 {card.description}
               </motion.p>
-              <motion.div
-                layoutId={`price-${card.id}-${id}`}
-                className="text-[18px] font-extrabold text-gray-900"
-              >
-                {formatPrice(card.price)}
-              </motion.div>
+              <div className="mt-auto">
+                <motion.div
+                  layoutId={`price-${card.id}-${id}`}
+                  className="text-[18px] font-extrabold text-gray-900"
+                >
+                  {formatPrice(card.price)}
+                </motion.div>
+              </div>
             </div>
           </motion.div>
         ))}

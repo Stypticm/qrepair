@@ -146,7 +146,7 @@ export function DeviceCarousel({ items, isLoading, onLoadMore, hasMore }: Device
       </div>
 
       {/* Карусель */}
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden min-h-[560px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIndex}
@@ -154,6 +154,7 @@ export function DeviceCarousel({ items, isLoading, onLoadMore, hasMore }: Device
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="h-full"
           >
             <ExpandableDeviceCard cards={currentItems} />
           </motion.div>
