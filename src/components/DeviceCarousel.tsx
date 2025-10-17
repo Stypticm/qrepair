@@ -10,9 +10,10 @@ import { getPictureUrl } from "@/core/lib/assets";
 interface DeviceCard {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   price: number | null;
   cover: string | null;
+  photos: string[]; // Все фото для галереи
   date: string;
   model?: string;
   storage?: string;

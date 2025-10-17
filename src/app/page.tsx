@@ -37,7 +37,19 @@ function HomeContent() {
   const [testAdminIndex, setTestAdminIndex] = useState(0);
 
   // Состояние для marketplace
-  const [marketplaceItems, setMarketplaceItems] = useState<Array<{ id: string; title: string; price: number | null; date: string; cover: string | null }>>([]);
+  const [marketplaceItems, setMarketplaceItems] = useState<Array<{ 
+    id: string; 
+    title: string; 
+    price: number | null; 
+    date: string; 
+    cover: string | null;
+    photos: string[];
+    model?: string;
+    storage?: string;
+    color?: string;
+    condition?: string;
+    description?: string;
+  }>>([]);
   const [marketplaceOffset, setMarketplaceOffset] = useState(0);
   const marketplaceOffsetRef = useRef(0);
   const [marketplaceHasMore, setMarketplaceHasMore] = useState(true);
