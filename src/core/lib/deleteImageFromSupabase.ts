@@ -1,19 +1,25 @@
-import { supabase } from './supabase';
-
-export const deleteImageFromSupabase = async (imageUrl: string) => {
+export const deleteImageFromSupabase = async (
+  imageUrl: string
+) => {
   try {
-    const { data, error } = await supabase.storage
-      .from('master-photos')
-      .remove([imageUrl]);
+    // Отправляем через API роут вместо прямого доступа к Supabase
+    const response = await fetch('/api/delete-image', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl }),
+    })
 
-    if (error) {
-      console.error('Error deleting image:', error);
-      throw error;
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(
+        error.message || 'Ошибка удаления изображения'
+      )
     }
 
-    return data;
+    const data = await response.json()
+    return data
   } catch (error) {
-    console.error('Error deleting image:', error);
-    throw error;
+    console.error('Error deleting image:', error)
+    throw error
   }
-};
+}

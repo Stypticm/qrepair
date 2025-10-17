@@ -1,20 +1,27 @@
-import { v4 as uuidv4 } from 'uuid';
-import { supabase } from './supabase';
+import { v4 as uuidv4 } from 'uuid'
 
 export const uploadImageToSupabase = async (file: File) => {
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${uuidv4()}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const fileExt = file.name.split('.').pop()
+  const fileName = `${uuidv4()}.${fileExt}`
 
-  const { error } = await supabase.storage.from('items').upload(filePath, file);
+  // Создаём FormData для отправки файла
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('fileName', fileName)
 
-  if (error) {
-    throw new Error(error.message);
+  // Отправляем через API роут вместо прямого доступа к Supabase
+  const response = await fetch('/api/upload-image', {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(
+      error.message || 'Ошибка загрузки изображения'
+    )
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('items').getPublicUrl(filePath);
-
-  return publicUrl;
-};
+  const { publicUrl } = await response.json()
+  return publicUrl
+}
