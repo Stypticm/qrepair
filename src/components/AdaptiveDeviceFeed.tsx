@@ -59,14 +59,35 @@ export function AdaptiveDeviceFeed({
   isLoading, 
   onLoadMore, 
   hasMore,
-  mode = 'auto'
+  mode = 'carousel'
 }: AdaptiveDeviceFeedProps) {
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'price' | 'date' | 'popularity'>('date');
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const lastWheelTs = useRef<number>(0);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const switchToGrid = useCallback(() => {
+    setViewMode('grid');
+    setShowFilters(false);
+    // плавная прокрутка к началу списка
+    setTimeout(() => {
+      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }, []);
+
+  const switchToCarousel = useCallback(() => {
+    setViewMode('carousel');
+    setShowFilters(false);
+    setTimeout(() => {
+      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }, []);
   
   // Временные тестовые данные для демонстрации
   const [testData, setTestData] = useState<DeviceCard[]>([]);
@@ -80,7 +101,7 @@ export function AdaptiveDeviceFeed({
   // Используем тестовые данные вместо реальных для демонстрации
   const displayItems = testData.length > 0 ? testData : items;
   
-  const itemsPerPage = 6;
+  const itemsPerPage = 1;
   const totalPages = Math.ceil(displayItems.length / itemsPerPage);
   const currentItems = displayItems.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage);
 
@@ -97,33 +118,18 @@ export function AdaptiveDeviceFeed({
     }
   }, [displayItems.length, mode]);
 
-  // Автопрокрутка только для карусели
-  useEffect(() => {
-    if (viewMode === 'carousel' && isAutoPlaying && totalPages > 1) {
-      const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % totalPages);
-      }, 4000);
-
-      return () => clearInterval(interval);
-    }
-  }, [viewMode, isAutoPlaying, totalPages]);
+  // Автопрокрутка отключена
 
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % totalPages);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
   }, [totalPages]);
 
   const goToPrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev - 1 + totalPages) % totalPages);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
   }, [totalPages]);
 
   const goToPage = useCallback((page: number) => {
     setCurrentIndex(page);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 10000);
   }, []);
 
   // Фильтрация и поиск
@@ -187,9 +193,9 @@ export function AdaptiveDeviceFeed({
   }
 
   return (
-    <div className="w-full space-y-4">
+    <div ref={rootRef} className="w-full space-y-4">
       {/* Тестовые контролы */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+      {/* <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold text-blue-800">🧪 Тестовый режим</h3>
           <div className="flex gap-2">
@@ -211,100 +217,63 @@ export function AdaptiveDeviceFeed({
           Текущее количество: {displayItems.length} товаров | Режим: {viewMode} | 
           Автопереключение: {mode === 'auto' ? 'Включено' : 'Выключено'}
         </p>
-      </div>
+      </div> */}
 
-      {/* Заголовок с контролами */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-gray-900">
-            {viewMode === 'carousel' ? 'Рекомендуемые устройства' : 'Все устройства'}
-          </h2>
-          <span className="text-sm text-gray-500">({displayItems.length})</span>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Переключатель режимов */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('carousel')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'carousel' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'grid' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Grid className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Кнопка фильтров */}
+      {/* В режиме grid показываем панель с кнопкой возврата к карусели */}
+      {viewMode === 'grid' && (
+        <div className="flex items-center justify-between">
           <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
+            onClick={switchToCarousel}
+            className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
           >
-            <Filter className="w-4 h-4 text-gray-600" />
+            ← Рекомендации
           </button>
+          <span className="text-sm text-gray-500">Всего: {sortedItems.length}</span>
         </div>
-      </div>
+      )}
 
       {/* Фильтры и поиск */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-gray-50 rounded-xl p-4 space-y-3"
-          >
-            {/* Поиск */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Поиск устройств..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent"
-              />
-            </div>
+      {/* В режиме grid фильтры и поиск всегда видимы */}
+      {viewMode === 'grid' && (
+        <div className="mt-12 bg-gray-50 rounded-xl p-4 space-y-3">
+          {/* Поиск */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Поиск устройств..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent"
+            />
+          </div>
 
-            {/* Сортировка */}
-            <div className="flex gap-2">
-              <span className="text-sm text-gray-600 self-center">Сортировка:</span>
-              {(['date', 'price', 'popularity'] as const).map((sort) => (
-                <button
-                  key={sort}
-                  onClick={() => setSortBy(sort)}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                    sortBy === sort
-                      ? 'bg-[#2dc2c6] text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {sort === 'date' ? 'По дате' : sort === 'price' ? 'По цене' : 'По популярности'}
-                </button>
-              ))}
-            </div>
+          {/* Сортировка */}
+          <div className="flex gap-2">
+            <span className="text-sm text-gray-600 self-center">Сортировка:</span>
+            {(['date', 'price', 'popularity'] as const).map((sort) => (
+              <button
+                key={sort}
+                onClick={() => setSortBy(sort)}
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                  sortBy === sort
+                    ? 'bg-[#2dc2c6] text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {sort === 'date' ? 'По дате' : sort === 'price' ? 'По цене' : 'По популярности'}
+              </button>
+            ))}
+          </div>
 
-            {/* Результаты поиска */}
-            {searchQuery && (
-              <div className="text-sm text-gray-600">
-                Найдено: {filteredItems.length} из {displayItems.length} товаров
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Результаты поиска */}
+          {searchQuery && (
+            <div className="text-sm text-gray-600">
+              Найдено: {filteredItems.length} из {displayItems.length} товаров
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Контент */}
       {viewMode === 'carousel' ? (
@@ -324,8 +293,36 @@ export function AdaptiveDeviceFeed({
             </div>
           )}
 
-          {/* Карусель */}
-          <div className="relative overflow-hidden">
+          {/* Карусель с ручным свайпом */}
+          <div
+            className="relative overflow-hidden outline-none flex justify-center"
+            role="region"
+            aria-label="Карусель устройств"
+            tabIndex={0}
+            onTouchStart={(e) => { touchStartX.current = e.changedTouches[0].clientX; }}
+            onTouchEnd={(e) => {
+              touchEndX.current = e.changedTouches[0].clientX;
+              if (touchStartX.current !== null && touchEndX.current !== null) {
+                const dx = touchEndX.current - touchStartX.current;
+                if (Math.abs(dx) > 40) {
+                  if (dx < 0) goToNext(); else goToPrevious();
+                }
+              }
+              touchStartX.current = null;
+              touchEndX.current = null;
+            }}
+            onWheel={(e) => {
+              const now = Date.now();
+              if (now - lastWheelTs.current < 350) return; // дебаунс
+              lastWheelTs.current = now;
+              if (e.deltaY > 20) goToNext();
+              else if (e.deltaY < -20) goToPrevious();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowRight') goToNext();
+              if (e.key === 'ArrowLeft') goToPrevious();
+            }}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentIndex}
@@ -357,9 +354,14 @@ export function AdaptiveDeviceFeed({
             </div>
           )}
 
-          {/* Информация о страницах */}
-          <div className="text-center text-sm text-gray-500">
-            Страница {currentIndex + 1} из {totalPages}
+          {/* Кнопка все товары под каруселью */}
+          <div className="text-center">
+            <button
+              onClick={switchToGrid}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+            >
+              Все товары
+            </button>
           </div>
         </div>
       ) : (
@@ -378,20 +380,12 @@ export function AdaptiveDeviceFeed({
             ))}
           </div>
 
-          {/* Загрузка больше */}
-          <div className="text-center">
-            <button
-              onClick={addMoreTestData}
-              className="px-6 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold rounded-xl transition-colors"
-            >
-              Показать ещё 12 товаров
-            </button>
-          </div>
+          {/* Нижняя кнопка убрана по требованию */}
         </div>
       )}
 
-      {/* Индикатор загрузки */}
-      {isLoading && (
+      {/* Индикатор загрузки показываем только если нет элементов */}
+      {isLoading && displayItems.length === 0 && (
         <div className="flex justify-center items-center py-4">
           <span className="inline-flex items-center gap-2 text-gray-500">
             <Image

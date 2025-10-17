@@ -36,6 +36,7 @@ function HomeContent() {
   // Состояние для marketplace
   const [marketplaceItems, setMarketplaceItems] = useState<Array<{ id: string; title: string; price: number | null; date: string; cover: string | null }>>([]);
   const [marketplaceOffset, setMarketplaceOffset] = useState(0);
+  const marketplaceOffsetRef = useRef(0);
   const [marketplaceHasMore, setMarketplaceHasMore] = useState(true);
   const [marketplaceLoading, setMarketplaceLoading] = useState(false);
   
@@ -46,32 +47,37 @@ function HomeContent() {
   // Функция загрузки marketplace данных
   const loadMoreMarketplaceItems = useCallback(async () => {
     if (marketplaceLoading) return;
-    
     setMarketplaceLoading(true);
     try {
       const limit = 12;
-      const res = await fetch(`/api/market/feed?limit=${limit}&offset=${marketplaceOffset}`, { cache: 'no-store' });
+      const currentOffset = marketplaceOffsetRef.current;
+      const res = await fetch(`/api/market/feed?limit=${limit}&offset=${currentOffset}`, { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'Failed to load feed');
-      
+
       const newItems = Array.isArray(data.items) ? data.items : [];
       setMarketplaceItems((prev) => [...prev, ...newItems]);
-      setMarketplaceOffset(prev => prev + (newItems.length || 0));
-      setMarketplaceHasMore((newItems.length || 0) === limit);
+      const nextOffset = currentOffset + (newItems.length || 0);
+      marketplaceOffsetRef.current = nextOffset;
+      setMarketplaceOffset(nextOffset);
+      // Мы хотим загрузить только один пакет из 12
+      setMarketplaceHasMore(false);
     } catch (e) {
       console.error('Feed load error', e);
       setMarketplaceHasMore(false);
     } finally {
       setMarketplaceLoading(false);
     }
-  }, [marketplaceLoading, marketplaceOffset]);
+  }, [marketplaceLoading]);
 
   // Загружаем данные при инициализации
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && marketplaceItems.length === 0 && marketplaceOffsetRef.current === 0) {
       loadMoreMarketplaceItems();
     }
-  }, [isLoading, loadMoreMarketplaceItems]);
+    // намеренно не добавляем loadMoreMarketplaceItems в зависимости, чтобы не триггерить повторно
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, marketplaceItems.length]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -197,14 +203,16 @@ function HomeContent() {
             transition={{ type: "spring", stiffness: 70, damping: 12, duration: 2.2 }}
             className="w-full"
           >
-            <Image
-              src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
-              alt="Логотип"
-              width={400}
-              height={150}
-              className="w-full max-w-md h-auto object-contain mx-auto rounded-2xl shadow-lg"
-              priority
-            />
+            <div className="w-full max-w-md mx-auto">
+              <Image
+                src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
+                alt="Логотип"
+                width={320}
+                height={120}
+                className="w-full h-[110px] object-contain mx-auto rounded-2xl shadow-lg"
+                priority
+              />
+            </div>
           </motion.div>
 
           <div className="flex flex-col gap-4 w-full">
@@ -222,6 +230,11 @@ function HomeContent() {
               hasMore={marketplaceHasMore}
               mode="auto"
             />
+            <div className="mt-3 flex flex-col gap-2">
+              <div className="w-full h-20 rounded-xl border border-dashed border-gray-300 bg-white text-gray-500 text-sm grid place-items-center">
+                место для рекламы
+              </div>
+            </div>
             {!isLoading && !isInTelegram && (
               <Button
                 variant="outline"
