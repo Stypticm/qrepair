@@ -15,7 +15,7 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore, isMaster } from '@/stores/authStore';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 import { postEvent } from '@telegram-apps/sdk';
-import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen } from '@telegram-apps/sdk';
+import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen, mountSwipeBehavior, disableVerticalSwipes, isSwipeBehaviorMounted } from '@telegram-apps/sdk';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 import { Smartphone } from 'lucide-react';
 
@@ -127,22 +127,25 @@ function HomeContent() {
 
       if (inTelegram) {
         initializeTelegram(initDataState);
-        // Запрещаем вертикальный свайп для закрытия мини‑приложения
+        // Официальный API SwipeBehavior: монтируем и отключаем вертикальные свайпы
         try {
-          postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false });
-          addDebugInfo('Swipe behavior: allow_vertical_swipe=false применён');
+          if ((mountSwipeBehavior as any)?.isAvailable?.()) {
+            mountSwipeBehavior();
+          }
+          const applyDisable = () => {
+            try {
+              if ((disableVerticalSwipes as any)?.isAvailable?.()) disableVerticalSwipes();
+              addDebugInfo('SwipeBehavior: disableVerticalSwipes применён');
+            } catch {}
+          };
+          applyDisable();
+          // ретраи на случай ленивого инициализации клиента
+          setTimeout(applyDisable, 300);
+          setTimeout(applyDisable, 1000);
         } catch (e) {
-          console.error('Не удалось применить web_app_setup_swipe_behavior', e);
+          // Фоллбек через postEvent, если компонент недоступен
+          try { postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); } catch {}
         }
-        // Ретраи на случай, если телеграм применил поведение не сразу
-        try {
-          setTimeout(() => {
-            try { postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); } catch {}
-          }, 300);
-          setTimeout(() => {
-            try { postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); } catch {}
-          }, 1000);
-        } catch {}
         // Привяжем CSS переменные viewport (влияет на безопасные отступы)
         try {
           if ((bindViewportCssVars as any)?.isAvailable?.() || true) {
