@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { mountSwipeBehavior, disableVerticalSwipes } from '@telegram-apps/sdk';
 import Image from 'next/image';
 import { useSafeArea } from '@/hooks/useSafeArea';
 
@@ -32,6 +33,24 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
 
     checkDevice();
   }, [isMounted, safeArea]);
+
+  // Глобально отключаем вертикальный свайп в Telegram Mini App на уровне контейнера
+  useEffect(() => {
+    if (!isMounted) return;
+    if (!safeArea.isTelegram) return;
+    try {
+      if ((mountSwipeBehavior as any)?.isAvailable?.()) {
+        mountSwipeBehavior();
+      }
+      const apply = () => {
+        try { (disableVerticalSwipes as any)?.isAvailable?.() && disableVerticalSwipes(); } catch {}
+      };
+      apply();
+      const t1 = setTimeout(apply, 300);
+      const t2 = setTimeout(apply, 1000);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    } catch {}
+  }, [isMounted, safeArea.isTelegram]);
 
   if (!isMounted) {
     return (

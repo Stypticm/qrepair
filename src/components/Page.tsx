@@ -63,19 +63,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   return (
     <div className={outerClass}>
-      <div className={innerClass}>
-        {/* Web back button fallback when Telegram BackButton is unavailable or not clickable */}
-        {back ? (
-          <button
-            onClick={onBack}
-            className="absolute top-3 left-3 z-50 h-10 w-10 rounded-full bg-white/90 border border-gray-200 shadow flex items-center justify-center active:scale-95"
-            aria-label="Назад"
-          >
-            <span className="text-xl leading-none">←</span>
-          </button>
-        ) : null}
-        {children}
-      </div>
+      <div className={innerClass}>{children}</div>
     </div>
   );
 }
