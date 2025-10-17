@@ -84,7 +84,7 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                       <Image
                         width={300}
                         height={300}
-                        src={active.cover || '/logo3.png'}
+                        src={active.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
                         alt={active.title}
                         className="w-full h-full object-contain p-6"
                       />
