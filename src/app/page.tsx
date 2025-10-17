@@ -134,6 +134,15 @@ function HomeContent() {
         } catch (e) {
           console.error('Не удалось применить web_app_setup_swipe_behavior', e);
         }
+        // Ретраи на случай, если телеграм применил поведение не сразу
+        try {
+          setTimeout(() => {
+            try { postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); } catch {}
+          }, 300);
+          setTimeout(() => {
+            try { postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); } catch {}
+          }, 1000);
+        } catch {}
         // Привяжем CSS переменные viewport (влияет на безопасные отступы)
         try {
           if ((bindViewportCssVars as any)?.isAvailable?.() || true) {

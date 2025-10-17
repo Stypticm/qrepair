@@ -67,8 +67,9 @@ export function AdaptiveDeviceFeed({
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'price' | 'date' | 'popularity'>('date');
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
+      const touchStartX = useRef<number | null>(null);
+      const touchStartY = useRef<number | null>(null);
+      const touchEndX = useRef<number | null>(null);
   const lastWheelTs = useRef<number>(0);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -298,16 +299,35 @@ export function AdaptiveDeviceFeed({
             role="region"
             aria-label="Карусель устройств"
             tabIndex={0}
-            onTouchStart={(e) => { touchStartX.current = e.changedTouches[0].clientX; }}
+              onTouchStart={(e) => {
+                touchStartX.current = e.changedTouches[0].clientX;
+                touchStartY.current = e.changedTouches[0].clientY;
+              }}
+              onTouchMove={(e) => {
+                // Блокируем вертикальный свайп/скролл в пределах карусели, если горизонтальное движение доминирует
+                const x = e.changedTouches[0].clientX;
+                const y = e.changedTouches[0].clientY;
+                if (touchStartX.current != null && touchStartY.current != null) {
+                  const dx = Math.abs(x - touchStartX.current);
+                  const dy = Math.abs(y - touchStartY.current);
+                  if (dx > dy && dx > 8) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                }
+              }}
             onTouchEnd={(e) => {
               touchEndX.current = e.changedTouches[0].clientX;
-              if (touchStartX.current !== null && touchEndX.current !== null) {
-                const dx = touchEndX.current - touchStartX.current;
-                if (Math.abs(dx) > 40) {
-                  if (dx < 0) goToNext(); else goToPrevious();
+                const endY = e.changedTouches[0].clientY;
+                if (touchStartX.current !== null && touchEndX.current !== null && touchStartY.current !== null) {
+                  const dx = touchEndX.current - touchStartX.current;
+                  const dy = Math.abs(endY - touchStartY.current);
+                  if (Math.abs(dx) > Math.max(30, dy)) {
+                    if (dx < 0) goToNext(); else goToPrevious();
+                  }
                 }
-              }
               touchStartX.current = null;
+                touchStartY.current = null;
               touchEndX.current = null;
             }}
             onWheel={(e) => {

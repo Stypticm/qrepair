@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Download } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { getPictureUrl } from '@/core/lib/assets';
 
 interface QRCodeGeneratorProps {
   skupkaId: string;
@@ -65,7 +66,7 @@ export function QRCodeGenerator({ skupkaId, pointId, showHeader = true, showId =
         ctxNow.drawImage(img, cx2 - r2, cy2 - r2, r2 * 2, r2 * 2)
         ctxNow.restore()
       }
-      img.src = '/submit.png'
+      img.src = getPictureUrl('submit.png') || '/submit.png'
     }
 
     // Немного задержки, чтобы холст гарантированно был отрендерен
@@ -119,10 +120,10 @@ export function QRCodeGenerator({ skupkaId, pointId, showHeader = true, showId =
                   </div>
                 </div>
               </div>
-              {/* Абсолютный fallback логотип поверх */}
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-10">
+              {/* Абсолютный fallback логотип поверх всех слоёв */}
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-30">
                 <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm bg-white/90">
-                  <img src="/submit.png" alt="logo" className="w-full h-full object-contain" />
+                  <img src={getPictureUrl('submit.png') || '/submit.png'} alt="logo" className="w-full h-full object-contain" />
                 </div>
               </div>
             </div>

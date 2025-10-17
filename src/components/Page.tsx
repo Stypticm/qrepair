@@ -14,6 +14,20 @@ export function Page({ children, back = true }: PropsWithChildren<{
   const { safeAreaInsets, cssVars, isTelegram, isDesktop } = useSafeArea();
   const { goToPreviousStep } = useAppStore();
 
+  const onBack = () => {
+    if (!back) return;
+    if (typeof back === 'function') {
+      back();
+      return;
+    }
+    const { currentStep } = useAppStore.getState();
+    if (!currentStep) {
+      router.back();
+    } else {
+      goToPreviousStep(router);
+    }
+  };
+
   useEffect(() => {
     try {
       if (back) {
@@ -27,24 +41,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
   }, [back]);
 
   useEffect(() => {
-    const handleBackClick = () => {
-      if (typeof back === 'function') {
-        // Если передана кастомная функция, вызываем её
-        back();
-      } else {
-        // Проверяем, есть ли currentStep в store
-        const { currentStep } = useAppStore.getState();
-        console.log('🔍 Page handleBackClick - currentStep:', currentStep);
-
-        if (!currentStep) {
-          // Если нет currentStep, просто возвращаемся назад
-          router.back();
-        } else {
-          // Используем логику из стора для навигации
-          goToPreviousStep(router);
-        }
-      }
-    };
+    const handleBackClick = () => onBack();
 
     try {
       backButton.onClick(handleBackClick);
@@ -67,6 +64,16 @@ export function Page({ children, back = true }: PropsWithChildren<{
   return (
     <div className={outerClass}>
       <div className={innerClass}>
+        {/* Web back button fallback when Telegram BackButton is unavailable or not clickable */}
+        {back ? (
+          <button
+            onClick={onBack}
+            className="absolute top-3 left-3 z-50 h-10 w-10 rounded-full bg-white/90 border border-gray-200 shadow flex items-center justify-center active:scale-95"
+            aria-label="Назад"
+          >
+            <span className="text-xl leading-none">←</span>
+          </button>
+        ) : null}
         {children}
       </div>
     </div>
