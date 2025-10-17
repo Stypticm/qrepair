@@ -13,6 +13,7 @@ interface DeviceCard {
   description?: string;
   price: number | null;
   cover: string | null;
+  photos: string[]; // Все фото для галереи
   date: string;
   model?: string;
   storage?: string;
@@ -131,14 +132,18 @@ export function AdaptiveDeviceFeed({
   if (isLoading && displayItems.length === 0) {
     return (
       <div className="w-full">
-        <div className="flex justify-center items-center h-64">
+        <div className="flex flex-col justify-center items-center h-64 space-y-4">
           <Image
             src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
             alt="Загрузка"
-            width={96}
-            height={96}
+            width={48}
+            height={48}
             className="object-contain"
           />
+          <div className="text-center">
+            <p className="text-gray-600 font-medium">Загружаем товары...</p>
+            <p className="text-gray-400 text-sm">Пожалуйста, подождите</p>
+          </div>
         </div>
       </div>
     );
@@ -339,19 +344,13 @@ export function AdaptiveDeviceFeed({
         </div>
       )}
 
-      {/* Индикатор загрузки показываем только если нет элементов */}
-      {isLoading && displayItems.length === 0 && (
-        <div className="flex justify-center items-center py-4">
-          <span className="inline-flex items-center gap-2 text-gray-500">
-            <Image
-              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-              alt="Загрузка"
-              width={24}
-              height={24}
-              className="object-contain"
-            />
-            Загрузка...
-          </span>
+      {/* Индикатор обновления данных */}
+      {isLoading && displayItems.length > 0 && (
+        <div className="flex justify-center items-center py-2">
+          <div className="flex items-center gap-2 text-gray-500 text-sm">
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+            Обновляем данные...
+          </div>
         </div>
       )}
     </div>

@@ -36,10 +36,12 @@ export async function GET(request: NextRequest) {
       let model = ''
       let storage = ''
       let color = ''
-      
+
       if (modelParts.length >= 3) {
         // Ищем GB в строке для определения storage
-        const gbIndex = modelParts.findIndex(part => part.includes('GB'))
+        const gbIndex = modelParts.findIndex((part) =>
+          part.includes('GB')
+        )
         if (gbIndex > 0) {
           model = modelParts.slice(0, gbIndex).join(' ')
           storage = modelParts[gbIndex]
@@ -63,6 +65,10 @@ export async function GET(request: NextRequest) {
           item.photoUrls.length > 0
             ? item.photoUrls[0]
             : null,
+        // Все фото для галереи
+        photos: Array.isArray(item.photoUrls)
+          ? item.photoUrls
+          : [],
         // Разбитые поля для плиток
         model: model,
         storage: storage,

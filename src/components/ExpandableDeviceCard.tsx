@@ -15,6 +15,7 @@ interface DeviceCard {
   description?: string;
   price: number | null;
   cover: string | null;
+  photos: string[]; // Все фото для галереи
   date: string;
   // Дополнительные поля для расширенной информации
   model?: string;
@@ -31,14 +32,22 @@ interface ExpandableDeviceCardProps {
 
 export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
   const [active, setActive] = useState<DeviceCard | null>(null);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
   const isSingle = cards.length === 1;
+  
+  // Touch events для фото-карусели
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const lastWheelTs = useRef<number>(0);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setActive(null);
+        setCurrentPhotoIndex(0);
       }
     }
 
@@ -52,7 +61,10 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [active]);
 
-  useOutsideClick(ref, () => setActive(null));
+  useOutsideClick(ref, () => {
+    setActive(null);
+    setCurrentPhotoIndex(0);
+  });
 
   const formatPrice = (price: number | null) => {
     if (!price) return "Цена не указана";
@@ -68,6 +80,18 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
     });
   };
 
+  const goToNextPhoto = () => {
+    if (active && active.photos.length > 1) {
+      setCurrentPhotoIndex((prev) => (prev + 1) % active.photos.length);
+    }
+  };
+
+  const goToPreviousPhoto = () => {
+    if (active && active.photos.length > 1) {
+      setCurrentPhotoIndex((prev) => (prev - 1 + active.photos.length) % active.photos.length);
+    }
+  };
+
   return (
     <>
       <AnimatePresence>
@@ -81,14 +105,88 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                   className="w-[92%] max-w-[420px] flex flex-col bg-white rounded-3xl overflow-hidden shadow-2xl"
                 >
                   <motion.div layoutId={`image-${active.id}-${id}`} className="relative">
-                    <div className="w-full h-80 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
-                      <Image
-                        width={400}
-                        height={400}
-                        src={active.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
-                        alt={active.title}
-                        className="w-full h-full object-contain p-4"
-                      />
+                    <div 
+                      className="w-full h-80 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden"
+                      onTouchStart={(e) => {
+                        touchStartX.current = e.changedTouches[0].clientX;
+                        touchStartY.current = e.changedTouches[0].clientY;
+                      }}
+                      onTouchMove={(e) => {
+                        // Блокируем вертикальный свайп/скролл в пределах карусели, если горизонтальное движение доминирует
+                        const x = e.changedTouches[0].clientX;
+                        const y = e.changedTouches[0].clientY;
+                        if (touchStartX.current != null && touchStartY.current != null) {
+                          const dx = Math.abs(x - touchStartX.current);
+                          const dy = Math.abs(y - touchStartY.current);
+                          if (dx > dy && dx > 8) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        touchEndX.current = e.changedTouches[0].clientX;
+                        const endY = e.changedTouches[0].clientY;
+                        if (touchStartX.current !== null && touchEndX.current !== null && touchStartY.current !== null) {
+                          const dx = touchEndX.current - touchStartX.current;
+                          const dy = Math.abs(endY - touchStartY.current);
+                          if (Math.abs(dx) > Math.max(30, dy)) {
+                            if (dx < 0) goToNextPhoto(); else goToPreviousPhoto();
+                          }
+                        }
+                        touchStartX.current = null;
+                        touchStartY.current = null;
+                        touchEndX.current = null;
+                      }}
+                      onWheel={(e) => {
+                        const now = Date.now();
+                        if (now - lastWheelTs.current < 350) return; // дебаунс
+                        lastWheelTs.current = now;
+                        if (e.deltaY > 20) goToNextPhoto();
+                        else if (e.deltaY < -20) goToPreviousPhoto();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowRight') goToNextPhoto();
+                        if (e.key === 'ArrowLeft') goToPreviousPhoto();
+                      }}
+                      tabIndex={0}
+                      role="region"
+                      aria-label="Галерея фото"
+                    >
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={currentPhotoIndex}
+                          initial={{ opacity: 0, x: 50 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -50 }}
+                          transition={{ duration: 0.3 }}
+                          className="w-full h-full flex items-center justify-center"
+                        >
+                          <Image
+                            width={400}
+                            height={400}
+                            src={active.photos[currentPhotoIndex] || active.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
+                            alt={`${active.title} - фото ${currentPhotoIndex + 1}`}
+                            className="w-full h-full object-contain p-4"
+                          />
+                        </motion.div>
+                      </AnimatePresence>
+                      
+                      {/* Индикаторы фото (только если больше одного) */}
+                      {active.photos.length > 1 && (
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                          {active.photos.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentPhotoIndex(index)}
+                              className={`w-2 h-2 rounded-full transition-colors ${
+                                index === currentPhotoIndex ? 'bg-white' : 'bg-white/50'
+                              }`}
+                              aria-label={`Фото ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
 
