@@ -208,9 +208,9 @@ function HomeContent() {
                 <Image
                   src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
                   alt="Логотип"
-                  width={96}
-                  height={96}
-                  className="w-[96px] h-[96px] object-contain bg-white"
+                  width={140}
+                  height={140}
+                  className="w-[120px] h-[120px] object-cover bg-white"
                   priority
                 />
               </div>
@@ -218,13 +218,15 @@ function HomeContent() {
           </motion.div>
 
           <div className="flex flex-col gap-4 w-full">
-            <Button
-              variant="outline"
-              className="w-full h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
-              onClick={handleStartForm}
-            >
-              Оценить смартфон
-            </Button>
+            <div className="w-full flex justify-center">
+              <Button
+                variant="outline"
+                className="w-[80%] h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                onClick={handleStartForm}
+              >
+                Оценить смартфон
+              </Button>
+            </div>
             <AdaptiveDeviceFeed 
               items={marketplaceItems}
               isLoading={marketplaceLoading}

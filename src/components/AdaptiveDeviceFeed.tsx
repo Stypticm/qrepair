@@ -220,23 +220,22 @@ export function AdaptiveDeviceFeed({
       </div> */}
 
       {/* В режиме grid показываем панель с кнопкой возврата к карусели */}
-      {viewMode === 'grid' && (
-        <div className="flex items-center justify-between">
-          <button
-            onClick={switchToCarousel}
-            className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
-          >
-            ← Рекомендации
-          </button>
-          <span className="text-sm text-gray-500">Всего: {sortedItems.length}</span>
-        </div>
-      )}
 
       {/* Фильтры и поиск */}
       {/* В режиме grid фильтры и поиск всегда видимы */}
       {viewMode === 'grid' && (
         <div className="mt-12 bg-gray-50 rounded-xl p-4 space-y-3">
-          {/* Поиск */}
+          {/* Кнопка возврата к рекомендациям по центру (вверху) */}
+          <div className="w-full flex justify-center">
+            <button
+              onClick={switchToCarousel}
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+            >
+              ← Рекомендации
+            </button>
+          </div>
+
+          {/* Поиск (чуть выше по высоте) */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -244,11 +243,11 @@ export function AdaptiveDeviceFeed({
               placeholder="Поиск устройств..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent"
             />
           </div>
 
-          {/* Сортировка */}
+          {/* Фильтр (сортировка) */}
           <div className="flex gap-2">
             <span className="text-sm text-gray-600 self-center">Сортировка:</span>
             {(['date', 'price', 'popularity'] as const).map((sort) => (
