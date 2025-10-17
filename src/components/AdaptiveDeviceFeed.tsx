@@ -30,29 +30,6 @@ interface AdaptiveDeviceFeedProps {
   mode?: 'carousel' | 'grid' | 'auto';
 }
 
-// Временные тестовые данные
-const generateTestData = (count: number): DeviceCard[] => {
-  const models = ['iPhone 15 Pro', 'iPhone 14', 'iPhone 13 Pro', 'Samsung Galaxy S24', 'Google Pixel 8', 'OnePlus 12'];
-  const conditions = ['Отличное', 'Хорошее', 'Удовлетворительное', 'Новое'];
-  const colors = ['Чёрный', 'Белый', 'Синий', 'Красный', 'Золотой'];
-  const storages = ['128GB', '256GB', '512GB', '1TB'];
-  const locations = ['Москва', 'СПб', 'Казань', 'Екатеринбург'];
-  
-  return Array.from({ length: count }, (_, i) => ({
-    id: `test-${i + 1}`,
-    title: `${models[i % models.length]} ${storages[i % storages.length]}`,
-    description: `Продаю ${models[i % models.length].toLowerCase()} в ${conditions[i % conditions.length].toLowerCase()} состоянии`,
-    price: Math.floor(Math.random() * 50000) + 20000, // 20k-70k
-    cover: null, // Будем использовать логотип по умолчанию
-    date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // Последние 30 дней
-    model: models[i % models.length],
-    storage: storages[i % storages.length],
-    color: colors[i % colors.length],
-    condition: conditions[i % conditions.length],
-    seller: `Продавец ${i + 1}`,
-    location: locations[i % locations.length]
-  }));
-};
 
 export function AdaptiveDeviceFeed({ 
   items, 
@@ -90,17 +67,8 @@ export function AdaptiveDeviceFeed({
     }, 0);
   }, []);
   
-  // Временные тестовые данные для демонстрации
-  const [testData, setTestData] = useState<DeviceCard[]>([]);
-  const [testCount, setTestCount] = useState(12); // Начинаем с 12 для карусели
-  
-  // Генерируем тестовые данные
-  useEffect(() => {
-    setTestData(generateTestData(testCount));
-  }, [testCount]);
-  
-  // Используем тестовые данные вместо реальных для демонстрации
-  const displayItems = testData.length > 0 ? testData : items;
+  // Используем реальные данные из props
+  const displayItems = items;
   
   const itemsPerPage = 1;
   const totalPages = Math.ceil(displayItems.length / itemsPerPage);
@@ -159,15 +127,6 @@ export function AdaptiveDeviceFeed({
     }
   });
 
-  // Функции для тестирования
-  const addMoreTestData = () => {
-    setTestCount(prev => prev + 12);
-  };
-
-  const resetTestData = () => {
-    setTestCount(12);
-    setCurrentIndex(0);
-  };
 
   if (isLoading && displayItems.length === 0) {
     return (
@@ -195,30 +154,6 @@ export function AdaptiveDeviceFeed({
 
   return (
     <div ref={rootRef} className="w-full space-y-4">
-      {/* Тестовые контролы */}
-      {/* <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-blue-800">🧪 Тестовый режим</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={addMoreTestData}
-              className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded-lg transition-colors"
-            >
-              +12 товаров
-            </button>
-            <button
-              onClick={resetTestData}
-              className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded-lg transition-colors"
-            >
-              Сброс
-            </button>
-          </div>
-        </div>
-        <p className="text-xs text-blue-600">
-          Текущее количество: {displayItems.length} товаров | Режим: {viewMode} | 
-          Автопереключение: {mode === 'auto' ? 'Включено' : 'Выключено'}
-        </p>
-      </div> */}
 
       {/* В режиме grid показываем панель с кнопкой возврата к карусели */}
 

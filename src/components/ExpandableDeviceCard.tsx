@@ -6,7 +6,7 @@ import { useOutsideClick } from "@/hooks/use-outside-click";
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 import { Page } from "@/components/Page";
-import { Heart, ShoppingCart, Share2, Star } from "lucide-react";
+import { Heart, ShoppingCart, Share2, Star, Smartphone, HardDrive, Palette, Sparkles } from "lucide-react";
 import { sendTon } from "@/core/ton/tonconnect";
 
 interface DeviceCard {
@@ -81,23 +81,23 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                   className="w-[92%] max-w-[420px] flex flex-col bg-white rounded-3xl overflow-hidden shadow-2xl"
                 >
                   <motion.div layoutId={`image-${active.id}-${id}`} className="relative">
-                    <div className="w-full h-64 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
+                    <div className="w-full h-80 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
                       <Image
-                        width={300}
-                        height={300}
+                        width={400}
+                        height={400}
                         src={active.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
                         alt={active.title}
-                        className="w-full h-full object-contain p-6"
+                        className="w-full h-full object-contain p-4"
                       />
                     </div>
                   </motion.div>
 
                   <div className="flex-1 flex flex-col">
-                    <div className="flex justify-between items-start p-5">
+                    <div className="flex justify-between items-start p-4">
                       <div className="flex-1">
                         <motion.h3
                           layoutId={`title-${active.id}-${id}`}
-                          className="font-bold text-xl text-gray-900 mb-1"
+                          className="font-semibold text-base text-gray-900 mb-1"
                         >
                           {active.title}
                         </motion.h3>
@@ -111,49 +111,49 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                         )}
                         <motion.div
                           layoutId={`price-${active.id}-${id}`}
-                          className="text-2xl font-bold text-gray-900 mt-3"
+                          className="text-lg font-bold text-gray-900 mt-2"
                         >
                           {formatPrice(active.price)}
                         </motion.div>
                       </div>
                     </div>
 
-                    <div className="px-5 pb-5">
+                    <div className="px-4 pb-4">
                       <motion.div
                         layout
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="space-y-4"
+                        className="space-y-3"
                       >
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          {active.model && (
-                            <div className="bg-gray-50 rounded-lg p-2">
-                              <span className="text-gray-500">Модель</span>
-                              <div className="font-medium text-gray-900">{active.model}</div>
-                            </div>
-                          )}
-                          {active.storage && (
-                            <div className="bg-gray-50 rounded-lg p-2">
-                              <span className="text-gray-500">Память</span>
-                              <div className="font-medium text-gray-900">{active.storage}</div>
-                            </div>
-                          )}
-                          {active.color && (
-                            <div className="bg-gray-50 rounded-lg p-2">
-                              <span className="text-gray-500">Цвет</span>
-                              <div className="font-medium text-gray-900">{active.color}</div>
-                            </div>
-                          )}
-                          {active.condition && (
-                            <div className="bg-gray-50 rounded-lg p-2">
-                              <span className="text-gray-500">Состояние</span>
-                              <div className="font-medium text-gray-900">{active.condition}</div>
-                            </div>
-                          )}
+                        {/* Минималистичные плитки характеристик */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Модель */}
+                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Модель</div>
+                            <div className="font-semibold text-gray-900 text-sm">{active.model || 'Не указана'}</div>
+                          </div>
+
+                          {/* Память */}
+                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Память</div>
+                            <div className="font-semibold text-gray-900 text-sm">{active.storage || 'Не указана'}</div>
+                          </div>
+
+                          {/* Цвет */}
+                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Цвет</div>
+                            <div className="font-semibold text-gray-900 text-sm">{active.color || 'Не указан'}</div>
+                          </div>
+
+                          {/* Состояние */}
+                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Состояние</div>
+                            <div className="font-semibold text-gray-900 text-sm">{active.condition || 'Не указано'}</div>
+                          </div>
                         </div>
 
-                        <div className="flex flex-col gap-3 pt-2">
+                        <div className="flex flex-col gap-2 pt-1">
                           <div className="grid grid-cols-2 gap-3">
                             <motion.button
                               layoutId={`button-${active.id}-${id}`}

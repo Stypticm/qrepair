@@ -25,9 +25,20 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# Environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Supabase
+.supabase/
+
+# Keys and secrets
+*.key
+*.pem
+service-account*.json
 
 # vercel
 .vercel

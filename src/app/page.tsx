@@ -73,6 +73,27 @@ function HomeContent() {
     }
   }, [marketplaceLoading]);
 
+  // Функция обновления marketplace данных (для автообновления)
+  const refreshMarketplaceItems = useCallback(async () => {
+    setMarketplaceLoading(true);
+    try {
+      const limit = 12;
+      const res = await fetch(`/api/market/feed?limit=${limit}&offset=0`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to refresh feed');
+
+      const newItems = Array.isArray(data.items) ? data.items : [];
+      setMarketplaceItems(newItems);
+      marketplaceOffsetRef.current = newItems.length;
+      setMarketplaceOffset(newItems.length);
+      setMarketplaceHasMore(false);
+    } catch (e) {
+      console.error('Feed refresh error', e);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  }, []);
+
   // Загружаем данные при инициализации
   useEffect(() => {
     if (!isLoading && marketplaceItems.length === 0 && marketplaceOffsetRef.current === 0) {
@@ -98,6 +119,21 @@ function HomeContent() {
       } catch { }
     }
   }, [isLoading, userId, router]);
+
+  // Слушатель для автообновления после добавления лота
+  useEffect(() => {
+    const handleLotAdded = () => {
+      console.log('Lot added, refreshing marketplace...');
+      refreshMarketplaceItems();
+    };
+
+    // Слушаем событие добавления лота
+    window.addEventListener('lotAdded', handleLotAdded);
+    
+    return () => {
+      window.removeEventListener('lotAdded', handleLotAdded);
+    };
+  }, [refreshMarketplaceItems]);
 
   useEffect(() => {
     addDebugInfo('Запуск инициализации Telegram WebApp');
