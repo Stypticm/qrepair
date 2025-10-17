@@ -32,10 +32,10 @@ interface AdaptiveDeviceFeedProps {
 }
 
 
-export function AdaptiveDeviceFeed({ 
-  items, 
-  isLoading, 
-  onLoadMore, 
+export function AdaptiveDeviceFeed({
+  items,
+  isLoading,
+  onLoadMore,
   hasMore,
   mode = 'carousel'
 }: AdaptiveDeviceFeedProps) {
@@ -45,9 +45,9 @@ export function AdaptiveDeviceFeed({
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'price' | 'date' | 'popularity'>('date');
-      const touchStartX = useRef<number | null>(null);
-      const touchStartY = useRef<number | null>(null);
-      const touchEndX = useRef<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
   const lastWheelTs = useRef<number>(0);
   const rootRef = useRef<HTMLDivElement | null>(null);
 
@@ -67,10 +67,10 @@ export function AdaptiveDeviceFeed({
       rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 0);
   }, []);
-  
+
   // Используем реальные данные из props
   const displayItems = items;
-  
+
   const itemsPerPage = 1;
   const totalPages = Math.ceil(displayItems.length / itemsPerPage);
   const currentItems = displayItems.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage);
@@ -139,9 +139,7 @@ export function AdaptiveDeviceFeed({
               alt="Загрузка"
               width={48}
               height={48}
-              className="object-contain w-full h-full"
-              priority
-              unoptimized
+              className="object-contain"
             />
           </div>
           <div className="text-center">
@@ -199,11 +197,10 @@ export function AdaptiveDeviceFeed({
               <button
                 key={sort}
                 onClick={() => setSortBy(sort)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                  sortBy === sort
+                className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${sortBy === sort
                     ? 'bg-[#2dc2c6] text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 {sort === 'date' ? 'По дате' : sort === 'price' ? 'По цене' : 'По популярности'}
               </button>
@@ -229,9 +226,8 @@ export function AdaptiveDeviceFeed({
                 <button
                   key={index}
                   onClick={() => goToPage(index)}
-                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                    index === currentIndex ? 'bg-[#2dc2c6]' : 'bg-gray-300'
-                  }`}
+                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${index === currentIndex ? 'bg-[#2dc2c6]' : 'bg-gray-300'
+                    }`}
                 />
               ))}
             </div>
@@ -239,39 +235,39 @@ export function AdaptiveDeviceFeed({
 
           {/* Карусель с ручным свайпом */}
           <div
-            className="relative overflow-hidden outline-none flex justify-center min-h-[560px]"
+            className="relative overflow-hidden outline-none flex justify-center"
             role="region"
             aria-label="Карусель устройств"
             tabIndex={0}
-              onTouchStart={(e) => {
-                touchStartX.current = e.changedTouches[0].clientX;
-                touchStartY.current = e.changedTouches[0].clientY;
-              }}
-              onTouchMove={(e) => {
-                // Блокируем вертикальный свайп/скролл в пределах карусели, если горизонтальное движение доминирует
-                const x = e.changedTouches[0].clientX;
-                const y = e.changedTouches[0].clientY;
-                if (touchStartX.current != null && touchStartY.current != null) {
-                  const dx = Math.abs(x - touchStartX.current);
-                  const dy = Math.abs(y - touchStartY.current);
-                  if (dx > dy && dx > 8) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
+            onTouchStart={(e) => {
+              touchStartX.current = e.changedTouches[0].clientX;
+              touchStartY.current = e.changedTouches[0].clientY;
+            }}
+            onTouchMove={(e) => {
+              // Блокируем вертикальный свайп/скролл в пределах карусели, если горизонтальное движение доминирует
+              const x = e.changedTouches[0].clientX;
+              const y = e.changedTouches[0].clientY;
+              if (touchStartX.current != null && touchStartY.current != null) {
+                const dx = Math.abs(x - touchStartX.current);
+                const dy = Math.abs(y - touchStartY.current);
+                if (dx > dy && dx > 8) {
+                  e.preventDefault();
+                  e.stopPropagation();
                 }
-              }}
+              }
+            }}
             onTouchEnd={(e) => {
               touchEndX.current = e.changedTouches[0].clientX;
-                const endY = e.changedTouches[0].clientY;
-                if (touchStartX.current !== null && touchEndX.current !== null && touchStartY.current !== null) {
-                  const dx = touchEndX.current - touchStartX.current;
-                  const dy = Math.abs(endY - touchStartY.current);
-                  if (Math.abs(dx) > Math.max(30, dy)) {
-                    if (dx < 0) goToNext(); else goToPrevious();
-                  }
+              const endY = e.changedTouches[0].clientY;
+              if (touchStartX.current !== null && touchEndX.current !== null && touchStartY.current !== null) {
+                const dx = touchEndX.current - touchStartX.current;
+                const dy = Math.abs(endY - touchStartY.current);
+                if (Math.abs(dx) > Math.max(30, dy)) {
+                  if (dx < 0) goToNext(); else goToPrevious();
                 }
+              }
               touchStartX.current = null;
-                touchStartY.current = null;
+              touchStartY.current = null;
               touchEndX.current = null;
             }}
             onWheel={(e) => {
