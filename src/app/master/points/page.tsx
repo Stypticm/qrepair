@@ -564,7 +564,17 @@ export default function MasterPointsPage() {
                 muted
                 autoPlay
               />
-              <div className="pointer-events-none absolute inset-0 border-2 border-white/30" />
+              {/* Круглая маска/рамка для сканирования */}
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div
+                  className="rounded-full"
+                  style={{
+                    width: '220px',
+                    height: '220px',
+                    boxShadow: '0 0 0 2000px rgba(0,0,0,0.6), inset 0 0 0 2px rgba(255,255,255,0.85)',
+                  }}
+                />
+              </div>
             </div>
             <div className="mt-4 flex flex-col gap-3">
               {scannerError && <p className="text-sm text-amber-400 text-center">{scannerError}</p>}
