@@ -34,6 +34,8 @@ export default function DeviceInfoPage() {
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<null | { model?: string; variant?: string; storage?: string; color?: string; image?: string; raw?: any }>(null);
   const [showCheckDialog, setShowCheckDialog] = useState(false);
+  const [isDialogLocked, setIsDialogLocked] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isTestLoading, setIsTestLoading] = useState(false);
 
     const addDebugInfo = (message: string) => {
@@ -409,7 +411,7 @@ export default function DeviceInfoPage() {
             </Dialog>
 
             {/* SN parsed confirm dialog */}
-            <Dialog open={showCheckDialog} onOpenChange={setShowCheckDialog}>
+            <Dialog open={showCheckDialog} onOpenChange={(v) => { if (!isDialogLocked) setShowCheckDialog(v) }}>
                 <DialogContent className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg" showCloseButton={false}>
                     <DialogTitle className="text-center text-base font-semibold text-gray-900 mb-2">
                         Найдено устройство
@@ -436,6 +438,8 @@ export default function DeviceInfoPage() {
                             className="bg-[#2dc2c6] hover:bg-[#25a8ac] text-white text-sm"
                             onClick={async () => {
                                 if (!checkResult) return;
+                                setIsDialogLocked(true);
+                                setIsTransitioning(true);
                                 // 1) Сохраняем префилл для совместимости
                                 const prefill = {
                                     model: checkResult.model || '',
@@ -503,24 +507,41 @@ export default function DeviceInfoPage() {
                                     });
                                 } catch {}
 
-                                setShowCheckDialog(false);
                                 try { sessionStorage.setItem('previousStepPath', '/request/device-info'); } catch {}
-                                router.push('/request/evaluation');
+                                // Небольшая задержка, чтобы пользователь видел, что идёт переход
+                                setTimeout(() => {
+                                  router.push('/request/evaluation');
+                                }, 50);
                             }}
                         >
-                            Данные совпадают
+                            {isTransitioning ? 'Переходим…' : 'Данные совпадают'}
                         </Button>
                         <Button
                             variant="outline"
                             className="text-sm"
                             onClick={() => {
-                                setShowCheckDialog(false);
+                                setIsDialogLocked(true);
+                                setIsTransitioning(true);
+                                try {
+                                  sessionStorage.removeItem('prefillSelection');
+                                  sessionStorage.removeItem('phoneSelection');
+                                  sessionStorage.removeItem('basePrice');
+                                  sessionStorage.setItem('previousStepPath', '/request/device-info');
+                                } catch {}
                                 router.push('/request/form');
                             }}
                         >
-                            Выбрать вручную
+                            {isTransitioning ? 'Открываем…' : 'Выбрать вручную'}
                         </Button>
                     </div>
+                    {isTransitioning && (
+                      <div className="mt-3 w-full flex justify-center">
+                        <div className="inline-flex items-center gap-2 text-gray-500 text-xs">
+                          <span className="inline-block w-2 h-2 rounded-full bg-gray-400 animate-pulse" />
+                          Загрузка…
+                        </div>
+                      </div>
+                    )}
                     <div className="mt-2">
                         <p className="text-[10px] text-gray-500 break-words">SN: {manualSerialNumber}</p>
                     </div>

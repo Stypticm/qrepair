@@ -32,6 +32,38 @@ export default function FormPage() {
         error,
     } = useDevices();
 
+    // Wrapper selectors to enforce sequential flow and reset downstream choices
+    const selectModel = useCallback((model: string) => {
+        // Всегда принудительно сбрасываем зависимые поля
+        handleOptionSelect('model', model)
+        handleOptionSelect('variant', null as unknown as string)
+        handleOptionSelect('storage', null as unknown as string)
+        handleOptionSelect('color', null as unknown as string)
+        try {
+          sessionStorage.removeItem('phoneSelection')
+          sessionStorage.removeItem('basePrice')
+        } catch {}
+        setPrice(0)
+        setShowSummaryDialog(false)
+    }, [handleOptionSelect, setPrice])
+
+    const selectVariant = useCallback((variant: string) => {
+        if (selectedOptions.variant !== variant) {
+            handleOptionSelect('variant', variant)
+            // reset downstream
+            handleOptionSelect('storage', null as unknown as string)
+            handleOptionSelect('color', null as unknown as string)
+        }
+    }, [handleOptionSelect, selectedOptions.variant])
+
+    const selectStorage = useCallback((storage: string) => {
+        if (selectedOptions.storage !== storage) {
+            handleOptionSelect('storage', storage)
+            // reset downstream
+            handleOptionSelect('color', null as unknown as string)
+        }
+    }, [handleOptionSelect, selectedOptions.storage])
+
     const [showSummaryDialog, setShowSummaryDialog] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
 
@@ -44,13 +76,18 @@ export default function FormPage() {
     if (typeof window === 'undefined') return;
     try {
       const prefillRaw = sessionStorage.getItem('prefillSelection');
+      const manualSelection = sessionStorage.getItem('previousStepPath') === '/request/device-info' && !prefillRaw;
+      if (manualSelection) {
+        // пользователь пришёл вручную выбирать — принудительно очищаем авто‑выбор
+        sessionStorage.removeItem('phoneSelection');
+        return;
+      }
       if (!prefillRaw) return;
       const prefill = JSON.parse(prefillRaw);
       if (prefill?.model) handleOptionSelect('model', prefill.model);
       if (prefill?.variant) handleOptionSelect('variant', prefill.variant);
       if (prefill?.storage) handleOptionSelect('storage', prefill.storage);
       if (prefill?.color) handleOptionSelect('color', prefill.color);
-      // clear so it doesn't reapply
       sessionStorage.removeItem('prefillSelection');
     } catch {}
   }, [handleOptionSelect]);
@@ -169,7 +206,7 @@ export default function FormPage() {
                                     <div className="grid grid-cols-4 gap-1">
                                         {models.map((model: string) => (
                                             <motion.div key={model} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} transition={{ duration: 0.15 }}>
-                                                <Button onClick={() => handleOptionSelect('model', model)} className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.model === model ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
+                                                <Button onClick={() => selectModel(model)} className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.model === model ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
                                                     {selectedOptions.model === model && <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>}
                                                     {model}
                                                 </Button>
@@ -184,7 +221,7 @@ export default function FormPage() {
                                     <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Вариант</h3>
                                     <div className="grid grid-cols-3 gap-1">
                                         {variants.map((variant: string) => (
-                                            <Button key={variant} onClick={() => handleOptionSelect('variant', variant)} className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.variant === variant ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
+                                            <Button key={variant} onClick={() => selectVariant(variant)} className={`w-full h-7 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.variant === variant ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
                                                 {selectedOptions.variant === variant && <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>}
                                                 {getVariantLabel(variant)}
                                             </Button>
@@ -204,7 +241,7 @@ export default function FormPage() {
                                             }
                                             return toGb(a) - toGb(b)
                                         })).map((storage: string) => (
-                                            <Button key={storage} onClick={() => handleOptionSelect('storage', storage)} className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.storage === storage ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
+                                            <Button key={storage} onClick={() => selectStorage(storage)} className={`h-8 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center justify-center truncate relative ${selectedOptions.storage === storage ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6] shadow-md' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-sm'}`}>
                                                 {selectedOptions.storage === storage && <div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>}
                                                 {storage}
                                             </Button>

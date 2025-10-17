@@ -24,6 +24,7 @@
     "cleanup:all": "npm run cleanup:frontend-logs && npm run cleanup:test-apis"
   },
   "dependencies": {
+    "@tonconnect/ui": "^2.0.8",
     "@gsap/react": "^2.1.2",
     "@prisma/client": "^6.12.0",
     "@radix-ui/react-checkbox": "^1.3.2",

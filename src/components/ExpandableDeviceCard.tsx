@@ -7,6 +7,7 @@ import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 import { Page } from "@/components/Page";
 import { Heart, ShoppingCart, Share2, Star } from "lucide-react";
+import { sendTon } from "@/core/ton/tonconnect";
 
 interface DeviceCard {
   id: string;
@@ -152,20 +153,58 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                           )}
                         </div>
 
-                        <div className="flex gap-3 pt-2">
-                          <motion.button
-                            layoutId={`button-${active.id}-${id}`}
-                            className="flex-1 px-5 py-3 text-base font-semibold rounded-2xl bg-[#2dc2c6] hover:bg-[#25a8ac] text-white transition-colors duration-200 flex items-center justify-center gap-2"
-                          >
-                            <ShoppingCart className="w-5 h-5" />
-                            Купить
-                          </motion.button>
-                          <button className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
-                            <Heart className="w-5 h-5 text-gray-600" />
-                          </button>
-                          <button className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
-                            <Share2 className="w-5 h-5 text-gray-600" />
-                          </button>
+                        <div className="flex flex-col gap-3 pt-2">
+                          <div className="grid grid-cols-2 gap-3">
+                            <motion.button
+                              layoutId={`button-${active.id}-${id}`}
+                              className="w-full px-5 py-3 text-base font-semibold rounded-2xl bg-[#2dc2c6] hover:bg-[#25a8ac] text-white transition-colors duration-200 flex items-center justify-center gap-2"
+                            >
+                              <ShoppingCart className="w-5 h-5" />
+                              Купить
+                            </motion.button>
+                            <button
+                              className="w-full px-5 py-3 rounded-2xl bg-[#2dc2c6] hover:bg-[#25a8ac] transition-colors duration-200 text-white font-bold uppercase tracking-wide flex items-center justify-center gap-3"
+                              onClick={async () => {
+                                try {
+                                  // Демонстрационная сумма 0.1 TON (в нанотонах: 0.1 * 1e9)
+                                  await sendTon('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', String(0.1 * 1e9))
+                                } catch (e) {
+                                  console.error('TON payment error', e)
+                                }
+                              }}
+                            >
+                              {/* TON Logo */}
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                className="w-6 h-6 drop-shadow-[0_0_2px_rgba(255,255,255,0.85)]"
+                                aria-hidden
+                              >
+                                <path
+                                  fill="#FFFFFF"
+                                  stroke="#FFFFFF"
+                                  strokeOpacity="0.85"
+                                  strokeWidth="0.25"
+                                  d="M12 2c5.523 0 10 2.477 10 5.533 0 1.42-.88 3.29-2.34 5.384-1.37 1.97-3.24 4.13-5.2 6.11-1.4 1.41-2.79 2.62-3.78 3.34a.99.99 0 0 1-1.36-.2c-.99-.72-2.38-1.93-3.78-3.34-1.96-1.98-3.83-4.14-5.2-6.11C.88 10.823 0 8.953 0 7.533 0 4.477 4.477 2 10 2h2Zm0 2h-2C6.06 4 2 5.57 2 7.533c0 .86.68 2.36 2.02 4.29 1.27 1.82 3.06 3.9 4.96 5.83 1.07 1.06 2.08 1.96 3.02 2.67.94-.71 1.95-1.61 3.02-2.67 1.9-1.93 3.69-4.01 4.96-5.83 1.34-1.93 2.02-3.43 2.02-4.29C22 5.57 17.94 4 14 4h-2Zm0 2 4 6h-3v6h-2v-6H8l4-6Z"
+                                />
+                              </svg>
+                              Купить за TON
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <button
+                              aria-label="Добавить в избранное"
+                              className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+                            >
+                              <Heart className="w-5 h-5 text-gray-600" />
+                            </button>
+                            <button
+                              aria-label="Поделиться ссылкой"
+                              className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+                            >
+                              <Share2 className="w-5 h-5 text-gray-600" />
+                            </button>
+                          </div>
                         </div>
                       </motion.div>
                     </div>

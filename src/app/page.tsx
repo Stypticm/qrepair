@@ -15,6 +15,7 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore, isMaster } from '@/stores/authStore';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 import { postEvent } from '@telegram-apps/sdk';
+import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen } from '@telegram-apps/sdk';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 
 function HomeContent() {
@@ -119,6 +120,12 @@ function HomeContent() {
         } catch (e) {
           console.error('Не удалось применить web_app_setup_swipe_behavior', e);
         }
+        // Привяжем CSS переменные viewport (влияет на безопасные отступы)
+        try {
+          if ((bindViewportCssVars as any)?.isAvailable?.() || true) {
+            bindViewportCssVars();
+          }
+        } catch {}
       } else {
         addDebugInfo('Браузерный режим - используем fallback ID');
         const testId = testAdminIds[testAdminIndex];

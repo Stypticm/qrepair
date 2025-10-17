@@ -282,33 +282,43 @@ export default function EvaluationPage() {
     const base = basePrice ?? price;
     if (!base) return null;
 
-    // Получаем данные о состоянии устройства из sessionStorage
-    const deviceConditionsData = sessionStorage.getItem('deviceConditions');
+    // Готовим additionalConditions из сессии (если есть)
     const additionalConditionsData = sessionStorage.getItem('additionalConditions');
-    
-    let deviceConditions: DeviceConditions = {};
     let additionalConditions: AdditionalConditions = {};
-    
-    if (deviceConditionsData) {
-      try {
-        deviceConditions = JSON.parse(deviceConditionsData);
-      } catch (e) {
-        console.error('Ошибка парсинга deviceConditions:', e);
-      }
-    }
-    
     if (additionalConditionsData) {
-      try {
-        additionalConditions = JSON.parse(additionalConditionsData);
-      } catch (e) {
-        console.error('Ошибка парсинга additionalConditions:', e);
-      }
+      try { additionalConditions = JSON.parse(additionalConditionsData); } catch (e) { console.error('Ошибка парсинга additionalConditions:', e); }
     }
+
+    // Формируем deviceConditions напрямую из выбранной опции, чтобы сразу пересчитывать цену
+    // Маппинг ярлыков из evaluation -> значения, ожидаемые формулой
+    const currentOption = (evaluationOptions.find((o) => o.id === previewId) ?? selectedOption);
+    const label = currentOption?.label || '';
+    const percent = currentOption?.percentage ?? 0;
+    const mapLabelToCondition = (lbl: string): string => {
+      if (/новый|идеал/i.test(lbl)) return 'Новый';
+      if (/отлич/i.test(lbl) || /очень/i.test(lbl)) return 'Очень хорошее';
+      if (/царап/i.test(lbl) || /замет/i.test(lbl)) return 'Заметные царапины';
+      if (/трещ/i.test(lbl)) return 'Трещины';
+      return 'Очень хорошее';
+    };
+    // Если явного ключевого слова нет, подстрахуемся по проценту уценки
+    let mapped = mapLabelToCondition(label);
+    if (mapped === 'Очень хорошее') {
+      if (percent >= 60) mapped = 'Трещины';
+      else if (percent >= 30) mapped = 'Заметные царапины';
+    }
+    const deviceConditions: DeviceConditions = { front: mapped };
 
     // Используем новую формулу расчёта диапазона цен
     const modelName = modelname; // Модель всегда валидна из БД
-    const range = calculatePriceRange(base, modelName, deviceConditions, additionalConditions);
+    const range = calculatePriceRange(base, modelName, deviceConditions, additionalConditions, (percent / 100));
     
+    // Передаём вперёд по воронке для последующих шагов
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('price', JSON.stringify(range.midpoint));
+      sessionStorage.setItem('priceRange', JSON.stringify(range));
+      sessionStorage.setItem('calculatedPrice', JSON.stringify(range.midpoint));
+    }
     return range;
   }, [basePrice, price, selectedOption, previewId, modelname]);
 

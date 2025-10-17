@@ -211,13 +211,18 @@ export function calculatePriceRange(
   basePrice: number,
   modelName: string,
   deviceConditions: DeviceConditions,
-  additionalConditions: AdditionalConditions
+  additionalConditions: AdditionalConditions,
+  overrideDiscount?: number
 ): PriceRange {
-  // Рассчитываем дисконт за дефекты
-  const defectDiscount = calculateDefectDiscount(
-    deviceConditions,
-    additionalConditions
-  )
+  // Рассчитываем дисконт за дефекты (или используем принудительный, если передан)
+  const defectDiscount =
+    typeof overrideDiscount === 'number' &&
+    !isNaN(overrideDiscount)
+      ? Math.max(0, Math.min(1, overrideDiscount))
+      : calculateDefectDiscount(
+          deviceConditions,
+          additionalConditions
+        )
 
   // Получаем фактор риска модели
   const modelRiskFactor = getModelRiskFactor(modelName)
@@ -246,21 +251,26 @@ export function calculatePriceRange(
   const min = Math.floor(finalMinPrice / 100) * 100
   const max = Math.ceil(finalMaxPrice / 100) * 100
 
+  // Динамический минимальный диапазон: масштабируем с ценой и тяжестью дефекта
+  // База 2% от basePrice, + до 6% при сильных дефектах (дефект >= 60%)
+  const dynamicMinRangeRaw =
+    basePrice * (0.02 + 0.06 * Math.min(1, defectDiscount))
+  const dynamicMinRange = Math.max(
+    PRICE_CONSTANTS.MIN_RANGE,
+    Math.round(dynamicMinRangeRaw / 100) * 100
+  )
+
   // Проверяем минимальный диапазон
   let finalMin = min
   let finalMax = max
 
-  if (finalMax - finalMin < PRICE_CONSTANTS.MIN_RANGE) {
-    // Если диапазон слишком мал, расширяем его
+  if (finalMax - finalMin < dynamicMinRange) {
+    // Если диапазон слишком мал, расширяем его симметрично от центра
     const center = (finalMin + finalMax) / 2
     finalMin =
-      Math.floor(
-        (center - PRICE_CONSTANTS.MIN_RANGE / 2) / 100
-      ) * 100
+      Math.floor((center - dynamicMinRange / 2) / 100) * 100
     finalMax =
-      Math.ceil(
-        (center + PRICE_CONSTANTS.MIN_RANGE / 2) / 100
-      ) * 100
+      Math.ceil((center + dynamicMinRange / 2) / 100) * 100
   }
 
   // Рассчитываем среднюю цену
