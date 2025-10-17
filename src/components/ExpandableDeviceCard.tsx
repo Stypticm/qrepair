@@ -110,6 +110,7 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                       onTouchStart={(e) => {
                         touchStartX.current = e.changedTouches[0].clientX;
                         touchStartY.current = e.changedTouches[0].clientY;
+                        e.stopPropagation(); // Предотвращаем всплытие события
                       }}
                       onTouchMove={(e) => {
                         // Блокируем вертикальный свайп/скролл в пределах карусели, если горизонтальное движение доминирует
@@ -137,6 +138,7 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                         touchStartX.current = null;
                         touchStartY.current = null;
                         touchEndX.current = null;
+                        e.stopPropagation(); // Предотвращаем всплытие события
                       }}
                       onWheel={(e) => {
                         const now = Date.now();
