@@ -59,7 +59,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
   }, [router, goToPreviousStep, back]);
 
   const outerClass = isDesktop ? 'w-full h-full flex justify-center items-center' : 'w-full h-full flex justify-center items-start';
-  const innerClass = isDesktop ? 'w-[414px] h-[896px] max-w-full max-h-full bg-white rounded-2xl shadow-xl overflow-hidden' : 'w-full h-full';
+  const innerClass = isDesktop ? 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto' : 'w-full h-full';
 
   return (
     <div className={outerClass}>
