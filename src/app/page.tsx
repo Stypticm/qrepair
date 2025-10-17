@@ -32,15 +32,16 @@ function HomeContent() {
   } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
+  const [isDesktopLike, setIsDesktopLike] = useState(false);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
-  
+
   // Состояние для marketplace
   const [marketplaceItems, setMarketplaceItems] = useState<Array<{ id: string; title: string; price: number | null; date: string; cover: string | null }>>([]);
   const [marketplaceOffset, setMarketplaceOffset] = useState(0);
   const marketplaceOffsetRef = useRef(0);
   const [marketplaceHasMore, setMarketplaceHasMore] = useState(true);
   const [marketplaceLoading, setMarketplaceLoading] = useState(false);
-  
+
   const router = useRouter();
   const { forceFullscreen, isFullscreen } = useSafeArea();
   const testAdminIds = useMemo(() => ['1', '296925626', '531360988'], []);
@@ -111,6 +112,18 @@ function HomeContent() {
       setIsInTelegram(inTelegram);
       setIsLoading(false);
 
+      // Детект десктопа для «оконного» вида (визуально)
+      const detectDesktop = () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const isSmallMobile = w < 768;
+        setIsDesktopLike(!isSmallMobile);
+      };
+      detectDesktop();
+      window.addEventListener('resize', detectDesktop);
+      // cleanup
+      return () => window.removeEventListener('resize', detectDesktop);
+
       if (inTelegram) {
         initializeTelegram(initDataState);
         // Запрещаем вертикальный свайп для закрытия мини‑приложения
@@ -125,7 +138,7 @@ function HomeContent() {
           if ((bindViewportCssVars as any)?.isAvailable?.() || true) {
             bindViewportCssVars();
           }
-        } catch {}
+        } catch { }
       } else {
         addDebugInfo('Браузерный режим - используем fallback ID');
         const testId = testAdminIds[testAdminIndex];
@@ -202,122 +215,128 @@ function HomeContent() {
 
   return (
     <AdaptiveContainer>
-      <div className="w-full max-w-[480px] mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-8 box-border">
-        <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-16">
-          <motion.div
-            initial={{ x: -300, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 70, damping: 12, duration: 2.2 }}
-            className="w-full"
-          >
-            <div className="w-full max-w-md mx-auto flex justify-center">
-              <div className="w-[120px] h-[120px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden">
-                <Image
-                  src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
-                  alt="Логотип"
-                  width={140}
-                  height={140}
-                  className="w-[120px] h-[120px] object-cover bg-white"
-                  priority
-                />
+      <div className={`${isDesktopLike ? 'min-h-screen flex items-start justify-center p-6 md:p-8 bg-gray-100' : ''}`}>
+        <div className={`${isDesktopLike ? 'w-full max-w-[520px] bg-gradient-to-b from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden' : ''}`}>
+          <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
+            <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-8 box-border`}>
+              <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-16">
+                <motion.div
+                  initial={{ x: -300, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 70, damping: 12, duration: 2.2 }}
+                  className="w-full"
+                >
+                  <div className="w-full max-w-md mx-auto flex justify-center">
+                    <div className="w-[120px] h-[120px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden">
+                      <Image
+                        src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
+                        alt="Логотип"
+                        width={140}
+                        height={140}
+                        className="w-[120px] h-[120px] object-cover bg-white"
+                        priority
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+
+                <div className="flex flex-col gap-4 w-full">
+                  <div className="w-full flex justify-center">
+                    <Button
+                      variant="outline"
+                      className="w-[80%] h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                      onClick={handleStartForm}
+                    >
+                      Оценить смартфон
+                    </Button>
+                  </div>
+                  <AdaptiveDeviceFeed
+                    items={marketplaceItems}
+                    isLoading={marketplaceLoading}
+                    onLoadMore={loadMoreMarketplaceItems}
+                    hasMore={marketplaceHasMore}
+                    mode="auto"
+                  />
+                  <div className="mt-3 flex flex-col gap-2">
+                    <div className="w-full h-20 rounded-xl border border-dashed border-gray-300 bg-white text-gray-500 text-sm grid place-items-center">
+                      место для рекламы
+                    </div>
+                  </div>
+                  {!isLoading && !isInTelegram && (
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
+                      onClick={() => {
+                        const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
+                        setTestAdminIndex(nextIndex);
+                      }}
+                    >
+                      Переключить ID админа: {testAdminIds[testAdminIndex]}
+                    </Button>
+                  )}
+                </div>
+
+                <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
+                  <ExpandButton className="w-full" />
+                </div>
+
+                {!isLoading && isMaster(userId) && (
+                  <button
+                    onClick={() => router.push('/internal')}
+                    className="fixed bottom-5 right-5 w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center active:scale-95 transition"
+                    aria-label="Открыть админ панель"
+                  >
+                    ⚙️
+                  </button>
+                )}
+
+                <div className="fixed top-22 right-5 z-50">
+                  <Menubar>
+                    <MenubarTrigger
+                      aria-label="Открыть меню"
+                      className="w-12 h-12 rounded-full bg-gray-900/80 text-white shadow-md flex items-center justify-center active:scale-95 transition"
+                    >
+                      ☰
+                    </MenubarTrigger>
+                    <MenubarContent className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+                      <MenubarItem
+                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                        onSelect={() => router.push('/my-devices')}
+                      >
+                        📱 Мои устройства
+                      </MenubarItem>
+                      <MenubarItem
+                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                        onSelect={() => router.push('/market')}
+                      >
+                        🛒 Маркетплейс
+                      </MenubarItem>
+                      <MenubarItem
+                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                        onSelect={() => router.push('/favorites')}
+                      >
+                        ❤️ Избранное
+                      </MenubarItem>
+                      <MenubarItem
+                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                        onSelect={() => router.push('/profile')}
+                      >
+                        👤 Профиль
+                      </MenubarItem>
+                      <MenubarItem
+                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                        onSelect={() => router.push('/help')}
+                      >
+                        ❓ Помощь
+                      </MenubarItem>
+                    </MenubarContent>
+                  </Menubar>
+                </div>
               </div>
             </div>
-          </motion.div>
-
-          <div className="flex flex-col gap-4 w-full">
-            <div className="w-full flex justify-center">
-              <Button
-                variant="outline"
-                className="w-[80%] h-14 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200"
-                onClick={handleStartForm}
-              >
-                Оценить смартфон
-              </Button>
-            </div>
-            <AdaptiveDeviceFeed 
-              items={marketplaceItems}
-              isLoading={marketplaceLoading}
-              onLoadMore={loadMoreMarketplaceItems}
-              hasMore={marketplaceHasMore}
-              mode="auto"
-            />
-            <div className="mt-3 flex flex-col gap-2">
-              <div className="w-full h-20 rounded-xl border border-dashed border-gray-300 bg-white text-gray-500 text-sm grid place-items-center">
-                место для рекламы
-              </div>
-            </div>
-            {!isLoading && !isInTelegram && (
-              <Button
-                variant="outline"
-                className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
-                onClick={() => {
-                  const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
-                  setTestAdminIndex(nextIndex);
-                }}
-              >
-                Переключить ID админа: {testAdminIds[testAdminIndex]}
-              </Button>
-            )}
           </div>
-
-          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
-            <ExpandButton className="w-full" />
-          </div>
-
-          {!isLoading && isMaster(userId) && (
-            <button
-              onClick={() => router.push('/internal')}
-              className="fixed bottom-5 right-5 w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center active:scale-95 transition"
-              aria-label="Открыть админ панель"
-            >
-              ⚙️
-            </button>
-          )}
-
-          <div className="fixed top-22 right-5 z-50">
-            <Menubar>
-              <MenubarTrigger
-                aria-label="Открыть меню"
-                className="w-12 h-12 rounded-full bg-gray-900/80 text-white shadow-md flex items-center justify-center active:scale-95 transition"
-              >
-                ☰
-              </MenubarTrigger>
-              <MenubarContent className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
-                <MenubarItem
-                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                  onSelect={() => router.push('/my-devices')}
-                >
-                  📱 Мои устройства
-                </MenubarItem>
-                <MenubarItem
-                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                  onSelect={() => router.push('/market')}
-                >
-                  🛒 Маркетплейс
-                </MenubarItem>
-                <MenubarItem
-                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                  onSelect={() => router.push('/favorites')}
-                >
-                  ❤️ Избранное
-                </MenubarItem>
-                <MenubarItem
-                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                  onSelect={() => router.push('/profile')}
-                >
-                  👤 Профиль
-                </MenubarItem>
-                <MenubarItem
-                  className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                  onSelect={() => router.push('/help')}
-                >
-                  ❓ Помощь
-                </MenubarItem>
-              </MenubarContent>
-            </Menubar>
-          </div>
-        </div>
-      </div >
+        </div >
+      </div>
     </AdaptiveContainer >
   );
 }
