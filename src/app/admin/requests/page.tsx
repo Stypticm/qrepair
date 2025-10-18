@@ -156,12 +156,13 @@ export default function AdminRequestsPage() {
         <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="text-center">
               <div className="relative w-16 h-16 mx-auto mb-4">
-                <Image
+                <img
                   src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
                   alt="Загрузка"
                   width={64}
                   height={64}
                   className="object-contain w-full h-full"
+                  style={{ imageRendering: 'auto' }}
                 />
               </div>
               <p className="text-gray-600">Проверяем доступ...</p>
@@ -175,12 +176,13 @@ export default function AdminRequestsPage() {
         <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="text-center">
               <div className="relative w-16 h-16 mx-auto mb-4">
-                <Image
+                <img
                   src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
                   alt="Загрузка"
                   width={64}
                   height={64}
                   className="object-contain w-full h-full"
+                  style={{ imageRendering: 'auto' }}
                 />
               </div>
               <p className="text-gray-600">Загружаем данные...</p>

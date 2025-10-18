@@ -126,12 +126,13 @@ export function AdaptiveDeviceFeed({
       <div className="w-full">
         <div className="flex flex-col justify-center items-center h-64 space-y-4">
           <div className="relative w-16 h-16">
-            <Image
+            <img
               src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
               alt="Загрузка"
               width={64}
               height={64}
               className="object-contain w-full h-full"
+              style={{ imageRendering: 'auto' }}
             />
           </div>
           <div className="text-center">

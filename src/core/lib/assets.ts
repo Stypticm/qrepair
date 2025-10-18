@@ -66,6 +66,11 @@ export function getServerImageUrl(
 export function getTelegramCloudImage(
   fileName: string
 ): string {
+  // Для GIF файлов всегда используем прямые ссылки (Cloud Storage может терять анимацию)
+  if (fileName.endsWith('.gif')) {
+    return getPictureUrl(fileName)
+  }
+
   // Проверяем доступность Telegram Cloud Storage
   if (
     typeof window !== 'undefined' &&

@@ -258,12 +258,13 @@ function HomeContent() {
     return (
       <AdaptiveContainer>
         <div className="w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
-          <Image
+          <img
             src={getImage('animation_running.gif') || '/animation_running.gif'}
             alt="Загрузка"
             width={64}
             height={64}
             className="object-contain rounded-2xl"
+            style={{ imageRendering: 'auto' }}
           />
           <p className="text-gray-600 mt-4">Инициализация...</p>
         </div>
@@ -291,13 +292,13 @@ function HomeContent() {
                 >
                   <div className="w-full max-w-md mx-auto flex justify-center">
                     <div className="w-[120px] h-[120px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden">
-                      <Image
+                      <img
                         src={getImage('animation_logo2.gif') || '/animation_logo2.gif'}
                         alt="Логотип"
                         width={140}
                         height={140}
                         className="w-[120px] h-[120px] object-cover bg-white"
-                        priority
+                        style={{ imageRendering: 'auto' }}
                       />
                     </div>
                   </div>
