@@ -307,16 +307,29 @@ function HomeContent() {
 
                 <div className="flex flex-col gap-4 w-full">
                   <div className="w-full flex justify-center">
-                    <Button
-                      variant="outline"
-                      className="group w-[320px] max-w-[320px] h-14 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200 animate-pulse"
-                      onClick={handleStartForm}
+                    <div 
+                      className="w-[320px] max-w-[320px] bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] hover:from-[#25a8ac] hover:to-[#39c4c8] rounded-3xl p-6 shadow-2xl active:scale-[0.98] transition-all duration-300 cursor-pointer"
+                      onClick={() => router.push('/accessories')}
                     >
-                      <span className="inline-flex items-center gap-2">
-                        <Smartphone className="w-5 h-5" />
-                        Оценить смартфон
-                      </span>
-                    </Button>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-white font-bold text-lg">Аксессуары</h3>
+                            <p className="text-white/80 text-sm">Чехлы, наушники, зарядки</p>
+                          </div>
+                        </div>
+                        <div className="text-white/60">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 18l6-6-6-6"/>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <AdaptiveDeviceFeed
                     items={marketplaceItems}
@@ -345,32 +358,19 @@ function HomeContent() {
                   <ExpandButton className="w-full" />
                 </div>
 
-                {/* Плашка Аксессуары */}
+                {/* Кнопка Оценить смартфон */}
                 {!isGridViewMode && (
                   <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full flex justify-center">
-                    <div 
-                      className="w-[320px] max-w-[320px] bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] hover:from-[#25a8ac] hover:to-[#39c4c8] rounded-3xl p-6 shadow-2xl active:scale-[0.98] transition-all duration-300 cursor-pointer"
-                      onClick={() => router.push('/accessories')}
+                    <Button
+                      variant="outline"
+                      className="group w-[320px] max-w-[320px] h-14 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200 animate-pulse"
+                      onClick={handleStartForm}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="text-white font-bold text-lg">Аксессуары</h3>
-                            <p className="text-white/80 text-sm">Чехлы, наушники, зарядки</p>
-                          </div>
-                        </div>
-                        <div className="text-white/60">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 18l6-6-6-6"/>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
+                      <span className="inline-flex items-center gap-2">
+                        <Smartphone className="w-5 h-5" />
+                        Оценить смартфон
+                      </span>
+                    </Button>
                   </div>
                 )}
 
