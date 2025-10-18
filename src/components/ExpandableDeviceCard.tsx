@@ -102,17 +102,17 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
     <>
       <AnimatePresence>
         {active ? (
-          <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/50 backdrop-blur-sm">
             <Page back={true}>
-              <div className="min-h-[100svh] w-full max-w-[480px] mx-auto px-4 pb-6 flex items-center justify-center">
+              <div className="w-full max-w-[400px] mx-auto px-8 py-8 flex items-center justify-center min-h-screen">
                 <motion.div
                   layoutId={`card-${active.id}-${id}`}
                   ref={ref}
-                  className="w-[92%] max-w-[420px] flex flex-col bg-white rounded-3xl overflow-hidden shadow-2xl"
+                  className="w-full max-w-[400px] flex flex-col bg-white rounded-3xl overflow-hidden shadow-2xl"
                 >
                   <motion.div layoutId={`image-${active.id}-${id}`} className="relative">
                     <div 
-                      className="w-full h-80 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden"
+                      className="w-full h-60 bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden"
                       onTouchStart={(e) => {
                         touchStartX.current = e.changedTouches[0].clientX;
                         touchStartY.current = e.changedTouches[0].clientY;
@@ -354,20 +354,20 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
             onClick={() => setActive(card)}
             className={
               "bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_10px_24px_rgba(0,0,0,0.10)] transition-all duration-200 cursor-pointer overflow-hidden flex flex-col " +
-              (isSingle ? " h-[280px]" : " h-[280px]") +
-              (isSingle ? " w-[75%] max-w-[280px]" : "")
+              (isSingle ? " h-[220px] w-[85%] max-w-[300px]" : " h-[220px]") +
+              (isSingle ? "" : " w-full")
             }
           >
             <div className="relative">
               <motion.div layoutId={`image-${card.id}-${id}`}>
-                <div className={`w-full ${isSingle ? 'h-48' : 'h-48'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0`}>
-                  <div className="w-[100%] h-[280%] -mb-[60%]">
+                <div className={`w-full ${isSingle ? 'h-32' : 'h-32'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0`}>
+                  <div className={`w-[100%] ${isSingle ? 'h-[280%] -mb-[60%]' : 'h-[280%] -mb-[60%]'}`}>
                     <Image
                       width={220}
                       height={380}
                       src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
                       alt={card.title}
-                      className="object-cover object-top w-full h-full"
+                      className={`object-cover w-full h-full ${isSingle ? 'object-center' : 'object-top'}`}
                     />
                   </div>
                 </div>

@@ -23,7 +23,7 @@ export default function CartPage() {
       // Демонстрационная сумма (общая стоимость корзины в TON)
       const totalPriceInTon = getTotalPrice() / 100 // Предполагаем курс 1 TON = 100₽
       await sendTon('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', String(totalPriceInTon * 1e9))
-      
+
       // После успешной оплаты очищаем корзину
       await clearCart()
     } catch (e) {
@@ -39,7 +39,7 @@ export default function CartPage() {
       // Демонстрационная сумма (общая стоимость корзины в TON)
       const totalPriceInTon = getTotalPrice() / 100 // Предполагаем курс 1 TON = 100₽
       await sendTon('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', String(totalPriceInTon * 1e9))
-      
+
       // После успешной оплаты очищаем корзину
       await clearCart()
     } catch (e) {
@@ -52,32 +52,32 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <Page back={true}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
           <div className="text-center">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <ShoppingCart className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
             <p className="text-gray-600 mb-6">Добавьте заявки в корзину, чтобы они появились здесь</p>
-            <button
-              onClick={() => window.history.back()}
-              className="px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors font-semibold flex items-center justify-center gap-2 mx-auto"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="m15 18-6-6 6-6"/>
-              </svg>
-              На главную
-            </button>
           </div>
+          <button
+            onClick={() => window.history.back()}
+            className="px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors font-semibold flex items-center justify-center gap-2 mx-auto"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            На главную
+          </button>
         </div>
       </Page>
     )
@@ -190,7 +190,7 @@ export default function CartPage() {
                 <CreditCard className="w-5 h-5" />
                 {isCheckingOut ? 'Обработка...' : 'Оформить заказ'}
               </button>
-              
+
               <button
                 onClick={handleBuyAllWithTon}
                 disabled={loading || isCheckingOut}
@@ -212,7 +212,7 @@ export default function CartPage() {
                 </svg>
                 Оплатить TON
               </button>
-              
+
               <button
                 onClick={clearCart}
                 disabled={loading}
@@ -228,15 +228,15 @@ export default function CartPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M3 6h18"/>
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                  <line x1="10" y1="11" x2="10" y2="17"/>
-                  <line x1="14" y1="11" x2="14" y2="17"/>
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
                 </svg>
                 Очистить корзину
               </button>
-              
+
               <button
                 onClick={() => window.history.back()}
                 className="w-full px-6 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
@@ -251,7 +251,7 @@ export default function CartPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="m15 18-6-6 6-6"/>
+                  <path d="m15 18-6-6 6-6" />
                 </svg>
                 Вернуться к заявкам
               </button>

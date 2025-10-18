@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Grid, List, Filter, Search } from "lucide-react";
-import { ExpandableDeviceCard } from "./ExpandableDeviceCard";
+import { ExpandableDeviceCard } from './ExpandableDeviceCard';
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 
@@ -29,6 +29,7 @@ interface AdaptiveDeviceFeedProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   mode?: 'carousel' | 'grid' | 'auto';
+  onViewModeChange?: (mode: 'carousel' | 'grid') => void;
 }
 
 
@@ -37,7 +38,8 @@ export function AdaptiveDeviceFeed({
   isLoading,
   onLoadMore,
   hasMore,
-  mode = 'carousel'
+  mode = 'carousel',
+  onViewModeChange
 }: AdaptiveDeviceFeedProps) {
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -54,19 +56,22 @@ export function AdaptiveDeviceFeed({
   const switchToGrid = useCallback(() => {
     setViewMode('grid');
     setShowFilters(false);
+    onViewModeChange?.('grid');
     // плавная прокрутка к началу списка
     setTimeout(() => {
       rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 0);
-  }, []);
+  }, [onViewModeChange]);
 
   const switchToCarousel = useCallback(() => {
     setViewMode('carousel');
     setShowFilters(false);
+    onViewModeChange?.('carousel');
+    // Возвращаемся в начальное состояние страницы
     setTimeout(() => {
-      rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 0);
-  }, []);
+  }, [onViewModeChange]);
 
   // Используем реальные данные из props
   const displayItems = items;
@@ -75,10 +80,17 @@ export function AdaptiveDeviceFeed({
   const totalPages = Math.ceil(displayItems.length / itemsPerPage);
   const currentItems = displayItems.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage);
 
-  // Принудительно используем carousel режим
+  // Устанавливаем режим в зависимости от переданного параметра
   useEffect(() => {
-    setViewMode('carousel');
-  }, []);
+    if (mode === 'grid') {
+      setViewMode('grid');
+    } else if (mode === 'carousel') {
+      setViewMode('carousel');
+    } else {
+      // mode === 'auto' - используем carousel по умолчанию
+      setViewMode('carousel');
+    }
+  }, [mode]);
 
   // Автопрокрутка отключена
 
@@ -153,14 +165,9 @@ export function AdaptiveDeviceFeed({
   }
 
   return (
-    <div ref={rootRef} className="w-full space-y-2">
-
-      {/* В режиме grid показываем панель с кнопкой возврата к карусели */}
-
-      {/* Фильтры и поиск */}
-      {/* В режиме grid фильтры и поиск всегда видимы */}
+    <div ref={rootRef} className="w-full space-y-1">
       {viewMode === 'grid' && (
-        <div className="mt-12 bg-gray-50 rounded-xl p-4 space-y-3">
+        <div className="bg-gray-50 rounded-xl p-4 space-y-3">
           {/* Кнопка возврата к рекомендациям по центру (вверху) */}
           <div className="w-full flex justify-center">
             <button
@@ -284,7 +291,7 @@ export function AdaptiveDeviceFeed({
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="h-full w-full"
               >
-                <ExpandableDeviceCard cards={currentItems} />
+                  <ExpandableDeviceCard cards={currentItems} />
               </motion.div>
             </AnimatePresence>
           </div>
@@ -308,19 +315,18 @@ export function AdaptiveDeviceFeed({
           )}
 
           {/* Кнопка все товары под каруселью (ещё заметнее) */}
-          <div className="text-center">
+          <div className="text-center w-full flex justify-center">
             <button
               onClick={switchToGrid}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white text-sm font-bold shadow-md active:scale-[0.98] transition"
+              className="w-[320px] max-w-[320px] h-14 flex items-center justify-center px-6 py-6 rounded-2xl bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white text-sm font-bold shadow-md active:scale-[0.98] transition"
             >
-              <List className="w-4 h-4" />
               Все товары
             </button>
           </div>
         </div>
       ) : (
         /* Сетка */
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div className="grid grid-cols-2 gap-3">
             {sortedItems.map((item, index) => (
               <motion.div
@@ -329,7 +335,7 @@ export function AdaptiveDeviceFeed({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.05 }}
               >
-                <ExpandableDeviceCard cards={[item]} />
+                  <ExpandableDeviceCard cards={[item]} />
               </motion.div>
             ))}
           </div>

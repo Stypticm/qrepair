@@ -12,9 +12,9 @@ export function getSupabasePublicBase(
  * СТРАТЕГИЯ ЗАГРУЗКИ ИЗОБРАЖЕНИЙ:
  *
  * 1. СТАТИЧЕСКИЕ ИЗОБРАЖЕНИЯ (лоадеры, логотипы, состояния):
- *    - Источник: /public папка
+ *    - Источник: Supabase storage/pictures (приоритет)
+ *    - Fallback: локальные файлы (/public)
  *    - Кэширование: Telegram Cloud Storage (если доступен)
- *    - Fallback: локальные файлы
  *
  * 2. ФОТО УСТРОЙСТВ (photoUrls):
  *    - Источник: БД (Supabase) - это фото пользователей
@@ -22,13 +22,23 @@ export function getSupabasePublicBase(
  *    - Fallback: placeholder изображение
  *
  * 3. ПРИОРИТЕТЫ:
- *    - Telegram Cloud Storage (если доступен)
+ *    - Supabase storage/pictures
  *    - Локальные файлы (/public)
  *    - Placeholder изображения
  */
 
 export function getPictureUrl(fileName: string): string {
-  // Используем только локальные файлы для стабильности
+  // Проверяем доступность Supabase
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (supabaseUrl && supabaseKey) {
+    // Используем Supabase storage для изображений
+    return `${supabaseUrl}/storage/v1/object/public/pictures/${fileName}`
+  }
+
+  // Fallback на локальные файлы
   if (typeof window !== 'undefined' && window.location) {
     return `${window.location.origin}/${fileName}`
   }
