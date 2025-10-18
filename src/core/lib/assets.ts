@@ -8,37 +8,36 @@ export function getSupabasePublicBase(
   return `${url.origin}/storage/v1/object/public/${bucket}`
 }
 
+/**
+ * СТРАТЕГИЯ ЗАГРУЗКИ ИЗОБРАЖЕНИЙ:
+ *
+ * 1. СТАТИЧЕСКИЕ ИЗОБРАЖЕНИЯ (лоадеры, логотипы, состояния):
+ *    - Источник: /public папка
+ *    - Кэширование: Telegram Cloud Storage (если доступен)
+ *    - Fallback: локальные файлы
+ *
+ * 2. ФОТО УСТРОЙСТВ (photoUrls):
+ *    - Источник: БД (Supabase) - это фото пользователей
+ *    - Обработка: как есть, без изменений
+ *    - Fallback: placeholder изображение
+ *
+ * 3. ПРИОРИТЕТЫ:
+ *    - Telegram Cloud Storage (если доступен)
+ *    - Локальные файлы (/public)
+ *    - Placeholder изображения
+ */
+
 export function getPictureUrl(fileName: string): string {
-  // По умолчанию используем локальные файлы для ускорения загрузки
-  // Можно переопределить через переменную окружения, если нужно использовать Supabase
-  const useSupabase =
-    process.env.NEXT_PUBLIC_USE_SUPABASE_IMAGES === 'true'
-
-  if (!useSupabase) {
-    // В клиентской среде используем window.location.origin
-    if (typeof window !== 'undefined' && window.location) {
-      return `${window.location.origin}/${fileName}`
-    }
-
-    // В серверной среде используем NEXT_PUBLIC_BASE_URL или fallback
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      'http://localhost:3000'
-    return `${baseUrl}/${fileName}`
+  // Используем только локальные файлы для стабильности
+  if (typeof window !== 'undefined' && window.location) {
+    return `${window.location.origin}/${fileName}`
   }
 
-  // Можно переопределить базу через переменную окружения, если нужно
-  const override = process.env.NEXT_PUBLIC_PICTURES_BASE
-  const base = override || getSupabasePublicBase('pictures')
-  if (!base) {
-    // Fallback на локальные файлы с абсолютным URL
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      'http://localhost:3000'
-    return `${baseUrl}/${fileName}`
-  }
-
-  return `${base}/${fileName}`
+  // В серверной среде используем NEXT_PUBLIC_BASE_URL или fallback
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    'http://localhost:3000'
+  return `${baseUrl}/${fileName}`
 }
 
 // Функция для получения URL изображения с fallback на локальные файлы
@@ -58,27 +57,99 @@ export function getStatusImage(name: string): string {
 export function getServerImageUrl(
   fileName: string
 ): string {
-  const useSupabase =
-    process.env.NEXT_PUBLIC_USE_SUPABASE_IMAGES === 'true'
+  // Для серверной среды используем NEXT_PUBLIC_BASE_URL или fallback
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL ||
+    'http://localhost:3000'
+  return `${baseUrl}/${fileName}`
+}
+export function getTelegramCloudImage(
+  fileName: string
+): string {
+  // Проверяем доступность Telegram Cloud Storage
+  if (
+    typeof window !== 'undefined' &&
+    (window as any).Telegram?.WebApp?.CloudStorage
+  ) {
+    try {
+      // Получаем изображение из Cloud Storage
+      const cloudStorage = (window as any).Telegram.WebApp
+        .CloudStorage
+      const imageData = cloudStorage.getItem(
+        `image_${fileName}`
+      )
 
-  if (!useSupabase) {
-    // Для серверной среды используем NEXT_PUBLIC_BASE_URL или fallback
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      'http://localhost:3000'
-    return `${baseUrl}/${fileName}`
+      if (imageData) {
+        // Если изображение в base64, возвращаем data URL
+        if (imageData.startsWith('data:')) {
+          return imageData
+        }
+        // Если это URL, возвращаем как есть
+        return imageData
+      }
+    } catch (error) {
+      console.warn(
+        'Error accessing Telegram Cloud Storage:',
+        error
+      )
+    }
   }
 
-  // Если используется Supabase
-  const override = process.env.NEXT_PUBLIC_PICTURES_BASE
-  const base = override || getSupabasePublicBase('pictures')
-  if (!base) {
-    // Fallback на локальные файлы с абсолютным URL
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      'http://localhost:3000'
-    return `${baseUrl}/${fileName}`
-  }
+  // Fallback на локальные файлы
+  return getPictureUrl(fileName)
+}
 
-  return `${base}/${fileName}`
+// Функция для загрузки изображения в Telegram Cloud Storage
+export async function uploadImageToTelegramCloud(
+  fileName: string,
+  imageData: string
+): Promise<boolean> {
+  if (
+    typeof window !== 'undefined' &&
+    (window as any).Telegram?.WebApp?.CloudStorage
+  ) {
+    try {
+      const cloudStorage = (window as any).Telegram.WebApp
+        .CloudStorage
+      cloudStorage.setItem(`image_${fileName}`, imageData)
+      return true
+    } catch (error) {
+      console.error(
+        'Error uploading to Telegram Cloud Storage:',
+        error
+      )
+      return false
+    }
+  }
+  return false
+}
+
+// Функция для предзагрузки всех изображений в Telegram Cloud Storage
+export async function preloadImagesToTelegramCloud(): Promise<void> {
+  const images = [
+    'animation_running.gif',
+    'animation_logo2.gif',
+    'display_front_new.png',
+    'display_front.png',
+    'display_front_have_scratches.png',
+    'display_front_scratches.png',
+  ]
+
+  for (const imageName of images) {
+    try {
+      // Загружаем изображение как base64
+      const response = await fetch(getPictureUrl(imageName))
+      if (response.ok) {
+        const blob = await response.blob()
+        const reader = new FileReader()
+        reader.onload = () => {
+          const base64Data = reader.result as string
+          uploadImageToTelegramCloud(imageName, base64Data)
+        }
+        reader.readAsDataURL(blob)
+      }
+    } catch (error) {
+      console.warn(`Failed to preload ${imageName}:`, error)
+    }
+  }
 }

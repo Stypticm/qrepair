@@ -18,6 +18,7 @@ import { postEvent } from '@telegram-apps/sdk';
 import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen, mountSwipeBehavior, disableVerticalSwipes, isSwipeBehaviorMounted } from '@telegram-apps/sdk';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 import { Smartphone } from 'lucide-react';
+import { useTelegramCloudImages } from '@/hooks/useTelegramCloudImages'
 
 function HomeContent() {
   const initDataState = useSignal(_initDataState);
@@ -57,6 +58,7 @@ function HomeContent() {
 
   const router = useRouter();
   const { forceFullscreen, isFullscreen } = useSafeArea();
+  const { getImage } = useTelegramCloudImages();
   const testAdminIds = useMemo(() => ['1', '296925626', '531360988'], []);
 
   // Функция загрузки marketplace данных
@@ -257,7 +259,7 @@ function HomeContent() {
       <AdaptiveContainer>
         <div className="w-full flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
           <Image
-            src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+            src={getImage('animation_running.gif') || '/animation_running.gif'}
             alt="Загрузка"
             width={64}
             height={64}
@@ -290,7 +292,7 @@ function HomeContent() {
                   <div className="w-full max-w-md mx-auto flex justify-center">
                     <div className="w-[120px] h-[120px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden">
                       <Image
-                        src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
+                        src={getImage('animation_logo2.gif') || '/animation_logo2.gif'}
                         alt="Логотип"
                         width={140}
                         height={140}
