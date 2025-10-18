@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAppStore } from '@/stores/authStore'
 import { Page } from '@/components/Page'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchAdminData, assignRequest } from '@/lib/api'
+import { Trash2 } from 'lucide-react'
+import Image from 'next/image'
+import { getPictureUrl } from '@/core/lib/assets'
 
 // Interfaces remain the same
 interface Request {
@@ -31,7 +34,7 @@ interface Master {
 }
 
 export default function AdminRequestsPage() {
-  const [accessDenied, setAccessDenied] = useState(true);
+  const [accessDenied, setAccessDenied] = useState<boolean | null>(null); // null = проверяем, true = запрещён, false = разрешён
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedMaster, setSelectedMaster] = useState<{ [requestId: string]: string }>({});
   const [assigningRequestId, setAssigningRequestId] = useState<string | null>(null);
@@ -39,27 +42,33 @@ export default function AdminRequestsPage() {
   const { telegramId } = useAppStore()
   const queryClient = useQueryClient()
 
-  // Check access rights
-  useState(() => {
+  // Check access rights - синхронная проверка
+  useEffect(() => {
     const currentTelegramId = telegramId || sessionStorage.getItem('telegramId');
     if (currentTelegramId) {
       const adminIds = ['1', '296925626', '531360988'];
       const isAdmin = adminIds.includes(currentTelegramId);
       setAccessDenied(!isAdmin);
     } else {
+      // Если нет telegramId, ждём немного и проверяем снова
       const timer = setTimeout(() => {
-        if (!telegramId && !sessionStorage.getItem('telegramId')) {
-            setAccessDenied(true);
+        const retryTelegramId = telegramId || sessionStorage.getItem('telegramId');
+        if (!retryTelegramId) {
+          setAccessDenied(true);
+        } else {
+          const adminIds = ['1', '296925626', '531360988'];
+          const isAdmin = adminIds.includes(retryTelegramId);
+          setAccessDenied(!isAdmin);
         }
-      }, 1000)
+      }, 500) // Уменьшил время ожидания
       return () => clearTimeout(timer)
     }
-  });
+  }, [telegramId]);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['adminData', telegramId],
     queryFn: () => fetchAdminData(telegramId!),
-    enabled: !accessDenied && !!telegramId,
+    enabled: accessDenied === false && !!telegramId,
   });
 
   const { requests = [], masters = [] } = data || {};
@@ -89,6 +98,35 @@ export default function AdminRequestsPage() {
     }
   };
 
+  // Функция для удаления заявки
+  const deleteRequest = async (requestId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить эту заявку?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/requests/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-telegram-id': telegramId || '',
+        },
+        body: JSON.stringify({ requestId }),
+      });
+      
+      const data = await response.json();
+      if (response.ok) {
+        alert('Заявка успешно удалена');
+        // Обновляем список заявок
+        refetch();
+      } else {
+        alert('Ошибка удаления заявки: ' + data.error);
+      }
+    } catch (error) {
+      alert('Ошибка удаления заявки');
+    }
+  };
+
   const filteredRequests = useMemo(() => {
     if (statusFilter === 'all') return requests;
     return requests.filter((req: Request) => req.status === statusFilter);
@@ -112,18 +150,46 @@ export default function AdminRequestsPage() {
     // Add other statuses here as they appear
   };
 
-  if (isLoading && !accessDenied) {
+  // Показываем лоадер пока проверяем доступ
+  if (accessDenied === null) {
     return (
         <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Загружаем данные...</p>
+              <div className="relative w-16 h-16 mx-auto mb-4">
+                <Image
+                  src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+                  alt="Загрузка"
+                  width={64}
+                  height={64}
+                  className="object-contain w-full h-full"
+                />
+              </div>
+              <p className="text-gray-600">Проверяем доступ...</p>
             </div>
         </div>
     )
   }
 
-  if (accessDenied) {
+  if (isLoading && accessDenied === false) {
+    return (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="text-center">
+              <div className="relative w-16 h-16 mx-auto mb-4">
+                <Image
+                  src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+                  alt="Загрузка"
+                  width={64}
+                  height={64}
+                  className="object-contain w-full h-full"
+                />
+              </div>
+              <p className="text-gray-600">Загружаем данные...</p>
+            </div>
+        </div>
+    )
+  }
+
+  if (accessDenied === true) {
     return (
         <div className="min-h-screen bg-white flex items-center justify-center">
             <div className="text-center">
@@ -146,8 +212,8 @@ export default function AdminRequestsPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto pt-16 px-4">
+      <div className="w-full h-full bg-gray-50 overflow-y-auto">
+        <div className="mx-auto pt-16 px-4 pb-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Управление заявками</h1>
             <div className="flex flex-wrap gap-2">
@@ -173,9 +239,18 @@ export default function AdminRequestsPage() {
                             <h3 className="text-xl font-semibold text-gray-900">Заявка #{request.id.substring(0, 8)}...</h3>
                             <p className="text-gray-500 text-sm">{new Date(request.createdAt).toLocaleString('ru-RU')}</p>
                         </div>
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                            {request.status}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 text-sm font-medium rounded-full ${request.status === 'submitted' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                              {request.status}
+                          </span>
+                          <button
+                            onClick={() => deleteRequest(request.id)}
+                            className="p-2 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-colors"
+                            title="Удалить заявку"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                     </div>
                     
                     <div className="space-y-2 mb-4">

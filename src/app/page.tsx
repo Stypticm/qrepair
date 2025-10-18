@@ -279,8 +279,8 @@ function HomeContent() {
       <div className={`${isDesktopLike ? 'min-h-screen flex items-start justify-center p-6 md:p-8 bg-gray-100' : ''}`}>
         <div className={`${isDesktopLike ? 'w-full max-w-[520px] bg-gradient-to-b from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden' : ''}`}>
           <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
-            <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-8 box-border`}>
-              <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-16">
+            <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}>
+              <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-10">
                 <motion.div
                   initial={{ x: -300, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -353,40 +353,32 @@ function HomeContent() {
                   <Menubar>
                     <MenubarTrigger
                       aria-label="Открыть меню"
-                      className="w-12 h-12 rounded-full bg-gray-900/80 text-white shadow-md flex items-center justify-center active:scale-95 transition"
+                      className="w-12 h-12 rounded-full bg-gray-900/90 text-white shadow-lg flex items-center justify-center active:scale-95 transition-all duration-200 hover:bg-gray-800/90"
                     >
-                      ☰
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                      </svg>
                     </MenubarTrigger>
-                    <MenubarContent className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden">
+                    <MenubarContent className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-2xl overflow-hidden">
                       <MenubarItem
-                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                        className="w-full text-left px-6 py-4 text-base text-gray-900 hover:bg-gray-50/80 transition-colors duration-200 font-medium"
                         onSelect={() => router.push('/my-devices')}
                       >
-                        📱 Мои устройства
+                        Мои устройства
                       </MenubarItem>
                       <MenubarItem
-                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                        onSelect={() => router.push('/market')}
-                      >
-                        🛒 Маркетплейс
-                      </MenubarItem>
-                      <MenubarItem
-                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
+                        className="w-full text-left px-6 py-4 text-base text-gray-900 hover:bg-gray-50/80 transition-colors duration-200 font-medium"
                         onSelect={() => router.push('/favorites')}
                       >
-                        ❤️ Избранное
+                        Избранное
                       </MenubarItem>
                       <MenubarItem
-                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                        onSelect={() => router.push('/profile')}
+                        className="w-full text-left px-6 py-4 text-base text-gray-900 hover:bg-gray-50/80 transition-colors duration-200 font-medium"
+                        onSelect={() => router.push('/cart')}
                       >
-                        👤 Профиль
-                      </MenubarItem>
-                      <MenubarItem
-                        className="w-full text-left px-4 py-3 text-sm text-gray-800 hover:bg-gray-50"
-                        onSelect={() => router.push('/help')}
-                      >
-                        ❓ Помощь
+                        Корзина
                       </MenubarItem>
                     </MenubarContent>
                   </Menubar>

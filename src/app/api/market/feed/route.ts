@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     // Получаем лоты из таблицы Skupka через Prisma
     const items = await prisma.skupka.findMany({
       where: {
-        status: 'paid',
+        status: 'paid', // Только оплаченные заявки
         NOT: {
           photoUrls: {
             isEmpty: true,

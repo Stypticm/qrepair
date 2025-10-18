@@ -8,6 +8,9 @@ import { getPictureUrl } from "@/core/lib/assets";
 import { Page } from "@/components/Page";
 import { Heart, ShoppingCart, Share2, Star, Smartphone, HardDrive, Palette, Sparkles } from "lucide-react";
 import { sendTon } from "@/core/ton/tonconnect";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useCart } from "@/hooks/useCart";
+import { useRouter } from "next/navigation";
 
 interface DeviceCard {
   id: string;
@@ -36,6 +39,9 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
   const isSingle = cards.length === 1;
+  const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
+  const { addToCart, isInCart, loading: cartLoading } = useCart();
+  const router = useRouter();
   
   // Touch events для фото-карусели
   const touchStartX = useRef<number | null>(null);
@@ -254,57 +260,81 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
                         </div>
 
                         <div className="flex flex-col gap-2 pt-1">
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-2">
                             <motion.button
                               layoutId={`button-${active.id}-${id}`}
-                              className="w-full px-5 py-3 text-base font-semibold rounded-2xl bg-[#ff9800] hover:bg-[#fb8c00] text-white transition-colors duration-200 flex items-center justify-center gap-2"
-                            >
-                              <ShoppingCart className="w-5 h-5" />
-                              Купить
-                            </motion.button>
-                            <button
-                              className="w-full px-5 py-3 rounded-2xl bg-[#2dc2c6] hover:bg-[#25a8ac] transition-colors duration-200 text-white font-bold uppercase tracking-wide flex items-center justify-center gap-3"
                               onClick={async () => {
-                                try {
-                                  // Демонстрационная сумма 0.1 TON (в нанотонах: 0.1 * 1e9)
-                                  await sendTon('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', String(0.1 * 1e9))
-                                } catch (e) {
-                                  console.error('TON payment error', e)
+                                if (isInCart(active.id)) {
+                                  // Если уже в корзине, переходим в корзину
+                                  router.push('/cart')
+                                } else {
+                                  // Если не в корзине, добавляем в корзину (без перехода)
+                                  await addToCart({
+                                    id: active.id,
+                                    title: active.title,
+                                    price: active.price,
+                                    cover: active.cover,
+                                    photos: active.photos,
+                                    date: active.date,
+                                    model: active.model,
+                                    storage: active.storage,
+                                    color: active.color,
+                                    condition: active.condition,
+                                    description: active.description
+                                  })
+                                  // НЕ переходим в корзину - только после второго нажатия
                                 }
                               }}
+                              disabled={cartLoading}
+                              className={`px-4 py-3 text-sm font-semibold rounded-xl transition-colors duration-200 flex items-center justify-center gap-1 ${
+                                isInCart(active.id)
+                                  ? 'bg-[#2dc2c6] hover:bg-[#25a8ac] text-white'
+                                  : 'bg-[#2dc2c6] hover:bg-[#25a8ac] text-white'
+                              }`}
                             >
-                              {/* TON Logo */}
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                className="w-6 h-6 drop-shadow-[0_0_2px_rgba(255,255,255,0.85)]"
-                                aria-hidden
-                              >
-                                <path
-                                  fill="#FFFFFF"
-                                  stroke="#FFFFFF"
-                                  strokeOpacity="0.85"
-                                  strokeWidth="0.25"
-                                  d="M12 2c5.523 0 10 2.477 10 5.533 0 1.42-.88 3.29-2.34 5.384-1.37 1.97-3.24 4.13-5.2 6.11-1.4 1.41-2.79 2.62-3.78 3.34a.99.99 0 0 1-1.36-.2c-.99-.72-2.38-1.93-3.78-3.34-1.96-1.98-3.83-4.14-5.2-6.11C.88 10.823 0 8.953 0 7.533 0 4.477 4.477 2 10 2h2Zm0 2h-2C6.06 4 2 5.57 2 7.533c0 .86.68 2.36 2.02 4.29 1.27 1.82 3.06 3.9 4.96 5.83 1.07 1.06 2.08 1.96 3.02 2.67.94-.71 1.95-1.61 3.02-2.67 1.9-1.93 3.69-4.01 4.96-5.83 1.34-1.93 2.02-3.43 2.02-4.29C22 5.57 17.94 4 14 4h-2Zm0 2 4 6h-3v6h-2v-6H8l4-6Z"
-                                />
-                              </svg>
-                              Купить за TON
+                              <ShoppingCart className="w-4 h-4" />
+                              {isInCart(active.id) ? 'В корзину' : 'Купить'}
+                            </motion.button>
+                            <button
+                              onClick={() => toggleFavorite(active.id)}
+                              disabled={favoritesLoading}
+                              className={`px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center justify-center ${
+                                isFavorite(active.id)
+                                  ? 'bg-[#2dc2c6] hover:bg-[#25a8ac] text-white'
+                                  : 'bg-[#2dc2c6] hover:bg-[#25a8ac] text-white'
+                              }`}
+                            >
+                              {isFavorite(active.id) ? 'В избранном' : 'В избранное'}
                             </button>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <button
-                              aria-label="Добавить в избранное"
-                              className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+                          <button
+                            className="w-full px-5 py-3 rounded-2xl bg-[#2dc2c6] hover:bg-[#25a8ac] transition-colors duration-200 text-white font-bold uppercase tracking-wide flex items-center justify-center gap-3"
+                            onClick={async () => {
+                              try {
+                                // Демонстрационная сумма 0.1 TON (в нанотонах: 0.1 * 1e9)
+                                await sendTon('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', String(0.1 * 1e9))
+                              } catch (e) {
+                                console.error('TON payment error', e)
+                              }
+                            }}
+                          >
+                            {/* TON Logo */}
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              className="w-6 h-6 drop-shadow-[0_0_2px_rgba(255,255,255,0.85)]"
+                              aria-hidden
                             >
-                              <Heart className="w-5 h-5 text-gray-600" />
-                            </button>
-                            <button
-                              aria-label="Поделиться ссылкой"
-                              className="px-4 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
-                            >
-                              <Share2 className="w-5 h-5 text-gray-600" />
-                            </button>
-                          </div>
+                              <path
+                                fill="#FFFFFF"
+                                stroke="#FFFFFF"
+                                strokeOpacity="0.85"
+                                strokeWidth="0.25"
+                                d="M12 2c5.523 0 10 2.477 10 5.533 0 1.42-.88 3.29-2.34 5.384-1.37 1.97-3.24 4.13-5.2 6.11-1.4 1.41-2.79 2.62-3.78 3.34a.99.99 0 0 1-1.36-.2c-.99-.72-2.38-1.93-3.78-3.34-1.96-1.98-3.83-4.14-5.2-6.11C.88 10.823 0 8.953 0 7.533 0 4.477 4.477 2 10 2h2Zm0 2h-2C6.06 4 2 5.57 2 7.533c0 .86.68 2.36 2.02 4.29 1.27 1.82 3.06 3.9 4.96 5.83 1.07 1.06 2.08 1.96 3.02 2.67.94-.71 1.95-1.61 3.02-2.67 1.9-1.93 3.69-4.01 4.96-5.83 1.34-1.93 2.02-3.43 2.02-4.29C22 5.57 17.94 4 14 4h-2Zm0 2 4 6h-3v6h-2v-6H8l4-6Z"
+                              />
+                            </svg>
+                            Купить за TON
+                          </button>
                         </div>
                       </motion.div>
                     </div>
@@ -324,13 +354,13 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
             onClick={() => setActive(card)}
             className={
               "bg-white rounded-2xl border border-gray-200 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_10px_24px_rgba(0,0,0,0.10)] transition-all duration-200 cursor-pointer overflow-hidden flex flex-col " +
-              (isSingle ? " h-[240px]" : " h-[360px]") +
-              (isSingle ? " w-[88%] max-w-[360px]" : "")
+              (isSingle ? " h-[280px]" : " h-[280px]") +
+              (isSingle ? " w-[75%] max-w-[280px]" : "")
             }
           >
             <div className="relative">
               <motion.div layoutId={`image-${card.id}-${id}`}>
-                <div className={`w-full ${isSingle ? 'h-32' : 'h-36'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0`}>
+                <div className={`w-full ${isSingle ? 'h-48' : 'h-48'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0`}>
                   <div className="w-[100%] h-[280%] -mb-[60%]">
                     <Image
                       width={220}
@@ -347,13 +377,13 @@ export function ExpandableDeviceCard({ cards }: ExpandableDeviceCardProps) {
             <div className="p-3 flex-1 flex flex-col justify-between">
               <motion.h3
                 layoutId={`title-${card.id}-${id}`}
-                className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2"
+                className="font-semibold text-sm text-gray-900 mb-0.5 line-clamp-2"
               >
                 {card.title}
               </motion.h3>
               <motion.p
                 layoutId={`description-${card.id}-${id}`}
-                className="text-xs text-gray-500 mb-2 line-clamp-1"
+                className="text-xs text-gray-500 mb-1 line-clamp-1"
               >
                 {card.description}
               </motion.p>

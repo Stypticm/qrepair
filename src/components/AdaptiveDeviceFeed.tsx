@@ -71,22 +71,14 @@ export function AdaptiveDeviceFeed({
   // Используем реальные данные из props
   const displayItems = items;
 
-  const itemsPerPage = 1;
+  const itemsPerPage = 1; // Показываем по 1 карточке за раз (настоящий carousel)
   const totalPages = Math.ceil(displayItems.length / itemsPerPage);
   const currentItems = displayItems.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage);
 
-  // Автоматическое переключение режима на основе количества товаров
+  // Принудительно используем carousel режим
   useEffect(() => {
-    if (mode === 'auto') {
-      if (displayItems.length > 20) {
-        setViewMode('grid');
-      } else {
-        setViewMode('carousel');
-      }
-    } else {
-      setViewMode(mode);
-    }
-  }, [displayItems.length, mode]);
+    setViewMode('carousel');
+  }, []);
 
   // Автопрокрутка отключена
 
@@ -133,13 +125,13 @@ export function AdaptiveDeviceFeed({
     return (
       <div className="w-full">
         <div className="flex flex-col justify-center items-center h-64 space-y-4">
-          <div className="relative w-12 h-12">
+          <div className="relative w-16 h-16">
             <Image
               src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
               alt="Загрузка"
-              width={48}
-              height={48}
-              className="object-contain"
+              width={64}
+              height={64}
+              className="object-contain w-full h-full"
             />
           </div>
           <div className="text-center">
@@ -160,7 +152,7 @@ export function AdaptiveDeviceFeed({
   }
 
   return (
-    <div ref={rootRef} className="w-full space-y-4">
+    <div ref={rootRef} className="w-full space-y-2">
 
       {/* В режиме grid показываем панель с кнопкой возврата к карусели */}
 
@@ -218,7 +210,7 @@ export function AdaptiveDeviceFeed({
 
       {/* Контент */}
       {viewMode === 'carousel' ? (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {/* Индикаторы страниц */}
           {totalPages > 1 && (
             <div className="flex justify-center gap-1">
