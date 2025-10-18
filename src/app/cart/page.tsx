@@ -75,7 +75,7 @@ export default function CartPage() {
               >
                 <path d="m15 18-6-6 6-6"/>
               </svg>
-              Вернуться к заявкам
+              На главную
             </button>
           </div>
         </div>

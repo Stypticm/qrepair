@@ -410,7 +410,10 @@ export default function EvaluationPage() {
                 <div ref={carouselRef} className="relative mx-auto w-full max-w-none touch-pan-x select-none">
                   <Carousel_003
                     className="mx-auto"
-                    images={evaluationOptions.map(o => ({ src: getPictureUrl(`${o.image}.png`), alt: o.label }))}
+                    images={evaluationOptions.map(o => ({ 
+                      src: getPictureUrl(`${o.image}.png`) || getPictureUrl('display_front_new.png') || '/display_front_new.png', 
+                      alt: o.label 
+                    }))}
                     showPagination
                     loop
                     autoplay={false}

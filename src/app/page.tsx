@@ -259,8 +259,8 @@ function HomeContent() {
           <Image
             src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
             alt="Загрузка"
-            width={192}
-            height={192}
+            width={64}
+            height={64}
             className="object-contain rounded-2xl"
           />
           <p className="text-gray-600 mt-4">Инициализация...</p>
