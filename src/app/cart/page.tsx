@@ -58,7 +58,7 @@ export default function CartPage() {
               <ShoppingCart className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
-            <p className="text-gray-600 mb-6">Добавьте заявки в корзину, чтобы они появились здесь</p>
+            <p className="text-gray-600 mb-6">Добавьте заявки в корзину, <br />чтобы они появились здесь</p>
           </div>
           <button
             onClick={() => window.history.back()}

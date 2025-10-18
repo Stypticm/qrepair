@@ -17,7 +17,7 @@ import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-r
 import { postEvent } from '@telegram-apps/sdk';
 import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen, mountSwipeBehavior, disableVerticalSwipes, isSwipeBehaviorMounted } from '@telegram-apps/sdk';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
-import { Smartphone } from 'lucide-react';
+import { Smartphone, Wrench, Smartphone as DevicesIcon, Heart, ShoppingCart, Settings } from 'lucide-react';
 import { useTelegramCloudImages } from '@/hooks/useTelegramCloudImages'
 
 function HomeContent() {
@@ -305,29 +305,13 @@ function HomeContent() {
                   </div>
                 </motion.div>
 
-                <div className="flex flex-col gap-4 w-full">
-                  <div className="w-full flex justify-center">
+                <div className="flex flex-col gap-4 w-full pb-20">
+                  <div className="w-full px-4">
                     <div 
-                      className="w-[320px] max-w-[320px] bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] hover:from-[#25a8ac] hover:to-[#39c4c8] rounded-3xl p-6 shadow-2xl active:scale-[0.98] transition-all duration-300 cursor-pointer"
-                      onClick={() => router.push('/accessories')}
+                      className="w-full max-w-md mx-auto h-30 bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] rounded-3xl p-6 shadow-2xl flex items-center justify-center"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="text-white font-bold text-lg">Аксессуары</h3>
-                            <p className="text-white/80 text-sm">Чехлы, наушники, зарядки</p>
-                          </div>
-                        </div>
-                        <div className="text-white/60">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 18l6-6-6-6"/>
-                          </svg>
-                        </div>
+                      <div className="text-center">
+                        <h3 className="text-white font-bold text-lg">Баннер!</h3>
                       </div>
                     </div>
                   </div>
@@ -339,6 +323,41 @@ function HomeContent() {
                     mode="auto"
                     onViewModeChange={(mode) => setIsGridViewMode(mode === 'grid')}
                   />
+                  
+                  {/* Кнопки Ремонт и Оценка - только в carousel режиме */}
+                  {!isGridViewMode && (
+                    <div className="w-full px-2">
+                      <div className="w-full max-w-md mx-auto flex gap-2">
+                        {/* Кнопка Ремонт */}
+                        <Button
+                          variant="outline"
+                          className="group flex-1 h-20 bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] text-white font-semibold text-lg rounded-3xl border-0 shadow-2xl hover:shadow-2xl transition-all duration-300"
+                          onClick={() => router.push('/repair')}
+                        >
+                          <div className="flex items-center justify-around gap-2">
+                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                              <Wrench className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="text-white font-semibold text-base">Ремонт</span>
+                          </div>
+                        </Button>
+
+                        {/* Кнопка Оценить смартфон */}
+                        <Button
+                          variant="outline"
+                          className="group flex-1 h-20 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold text-lg rounded-3xl border-0 shadow-2xl hover:shadow-2xl transition-all duration-300 animate-pulse"
+                          onClick={handleStartForm}
+                        >
+                          <div className="flex items-center justify-around gap-2">
+                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                              <Smartphone className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="text-white font-semibold text-base">Оценить</span>
+                          </div>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   
                   {!isLoading && !isInTelegram && (
                     <Button
@@ -354,69 +373,56 @@ function HomeContent() {
                   )}
                 </div>
 
-                <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
-                  <ExpandButton className="w-full" />
-                </div>
-
-                {/* Кнопка Оценить смартфон */}
-                {!isGridViewMode && (
-                  <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-full flex justify-center">
-                    <Button
-                      variant="outline"
-                      className="group w-[320px] max-w-[320px] h-14 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold text-lg rounded-2xl border-0 shadow-lg hover:shadow-xl transition-all duration-200 animate-pulse"
-                      onClick={handleStartForm}
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <Smartphone className="w-5 h-5" />
-                        Оценить смартфон
-                      </span>
-                    </Button>
+                {/* ExpandButton - только в grid режиме */}
+                {isGridViewMode && (
+                  <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
+                    <ExpandButton className="w-full" />
                   </div>
                 )}
 
-                {!isLoading && isMaster(userId) && (
-                  <button
-                    onClick={() => router.push('/internal')}
-                    className="fixed bottom-5 right-5 w-14 h-14 rounded-full bg-purple-600 text-white shadow-lg flex items-center justify-center active:scale-95 transition"
-                    aria-label="Открыть админ панель"
-                  >
-                    ⚙️
-                  </button>
-                )}
+                {/* Фиксированное нижнее меню в стиле Apple Liquid Design */}
+                <div className="fixed bottom-4 left-4 right-4 z-50">
+                  <div className="bg-black/10 backdrop-blur-2xl border border-white/5 rounded-full px-6 py-4">
+                    <div className="max-w-md mx-auto flex justify-around items-center">
+                      {/* Мои устройства */}
+                      <button
+                        onClick={() => router.push('/my-devices')}
+                        className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-200 hover:bg-white/40"
+                        aria-label="Мои устройства"
+                      >
+                        <DevicesIcon className="w-6 h-6 text-gray-800" />
+                      </button>
 
-                <div className="fixed top-22 right-5 z-50">
-                  <Menubar>
-                    <MenubarTrigger
-                      aria-label="Открыть меню"
-                      className="w-12 h-12 rounded-full bg-gray-900/90 text-white shadow-lg flex items-center justify-center active:scale-95 transition-all duration-200 hover:bg-gray-800/90"
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                      </svg>
-                    </MenubarTrigger>
-                    <MenubarContent className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl border border-gray-200/50 shadow-2xl overflow-hidden">
-                      <MenubarItem
-                        className="w-full text-left px-6 py-4 text-base text-gray-900 hover:bg-gray-50/80 transition-colors duration-200 font-medium"
-                        onSelect={() => router.push('/my-devices')}
+                      {/* Избранное */}
+                      <button
+                        onClick={() => router.push('/favorites')}
+                        className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-200 hover:bg-white/40"
+                        aria-label="Избранное"
                       >
-                        Мои устройства
-                      </MenubarItem>
-                      <MenubarItem
-                        className="w-full text-left px-6 py-4 text-base text-gray-900 hover:bg-gray-50/80 transition-colors duration-200 font-medium"
-                        onSelect={() => router.push('/favorites')}
+                        <Heart className="w-6 h-6 text-gray-800" />
+                      </button>
+
+                      {/* Корзина */}
+                      <button
+                        onClick={() => router.push('/cart')}
+                        className="w-12 h-12 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-200 hover:bg-white/40"
+                        aria-label="Корзина"
                       >
-                        Избранное
-                      </MenubarItem>
-                      <MenubarItem
-                        className="w-full text-left px-6 py-4 text-base text-gray-900 hover:bg-gray-50/80 transition-colors duration-200 font-medium"
-                        onSelect={() => router.push('/cart')}
-                      >
-                        Корзина
-                      </MenubarItem>
-                    </MenubarContent>
-                  </Menubar>
+                        <ShoppingCart className="w-6 h-6 text-gray-800" />
+                      </button>
+
+                      {/* Системная кнопка для админов */}
+                      {!isLoading && isMaster(userId) && (
+                        <button
+                          onClick={() => router.push('/internal')}
+                          className="w-12 h-12 rounded-full bg-purple-600/80 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-200 hover:bg-purple-700/80"
+                          aria-label="Открыть админ панель"
+                        >
+                          <Settings className="w-6 h-6 text-white" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

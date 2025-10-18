@@ -18,7 +18,7 @@ export default function StatusPage() {
 
     return (
         <Page back={true}>
-            <div className="min-h-screen min-w-screen bg-[#f9ecb8] flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
+            <div className="min-h-screen min-w-screen flex flex-col" style={{ padding: 'env(--safe-area-top, 0px) env(--safe-area-right, 0px) env(--safe-area-bottom, 0px) env(--safe-area-left, 0px)' }}>
                 <h1 className="text-2xl font-extrabold uppercase text-black text-center leading-tight px-2">
                     📋 Статус<br />заявки
                 </h1>

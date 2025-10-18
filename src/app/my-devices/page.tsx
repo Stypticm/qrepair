@@ -82,10 +82,10 @@ const MyDevices = () => {
 
   return (
     <Page back={true}>
-      <div className="w-full h-full flex flex-col mx-auto">
-        <div className="h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-          <div className="w-full max-w-md mx-auto px-2">
-            <div className="text-center mb-8 mt-12">
+      <div className="w-full h-full flex flex-col mx-auto bg-white">
+        <div className="h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-white">
+          <div className="w-full max-w-md mx-auto px-2 bg-white">
+            <div className="text-center mb-8 mt-20">
               <h1 className="text-3xl font-semibold text-gray-900 mb-2">Мои устройства</h1>
               {!loading && myDevices.length > 0 && (
                 <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
@@ -114,7 +114,7 @@ const MyDevices = () => {
                 {myDevices.map((device: SkupkaRequest) => {
                   const isExpanded = expandedCards.has(device.id);
                   return (
-                    <Card key={device.id} className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200">
+                    <Card key={device.id} className="bg-white border border-gray-200 rounded-2xl shadow-2xl hover:shadow-3xl transition-all duration-300">
                       <CardHeader
                         className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
                         onClick={() => toggleCard(device.id)}
