@@ -30,6 +30,7 @@ interface AdaptiveDeviceFeedProps {
   hasMore?: boolean;
   mode?: 'carousel' | 'grid' | 'auto';
   onViewModeChange?: (mode: 'carousel' | 'grid') => void;
+  showRecommendationsButton?: boolean;
 }
 
 
@@ -39,7 +40,8 @@ export function AdaptiveDeviceFeed({
   onLoadMore,
   hasMore,
   mode = 'carousel',
-  onViewModeChange
+  onViewModeChange,
+  showRecommendationsButton = true
 }: AdaptiveDeviceFeedProps) {
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -169,14 +171,16 @@ export function AdaptiveDeviceFeed({
       {viewMode === 'grid' && (
         <div className="bg-gray-50 rounded-xl p-4 space-y-3">
           {/* Кнопка возврата к рекомендациям по центру (вверху) */}
-          <div className="w-full flex justify-center">
-            <button
-              onClick={switchToCarousel}
-              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
-            >
-              ← Рекомендации
-            </button>
-          </div>
+          {showRecommendationsButton && (
+            <div className="w-full flex justify-center">
+              <button
+                onClick={switchToCarousel}
+                className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+              >
+                ← Рекомендации
+              </button>
+            </div>
+          )}
 
           {/* Поиск (чуть выше по высоте) */}
           <div className="relative">

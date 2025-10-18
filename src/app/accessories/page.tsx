@@ -140,6 +140,7 @@ export default function AccessoriesPage() {
             onLoadMore={handleLoadMore}
             hasMore={false}
             mode="grid"
+            showRecommendationsButton={false}
           />
         </div>
       </div>
