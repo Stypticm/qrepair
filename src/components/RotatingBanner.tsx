@@ -13,47 +13,47 @@ interface RotatingBannerProps {
   screenHeight?: number; // высота экрана для адаптивности
 }
 
-// iPhone-адаптивные размеры баннеров синхронизированные с carousel
+// iPhone-адаптивные размеры баннеров как у carousel
 const getBannerDimensions = (screenWidth: number, screenHeight: number = 844) => {
-  // Принцип 80/20: 20% синхронизации с carousel дают 80% визуальной гармонии
+  // Принцип 80/20: 20% адаптивной ширины дают 80% визуального единства с carousel
   
   // Адаптивность по высоте экрана для компактности
   const heightMultiplier = screenHeight > 900 ? 0.7 : screenHeight > 850 ? 0.8 : 1.0;
   
-  // Баннер синхронизирован с шириной карточек carousel (max-w-sm = 384px)
-  const containerWidth = Math.min(screenWidth - 32, 384); // как карточки: max-w-sm
+  // Баннер адаптивный как carousel - полная ширина экрана с отступами
+  const containerWidth = screenWidth - 32; // как carousel: w-full с отступами 16px с каждой стороны
   
   if (screenWidth <= 375) {
-    // iPhone SE, iPhone 12/13 mini - компактные картинки
+    // iPhone SE, iPhone 12/13 mini - компактные картинки для малых экранов
     return { 
       containerWidth, 
-      containerHeight: Math.round(180 * heightMultiplier),
-      imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
-      imageHeight: Math.round(140 * heightMultiplier)
+      containerHeight: Math.round(250 * heightMultiplier),
+      imageWidth: Math.round(containerWidth * 0.85), // компактнее на 15%
+      imageHeight: Math.round(180 * heightMultiplier) // компактнее на 14%
     };
   } else if (screenWidth <= 390) {
-    // iPhone 12/13/14/15 - компактные картинки
+    // iPhone 12/13/14/15 - компактные картинки для малых экранов
     return { 
       containerWidth, 
-      containerHeight: Math.round(200 * heightMultiplier),
-      imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
-      imageHeight: Math.round(160 * heightMultiplier)
+      containerHeight: Math.round(270 * heightMultiplier),
+      imageWidth: Math.round(containerWidth * 0.85), // компактнее на 15%
+      imageHeight: Math.round(200 * heightMultiplier) // компактнее на 13%
     };
-  } else if (screenWidth <= 428) {
-    // iPhone 12/13/14/15 Pro Max - компактные картинки
+  } else if (screenWidth <= 420) {
+    // iPhone 12/13/14/15 Pro Max - компактные картинки для средних экранов
     return { 
       containerWidth, 
-      containerHeight: Math.round(220 * heightMultiplier),
+      containerHeight: Math.round(290 * heightMultiplier),
       imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
-      imageHeight: Math.round(180 * heightMultiplier)
+      imageHeight: Math.round(220 * heightMultiplier) // компактнее на 12%
     };
   } else {
-    // Desktop и большие экраны - компактные картинки
+    // Desktop и большие экраны - полный размер картинок
     return { 
       containerWidth, 
-      containerHeight: Math.round(240 * heightMultiplier),
-      imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
-      imageHeight: Math.round(200 * heightMultiplier)
+      containerHeight: Math.round(310 * heightMultiplier),
+      imageWidth: Math.round(containerWidth * 0.95), // слегка компактнее для больших экранов
+      imageHeight: Math.round(270 * heightMultiplier)
     };
   }
 };
@@ -129,16 +129,13 @@ export function RotatingBanner({
 
   return (
     <div 
-      className={`relative overflow-hidden rounded-2xl ${className}`}
+      className={`relative overflow-hidden rounded-2xl w-full ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
-        // Фиксированные размеры контейнера для предотвращения скачков
-        width: `${dimensions.containerWidth}px`,
+        // Только высота фиксированная для предотвращения скачков
         height: `${dimensions.containerHeight}px`,
-        minWidth: `${dimensions.containerWidth}px`,
         minHeight: `${dimensions.containerHeight}px`,
-        maxWidth: `${dimensions.containerWidth}px`,
         maxHeight: `${dimensions.containerHeight}px`,
         // Предотвращение layout shift
         contain: 'layout style paint',
@@ -148,8 +145,7 @@ export function RotatingBanner({
       <div 
         className="w-full h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
         style={{
-          // Фиксированные размеры внутреннего контейнера
-          width: `${dimensions.containerWidth}px`,
+          // Только высота фиксированная
           height: `${dimensions.containerHeight}px`
         }}
       >
@@ -178,12 +174,9 @@ export function RotatingBanner({
               alt={`Баннер ${currentIndex + 1}`}
               width={dimensions.imageWidth}
               height={dimensions.imageHeight}
-              className="object-contain"
+              className="object-contain max-w-full max-h-full"
               style={{ 
                 imageRendering: 'auto',
-                // Фиксированные размеры картинки для предотвращения скачков
-                width: `${dimensions.imageWidth}px`,
-                height: `${dimensions.imageHeight}px`,
                 // Оптимизация для iPhone
                 WebkitTransform: 'translateZ(0)',
                 transform: 'translateZ(0)'

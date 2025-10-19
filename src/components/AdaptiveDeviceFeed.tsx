@@ -85,6 +85,15 @@ export function AdaptiveDeviceFeed({
 
   // Устанавливаем режим в зависимости от переданного параметра
   useEffect(() => {
+    const handleSwitchToGrid = () => {
+      switchToGrid();
+    };
+
+    window.addEventListener('switchToGrid', handleSwitchToGrid);
+    return () => window.removeEventListener('switchToGrid', handleSwitchToGrid);
+  }, [switchToGrid]);
+
+  useEffect(() => {
     if (mode === 'grid') {
       setViewMode('grid');
     } else if (mode === 'carousel') {
@@ -242,7 +251,7 @@ export function AdaptiveDeviceFeed({
 
           {/* Карусель с ручным свайпом */}
           <div
-            className="relative outline-none flex justify-center w-full mx-auto bg-white/15 backdrop-blur-lg rounded-3xl shadow-3xl border border-white/30 hover:bg-white/20 transition-all duration-500 ring-1 ring-white/20"
+            className="relative outline-none flex justify-center w-full mx-auto bg-white/15 backdrop-blur-lg rounded-3xl shadow-3xl border border-white/30 hover:bg-white/20 transition-all duration-500 ring-1 ring-white/20 pb-4"
             role="region"
             aria-label="Карусель устройств"
             tabIndex={0}
@@ -301,17 +310,6 @@ export function AdaptiveDeviceFeed({
                   <SimpleDeviceCard cards={currentItems} isSingle={true} />
               </motion.div>
             </AnimatePresence>
-          </div>
-
-
-          {/* Кнопка все товары под каруселью (стиль меню) */}
-          <div className="text-center w-full flex justify-center relative z-10 pt-4">
-            <button
-              onClick={switchToGrid}
-              className="w-[42.5%] max-w-[160px] mx-auto h-14 flex items-center justify-center px-6 py-3 rounded-2xl bg-gray-200/80 backdrop-blur-xl border border-gray-300/50 text-gray-700 text-sm font-semibold shadow-lg hover:bg-gray-300/80 hover:shadow-xl hover:border-gray-400/70 active:scale-[0.98] transition-all duration-300"
-            >
-              <span className="text-gray-700 font-semibold">Все товары</span>
-            </button>
           </div>
         </div>
       ) : (

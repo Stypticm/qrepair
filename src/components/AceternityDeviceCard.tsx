@@ -285,6 +285,30 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                           <span>Избранное</span>
                         </motion.button>
                       </div>
+                      
+                      {/* Кнопка "Все устройства" в Apple-стиле */}
+                      <motion.button
+                        layoutId={`all-devices-detail-btn-${active.id}-${id}`}
+                        onClick={() => {
+                          setActive(null); // Закрываем модальное окно
+                          const event = new CustomEvent('switchToGrid');
+                          window.dispatchEvent(event);
+                        }}
+                        className="w-full h-12 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-medium rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] mb-3 border border-gray-200"
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-5 h-5"
+                        >
+                          <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                        </svg>
+                        Все устройства
+                      </motion.button>
+                      
                       <button
                         onClick={() => sendTon(active.price?.toString() || '0', active.title)}
                         className="w-full h-12 bg-gradient-to-r from-[#007AFF] to-[#00C6FF] hover:from-[#005BBF] hover:to-[#0099CC] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
@@ -360,12 +384,28 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                 )}
               </div>
               
-              <motion.div
-                layoutId={`price-${card.id}-${id}`}
-                className="text-lg font-bold text-gray-900 mt-auto"
+              {/* Кнопка "Все устройства" в Apple-стиле */}
+              <motion.button
+                layoutId={`all-devices-btn-${card.id}-${id}`}
+                onClick={() => {
+                  // Переход к сетке всех устройств
+                  const event = new CustomEvent('switchToGrid');
+                  window.dispatchEvent(event);
+                }}
+                className="w-full mt-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-medium rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 border border-gray-200"
               >
-                {formatPrice(card.price)}
-              </motion.div>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-4 h-4"
+                >
+                  <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+                </svg>
+                Все устройства
+              </motion.button>
             </div>
           </motion.div>
         ))}
