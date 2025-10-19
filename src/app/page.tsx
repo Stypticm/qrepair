@@ -307,13 +307,19 @@ function HomeContent() {
 
                 <div className="flex flex-col gap-4 w-full pb-20">
                   <div className="w-full px-4">
-                    <div 
-                      className="w-full max-w-md mx-auto h-30 bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] rounded-3xl p-6 shadow-2xl flex items-center justify-center"
+                    <button 
+                      onClick={handleStartForm}
+                      className="w-full max-w-md mx-auto h-36 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                     >
-                      <div className="text-center">
-                        <h3 className="text-white font-bold text-lg">Баннер!</h3>
-                      </div>
-                    </div>
+                      <Image
+                        src="/banner.png"
+                        alt="Баннер"
+                        width={320}
+                        height={100}
+                        className="w-full h-full object-cover object-top"
+                        priority
+                      />
+                    </button>
                   </div>
                   <AdaptiveDeviceFeed
                     items={marketplaceItems}
