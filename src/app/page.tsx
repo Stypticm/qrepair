@@ -312,7 +312,7 @@ function HomeContent() {
                       className="w-full max-w-md mx-auto h-36 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                     >
                       <Image
-                        src="/banner.png"
+                        src={getImage('banner.png') || '/banner.png'}
                         alt="Баннер"
                         width={320}
                         height={100}
