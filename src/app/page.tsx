@@ -295,10 +295,10 @@ function HomeContent() {
               <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-10">
 
                 <div className="flex flex-col gap-4 w-full pb-20">
-                  <div className="flex justify-center px-4">
+                  <div className="flex justify-center">
                     <button 
                       onClick={handleStartForm}
-                      className="h-28 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 p-2"
+                      className="w-full h-28 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 p-2 flex items-center justify-center"
                     >
                       <Image
                         src={getImage('banner.png') || '/banner.png'}

@@ -234,7 +234,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
             onClick={() => setActive(card)}
             className={`${
               isSingle 
-                ? "h-[380px] w-full max-w-md" 
+                ? "h-[380px] w-full max-w-sm" 
                 : "h-[280px]"
             } bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
           >

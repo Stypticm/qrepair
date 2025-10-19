@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.136'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.137'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -41,6 +41,17 @@ export function useSafeArea() {
       window.Telegram?.WebApp
     ) {
       const webApp = window.Telegram.WebApp
+
+      // Проверяем, не выполняется ли уже запрос
+      if (webApp._isRequestingFullscreen) {
+        console.log(
+          'Fullscreen request already in progress, skipping...'
+        )
+        return
+      }
+
+      webApp._isRequestingFullscreen = true
+
       console.log(
         'Attempting to request fullscreen at',
         new Date().toISOString()
@@ -75,9 +86,18 @@ export function useSafeArea() {
           console.log(
             'requestFullscreen not available, using expand...'
           )
-          webApp.expand()
+          try {
+            webApp.expand()
+          } catch (error) {
+            console.error('expand failed:', error)
+          }
         }
       }
+
+      // Сбрасываем флаг через 1 секунду
+      setTimeout(() => {
+        webApp._isRequestingFullscreen = false
+      }, 1000)
     } else {
       console.log('No Telegram WebApp context available')
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { miniApp, viewport } from '@telegram-apps/sdk';
 
 interface TelegramFullScreenProps {
@@ -10,6 +10,7 @@ interface TelegramFullScreenProps {
 export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
+  const requestTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -74,8 +75,19 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
     const attempt = () => {
       if (isRequesting) return false;
       setIsRequesting(true);
+      
+      // Очищаем предыдущий таймаут
+      if (requestTimeoutRef.current) {
+        clearTimeout(requestTimeoutRef.current);
+      }
+      
       const result = tryTelegramFullscreen() || trySdkViewport();
-      setTimeout(() => setIsRequesting(false), 100);
+      
+      // Увеличиваем время блокировки до 500ms для предотвращения спама
+      requestTimeoutRef.current = setTimeout(() => {
+        setIsRequesting(false);
+      }, 500);
+      
       return result;
     };
 
@@ -87,7 +99,14 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
         if (!isFullscreen) attempt();
       }, delay);
     });
-  }, [isFullscreen, isRequesting]);
+
+    // Cleanup функция
+    return () => {
+      if (requestTimeoutRef.current) {
+        clearTimeout(requestTimeoutRef.current);
+      }
+    };
+  }, []); // Убираем зависимости чтобы избежать бесконечного цикла
 
   return (
     <div
