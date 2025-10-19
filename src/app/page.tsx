@@ -338,7 +338,7 @@ function HomeContent() {
               <div className="w-full text-center space-y-2 mt-6">
 
                 <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
-                  <div className="w-full px-4 flex justify-center">
+                  <div className="w-full flex justify-center">
                     <RotatingBanner
                       banners={bannerList}
                       interval={5000} // 5 секунд между сменами
@@ -371,7 +371,13 @@ function HomeContent() {
                         </Button>
 
                         {/* Логотип */}
-                        <div className="w-[60px] h-[60px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden mx-2">
+                        <div 
+                          className="w-[60px] h-[60px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden mx-2 cursor-pointer hover:shadow-xl transition-all duration-300 active:scale-95"
+                          onClick={() => {
+                            const event = new CustomEvent('switchToGrid');
+                            window.dispatchEvent(event);
+                          }}
+                        >
                           <img
                             src={getImage('animation_logo2.gif') || '/animation_logo2.gif'}
                             alt="Логотип"
