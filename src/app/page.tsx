@@ -19,6 +19,7 @@ import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen, m
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 import { Smartphone, Wrench, Smartphone as DevicesIcon, Heart, ShoppingCart, Settings } from 'lucide-react';
 import { useTelegramCloudImages } from '@/hooks/useTelegramCloudImages'
+import { RotatingBanner } from '@/components/RotatingBanner'
 
 function HomeContent() {
   const initDataState = useSignal(_initDataState);
@@ -250,18 +251,21 @@ function HomeContent() {
     if (savedUsername && !useAppStore.getState().username) setUsername(savedUsername);
   }, [setCurrentStep, setTelegramId, setUsername, addDebugInfo]);
 
-  // Функция для определения адаптивного gap и padding
-  const getAdaptiveGap = () => {
+  // Мемоизированный массив баннеров для предотвращения перерендеров
+  const bannerList = useMemo(() => ['banner.png', 'banner2.png'], []);
+
+  // Мемоизированные функции для предотвращения перерендеров
+  const adaptiveGap = useMemo(() => {
     if (screenHeight > 910) return 'gap-10';
     return 'gap-6';
-  };
+  }, [screenHeight]);
 
-  const getAdaptivePadding = () => {
+  const adaptivePadding = useMemo(() => {
     if (screenHeight < 850) return 'pb-20';
     return '';
-  };
+  }, [screenHeight]);
 
-  const handleStartForm = async () => {
+  const handleStartForm = useCallback(async () => {
     try {
       const savedStep = sessionStorage.getItem('currentStep');
       const hasSerial = !!sessionStorage.getItem('serialNumber');
@@ -286,8 +290,21 @@ function HomeContent() {
       console.error('Ошибка при переходе:', error);
       router.push('/request/device-info');
     }
-  };
+  }, [router, resetAllStates, setCurrentStep]);
 
+  // Мемоизированные обработчики для кнопок
+  const handleRepairClick = useCallback(() => {
+    router.push('/repair');
+  }, [router]);
+
+  const handleTestAdminToggle = useCallback(() => {
+    const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
+    setTestAdminIndex(nextIndex);
+  }, [testAdminIndex, testAdminIds.length]);
+
+  const handleViewModeChange = useCallback((mode: 'grid' | 'carousel') => {
+    setIsGridViewMode(mode === 'grid');
+  }, []);
 
   if (isInTelegram === null) {
     return (
@@ -320,22 +337,13 @@ function HomeContent() {
             <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}>
               <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-10">
 
-                <div className={`flex flex-col ${getAdaptiveGap()} ${getAdaptivePadding()} w-full h-full`}>
+                <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
                   <div className="flex justify-center">
-                    <button 
-                      onClick={handleStartForm}
-                      className="w-full h-auto rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center"
-                    >
-                      <Image
-                        src={getImage('banner.png') || '/banner.png'}
-                        alt="Баннер"
-                        width={280}
-                        height={60}
-                        className="object-cover"
-                        style={{ imageRendering: 'auto' }}
-                        priority
-                      />
-                    </button>
+                    <RotatingBanner
+                      banners={bannerList}
+                      interval={5000} // 5 секунд между сменами
+                      screenHeight={screenHeight}
+                    />
                   </div>
                   <AdaptiveDeviceFeed
                     items={marketplaceItems}
@@ -343,7 +351,7 @@ function HomeContent() {
                     onLoadMore={loadMoreMarketplaceItems}
                     hasMore={marketplaceHasMore}
                     mode="auto"
-                    onViewModeChange={(mode) => setIsGridViewMode(mode === 'grid')}
+                    onViewModeChange={handleViewModeChange}
                   />
                   
                   {/* Кнопки Ремонт и Оценка с логотипом - только в carousel режиме */}
@@ -354,7 +362,7 @@ function HomeContent() {
                         <Button
                           variant="outline"
                           className="group flex-1 h-16 bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
-                          onClick={() => router.push('/repair')}
+                          onClick={handleRepairClick}
                         >
                           <div className="flex items-center justify-center gap-2">
                             <Wrench className="w-6 h-6 text-white" />
@@ -393,10 +401,7 @@ function HomeContent() {
                     <Button
                       variant="outline"
                       className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
-                      onClick={() => {
-                        const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
-                        setTestAdminIndex(nextIndex);
-                      }}
+                      onClick={handleTestAdminToggle}
                     >
                       Переключить ID админа: {testAdminIds[testAdminIndex]}
                     </Button>
