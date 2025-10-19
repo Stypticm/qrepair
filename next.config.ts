@@ -35,7 +35,13 @@ const nextConfig: NextConfig = {
 
   // Оптимизация бандла
   webpack: (config, { dev, isServer }) => {
+    // Убираем Eruda из бандла в продакшене
     if (!dev && !isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        eruda: false,
+      }
+
       config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {

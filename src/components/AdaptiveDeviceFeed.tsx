@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Grid, List, Filter, Search } from "lucide-react";
-import { ExpandableDeviceCard } from './ExpandableDeviceCard';
+import { AceternityDeviceCard } from './AceternityDeviceCard';
+import { SimpleDeviceCard } from './SimpleDeviceCard';
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 
-interface DeviceCard {
+export interface DeviceCard {
   id: string;
   title: string;
   description?: string;
@@ -225,13 +226,15 @@ export function AdaptiveDeviceFeed({
         <div className="space-y-2">
           {/* Индикаторы страниц */}
           {totalPages > 1 && (
-            <div className="flex justify-center gap-1">
+            <div className="flex justify-center gap-2 mb-4">
               {Array.from({ length: totalPages }).map((_, index) => (
                 <button
                   key={index}
                   onClick={() => goToPage(index)}
-                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${index === currentIndex ? 'bg-[#2dc2c6]' : 'bg-gray-300'
-                    }`}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex 
+                    ? 'bg-[#2dc2c6] shadow-lg shadow-[#2dc2c6]/50 scale-110' 
+                    : 'bg-gray-400 hover:bg-gray-300 hover:scale-105'
+                  }`}
                 />
               ))}
             </div>
@@ -239,7 +242,7 @@ export function AdaptiveDeviceFeed({
 
           {/* Карусель с ручным свайпом */}
           <div
-            className="relative overflow-hidden outline-none flex justify-center"
+            className="relative outline-none flex justify-center w-full max-w-md mx-auto bg-white/15 backdrop-blur-lg rounded-3xl p-6 shadow-3xl border border-white/30 hover:bg-white/20 transition-all duration-500 ring-1 ring-white/20"
             role="region"
             aria-label="Карусель устройств"
             tabIndex={0}
@@ -295,36 +298,19 @@ export function AdaptiveDeviceFeed({
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="h-full w-full"
               >
-                  <ExpandableDeviceCard cards={currentItems} />
+                  <SimpleDeviceCard cards={currentItems} isSingle={true} />
               </motion.div>
             </AnimatePresence>
           </div>
 
-          {/* Навигация */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2">
-              <button
-                onClick={goToPrevious}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
-              </button>
-              <button
-                onClick={goToNext}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
-              </button>
-            </div>
-          )}
 
-          {/* Кнопка все товары под каруселью (ещё заметнее) */}
-          <div className="text-center w-full flex justify-center">
+          {/* Кнопка все товары под каруселью (стиль меню) */}
+          <div className="text-center w-full flex justify-center relative z-10">
             <button
               onClick={switchToGrid}
-              className="w-[320px] max-w-[320px] h-14 flex items-center justify-center px-6 py-6 rounded-2xl bg-gradient-to-r from-[#2dc2c6] to-[#49cfd2] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white text-sm font-bold shadow-md active:scale-[0.98] transition"
+              className="w-[85%] max-w-[320px] mx-auto h-14 flex items-center justify-center px-6 py-3 rounded-2xl bg-gray-200/80 backdrop-blur-xl border border-gray-300/50 text-gray-700 text-sm font-semibold shadow-lg hover:bg-gray-300/80 hover:shadow-xl hover:border-gray-400/70 active:scale-[0.98] transition-all duration-300"
             >
-              Все товары
+              <span className="text-gray-700 font-semibold">Все товары</span>
             </button>
           </div>
         </div>
@@ -339,7 +325,7 @@ export function AdaptiveDeviceFeed({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.05 }}
               >
-                  <ExpandableDeviceCard cards={[item]} />
+                 <SimpleDeviceCard cards={[item]} isSingle={false} />
               </motion.div>
             ))}
           </div>
@@ -357,6 +343,7 @@ export function AdaptiveDeviceFeed({
           </div>
         </div>
       )}
+
     </div>
   );
 }

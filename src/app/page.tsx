@@ -65,16 +65,24 @@ function HomeContent() {
   // Функция загрузки marketplace данных
   const loadMoreMarketplaceItems = useCallback(async () => {
     if (marketplaceLoading) return;
+    console.log('Loading marketplace items...');
     setMarketplaceLoading(true);
     try {
       const limit = 12;
       const currentOffset = marketplaceOffsetRef.current;
+      console.log('Fetching from API with offset:', currentOffset);
       const res = await fetch(`/api/market/feed?limit=${limit}&offset=${currentOffset}`, { cache: 'no-store' });
       const data = await res.json();
+      console.log('API response:', data);
       if (!res.ok) throw new Error(data?.error || 'Failed to load feed');
 
       const newItems = Array.isArray(data.items) ? data.items : [];
-      setMarketplaceItems((prev) => [...prev, ...newItems]);
+      console.log('New items loaded:', newItems.length);
+      setMarketplaceItems((prev) => {
+        const updated = [...prev, ...newItems];
+        console.log('Total items after update:', updated.length);
+        return updated;
+      });
       const nextOffset = currentOffset + (newItems.length || 0);
       marketplaceOffsetRef.current = nextOffset;
       setMarketplaceOffset(nextOffset);
@@ -285,38 +293,19 @@ function HomeContent() {
           <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
             <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}>
               <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-10">
-                <motion.div
-                  initial={{ x: -300, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 70, damping: 12, duration: 2.2 }}
-                  className="w-full"
-                >
-                  <div className="w-full max-w-md mx-auto flex justify-center">
-                    <div className="w-[120px] h-[120px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden">
-                      <img
-                        src={getImage('animation_logo2.gif') || '/animation_logo2.gif'}
-                        alt="Логотип"
-                        width={140}
-                        height={140}
-                        className="w-[120px] h-[120px] object-cover bg-white"
-                        style={{ imageRendering: 'auto' }}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
 
                 <div className="flex flex-col gap-4 w-full pb-20">
-                  <div className="w-full px-4">
+                  <div className="flex justify-center px-4">
                     <button 
                       onClick={handleStartForm}
-                      className="w-full max-w-md mx-auto h-36 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                      className="h-28 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 p-2"
                     >
                       <Image
                         src={getImage('banner.png') || '/banner.png'}
                         alt="Баннер"
-                        width={320}
-                        height={100}
-                        className="w-full h-full object-cover object-top"
+                        width={280}
+                        height={60}
+                        className="h-full w-auto object-contain"
                         priority
                       />
                     </button>
@@ -330,34 +319,42 @@ function HomeContent() {
                     onViewModeChange={(mode) => setIsGridViewMode(mode === 'grid')}
                   />
                   
-                  {/* Кнопки Ремонт и Оценка - только в carousel режиме */}
+                  {/* Кнопки Ремонт и Оценка с логотипом - только в carousel режиме */}
                   {!isGridViewMode && (
                     <div className="w-full px-2">
-                      <div className="w-full max-w-md mx-auto flex gap-2">
+                      <div className="w-full max-w-md mx-auto flex items-center justify-center gap-2">
                         {/* Кнопка Ремонт */}
                         <Button
                           variant="outline"
-                          className="group flex-1 h-20 bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] text-white font-semibold text-lg rounded-3xl border-0 shadow-2xl hover:shadow-2xl transition-all duration-300"
+                          className="group flex-1 h-16 bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
                           onClick={() => router.push('/repair')}
                         >
-                          <div className="flex items-center justify-around gap-2">
-                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                              <Wrench className="w-5 h-5 text-white" />
-                            </div>
+                          <div className="flex items-center justify-center gap-2">
+                            <Wrench className="w-6 h-6 text-white" />
                             <span className="text-white font-semibold text-base">Ремонт</span>
                           </div>
                         </Button>
 
+                        {/* Логотип */}
+                        <div className="w-[60px] h-[60px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden mx-2">
+                          <img
+                            src={getImage('animation_logo2.gif') || '/animation_logo2.gif'}
+                            alt="Логотип"
+                            width={80}
+                            height={80}
+                            className="w-[60px] h-[60px] object-cover bg-white"
+                            style={{ imageRendering: 'auto' }}
+                          />
+                        </div>
+
                         {/* Кнопка Оценить смартфон */}
                         <Button
                           variant="outline"
-                          className="group flex-1 h-20 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold text-lg rounded-3xl border-0 shadow-2xl hover:shadow-2xl transition-all duration-300 animate-pulse"
+                          className="group flex-1 h-16 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse"
                           onClick={handleStartForm}
                         >
-                          <div className="flex items-center justify-around gap-2">
-                            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                              <Smartphone className="w-5 h-5 text-white" />
-                            </div>
+                          <div className="flex items-center justify-center gap-2">
+                            <Smartphone className="w-6 h-6 text-white" />
                             <span className="text-white font-semibold text-base">Оценить</span>
                           </div>
                         </Button>

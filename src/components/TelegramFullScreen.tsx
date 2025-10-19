@@ -9,6 +9,7 @@ interface TelegramFullScreenProps {
 
 export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -70,7 +71,13 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
       }
     };
 
-    const attempt = () => tryTelegramFullscreen() || trySdkViewport();
+    const attempt = () => {
+      if (isRequesting) return false;
+      setIsRequesting(true);
+      const result = tryTelegramFullscreen() || trySdkViewport();
+      setTimeout(() => setIsRequesting(false), 100);
+      return result;
+    };
 
     // Первая попытка и несколько повторов
     attempt();
@@ -80,7 +87,7 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
         if (!isFullscreen) attempt();
       }, delay);
     });
-  }, [isFullscreen]);
+  }, [isFullscreen, isRequesting]);
 
   return (
     <div

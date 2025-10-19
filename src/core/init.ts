@@ -28,8 +28,9 @@ export async function init(options: {
   setDebug(options.debug)
   initSDK()
 
-  // Add Eruda if needed.
+  // Add Eruda if needed (только в development режиме).
   options.eruda &&
+    process.env.NODE_ENV === 'development' &&
     void import('eruda').then(({ default: eruda }) => {
       eruda.init()
       eruda.position({ x: window.innerWidth - 50, y: 0 })

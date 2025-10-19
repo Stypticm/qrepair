@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ExpandableDeviceCard } from "./ExpandableDeviceCard";
+import { SimpleDeviceCard } from "./SimpleDeviceCard";
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 
@@ -156,7 +156,7 @@ export function DeviceCarousel({ items, isLoading, onLoadMore, hasMore }: Device
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="h-full"
           >
-            <ExpandableDeviceCard cards={currentItems} />
+            <SimpleDeviceCard cards={currentItems} />
           </motion.div>
         </AnimatePresence>
       </div>
