@@ -37,6 +37,7 @@ function HomeContent() {
   const [isDesktopLike, setIsDesktopLike] = useState(false);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
   const [isGridViewMode, setIsGridViewMode] = useState(false);
+  const [screenHeight, setScreenHeight] = useState(0);
 
   // Состояние для marketplace
   const [marketplaceItems, setMarketplaceItems] = useState<Array<{ 
@@ -158,6 +159,20 @@ function HomeContent() {
     };
   }, [refreshMarketplaceItems]);
 
+  // Отслеживание высоты экрана для адаптивного gap
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateScreenHeight = () => {
+        setScreenHeight(window.innerHeight);
+      };
+      
+      updateScreenHeight();
+      window.addEventListener('resize', updateScreenHeight);
+      
+      return () => window.removeEventListener('resize', updateScreenHeight);
+    }
+  }, []);
+
   useEffect(() => {
     addDebugInfo('Запуск инициализации Telegram WebApp');
     if (typeof window !== 'undefined') {
@@ -235,6 +250,17 @@ function HomeContent() {
     if (savedUsername && !useAppStore.getState().username) setUsername(savedUsername);
   }, [setCurrentStep, setTelegramId, setUsername, addDebugInfo]);
 
+  // Функция для определения адаптивного gap и padding
+  const getAdaptiveGap = () => {
+    if (screenHeight > 910) return 'gap-10';
+    return 'gap-6';
+  };
+
+  const getAdaptivePadding = () => {
+    if (screenHeight < 850) return 'pb-20';
+    return '';
+  };
+
   const handleStartForm = async () => {
     try {
       const savedStep = sessionStorage.getItem('currentStep');
@@ -294,18 +320,19 @@ function HomeContent() {
             <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}>
               <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-10">
 
-                <div className="flex flex-col gap-4 w-full pb-20">
+                <div className={`flex flex-col ${getAdaptiveGap()} ${getAdaptivePadding()} w-full h-full`}>
                   <div className="flex justify-center">
                     <button 
                       onClick={handleStartForm}
-                      className="w-full h-28 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 p-2 flex items-center justify-center"
+                      className="w-full h-auto rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center"
                     >
                       <Image
                         src={getImage('banner.png') || '/banner.png'}
                         alt="Баннер"
                         width={280}
                         height={60}
-                        className="h-full w-auto object-contain"
+                        className="object-cover"
+                        style={{ imageRendering: 'auto' }}
                         priority
                       />
                     </button>

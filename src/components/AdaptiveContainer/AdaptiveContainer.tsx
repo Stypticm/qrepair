@@ -117,14 +117,14 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
 
   return (
     <div className={`${styles.container} ${className}`}>
-      {process.env.NODE_ENV === 'development' && (
+      {/* {process.env.NODE_ENV === 'development' && (
         <div className="fixed top-0 left-0 bg-[#2dc2c6] text-white text-xs p-2 z-50 rounded-br">
           <div>Mode: {isTelegram ? 'Telegram' : 'Browser'}</div>
           <div>Device: {safeArea.isMobile ? 'Mobile' : safeArea.isDesktop ? 'Desktop' : 'Unknown'}</div>
           <div>Ready: {isReady ? 'Yes' : 'No'}</div>
           <div>Fullscreen: {isFullscreen ? 'Yes' : 'No'}</div>
         </div>
-      )}
+      )} */}
 
       <div className={styles.wrapper}>
         <div className={styles.main}>{children}</div>
