@@ -13,44 +13,47 @@ interface RotatingBannerProps {
   screenHeight?: number; // высота экрана для адаптивности
 }
 
-// iPhone-адаптивные размеры баннеров с учетом высоты экрана
+// iPhone-адаптивные размеры баннеров синхронизированные с carousel
 const getBannerDimensions = (screenWidth: number, screenHeight: number = 844) => {
-  // Принцип 80/20: 20% iPhone-специфичных размеров дают 80% качества UX
+  // Принцип 80/20: 20% синхронизации с carousel дают 80% визуальной гармонии
   
   // Адаптивность по высоте экрана для компактности
   const heightMultiplier = screenHeight > 900 ? 0.7 : screenHeight > 850 ? 0.8 : 1.0;
   
+  // Баннер синхронизирован с шириной карточек carousel (max-w-sm = 384px)
+  const containerWidth = Math.min(screenWidth - 32, 384); // как карточки: max-w-sm
+  
   if (screenWidth <= 375) {
-    // iPhone SE, iPhone 12/13 mini - адаптивная высота
+    // iPhone SE, iPhone 12/13 mini - компактные картинки
     return { 
-      containerWidth: 300, 
-      containerHeight: Math.round(120 * heightMultiplier),
-      imageWidth: 260,
-      imageHeight: Math.round(100 * heightMultiplier)
-    };
-  } else if (screenWidth <= 390) {
-    // iPhone 12/13/14/15 - адаптивная высота
-    return { 
-      containerWidth: 320, 
-      containerHeight: Math.round(140 * heightMultiplier),
-      imageWidth: 280,
-      imageHeight: Math.round(120 * heightMultiplier)
-    };
-  } else if (screenWidth <= 428) {
-    // iPhone 12/13/14/15 Pro Max - адаптивная высота
-    return { 
-      containerWidth: 340, 
-      containerHeight: Math.round(160 * heightMultiplier),
-      imageWidth: 300,
+      containerWidth, 
+      containerHeight: Math.round(180 * heightMultiplier),
+      imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
       imageHeight: Math.round(140 * heightMultiplier)
     };
-  } else {
-    // Desktop и большие экраны - адаптивная высота
+  } else if (screenWidth <= 390) {
+    // iPhone 12/13/14/15 - компактные картинки
     return { 
-      containerWidth: 360, 
-      containerHeight: Math.round(180 * heightMultiplier),
-      imageWidth: 320,
+      containerWidth, 
+      containerHeight: Math.round(200 * heightMultiplier),
+      imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
       imageHeight: Math.round(160 * heightMultiplier)
+    };
+  } else if (screenWidth <= 428) {
+    // iPhone 12/13/14/15 Pro Max - компактные картинки
+    return { 
+      containerWidth, 
+      containerHeight: Math.round(220 * heightMultiplier),
+      imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
+      imageHeight: Math.round(180 * heightMultiplier)
+    };
+  } else {
+    // Desktop и большие экраны - компактные картинки
+    return { 
+      containerWidth, 
+      containerHeight: Math.round(240 * heightMultiplier),
+      imageWidth: Math.round(containerWidth * 0.9), // компактнее на 10%
+      imageHeight: Math.round(200 * heightMultiplier)
     };
   }
 };

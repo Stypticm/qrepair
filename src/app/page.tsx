@@ -256,8 +256,8 @@ function HomeContent() {
 
   // Мемоизированные функции для предотвращения перерендеров
   const adaptiveGap = useMemo(() => {
-    if (screenHeight > 910) return 'gap-10';
-    return 'gap-6';
+    if (screenHeight > 910) return 'gap-6';
+    return 'gap-3';
   }, [screenHeight]);
 
   const adaptivePadding = useMemo(() => {
@@ -335,10 +335,10 @@ function HomeContent() {
         <div className={`${isDesktopLike ? 'w-full max-w-[520px] bg-gradient-to-b from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden' : ''}`}>
           <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
             <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}>
-              <div className=" w-full max-w-md mx-auto text-center space-y-4 mt-10">
+              <div className="w-full text-center space-y-2 mt-6">
 
                 <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
-                  <div className="flex justify-center">
+                  <div className="w-full px-4 flex justify-center">
                     <RotatingBanner
                       banners={bannerList}
                       interval={5000} // 5 секунд между сменами
