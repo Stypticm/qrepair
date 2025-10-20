@@ -28,6 +28,15 @@ export async function GET(request: NextRequest) {
       },
       take: limit,
       skip: offset,
+      select: {
+        id: true,
+        modelname: true,
+        price: true,
+        createdAt: true,
+        photoUrls: true,
+        userEvaluation: true,
+        comment: true,
+      },
     })
 
     const feed = items.map((item) => {
