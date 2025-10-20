@@ -10,8 +10,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, MapPinIcon, ClockIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+// Убрали проблемные импорты date-fns
 import { locationManager } from '@telegram-apps/sdk';
 
 const CourierBookingPage = () => {
@@ -513,7 +512,10 @@ const CourierBookingPage = () => {
                                             >
                                                 <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
                                                 <span className={selectedDate ? "text-gray-900" : "text-gray-500"} style={{ fontSize: '0.875rem' }}>
-                                                    {selectedDate ? format(selectedDate, "dd MMM", { locale: ru }) : "Дата"}
+                                                    {selectedDate ? selectedDate.toLocaleDateString('ru-RU', { 
+                                                        day: '2-digit', 
+                                                        month: 'short' 
+                                                    }) : "Дата"}
                                                 </span>
                                             </Button>
                                         </PopoverTrigger>

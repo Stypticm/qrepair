@@ -25,47 +25,67 @@ export interface PriceRange {
 /**
  * Факторы риска по моделям устройств
  * Чем новее модель - тем меньше риск
+ *
+ * ОБНОВЛЕННАЯ МОДЕЛЬ (2024):
+ * - iPhone 17: 2% (новейшие технологии, максимальная надежность)
+ * - iPhone 16: 3% (титановые корпуса, A18 Pro, USB-C)
+ * - iPhone 15: 5% (переход на USB-C, титан)
+ * - iPhone 14: 8% (Dynamic Island, A16)
+ * - iPhone 13: 12% (A15 Bionic, стабильная платформа)
+ * - iPhone 12: 16% (5G, MagSafe, первые проблемы)
+ * - iPhone 11: 20% (A13, устаревающая платформа)
+ * - iPhone X: 25% (первый Face ID, высокий риск поломок)
+ *
+ * УБРАНО: iPhone 8 (слишком старый), iPhone SE (бюджетная линейка)
+ * ДОБАВЛЕНО: iPhone 16/17 серии с учетом технологических скачков
  */
 export const MODEL_RISK_FACTORS: Record<string, number> = {
-  // iPhone 15 серия - минимальный риск
+  // iPhone 17 серия - ультра-минимальный риск (новейшие технологии)
+  'iPhone 17': 0.02,
+  'iPhone 17 Plus': 0.02,
+  'iPhone 17 Pro': 0.02,
+  'iPhone 17 Pro Max': 0.02,
+
+  // iPhone 16 серия - минимальный риск (титановые корпуса, A18 Pro)
+  'iPhone 16': 0.03,
+  'iPhone 16 Plus': 0.03,
+  'iPhone 16 Pro': 0.03,
+  'iPhone 16 Pro Max': 0.03,
+
+  // iPhone 15 серия - очень низкий риск (USB-C, титан)
   'iPhone 15': 0.05,
   'iPhone 15 Plus': 0.05,
   'iPhone 15 Pro': 0.05,
   'iPhone 15 Pro Max': 0.05,
 
-  // iPhone 14 серия - низкий риск
-  'iPhone 14': 0.07,
-  'iPhone 14 Plus': 0.07,
-  'iPhone 14 Pro': 0.07,
-  'iPhone 14 Pro Max': 0.07,
+  // iPhone 14 серия - низкий риск (Dynamic Island)
+  'iPhone 14': 0.08,
+  'iPhone 14 Plus': 0.08,
+  'iPhone 14 Pro': 0.08,
+  'iPhone 14 Pro Max': 0.08,
 
-  // iPhone 13 серия - средний риск
-  'iPhone 13': 0.1,
-  'iPhone 13 mini': 0.1,
-  'iPhone 13 Pro': 0.1,
-  'iPhone 13 Pro Max': 0.1,
+  // iPhone 13 серия - средний риск (A15 Bionic)
+  'iPhone 13': 0.12,
+  'iPhone 13 mini': 0.12,
+  'iPhone 13 Pro': 0.12,
+  'iPhone 13 Pro Max': 0.12,
 
-  // iPhone 12 серия - повышенный риск
-  'iPhone 12': 0.12,
-  'iPhone 12 mini': 0.12,
-  'iPhone 12 Pro': 0.12,
-  'iPhone 12 Pro Max': 0.12,
+  // iPhone 12 серия - повышенный риск (5G, MagSafe)
+  'iPhone 12': 0.16,
+  'iPhone 12 mini': 0.16,
+  'iPhone 12 Pro': 0.16,
+  'iPhone 12 Pro Max': 0.16,
 
-  // iPhone 11 серия - высокий риск
-  'iPhone 11': 0.15,
-  'iPhone 11 Pro': 0.15,
-  'iPhone 11 Pro Max': 0.15,
+  // iPhone 11 серия - высокий риск (A13 Bionic)
+  'iPhone 11': 0.2,
+  'iPhone 11 Pro': 0.2,
+  'iPhone 11 Pro Max': 0.2,
 
-  // iPhone X серия - очень высокий риск
-  'iPhone X': 0.18,
-  'iPhone XR': 0.18,
-  'iPhone XS': 0.18,
-  'iPhone XS Max': 0.18,
-
-  // iPhone 8 и старше - максимальный риск
-  'iPhone 8': 0.2,
-  'iPhone 8 Plus': 0.2,
-  'iPhone SE': 0.2,
+  // iPhone X серия - очень высокий риск (первый Face ID)
+  'iPhone X': 0.25,
+  'iPhone XR': 0.25,
+  'iPhone XS': 0.25,
+  'iPhone XS Max': 0.25,
 
   // По умолчанию для неизвестных моделей
   default: 0.15,

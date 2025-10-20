@@ -1,139 +1,317 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
 import { motion } from "framer-motion";
 
 import { Page } from "@/components/Page";
 import { Button } from "@/components/ui/button";
-import { getPictureUrl } from "@/core/lib/assets";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAppStore } from "@/stores/authStore";
 import { init, swipeBehavior } from '@telegram-apps/sdk';
-import { Carousel_003 } from "@/components/v1/skiper49";
-import { calculatePriceRange, DeviceConditions, AdditionalConditions } from "@/core/lib/priceCalculation";
+import { getPictureUrl } from "@/core/lib/assets";
+import { calculatePriceRange, type DeviceConditions, type AdditionalConditions } from "@/core/lib/priceCalculation";
 
-type EvaluationOption = {
-  id: string;
-  label: string;
-  description: string;
-  percentage: number;
-  image: string;
-  accent: "mint" | "sea" | "amber" | "rose";
-};
+interface WearSliderProps {
+  category: string;
+  images: string[];
+  value: number;
+  onValueChange: (value: number) => void;
+  imageSize: number;
+}
 
-const evaluationOptions: EvaluationOption[] = [
-  {
-    id: "perfect",
-    label: "Идеальное",
-    description:
-      "Корпус и дисплей без следов использования, полностью как из коробки. Всё работает безупречно.",
-    percentage: 0,
-    image: "display_front_new",
-    accent: "mint",
-  },
-  {
-    id: "light-wear",
-    label: "Отличное",
-    description:
-      "Минимальные следы эксплуатации: едва заметные микроцарапины. Все функции работают штатно.",
-    percentage: 5,
-    image: "display_front",
-    accent: "mint",
-  },
-  {
-    id: "moderate",
-    label: "Очень хорошее",
-    description:
-      "Есть лёгкие потертости или пара царапин по корпусу, при этом технически всё исправно.",
-    percentage: 10,
-    image: "display_front",
-    accent: "sea",
-  },
-  {
-    id: "visible-wear",
-    label: "Хорошее",
-    description:
-      "Заметные следы износа: локальные царапины или сколы на корпусе, экран целый. Работает стабильно.",
-    percentage: 15,
-    image: "display_front_have_scratches",
-    accent: "sea",
-  },
-  {
-    id: "heavy-wear",
-    label: "Удовлетворительное",
-    description:
-      "Множественные царапины или сколы. Возможны потертости на рамке и задней панели, но без трещин дисплея.",
-    percentage: 25,
-    image: "display_front_scratches",
-    accent: "amber",
-  },
-  {
-    id: "feature-failure",
-    label: "Функции не работают",
-    description:
-      "Не работает одна из ключевых функций (Face ID, Touch ID, камера, кнопки) или есть трещина на экране.",
-    percentage: 40,
-    image: "display_back_have_scratches",
-    accent: "amber",
-  },
-  {
-    id: "needs-repair",
-    label: "Требуется ремонт",
-    description:
-      "Есть несколько неисправностей или серьёзные повреждения корпуса, потребуется замена деталей.",
-    percentage: 60,
-    image: "display_back_scratches",
-    accent: "rose",
-  },
-  {
-    id: "not-working",
-    label: "Не включается",
-    description:
-      "Устройство не запускается или не реагирует на зарядку, необходима полная диагностика и восстановление.",
-    percentage: 80,
-    image: "display_front_scratches",
-    accent: "rose",
-  },
-];
+function WearSlider({ category, images, value, onValueChange, imageSize }: WearSliderProps) {
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
 
-const accentGradient: Record<EvaluationOption["accent"], string> = {
-  mint: "from-emerald-200/60 via-teal-200/40 to-slate-50/40",
-  sea: "from-cyan-200/60 via-sky-200/40 to-slate-50/40",
-  amber: "from-amber-200/60 via-orange-200/40 to-slate-50/40",
-  rose: "from-rose-200/60 via-pink-200/40 to-slate-50/40",
-};
+  const { baseIdx, nextIdx, blend } = useMemo(() => {
+    const scaled = (value / 100) * (images.length - 1);
+    const i0 = Math.floor(scaled);
+    const i1 = Math.min(images.length - 1, i0 + 1);
+    const t = scaled - i0; // 0..1
+    return { baseIdx: i0, nextIdx: i1, blend: t };
+  }, [value, images.length]);
 
-// Эти функции больше не используются - логика округления перенесена в priceCalculation.ts
+  const getConditionLabel = (val: number) => {
+    if (val <= 25) return 'Идеальное';
+    if (val <= 50) return 'Хорошее';
+    if (val <= 75) return 'Удовлетворительное';
+    return 'Плохое';
+  };
 
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat("ru-RU", {
-    style: "currency",
-    currency: "RUB",
-    maximumFractionDigits: 0,
-  }).format(value);
+  const getConditionColor = (val: number) => {
+    if (val <= 25) return 'bg-green-100 text-green-800 border-green-200';
+    if (val <= 50) return 'bg-blue-100 text-blue-800 border-blue-200';
+    if (val <= 75) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    return 'bg-red-100 text-red-800 border-red-200';
+  };
+
+  const currentImage = images[baseIdx];
+  const nextImage = images[nextIdx];
+
+  const setValueFromPointer = (clientY: number) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const ratio = 1 - (clientY - rect.top) / rect.height;
+    const clamped = Math.max(0, Math.min(1, ratio));
+    onValueChange(Math.round(clamped * 100));
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = true;
+    try { (e.target as Element).setPointerCapture?.(e.pointerId); } catch {}
+    setValueFromPointer(e.clientY);
+  };
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    setValueFromPointer(e.clientY);
+  };
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = false;
+    try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch {}
+  };
+
+  return (
+    <div className="flex items-center gap-4 rounded-2xl p-4 border border-white/40 bg-white/70 backdrop-blur-md shadow-[0_30px_60px_-30px_rgba(2,6,23,0.25)]">
+      <div
+        className="relative rounded-xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 flex-shrink-0 flex items-center justify-center p-2"
+        style={{ width: imageSize, height: imageSize }}
+      >
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ opacity: 1 - blend }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+        >
+          {category === 'back_camera' ? (
+            <Image
+              src={getPictureUrl(`${currentImage}.png`) || '/display_front_new.png'}
+              alt={`${category} condition base`}
+              width={imageSize}
+              height={imageSize}
+              className="object-cover w-full h-full"
+              priority
+            />
+          ) : (
+            <Image
+              src={getPictureUrl(`${currentImage}.png`) || '/display_front_new.png'}
+              alt={`${category} condition base`}
+              width={imageSize - 28}
+              height={imageSize - 28}
+              className="object-contain max-w-full max-h-full"
+              priority
+            />
+          )}
+        </motion.div>
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ opacity: blend }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+        >
+          {category === 'back_camera' ? (
+            <Image
+              src={getPictureUrl(`${nextImage}.png`) || '/display_front_new.png'}
+              alt={`${category} condition next`}
+              width={imageSize}
+              height={imageSize}
+              className="object-cover w-full h-full"
+              priority
+            />
+          ) : (
+            <Image
+              src={getPictureUrl(`${nextImage}.png`) || '/display_front_new.png'}
+              alt={`${category} condition next`}
+              width={imageSize - 28}
+              height={imageSize - 28}
+              className="object-contain max-w-full max-h-full"
+              priority
+            />
+          )}
+        </motion.div>
+      </div>
+
+      <div className="flex-1 grid grid-cols-[1fr_auto] gap-4 items-center">
+        <div className="space-y-1 min-w-0">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-slate-500">{
+            category === 'display_front' ? 'Передняя панель' :
+            category === 'display_back' ? 'Задняя панель' :
+            category === 'back_camera' ? 'Задняя камера' :
+            'Износ батареи'
+          }</div>
+          <div className="text-base font-semibold text-slate-900 leading-tight break-words">{getConditionLabel(value)}</div>
+          <div className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${getConditionColor(value)}`}>{value}%</div>
+        </div>
+        <div
+          ref={sliderRef}
+          className="relative h-24 w-10 rounded-full bg-gradient-to-b from-white/70 to-white/30 border border-white/60 shadow-inner select-none touch-none"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
+          <div className="absolute left-1/2 top-2 -translate-x-1/2 h-[80px] w-[3px] rounded-full bg-slate-200 overflow-hidden">
+            <div
+              className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900 to-slate-700 rounded-full"
+              style={{ height: `${value}%`, transition: 'height 200ms ease-out' }}
+            />
+          </div>
+          <div
+            className="absolute left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white border-2 border-slate-900 shadow-[0_4px_12px_rgba(0,0,0,0.3)] pointer-events-none z-10"
+            style={{ bottom: `calc(${value}% - 10px)` }}
+          />
+          <input
+            aria-label="wear"
+            type="range"
+            min={0}
+            max={100}
+            value={value}
+            onChange={(e) => onValueChange(parseInt(e.target.value))}
+            className="slider-v pointer-events-none absolute inset-0 w-full h-full opacity-0"
+            data-orient="vertical"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface EvaluationSlidersProps {
+  wearValues: {
+    display_front: number;
+    display_back: number;
+    back_camera: number;
+    battery: number;
+  };
+  setWearValues: (values: any) => void;
+  setCurrentEvaluation: (evaluation: any) => void;
+  setPriceRange: (range: any) => void;
+  setPrice: (price: number) => void;
+  basePrice: number;
+  modelName: string;
+}
+
+function EvaluationSliders({ 
+  wearValues, 
+  setWearValues, 
+  setCurrentEvaluation, 
+  setPriceRange, 
+  setPrice, 
+  basePrice, 
+  modelName 
+}: EvaluationSlidersProps) {
+  const getBlockDimensions = (screenWidth: number, screenHeight: number = 844) => {
+    const heightMultiplier = screenHeight > 900 ? 0.7 : screenHeight > 850 ? 0.8 : 1.0;
+    if (screenWidth <= 375) return { imageSize: 100 };
+    if (screenWidth <= 390) return { imageSize: 110 };
+    if (screenWidth <= 420) return { imageSize: 120 };
+    return { imageSize: 130 };
+  };
+  
+  const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
+  const screenHeight = typeof window !== 'undefined' ? window.innerHeight : 844;
+  const { imageSize } = getBlockDimensions(screenWidth, screenHeight);
+
+  const categories = [
+    { id: 'display_front', images: ['display_front_new', 'display_front', 'display_front_have_scratches', 'display_front_scratches'] },
+    { id: 'display_back', images: ['display_back_new', 'display_back', 'display_back_have_scratches', 'display_back_scratches'] },
+    { id: 'back_camera', images: ['back_camera_new', 'back_camera', 'back_camera_have_scratches', 'back_camera_scratches'] },
+    { id: 'battery', images: ['battery_95', 'battery_90', 'battery_85', 'battery_75'] },
+  ];
+
+  const wearToLabel = (val: number): string => {
+    if (val <= 25) return 'Новый';
+    if (val <= 50) return 'Очень хорошее';
+    if (val <= 75) return 'Заметные царапины';
+    return 'Трещины';
+  };
+  
+  const wearToBattery = (val: number): string => {
+    if (val <= 25) return '95%';
+    if (val <= 50) return '90%';
+    if (val <= 75) return '85%';
+    return '75%';
+  };
+
+  const handleValueChange = (categoryId: string, val: number) => {
+    // Обновляем значение конкретной категории
+    const nextWear = { ...wearValues, [categoryId]: val };
+    setWearValues(nextWear);
+
+    // Обновляем текущее описание категории (для совместимости с сохранением)
+    setCurrentEvaluation({ category: categoryId, condition: wearToLabel(val), penalty: val });
+
+    // Пересчитываем диапазон по всем четырём значениям
+    const range = calculatePriceRange(
+      basePrice,
+      modelName,
+      {
+        front: wearToLabel(nextWear.display_front),
+        back: wearToLabel(nextWear.display_back),
+      },
+      {
+        backCamera: wearToLabel(nextWear.back_camera),
+        battery: wearToBattery(nextWear.battery),
+      }
+    );
+    setPriceRange(range);
+    setPrice(range.midpoint);
+    try {
+      sessionStorage.setItem('priceRange', JSON.stringify(range));
+      sessionStorage.setItem('price', JSON.stringify(range.midpoint));
+      sessionStorage.setItem('calculatedPrice', JSON.stringify(range.midpoint));
+    } catch {}
+  };
+
+  return (
+    <div className="space-y-4">
+      {categories.map((c) => (
+        <WearSlider
+          key={c.id}
+          category={c.id}
+          images={c.images}
+          value={(wearValues as any)[c.id] as number}
+          onValueChange={(val) => handleValueChange(c.id, val)}
+          imageSize={imageSize}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function EvaluationPage() {
   const router = useRouter();
-  const { telegramId, modelname, setUserEvaluation, setDamagePercent, price, setPrice, setCurrentStep } = useAppStore();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { 
+    telegramId, 
+    modelname, 
+    setUserEvaluation, 
+    setDamagePercent, 
+    price, 
+    setPrice, 
+    setCurrentStep 
+  } = useAppStore();
+  
   const [basePrice, setBasePrice] = useState<number | null>(null);
+  const [showResultDialog, setShowResultDialog] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [showScrollHint, setShowScrollHint] = useState<boolean>(true);
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
-  const listRef = useRef<HTMLDivElement | null>(null);
-  const cardRefs = useRef<Record<string, HTMLElement | null>>({});
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const [previewId, setPreviewId] = useState<string | null>(null);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const wheelLockRef = useRef<boolean>(false);
-  const lastWheelTsRef = useRef<number>(0);
-  const touchStartYRef = useRef<number | null>(null);
-  const touchStartXRef = useRef<number | null>(null);
-  const gestureAxisRef = useRef<'x' | 'y' | null>(null);
-  const carouselRef = useRef<HTMLDivElement | null>(null);
+  const [wearValues, setWearValues] = useState({
+    display_front: 0,
+    display_back: 0,
+    back_camera: 0,
+    battery: 0,
+  });
+  const [currentEvaluation, setCurrentEvaluation] = useState<{
+    category: string;
+    condition: string;
+    penalty: number;
+  } | null>(null);
+  const [priceRange, setPriceRange] = useState<{
+    min: number;
+    max: number;
+    midpoint: number;
+  } | null>(null);
 
-  // Disable vertical swipes using Telegram Apps SDK swipe behavior (per docs)
+  // Disable vertical swipes using Telegram Apps SDK swipe behavior
   useEffect(() => {
     let destroy: (() => void) | undefined
     try {
@@ -152,7 +330,8 @@ export default function EvaluationPage() {
         } catch {}
       }
     } catch {}
-    // Hard UI fallback to reduce vertical gestures: constrain to horizontal pan on this page
+    
+    // Hard UI fallback to reduce vertical gestures
     const prevTouchAction = document.body.style.touchAction
     const prevOverscrollY = (document.body.style as any).overscrollBehaviorY
     const prevHtmlOverscrollY = (document.documentElement.style as any).overscrollBehaviorY
@@ -163,23 +342,20 @@ export default function EvaluationPage() {
     ;(document.documentElement.style as any).overscrollBehaviorY = 'contain'
     document.body.style.overflow = 'hidden'
     document.body.style.height = '100dvh'
+    
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches && e.touches.length > 0) {
-        touchStartYRef.current = e.touches[0].clientY;
-        touchStartXRef.current = e.touches[0].clientX;
+        // Store touch start position for gesture detection
       }
     }
     const onTouchMove = (e: TouchEvent) => {
-      if (touchStartXRef.current == null) return;
-      const dx = e.touches[0].clientX - touchStartXRef.current;
-      const dy = e.touches[0].clientY - (touchStartYRef.current ?? e.touches[0].clientY);
-      if (Math.abs(dy) > Math.abs(dx)) {
-        // prevent vertical swipe-to-dismiss in Telegram shell
+      // Prevent vertical swipe-to-dismiss in Telegram shell
         e.preventDefault();
-      }
     }
+    
     document.addEventListener('touchstart', onTouchStart, { passive: false })
     document.addEventListener('touchmove', onTouchMove, { passive: false })
+    
     return () => {
       try { destroy?.(); } catch {}
       document.body.style.touchAction = prevTouchAction
@@ -192,38 +368,15 @@ export default function EvaluationPage() {
     };
   }, []);
 
-  // Локальная блокировка вертикального свайпа поверх карусели
+  // Ensure store knows we're on the evaluation step
   useEffect(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    let sx: number | null = null;
-    let sy: number | null = null;
-    const onStart = (e: TouchEvent) => {
-      if (!e.touches?.length) return;
-      sx = e.touches[0].clientX;
-      sy = e.touches[0].clientY;
-    };
-    const onMove = (e: TouchEvent) => {
-      if (sx == null || sy == null) return;
-      const dx = e.touches[0].clientX - sx;
-      const dy = e.touches[0].clientY - sy;
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 12) {
-        e.preventDefault();
-      }
-    };
-    el.addEventListener('touchstart', onStart, { passive: false });
-    el.addEventListener('touchmove', onMove, { passive: false });
-    return () => {
-      el.removeEventListener('touchstart', onStart as any);
-      el.removeEventListener('touchmove', onMove as any);
-    };
-  }, []);
-
-  // Ensure store knows we're on the evaluation step for correct back navigation
-  useEffect(() => {
-    try { setCurrentStep('evaluation'); sessionStorage.setItem('currentStep', 'evaluation'); } catch {}
+    try { 
+      setCurrentStep('evaluation'); 
+      sessionStorage.setItem('currentStep', 'evaluation'); 
+    } catch {}
   }, [setCurrentStep]);
 
+  // Load base price from session storage
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -234,126 +387,48 @@ export default function EvaluationPage() {
         setBasePrice(parsed);
       }
     }
-
-    const storedSelection = sessionStorage.getItem("userEvaluationId");
-    if (storedSelection) {
-      setSelectedId(storedSelection);
-    }
-
-    // First visit onboarding overlay (shown once per device)
-    setShowOnboarding(true);
   }, []);
 
-  // Автоскрытие подсказки скролла через несколько секунд
-  useEffect(() => {
-    const timer = setTimeout(() => setShowScrollHint(false), 4000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const selectedOption = useMemo(() => {
-    return evaluationOptions.find((option) => option.id === selectedId) ?? evaluationOptions[0];
-  }, [selectedId]);
-
-  useEffect(() => {
-    if (!selectedId) {
-      setSelectedId(evaluationOptions[0].id);
-    }
-  }, [selectedId]);
-
-  // Keep preview in sync when selection/options change
-  useEffect(() => {
-    if (selectedOption) {
-      setPreviewId((prev) => prev ?? selectedOption.id);
-      const idx = evaluationOptions.findIndex((o) => o.id === selectedOption.id);
-      if (idx >= 0) setCurrentIndex(idx);
-    }
-  }, [selectedOption]);
-
-  const handleOptionSelect = useCallback((option: EvaluationOption) => {
-    setSelectedId(option.id);
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("userEvaluationId", option.id);
-      sessionStorage.setItem("userEvaluation", option.label);
-      sessionStorage.setItem("damagePercent", String(option.percentage));
-    }
-  }, []);
-
-  const priceRange = useMemo(() => {
-    const base = basePrice ?? price;
-    if (!base) return null;
-
-    // Готовим additionalConditions из сессии (если есть)
-    const additionalConditionsData = sessionStorage.getItem('additionalConditions');
-    let additionalConditions: AdditionalConditions = {};
-    if (additionalConditionsData) {
-      try { additionalConditions = JSON.parse(additionalConditionsData); } catch (e) { console.error('Ошибка парсинга additionalConditions:', e); }
-    }
-
-    // Формируем deviceConditions напрямую из выбранной опции, чтобы сразу пересчитывать цену
-    // Маппинг ярлыков из evaluation -> значения, ожидаемые формулой
-    const currentOption = (evaluationOptions.find((o) => o.id === previewId) ?? selectedOption);
-    const label = currentOption?.label || '';
-    const percent = currentOption?.percentage ?? 0;
-    const mapLabelToCondition = (lbl: string): string => {
-      if (/новый|идеал/i.test(lbl)) return 'Новый';
-      if (/отлич/i.test(lbl) || /очень/i.test(lbl)) return 'Очень хорошее';
-      if (/царап/i.test(lbl) || /замет/i.test(lbl)) return 'Заметные царапины';
-      if (/трещ/i.test(lbl)) return 'Трещины';
-      return 'Очень хорошее';
-    };
-    // Если явного ключевого слова нет, подстрахуемся по проценту уценки
-    let mapped = mapLabelToCondition(label);
-    if (mapped === 'Очень хорошее') {
-      if (percent >= 60) mapped = 'Трещины';
-      else if (percent >= 30) mapped = 'Заметные царапины';
-    }
-    const deviceConditions: DeviceConditions = { front: mapped };
-
-    // Используем новую формулу расчёта диапазона цен
-    const modelName = modelname; // Модель всегда валидна из БД
-    const range = calculatePriceRange(base, modelName, deviceConditions, additionalConditions, (percent / 100));
+  // Handle evaluation changes
+  const handleEvaluationChange = useCallback((evaluation: {
+    category: string;
+    condition: string;
+    penalty: number;
+  }) => {
+    setCurrentEvaluation(evaluation);
     
-    // Передаём вперёд по воронке для последующих шагов
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('price', JSON.stringify(range.midpoint));
-      sessionStorage.setItem('priceRange', JSON.stringify(range));
-      sessionStorage.setItem('calculatedPrice', JSON.stringify(range.midpoint));
-    }
-    return range;
-  }, [basePrice, price, selectedOption, previewId, modelname]);
-
-  useEffect(() => {
-    if (!priceRange) return;
-    setPrice(priceRange.midpoint);
+    // Save to session storage
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("price", JSON.stringify(priceRange.midpoint));
-      sessionStorage.setItem("priceRange", JSON.stringify(priceRange));
+      sessionStorage.setItem("userEvaluationId", evaluation.condition);
+      sessionStorage.setItem("userEvaluation", evaluation.condition);
+      sessionStorage.setItem("damagePercent", String(evaluation.penalty));
     }
-  }, [priceRange, setPrice]);
+  }, []);
 
-  useEffect(() => {
-    const opt = evaluationOptions.find((o) => o.id === previewId) ?? selectedOption;
-    if (opt) {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("userEvaluation", opt.label);
-        sessionStorage.setItem("damagePercent", String(opt.percentage));
-      }
+  // Handle price changes
+  const handlePriceChange = useCallback((range: {
+    min: number;
+    max: number;
+    midpoint: number;
+  }) => {
+    setPriceRange(range);
+    setPrice(range.midpoint);
+    
+    // Save to session storage
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("price", JSON.stringify(range.midpoint));
+      sessionStorage.setItem("priceRange", JSON.stringify(range));
+      sessionStorage.setItem("calculatedPrice", JSON.stringify(range.midpoint));
     }
-  }, [previewId, selectedOption]);
+  }, [setPrice]);
 
-  // Swiper will handle gestures; keep index/preview in sync via callbacks
-
-  const previewOption = useMemo(() => {
-    return evaluationOptions.find((o) => o.id === previewId) ?? selectedOption;
-  }, [previewId, selectedOption]);
-
+  // Handle continue button (after dialog)
   const handleContinue = async () => {
-    const opt = evaluationOptions.find((o) => o.id === previewId) ?? selectedOption;
-    if (!opt || !priceRange) return;
+    if (!currentEvaluation || !priceRange) return;
 
     setSubmitting(true);
-    setUserEvaluation(opt.label);
-    setDamagePercent(opt.percentage);
+    setUserEvaluation(currentEvaluation.condition);
+    setDamagePercent(currentEvaluation.penalty);
 
     try {
       await fetch("/api/request/save-evaluation", {
@@ -361,8 +436,8 @@ export default function EvaluationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           telegramId,
-          userEvaluation: opt.label,
-          damagePercent: opt.percentage,
+          userEvaluation: currentEvaluation.condition,
+          damagePercent: currentEvaluation.penalty,
           price: priceRange.midpoint,
           priceRange,
         }),
@@ -377,95 +452,97 @@ export default function EvaluationPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen overflow-hidden flex items-center">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 pb-6 pt-6 md:px-6">
-          {showOnboarding && (
-            <div
-              className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm"
-              onClick={() => { setShowOnboarding(false); try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {} }}
-              onTouchStart={() => { setShowOnboarding(false); try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {} }}
-              onWheel={() => { setShowOnboarding(false); try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {} }}
-            >
-              <div className="mx-6 w-full max-w-sm rounded-2xl bg-white/95 p-5 text-center shadow-xl">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700">↕️</div>
-                <div className="text-base font-semibold text-slate-900">Выберите состояние</div>
-                <div className="mt-1 text-sm text-slate-600">Свайпайте влево/вправо, чтобы листать варианты по кругу, затем нажмите «Продолжить»</div>
-                <div className="mt-4 text-xs text-slate-400">Начните свайпать</div>
-              </div>
-            </div>
-          )}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25 }}
-            className="rounded-[32px] border border-white/70 bg-white/80 p-4 md:p-6 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur"
-          >
-            <div className="flex flex-col items-center gap-6">
-              <div className="text-center md:text-left h-[100px] md:h-[112px] flex flex-col justify-start overflow-hidden">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-slate-400">Состояние</p>
-                <h2 className="mt-1 text-3xl font-semibold text-slate-900 truncate">{previewOption.label}</h2>
-              </div>
+      <div className="min-h-screen overflow-hidden">
+        {/* Новый визуальный UI оценки */}
+        <div className="max-w-md mx-auto p-2">
+          <div className="text-center mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Оценка <br />состояния</h1>
+          </div>
 
-              <div className="relative overflow-hidden rounded-[28px] border border-white/60 bg-transparent p-3 md:p-4">
-                <div ref={carouselRef} className="relative mx-auto w-full max-w-none touch-pan-x select-none">
-                  <Carousel_003
-                    className="mx-auto"
-                    images={evaluationOptions.map(o => ({ 
-                      src: getPictureUrl(`${o.image}.png`) || getPictureUrl('display_front_new.png') || '/display_front_new.png', 
-                      alt: o.label 
-                    }))}
-                    showPagination
-                    loop
-                    autoplay={false}
-                    spaceBetween={0}
-                    initialIndex={currentIndex}
-                    heightPx={400}
-                    heightPxMd={480}
-                    slideWidthPx={300}
-                    slideWidthPxMd={360}
-                    onIndexChange={(idx) => {
-                      const option = evaluationOptions[idx];
-                      if (!option) return;
-                      if (showOnboarding) {
-                        setShowOnboarding(false);
-                        try { localStorage.setItem("seenEvalOnboarding", "1"); } catch {}
-                      }
-                      if (showScrollHint) setShowScrollHint(false);
-                      setCurrentIndex(idx);
-                      setPreviewId(option.id);
-                    }}
-                  />
-                </div>
-              </div>
+          <EvaluationSliders 
+            wearValues={wearValues}
+            setWearValues={setWearValues}
+            setCurrentEvaluation={setCurrentEvaluation}
+            setPriceRange={setPriceRange}
+            setPrice={setPrice}
+            basePrice={basePrice ?? price ?? 50000}
+            modelName={modelname ?? 'iPhone 14'}
+          />
+        </div>
 
-              <div className="mt-2 text-sm text-slate-600 md:text-base text-center md:text-left px-1 min-h-[64px] md:min-h-[80px] overflow-hidden">
-                {previewOption.description}
-              </div>
-
-              <div className="flex flex-col items-center justify-between gap-3 md:flex-row mt-2">
-                <div className="flex flex-col items-center gap-1 md:items-start">
-                  <div className="text-sm text-slate-500">
-                    <span className="font-semibold text-slate-900">-{previewOption.percentage}%</span>
-                    <span className="mx-2 text-slate-400">/</span>
-                    {priceRange ? (
-                      <span className="font-semibold text-slate-900">
-                        {formatMoney(priceRange.min)} — {formatMoney(priceRange.max)}
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">диапазон уточняется</span>
-                    )}
+        {/* Диалог диапазона цен */}
+        <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+          <DialogContent className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg">
+            <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-4">
+              Итоговая оценка
+            </DialogTitle>
+            {priceRange && (
+              <div className="text-center space-y-4">
+                {/* Диапазон цен - главный акцент */}
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-slate-600 uppercase tracking-wide">
+                    Диапазон оценки
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900">
+                    {priceRange.min.toLocaleString()} — {priceRange.max.toLocaleString()} ₽
                   </div>
                 </div>
+
+                {/* Визуальная полоса диапазона */}
+                <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    className="absolute top-0 h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full"
+                    style={{ 
+                      left: '0%', 
+                      width: '100%',
+                      background: `linear-gradient(to right, 
+                        #10b981 0%, 
+                        #3b82f6 50%, 
+                        #f59e0b 100%)`
+                    }}
+                  />
+                  {/* Маркеры */}
+                  <div className="absolute top-0 left-0 w-1 h-full bg-slate-900 rounded-full" />
+                  <div className="absolute top-0 right-0 w-1 h-full bg-slate-900 rounded-full" />
+                </div>
+
+                {/* Дополнительная информация */}
+                <div className="text-xs text-slate-500 space-y-1">
+                  <div>Базовая цена: {(basePrice ?? price ?? 50000).toLocaleString()} ₽</div>
+                  <div>Разница: {((priceRange.max - priceRange.min) / priceRange.max * 100).toFixed(0)}% от максимальной</div>
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    onClick={() => {
+                      setShowResultDialog(false);
+                      handleContinue();
+                    }}
+                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg"
+                  >
+                    Продолжить
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Кнопка продолжения */}
+        <div className="fixed bottom-4 left-4 right-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
                 <Button
                   type="button"
                   disabled={!priceRange || submitting}
-                  onClick={handleContinue}
-                  className="h-11 md:h-12 w-full md:w-auto rounded-full bg-slate-900 px-8 md:px-10 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              onClick={() => setShowResultDialog(true)}
+              className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
-                  Продолжить
+              {submitting ? 'Сохранение...' : 'Продолжить'}
                 </Button>
-              </div>
-            </div>
           </motion.div>
         </div>
       </div>
