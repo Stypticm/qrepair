@@ -18,6 +18,7 @@ const PickupPointsPage = () => {
     const [pickupPoints, setPickupPoints] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [priceRange, setPriceRange] = useState<{ min: number; max: number; midpoint: number } | null>(null);
+    const [isNavigating, setIsNavigating] = useState(false);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -168,7 +169,8 @@ const PickupPointsPage = () => {
                 sessionStorage.setItem('deliveryData', JSON.stringify(deliveryData));
 
                 // Переходим к финальной странице
-                router.push('/request/final');
+                setIsNavigating(true);
+                setTimeout(() => router.push('/request/final'), 300);
             } else {
                 console.error('❌ Ошибка API:', response.status, response.statusText);
                 const errorText = await response.text();
@@ -241,6 +243,7 @@ const PickupPointsPage = () => {
     };
 
     return (
+        <>
         <Page back={true}>
             <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
                 <div className="flex-1 p-3 pt-2 flex items-center justify-center">
@@ -350,6 +353,15 @@ const PickupPointsPage = () => {
                 </div>
             </div>
         </Page>
+        {isNavigating && (
+            <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                <div className="flex flex-col items-center">
+                    <Image src={getPictureUrl('animation_running.gif') || '/animation_running.gif'} alt="Загрузка" width={192} height={192} className="object-contain rounded-2xl" />
+                    <p className="mt-4 text-lg font-semibold text-gray-700">Завершаем оформление…</p>
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 

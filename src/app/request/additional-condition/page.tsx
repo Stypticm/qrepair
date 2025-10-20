@@ -29,8 +29,8 @@ export default function AdditionalConditionPage() {
     const {
         modelname,
         telegramId,
-        additionalConditions,
-        setAdditionalConditions,
+        deviceConditions,
+        setDeviceConditions,
         username,
         setModel,
         setPrice,
@@ -73,7 +73,7 @@ export default function AdditionalConditionPage() {
     };
 
     // Функция для проверки, все ли выбрано
-    const checkIfAllSelected = useCallback((conditions: typeof additionalConditions) => {
+    const checkIfAllSelected = useCallback((conditions: any) => {
         return conditions.faceId && conditions.touchId && conditions.backCamera && conditions.battery;
     }, []);
 
@@ -83,26 +83,26 @@ export default function AdditionalConditionPage() {
     useEffect(() => {
         const loadData = async () => {
             // 1. Попытка восстановить из sessionStorage
-            const savedInSession = sessionStorage.getItem('additionalConditions');
+            const savedInSession = sessionStorage.getItem('deviceConditions');
             if (savedInSession) {
                 try {
                     const parsed = JSON.parse(savedInSession);
                     const hasValidData = parsed && typeof parsed === 'object' && (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery);
 
                     if (hasValidData) {
-                        setAdditionalConditions(parsed);
+                        setDeviceConditions(parsed);
                         setIsEditing(true);
                         setIsAllSelected(!!checkIfAllSelected(parsed));
                         setHasChanges(true);
                         setShowHints(false);
                     } else {
-                        sessionStorage.removeItem('additionalConditions');
+                        sessionStorage.removeItem('deviceConditions');
                     }
                     setLoadedFromDB(true);
                     return; // Данные из сессии загружены, выходим
                 } catch (e) {
-                    console.error('Ошибка парсинга additionalConditions из sessionStorage:', e);
-                    sessionStorage.removeItem('additionalConditions');
+                    console.error('Ошибка парсинга deviceConditions из sessionStorage:', e);
+                    sessionStorage.removeItem('deviceConditions');
                 }
             }
 
@@ -120,15 +120,15 @@ export default function AdditionalConditionPage() {
 
                         if (data.status === 'submitted') {
                             // Заявка отправлена, сбрасываем состояние
-                            setAdditionalConditions({ faceId: null, touchId: null, backCamera: null, battery: null });
+                            setDeviceConditions({ faceId: null, touchId: null, backCamera: null, battery: null } as any);
                             setHasChanges(false);
-                        } else if (data.additionalConditions) {
-                            const hasOldData = data.additionalConditions.faceId || data.additionalConditions.touchId || data.additionalConditions.backCamera || data.additionalConditions.battery;
+                        } else if (data.deviceConditions) {
+                            const hasOldData = (data.deviceConditions as any).faceId || (data.deviceConditions as any).touchId || (data.deviceConditions as any).backCamera || (data.deviceConditions as any).battery;
                             if (hasOldData) {
-                                setAdditionalConditions(data.additionalConditions);
+                                setDeviceConditions(data.deviceConditions);
                                 setHasChanges(true);
                                 setShowHints(false);
-                                sessionStorage.setItem('additionalConditions', JSON.stringify(data.additionalConditions));
+                                sessionStorage.setItem('deviceConditions', JSON.stringify(data.deviceConditions));
                             }
                         }
                     }
@@ -158,15 +158,15 @@ export default function AdditionalConditionPage() {
         };
 
         loadData();
-    }, [telegramId, username, setAdditionalConditions, checkIfAllSelected]);
+    }, [telegramId, username, setDeviceConditions, checkIfAllSelected]);
 
     // Проверяем, заполнены ли все состояния
     const areAllConditionsSelected = useCallback(() => {
-        return additionalConditions.faceId &&
-            additionalConditions.touchId &&
-            additionalConditions.backCamera &&
-            additionalConditions.battery;
-    }, [additionalConditions]);
+        return (deviceConditions as any)?.faceId &&
+            (deviceConditions as any)?.touchId &&
+            (deviceConditions as any)?.backCamera &&
+            (deviceConditions as any)?.battery;
+    }, [deviceConditions]);
 
     // Функция расчета цены с учетом дополнительных условий
     const calculatePriceWithAdditionalConditions = useCallback(async () => {
@@ -196,10 +196,10 @@ export default function AdditionalConditionPage() {
 
             // Нормализуем дополнительные условия (null -> undefined) под тип AdditionalConditions
             const normalizedAdditional: AdditionalConditions = {
-                faceId: additionalConditions.faceId ?? undefined,
-                touchId: additionalConditions.touchId ?? undefined,
-                backCamera: additionalConditions.backCamera ?? undefined,
-                battery: additionalConditions.battery ?? undefined,
+                faceId: (deviceConditions as any)?.faceId ?? undefined,
+                touchId: (deviceConditions as any)?.touchId ?? undefined,
+                backCamera: (deviceConditions as any)?.backCamera ?? undefined,
+                battery: (deviceConditions as any)?.battery ?? undefined,
             }
 
             // Используем новую формулу расчёта диапазона цен
@@ -221,7 +221,7 @@ export default function AdditionalConditionPage() {
         } catch (error) {
             console.error('Ошибка при расчете цены:', error);
         }
-    }, [additionalConditions, setPrice, modelname]);
+    }, [deviceConditions, setPrice, modelname]);
 
     // Показываем диалог когда все условия выбраны И пользователь делал изменения
     useEffect(() => {
@@ -235,7 +235,7 @@ export default function AdditionalConditionPage() {
             // Устанавливаем флаг "все выбрано"
             setIsAllSelected(true);
         }
-    }, [additionalConditions, areAllConditionsSelected, hasChanges, calculatePriceWithAdditionalConditions]);
+    }, [deviceConditions, areAllConditionsSelected, hasChanges, calculatePriceWithAdditionalConditions]);
 
     // Обработчики диалогового окна
     const handleContinue = () => {
@@ -327,15 +327,15 @@ export default function AdditionalConditionPage() {
         const conditionText = getAdditionalConditionText(conditionId);
 
         // Проверяем, изменилось ли состояние
-        if (additionalConditions[type] !== conditionText) {
+        if ((deviceConditions as any)?.[type] !== conditionText) {
             const newConditions = {
-                ...additionalConditions,
+                ...(deviceConditions as any || {}),
                 [type]: conditionText
             };
 
 
             // Сначала обновляем контекст
-            setAdditionalConditions(newConditions);
+            setDeviceConditions(newConditions);
 
             // Сбрасываем режим редактирования при новом выборе
             setIsEditing(false);
@@ -350,7 +350,7 @@ export default function AdditionalConditionPage() {
 
             // Сохраняем в sessionStorage для быстрого восстановления
             if (typeof window !== 'undefined') {
-                sessionStorage.setItem('additionalConditions', JSON.stringify(newConditions));
+                sessionStorage.setItem('deviceConditions', JSON.stringify(newConditions));
             }
 
             // Затем сохраняем состояния в БД
@@ -362,9 +362,9 @@ export default function AdditionalConditionPage() {
     // Проверяем, можно ли выбрать секцию
     const canSelectSection = (type: 'faceId' | 'touchId' | 'backCamera' | 'battery'): boolean => {
         if (type === 'backCamera') return true; // Задняя камера всегда доступна
-        if (type === 'battery') return !!additionalConditions.backCamera; // Батарея только после выбора задней камеры
-        if (type === 'faceId') return !!additionalConditions.battery; // Face ID только после выбора батареи
-        if (type === 'touchId') return !!additionalConditions.faceId; // Touch ID только после выбора Face ID
+        if (type === 'battery') return !!(deviceConditions as any)?.backCamera; // Батарея только после выбора задней камеры
+        if (type === 'faceId') return !!(deviceConditions as any)?.battery; // Face ID только после выбора батареи
+        if (type === 'touchId') return !!(deviceConditions as any)?.faceId; // Touch ID только после выбора Face ID
         return false;
     };
 
@@ -388,7 +388,7 @@ export default function AdditionalConditionPage() {
                 </h3>
                 <div className={`grid ${gridCols} gap-1 ${!canSelectSection(type) ? 'opacity-50' : ''}`}>
                     {conditions.map((condition) => {
-                        const isSelected = additionalConditions[type] === condition.label;
+                        const isSelected = (deviceConditions as any)?.[type] === condition.label;
                         return (
                             <Card
                                 key={condition.id}
@@ -472,7 +472,7 @@ export default function AdditionalConditionPage() {
                         )}
 
                         {/* Батарея */}
-                        {additionalConditions.backCamera && (
+                        {(deviceConditions as any)?.backCamera && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -487,7 +487,7 @@ export default function AdditionalConditionPage() {
 
                                     <div className={`grid grid-cols-4 gap-1 ${!canSelectSection('battery') ? 'opacity-50' : ''}`}>
                                         {batteryConditions.map((condition) => {
-                                            const isSelected = additionalConditions.battery === condition.label;
+                                            const isSelected = (deviceConditions as any)?.battery === condition.label;
                                             const percentage = parseInt(condition.label.replace('%', ''));
                                             return (
                                                 <motion.div
@@ -540,7 +540,7 @@ export default function AdditionalConditionPage() {
                         )}
 
                         {/* Face ID / Touch ID на одной строке */}
-                        {additionalConditions.battery && (
+                        {(deviceConditions as any)?.battery && (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -554,7 +554,7 @@ export default function AdditionalConditionPage() {
                                     <div className={`grid grid-cols-4 gap-2 ${!canSelectSection('faceId') ? 'opacity-50' : ''}`}>
                                         {/* Face ID */}
                                         {faceIdConditions.map((condition) => {
-                                            const isSelected = additionalConditions.faceId === condition.label;
+                                            const isSelected = (deviceConditions as any)?.faceId === condition.label;
                                             return (
                                                 <motion.div key={condition.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
                                                     <Card className={`transition-all duration-200 relative border-0 shadow-none ${isSelected ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10' : ''} ${canSelectSection('faceId') ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}`} onClick={() => canSelectSection('faceId') && handleConditionSelect('faceId', condition.id)}>
@@ -587,8 +587,8 @@ export default function AdditionalConditionPage() {
                                         })}
 
                                         {/* Touch ID - показываем только после выбора Face ID */}
-                                        {additionalConditions.faceId && touchIdConditions.map((condition) => {
-                                            const isSelected = additionalConditions.touchId === condition.label;
+                                        {(deviceConditions as any)?.faceId && touchIdConditions.map((condition) => {
+                                            const isSelected = (deviceConditions as any)?.touchId === condition.label;
                                             return (
                                                 <motion.div key={condition.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
                                                     <Card className={`transition-all duration-200 relative border-0 shadow-none ${isSelected ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10' : ''} ${canSelectSection('touchId') ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}`} onClick={() => canSelectSection('touchId') && handleConditionSelect('touchId', condition.id)}>
@@ -648,35 +648,35 @@ export default function AdditionalConditionPage() {
                         {/* Рамка для выбранных условий */}
                         <div className="bg-[#2dc2c6]/10 rounded-2xl p-5 border border-[#2dc2c6] shadow-lg mb-4">
                             <div className="space-y-3">
-                                {additionalConditions.faceId && (
+                                {(deviceConditions as any)?.faceId && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600 font-medium">Face ID:</span>
                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.faceId}
+                                            {(deviceConditions as any)?.faceId}
                                         </span>
                                     </div>
                                 )}
-                                {additionalConditions.touchId && (
+                                {(deviceConditions as any)?.touchId && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600 font-medium">Touch ID:</span>
                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.touchId}
+                                            {(deviceConditions as any)?.touchId}
                                         </span>
                                     </div>
                                 )}
-                                {additionalConditions.backCamera && (
+                                {(deviceConditions as any)?.backCamera && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600 font-medium">Задняя камера:</span>
                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.backCamera}
+                                            {(deviceConditions as any)?.backCamera}
                                         </span>
                                     </div>
                                 )}
-                                {additionalConditions.battery && (
+                                {(deviceConditions as any)?.battery && (
                                     <div className="flex justify-between items-center">
                                         <span className="text-gray-600 font-medium">Батарея:</span>
                                         <span className="font-semibold text-gray-900 text-right break-words">
-                                            {additionalConditions.battery}
+                                            {(deviceConditions as any)?.battery}
                                         </span>
                                     </div>
                                 )}

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         telegramId: telegramId,
       },
       select: {
-        additionalConditions: true,
+        deviceConditions: true,
         status: true,
       },
       orderBy: {
@@ -30,13 +30,13 @@ export async function POST(request: NextRequest) {
 
     if (activeRequest) {
       return NextResponse.json({
-        additionalConditions:
-          activeRequest.additionalConditions || null,
+        deviceConditions:
+          (activeRequest as any).deviceConditions || null,
         status: activeRequest.status,
       })
     } else {
       return NextResponse.json({
-        additionalConditions: null,
+        deviceConditions: null,
         status: null,
       })
     }

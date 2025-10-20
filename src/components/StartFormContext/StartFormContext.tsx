@@ -67,19 +67,14 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         front: string | null;
         back: string | null;
         side: string | null;
+        faceId?: string | null;
+        touchId?: string | null;
+        backCamera?: string | null;
+        battery?: string | null;
     }>({
         front: null,
         back: null,
-        side: null
-    });
-
-    // Дополнительные состояния устройства
-    const [additionalConditions, setAdditionalConditions] = useState<{
-        faceId: string | null;
-        touchId: string | null;
-        backCamera: string | null;
-        battery: string | null;
-    }>({
+        side: null,
         faceId: null,
         touchId: null,
         backCamera: null,
@@ -98,9 +93,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         setDeviceConditions({
             front: null,
             back: null,
-            side: null
-        });
-        setAdditionalConditions({
+            side: null,
             faceId: null,
             touchId: null,
             backCamera: null,
@@ -113,7 +106,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             sessionStorage.removeItem('imei');
             sessionStorage.removeItem('serialNumber');
             sessionStorage.removeItem('deviceConditions');
-            sessionStorage.removeItem('additionalConditions');
+            // additionalConditions больше не используется
             sessionStorage.removeItem('price');
             sessionStorage.removeItem('hasSeenWelcome'); // Сбрасываем флаг приветствия
         }
@@ -200,7 +193,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                     if (data.imei) setImei(data.imei);
                     if (data.sn) setSerialNumber(data.sn);
                     if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
-                    if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
+                    // additionalConditions устарело
                     
                     // Восстанавливаем текущий шаг из БД
                     if (data.currentStep) {
@@ -210,7 +203,6 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                         }
                     }
                     
-                } else {
                 }
             }
         } catch (error) {
@@ -269,7 +261,6 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 showQuestionsSuccess,
                 onNext,
                 deviceConditions,
-                additionalConditions,
                 setOnNext,
                 setTelegramId,
                 setSerialNumber,
@@ -281,12 +272,11 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 setShowQuestionsSuccess,
                 setPrice,
                 setDeviceConditions,
-                setAdditionalConditions,
                 resetAllStates,
                 loadSavedData,
                 debugInfo,
                 addDebugInfo
-            }}
+            } as FormState}
         >
             {children}
         </StartFormContext.Provider>

@@ -230,7 +230,7 @@ export default function FormPage() {
                                 </motion.div>
                             )}
 
-                            {selectedOptions.model && storages.length > 0 && (
+                            {selectedOptions.model && (variants.length === 0 || !!selectedOptions.variant) && storages.length > 0 && (
                                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2, ease: "easeOut" }} className="p-2 rounded-xl shadow-sm bg-white">
                                     <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Объем памяти</h3>
                                     <div className="grid grid-cols-3 gap-1 max-w-xs mx-auto">
@@ -250,7 +250,7 @@ export default function FormPage() {
                                 </motion.div>
                             )}
 
-                            {selectedOptions.model && colors.length > 0 && (
+                            {!!selectedOptions.storage && colors.length > 0 && (
                                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2, ease: "easeOut" }} className="p-2 rounded-xl shadow-sm bg-white">
                                     <h3 className="text-center font-semibold text-gray-900 mb-1 text-lg">Цвет</h3>
                                     <div className="flex flex-row justify-around gap-2">

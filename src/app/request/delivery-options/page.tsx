@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
 import { motion } from 'framer-motion';
+import { getPictureUrl } from '@/core/lib/assets';
 
 const DeliveryOptionsPage = () => {
     const router = useRouter();
     const { telegramId, modelname, price, setCurrentStep } = useAppStore();
     const [selectedOption, setSelectedOption] = useState<'pickup' | null>(null);
     const [priceRange, setPriceRange] = useState<{ min: number; max: number; midpoint: number } | null>(null);
+    const [isNavigating, setIsNavigating] = useState(false);
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -56,8 +58,8 @@ const DeliveryOptionsPage = () => {
 
     const handlePickup = () => {
         setSelectedOption('pickup');
-        // Переходим к выбору точки самовывоза
-        router.push('/request/pickup-points');
+        setIsNavigating(true);
+        setTimeout(() => router.push('/request/pickup-points'), 200);
     };
 
     const finalPrice = price || priceRange?.midpoint || 48000;
@@ -173,6 +175,14 @@ const DeliveryOptionsPage = () => {
                     </div>
                 </div>
             </div>
+            {isNavigating && (
+                <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                    <div className="flex flex-col items-center">
+                        <img src={getPictureUrl('animation_running.gif') || '/animation_running.gif'} alt="Загрузка" width={192} height={192} className="object-contain rounded-2xl" />
+                        <p className="mt-4 text-lg font-semibold text-gray-700">Открываем точки самовывоза…</p>
+                    </div>
+                </div>
+            )}
         </Page>
     );
 };

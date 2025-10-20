@@ -35,30 +35,24 @@ export type FormState = {
   showQuestionsSuccess: boolean
   setShowQuestionsSuccess: (v: boolean) => void
 
-  // Состояния устройства
+  // Состояния устройства (объединённые)
   deviceConditions: {
     front: string | null
     back: string | null
     side: string | null
+    faceId?: string | null
+    touchId?: string | null
+    backCamera?: string | null
+    battery?: string | null
   }
   setDeviceConditions: (conditions: {
-    front: string | null
-    back: string | null
-    side: string | null
-  }) => void
-
-  // Дополнительные состояния устройства
-  additionalConditions: {
-    faceId: string | null
-    touchId: string | null
-    backCamera: string | null
-    battery: string | null
-  }
-  setAdditionalConditions: (conditions: {
-    faceId: string | null
-    touchId: string | null
-    backCamera: string | null
-    battery: string | null
+    front?: string | null
+    back?: string | null
+    side?: string | null
+    faceId?: string | null
+    touchId?: string | null
+    backCamera?: string | null
+    battery?: string | null
   }) => void
 
   // Сброс всех состояний

@@ -11,7 +11,7 @@ import { getPictureUrl } from '@/core/lib/assets';
 
 const SubmitPage = () => {
     const router = useRouter();
-    const { telegramId, username, modelname, deviceConditions, additionalConditions, price, resetAllStates, setDeviceConditions, setModel, setAdditionalConditions, imei, serialNumber, setImei, setSerialNumber, setPrice, setCurrentStep, clearCurrentStep } = useAppStore();
+    const { telegramId, username, modelname, deviceConditions, price, resetAllStates, setDeviceConditions, setModel, imei, serialNumber, setImei, setSerialNumber, setPrice, setCurrentStep, clearCurrentStep } = useAppStore();
     const [dataLoaded, setDataLoaded] = useState(false);
     const [priceLoaded, setPriceLoaded] = useState(false);
     const [dbData, setDbData] = useState<any>(null);
@@ -58,18 +58,7 @@ const SubmitPage = () => {
                 }
             }
 
-            // Загружаем дополнительные состояния
-            const savedAdditionalConditions = sessionStorage.getItem('additionalConditions');
-            if (savedAdditionalConditions) {
-                try {
-                    const parsed = JSON.parse(savedAdditionalConditions);
-                    if (parsed && (parsed.faceId || parsed.touchId || parsed.backCamera || parsed.battery)) {
-                        setAdditionalConditions(parsed);
-                    }
-                } catch (e) {
-                    // Ошибка парсинга additionalConditions
-                }
-            }
+            // Доп. состояния теперь входят в единый deviceConditions
 
             // Загружаем IMEI
             const savedImei = sessionStorage.getItem('imei');
@@ -110,7 +99,7 @@ const SubmitPage = () => {
             }
 
             // Если нет данных в sessionStorage, загружаем из БД
-            const hasSessionData = savedPhoneSelection || savedDeviceConditions || savedAdditionalConditions || savedImei || savedSerialNumber;
+            const hasSessionData = savedPhoneSelection || savedDeviceConditions || savedImei || savedSerialNumber;
             
             // Проверяем, есть ли валидная цена в sessionStorage
             let hasValidPrice = false;
@@ -151,7 +140,6 @@ const SubmitPage = () => {
                         }
                     }
                     if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
-                    if (data.additionalConditions) setAdditionalConditions(data.additionalConditions);
                     if (data.imei) setImei(data.imei);
                     if (data.sn) setSerialNumber(data.sn);
                 })
@@ -160,7 +148,7 @@ const SubmitPage = () => {
                     });
             }
         }
-    }, [setModel, setPrice, setDeviceConditions, setAdditionalConditions, setImei, setSerialNumber, telegramId]);
+    }, [setModel, setPrice, setDeviceConditions, setImei, setSerialNumber, telegramId]);
 
     // Проверяем, загружены ли все необходимые данные (не блокируем UI)
     useEffect(() => {
@@ -168,18 +156,18 @@ const SubmitPage = () => {
         const hasBasicData = Boolean(modelname || telegramId);
 
         // Проверяем наличие данных о состояниях устройства
-        const hasDeviceData = deviceConditions && (
+            const hasDeviceData = deviceConditions && (
             deviceConditions.front ||
             deviceConditions.back ||
             deviceConditions.side
         );
 
         // Проверяем наличие дополнительных данных
-        const hasAdditionalData = additionalConditions && (
-            additionalConditions.faceId ||
-            additionalConditions.touchId ||
-            additionalConditions.backCamera ||
-            additionalConditions.battery
+        const hasAdditionalData = deviceConditions && (
+            (deviceConditions as any).faceId ||
+            (deviceConditions as any).touchId ||
+            (deviceConditions as any).backCamera ||
+            (deviceConditions as any).battery
         );
 
         // Даем доступ к интерфейсу сразу при наличии базовых данных
@@ -195,7 +183,7 @@ const SubmitPage = () => {
         }, 800); // 0.8 секунды
 
         return () => clearTimeout(timeout);
-    }, [modelname, telegramId, deviceConditions, additionalConditions, dataLoaded]);
+    }, [modelname, telegramId, deviceConditions, dataLoaded]);
 
     const handleReset = async () => {
         try {
@@ -275,11 +263,11 @@ const SubmitPage = () => {
             }
 
             // Переходим к выбору способа доставки
-            router.push('/request/delivery-options');
+            setTimeout(() => router.push('/request/delivery-options'), 200);
         } catch (error) {
             console.error('Error saving current step:', error);
             // Переходим даже при ошибке
-            router.push('/request/delivery-options');
+            setTimeout(() => router.push('/request/delivery-options'), 200);
         } finally {
             // Не сбрасываем состояния, так как происходит переход
             // setAgreeLoading(false);
@@ -404,6 +392,7 @@ const SubmitPage = () => {
     };
 
     return (
+        <>
         <Page back={true}>
             <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
                 <div className="flex-1 p-3 pt-2 flex items-start justify-center">
@@ -616,6 +605,15 @@ const SubmitPage = () => {
 
             )}
         </Page>
+        {agreeLoading && (
+            <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                <div className="flex flex-col items-center">
+                    <Image src={getPictureUrl('animation_running.gif') || '/animation_running.gif'} alt="Загрузка" width={192} height={192} className="object-contain rounded-2xl" />
+                    <p className="mt-4 text-lg font-semibold text-gray-700">Открываем варианты доставки…</p>
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 

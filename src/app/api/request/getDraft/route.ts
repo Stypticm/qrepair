@@ -47,18 +47,45 @@ export async function POST(req: Request) {
     const damagePercent = draftRequest.damagePercent || 0
     const finalPrice = basePrice * (1 - damagePercent / 100)
 
-    // Возвращаем данные заявки
+    // Объединяем дополнительные условия в deviceConditions для обратной совместимости
+    let unifiedDeviceConditions: any =
+      draftRequest.deviceConditions || {}
+    const legacyAdditional: any =
+      draftRequest.additionalConditions || null
+    if (legacyAdditional) {
+      unifiedDeviceConditions = {
+        ...unifiedDeviceConditions,
+        faceId:
+          legacyAdditional.faceId ??
+          unifiedDeviceConditions.faceId ??
+          null,
+        touchId:
+          legacyAdditional.touchId ??
+          unifiedDeviceConditions.touchId ??
+          null,
+        backCamera:
+          legacyAdditional.backCamera ??
+          unifiedDeviceConditions.backCamera ??
+          null,
+        battery:
+          legacyAdditional.battery ??
+          unifiedDeviceConditions.battery ??
+          null,
+      }
+    }
+
+    // Возвращаем данные заявки с унифицированными условиями
     return NextResponse.json({
       id: draftRequest.id,
       modelname: draftRequest.modelname,
-      price: finalPrice, // Финальная цена (рассчитанная)
-      basePrice: basePrice, // Базовая цена
-      damagePercent: damagePercent, // Процент скидки
+      price: finalPrice,
+      basePrice: basePrice,
+      damagePercent: damagePercent,
       imei: draftRequest.imei,
       sn: draftRequest.sn,
-      deviceConditions: draftRequest.deviceConditions,
-      additionalConditions:
-        draftRequest.additionalConditions,
+      deviceConditions: unifiedDeviceConditions,
+      // additionalConditions оставляем для старых клиентов, можно удалить после миграции
+      additionalConditions: legacyAdditional,
       currentStep: draftRequest.currentStep,
       status: draftRequest.status,
       createdAt: draftRequest.createdAt,

@@ -23,6 +23,11 @@ interface DeviceConditions {
   front: string | null
   back: string | null
   side: string | null
+  // Unified: moved from additionalConditions
+  faceId?: string | null
+  touchId?: string | null
+  backCamera?: string | null
+  battery?: string | null
 }
 
 interface AdditionalConditions {
@@ -168,6 +173,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     front: null,
     back: null,
     side: null,
+    faceId: null,
+    touchId: null,
+    backCamera: null,
+    battery: null,
   },
   additionalConditions: {
     faceId: null,
@@ -232,9 +241,42 @@ export const useAppStore = create<AppState>((set, get) => ({
         ...state.deviceConditions,
         ...conditions,
       },
+      // keep backward compatibility mirror
+      additionalConditions: {
+        ...state.additionalConditions,
+        ...(conditions.faceId !== undefined
+          ? { faceId: conditions.faceId }
+          : {}),
+        ...(conditions.touchId !== undefined
+          ? { touchId: conditions.touchId }
+          : {}),
+        ...(conditions.backCamera !== undefined
+          ? { backCamera: conditions.backCamera }
+          : {}),
+        ...(conditions.battery !== undefined
+          ? { battery: conditions.battery }
+          : {}),
+      },
     })),
   setAdditionalConditions: (conditions) =>
     set((state) => ({
+      // write-through into unified deviceConditions
+      deviceConditions: {
+        ...state.deviceConditions,
+        ...(conditions.faceId !== undefined
+          ? { faceId: conditions.faceId }
+          : {}),
+        ...(conditions.touchId !== undefined
+          ? { touchId: conditions.touchId }
+          : {}),
+        ...(conditions.backCamera !== undefined
+          ? { backCamera: conditions.backCamera }
+          : {}),
+        ...(conditions.battery !== undefined
+          ? { battery: conditions.battery }
+          : {}),
+      },
+      // keep legacy state for components still reading it
       additionalConditions: {
         ...state.additionalConditions,
         ...conditions,
@@ -322,6 +364,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         front: null,
         back: null,
         side: null,
+        faceId: null,
+        touchId: null,
+        backCamera: null,
+        battery: null,
       },
       additionalConditions: {
         faceId: null,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/core/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +40,7 @@ export async function POST(request: NextRequest) {
       select: {
         id: true,
         additionalConditions: true,
+        deviceConditions: true,
         telegramId: true,
         status: true,
       },
@@ -83,26 +85,30 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Полностью заменяем существующие условия новыми
-    const mergedConditions = additionalConditions
+    // Объединяем в deviceConditions
+    const mergedDeviceConditions = {
+      ...((currentRequest?.deviceConditions as any) || {}),
+      ...(additionalConditions || {}),
+    }
 
     console.log(
       '[saveAdditionalConditions] Обновляем заявку с данными:',
       {
         telegramId,
-        mergedConditions,
+        mergedConditions: mergedDeviceConditions,
         currentStep,
       }
     )
 
-    // Обновляем заявку с новыми дополнительными условиями
+    // Обновляем заявку с новыми условиями (в deviceConditions)
     const updatedRequest = await prisma.skupka.updateMany({
       where: {
         telegramId: telegramId,
         status: 'draft',
       },
       data: {
-        additionalConditions: mergedConditions,
+        deviceConditions: mergedDeviceConditions as any,
+        additionalConditions: Prisma.DbNull, // чистим legacy (DB NULL)
         currentStep: currentStep || undefined,
       },
     })
@@ -114,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      additionalConditions: mergedConditions,
+      deviceConditions: mergedDeviceConditions,
     })
   } catch (error) {
     console.error(

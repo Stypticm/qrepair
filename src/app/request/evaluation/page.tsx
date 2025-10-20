@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { motion } from "framer-motion";
 
 import { Page } from "@/components/Page";
+import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAppStore } from "@/stores/authStore";
@@ -54,7 +55,8 @@ function WearSlider({ category, images, value, onValueChange, imageSize }: WearS
     const el = sliderRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const ratio = 1 - (clientY - rect.top) / rect.height;
+    // Top-start: 0% вверху, 100% внизу
+    const ratio = (clientY - rect.top) / rect.height;
     const clamped = Math.max(0, Math.min(1, ratio));
     onValueChange(Math.round(clamped * 100));
   };
@@ -150,15 +152,15 @@ function WearSlider({ category, images, value, onValueChange, imageSize }: WearS
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
         >
-          <div className="absolute left-1/2 top-2 -translate-x-1/2 h-[80px] w-[3px] rounded-full bg-slate-200 overflow-hidden">
+          <div className="absolute left-1/2 top-2 -translate-x-1/2 h-[84px] w-[6px] rounded-full bg-slate-200 overflow-hidden">
             <div
-              className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-slate-900 to-slate-700 rounded-full"
+              className="absolute top-0 left-0 w-full bg-gradient-to-b from-slate-900 to-slate-700 rounded-full"
               style={{ height: `${value}%`, transition: 'height 200ms ease-out' }}
             />
           </div>
           <div
-            className="absolute left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white border-2 border-slate-900 shadow-[0_4px_12px_rgba(0,0,0,0.3)] pointer-events-none z-10"
-            style={{ bottom: `calc(${value}% - 10px)` }}
+            className="absolute left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-white border-2 border-slate-900 shadow-[0_4px_12px_rgba(0,0,0,0.3)] pointer-events-none z-10"
+            style={{ top: `calc(${value}% - 14px)` }}
           />
           <input
             aria-label="wear"
@@ -281,6 +283,7 @@ function EvaluationSliders({
 
 export default function EvaluationPage() {
   const router = useRouter();
+  const { goBack } = useStepNavigation();
   const { 
     telegramId, 
     modelname, 
@@ -310,6 +313,9 @@ export default function EvaluationPage() {
     max: number;
     midpoint: number;
   } | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
+  // Persisted wear state
+  const WEAR_STORAGE_KEY = 'evaluationWearValues';
 
   // Disable vertical swipes using Telegram Apps SDK swipe behavior
   useEffect(() => {
@@ -427,6 +433,7 @@ export default function EvaluationPage() {
     if (!currentEvaluation || !priceRange) return;
 
     setSubmitting(true);
+    setIsNavigating(true);
     setUserEvaluation(currentEvaluation.condition);
     setDamagePercent(currentEvaluation.penalty);
 
@@ -445,13 +452,98 @@ export default function EvaluationPage() {
     } catch (error) {
       console.error("Error saving evaluation:", error);
     } finally {
+      // Не закрываем диалог вручную — держим его открытым до навигации
       setSubmitting(false);
       router.push("/request/submit");
     }
   };
 
+  // Persist wearValues locally and in Telegram CloudStorage (if доступен)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      sessionStorage.setItem(WEAR_STORAGE_KEY, JSON.stringify(wearValues));
+    } catch {}
+    try {
+      const webApp: any = (window as any).Telegram?.WebApp;
+      const cs = webApp?.CloudStorage;
+      if (cs?.setItem) {
+        cs.setItem(WEAR_STORAGE_KEY, JSON.stringify(wearValues), () => {});
+      }
+    } catch {}
+  }, [wearValues]);
+
+  // Restore wearValues on mount (CloudStorage → sessionStorage → defaults)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let restored = false;
+    try {
+      const webApp: any = (window as any).Telegram?.WebApp;
+      const cs = webApp?.CloudStorage;
+      if (cs?.getItem) {
+        cs.getItem(WEAR_STORAGE_KEY, (error: any, value: string | null) => {
+          if (!error && value) {
+            try {
+              const parsed = JSON.parse(value);
+              setWearValues((prev) => ({ ...prev, ...parsed }));
+            } catch {}
+          } else {
+            // Fallback to sessionStorage
+            try {
+              const local = sessionStorage.getItem(WEAR_STORAGE_KEY);
+              if (local) {
+                const parsed = JSON.parse(local);
+                setWearValues((prev) => ({ ...prev, ...parsed }));
+              }
+            } catch {}
+          }
+        });
+        restored = true;
+      }
+    } catch {}
+    if (!restored) {
+      try {
+        const local = sessionStorage.getItem(WEAR_STORAGE_KEY);
+        if (local) {
+          const parsed = JSON.parse(local);
+          setWearValues((prev) => ({ ...prev, ...parsed }));
+        }
+      } catch {}
+    }
+  }, []);
+
+  // Recompute price range on wearValues restore (when user returns to the page)
+  useEffect(() => {
+    const anyNonZero =
+      wearValues.display_front > 0 ||
+      wearValues.display_back > 0 ||
+      wearValues.back_camera > 0 ||
+      wearValues.battery > 0;
+    if (!anyNonZero) return;
+    const base = basePrice ?? price ?? 50000;
+    const range = calculatePriceRange(
+      base,
+      modelname ?? 'iPhone',
+      {
+        front: wearValues.display_front <= 25 ? 'Новый' : wearValues.display_front <= 50 ? 'Очень хорошее' : wearValues.display_front <= 75 ? 'Заметные царапины' : 'Трещины',
+        back: wearValues.display_back <= 25 ? 'Новый' : wearValues.display_back <= 50 ? 'Очень хорошее' : wearValues.display_back <= 75 ? 'Заметные царапины' : 'Трещины',
+      },
+      {
+        backCamera: wearValues.back_camera <= 25 ? 'Новый' : wearValues.back_camera <= 50 ? 'Очень хорошее' : wearValues.back_camera <= 75 ? 'Заметные царапины' : 'Трещины',
+        battery: wearValues.battery <= 25 ? '95%' : wearValues.battery <= 50 ? '90%' : wearValues.battery <= 75 ? '85%' : '75%',
+      }
+    );
+    setPriceRange(range);
+    setPrice(range.midpoint);
+    try {
+      sessionStorage.setItem('priceRange', JSON.stringify(range));
+      sessionStorage.setItem('price', JSON.stringify(range.midpoint));
+      sessionStorage.setItem('calculatedPrice', JSON.stringify(range.midpoint));
+    } catch {}
+  }, [wearValues, basePrice, modelname, setPrice]);
+
   return (
-    <Page back={true}>
+    <Page back={goBack}>
       <div className="min-h-screen overflow-hidden">
         {/* Новый визуальный UI оценки */}
         <div className="max-w-md mx-auto p-2">
@@ -471,7 +563,14 @@ export default function EvaluationPage() {
         </div>
 
         {/* Диалог диапазона цен */}
-        <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>
+        <Dialog
+          open={showResultDialog || isNavigating}
+          onOpenChange={(open) => {
+            // Блокируем закрытие во время сабмита/навигации
+            if (submitting || isNavigating) return;
+            setShowResultDialog(open);
+          }}
+        >
           <DialogContent className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg">
             <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-4">
               Итоговая оценка
@@ -514,19 +613,26 @@ export default function EvaluationPage() {
 
                 <div className="pt-2">
                   <Button
-                    onClick={() => {
-                      setShowResultDialog(false);
-                      handleContinue();
-                    }}
-                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg"
+                    onClick={handleContinue}
+                    disabled={submitting || isNavigating}
+                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-80"
                   >
-                    Продолжить
+                    {submitting || isNavigating ? 'Переходим…' : 'Продолжить'}
                   </Button>
                 </div>
               </div>
             )}
           </DialogContent>
         </Dialog>
+
+        {isNavigating && (
+          <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+            <div className="flex flex-col items-center">
+              <Image src={getPictureUrl('animation_running.gif') || '/animation_running.gif'} alt="Загрузка" width={192} height={192} className="object-contain rounded-2xl" />
+              <p className="mt-4 text-lg font-semibold text-gray-700">Переходим к подтверждению…</p>
+            </div>
+          </div>
+        )}
         
         {/* Кнопка продолжения */}
         <div className="fixed bottom-4 left-4 right-4 z-50">

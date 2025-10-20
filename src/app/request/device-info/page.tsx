@@ -548,6 +548,15 @@ export default function DeviceInfoPage() {
                 </DialogContent>
             </Dialog>
 
+            {isTransitioning && (
+                <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                    <div className="flex flex-col items-center">
+                        <Image src={getPictureUrl('animation_running.gif') || '/animation_running.gif'} alt="Загрузка" width={192} height={192} className="object-contain rounded-2xl" />
+                        <p className="mt-4 text-lg font-semibold text-gray-700">Переходим…</p>
+                    </div>
+                </div>
+            )}
+
             <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
                 <DialogContent
                     className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
