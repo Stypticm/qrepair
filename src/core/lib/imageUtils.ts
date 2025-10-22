@@ -5,7 +5,6 @@ import {
 } from './condition'
 import {
   faceIdConditions,
-  touchIdConditions,
   backCameraConditions,
   batteryConditions,
 } from './additionalCondition'
@@ -25,7 +24,6 @@ export function getConditionImages(): string[] {
 export function getAdditionalConditionImages(): string[] {
   const allConditions = [
     ...faceIdConditions,
-    ...touchIdConditions,
     ...backCameraConditions,
     ...batteryConditions,
   ]

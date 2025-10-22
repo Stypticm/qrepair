@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import {
     faceIdConditions,
-    touchIdConditions,
     backCameraConditions,
     batteryConditions,
     getAdditionalConditionText,
@@ -558,40 +557,6 @@ export default function AdditionalConditionPage() {
                                             return (
                                                 <motion.div key={condition.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
                                                     <Card className={`transition-all duration-200 relative border-0 shadow-none ${isSelected ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10' : ''} ${canSelectSection('faceId') ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}`} onClick={() => canSelectSection('faceId') && handleConditionSelect('faceId', condition.id)}>
-                                                        {isSelected && (<div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>)}
-                                                        <CardContent className="p-2">
-                                                            <div className="flex flex-col items-center space-y-1">
-                                                                <motion.div
-                                                                    className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100"
-                                                                    initial={{ opacity: 0, scale: 0.8 }}
-                                                                    animate={{ opacity: 1, scale: 1 }}
-                                                                    transition={{ duration: 0.3, delay: 0.1 }}
-                                                                >
-                                                                    <Image
-                                                                        src={`${getPictureUrl(`${condition.image}.png`) || `/${condition.image}.png`}`}
-                                                                        alt={condition.label}
-                                                                        fill
-                                                                        className="object-cover transition-transform duration-200 hover:scale-105"
-                                                                        loading="eager"
-                                                                        priority={false}
-                                                                    />
-                                                                </motion.div>
-                                                                <span className="text-xs font-medium text-gray-900 text-center">
-                                                                    {condition.label}
-                                                                </span>
-                                                            </div>
-                                                        </CardContent>
-                                                    </Card>
-                                                </motion.div>
-                                            );
-                                        })}
-
-                                        {/* Touch ID - показываем только после выбора Face ID */}
-                                        {(deviceConditions as any)?.faceId && touchIdConditions.map((condition) => {
-                                            const isSelected = (deviceConditions as any)?.touchId === condition.label;
-                                            return (
-                                                <motion.div key={condition.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={{ duration: 0.1 }}>
-                                                    <Card className={`transition-all duration-200 relative border-0 shadow-none ${isSelected ? 'ring-2 ring-[#2dc2c6] bg-[#2dc2c6]/10' : ''} ${canSelectSection('touchId') ? 'cursor-pointer hover:shadow-md' : 'cursor-not-allowed'}`} onClick={() => canSelectSection('touchId') && handleConditionSelect('touchId', condition.id)}>
                                                         {isSelected && (<div className="absolute top-1 right-1 w-4 h-4 bg-[#2dc2c6] rounded-full flex items-center justify-center shadow-sm z-10"><span className="text-white text-xs font-bold">✓</span></div>)}
                                                         <CardContent className="p-2">
                                                             <div className="flex flex-col items-center space-y-1">
