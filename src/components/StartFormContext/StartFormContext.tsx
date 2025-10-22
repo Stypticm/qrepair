@@ -18,6 +18,8 @@ const getPathForStep = (step: string): string | null => {
             return '/request/evaluation';
         case 'device-functions':
             return '/request/device-functions';
+        case 'delivery-options':
+            return '/request/delivery-options';
         case 'photos':
             return '/request/photos';
         case 'pickup':

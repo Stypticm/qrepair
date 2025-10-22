@@ -168,9 +168,9 @@ const PickupPointsPage = () => {
                 };
                 sessionStorage.setItem('deliveryData', JSON.stringify(deliveryData));
 
-                // Переходим к финальной странице
+                // Переходим к странице фотографий
                 setIsNavigating(true);
-                setTimeout(() => router.push('/request/final'), 300);
+                setTimeout(() => router.push('/request/photos'), 300);
             } else {
                 console.error('❌ Ошибка API:', response.status, response.statusText);
                 const errorText = await response.text();

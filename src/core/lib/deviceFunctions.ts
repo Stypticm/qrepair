@@ -41,7 +41,7 @@ export const DEVICE_FUNCTIONS: DeviceFunction[] = [
     title: 'Face ID',
     description: 'Распознавание лица работает корректно',
     affectsPrice: true,
-    weight: 0.08, // важная функция
+    weight: 0.12, // важная функция - увеличили вес
     critical: false,
     icon: 'face',
   },
@@ -50,7 +50,7 @@ export const DEVICE_FUNCTIONS: DeviceFunction[] = [
     title: 'Touch ID',
     description: 'Сканер отпечатка пальца работает',
     affectsPrice: true,
-    weight: 0.06, // важная функция
+    weight: 0.1, // важная функция - увеличили вес
     critical: false,
     icon: 'fingerprint',
   },
@@ -59,7 +59,7 @@ export const DEVICE_FUNCTIONS: DeviceFunction[] = [
     title: 'Фронтальная камера',
     description: 'Камера для селфи работает без дефектов',
     affectsPrice: true,
-    weight: 0.05, // умеренное влияние
+    weight: 0.08, // умеренное влияние - увеличили вес
     critical: false,
     icon: 'camera',
   },
@@ -68,81 +68,9 @@ export const DEVICE_FUNCTIONS: DeviceFunction[] = [
     title: 'Основная камера',
     description: 'Задняя камера работает без дефектов',
     affectsPrice: true,
-    weight: 0.07, // важная функция
+    weight: 0.15, // важная функция - увеличили вес
     critical: false,
     icon: 'camera',
-  },
-  {
-    key: 'microphone',
-    title: 'Микрофон',
-    description: 'Запись звука работает корректно',
-    affectsPrice: true,
-    weight: 0.04, // умеренное влияние
-    critical: false,
-    icon: 'mic',
-  },
-  {
-    key: 'speaker',
-    title: 'Динамик',
-    description: 'Воспроизведение звука работает',
-    affectsPrice: true,
-    weight: 0.04, // умеренное влияние
-    critical: false,
-    icon: 'volume',
-  },
-  {
-    key: 'battery',
-    title: 'Батарея',
-    description: 'Батарея держит заряд нормально',
-    affectsPrice: true,
-    weight: 0.08, // важная функция
-    critical: false,
-    icon: 'battery',
-  },
-  {
-    key: 'buttons',
-    title: 'Кнопки',
-    description: 'Все физические кнопки работают',
-    affectsPrice: true,
-    weight: 0.05, // умеренное влияние
-    critical: false,
-    icon: 'button',
-  },
-  {
-    key: 'water_resistance',
-    title: 'Влагозащита',
-    description: 'Устройство защищено от влаги',
-    affectsPrice: true,
-    weight: 0.06, // важная функция
-    critical: false,
-    icon: 'droplet',
-  },
-  {
-    key: 'cellular',
-    title: 'Сотовая связь',
-    description: 'Работает с SIM-картой',
-    affectsPrice: true,
-    weight: 0.05, // умеренное влияние
-    critical: false,
-    icon: 'signal',
-  },
-  {
-    key: 'wifi',
-    title: 'Wi-Fi',
-    description: 'Подключение к Wi-Fi работает',
-    affectsPrice: true,
-    weight: 0.04, // умеренное влияние
-    critical: false,
-    icon: 'wifi',
-  },
-  {
-    key: 'bluetooth',
-    title: 'Bluetooth',
-    description: 'Беспроводное подключение работает',
-    affectsPrice: true,
-    weight: 0.03, // небольшое влияние
-    critical: false,
-    icon: 'bluetooth',
   },
 ]
 
@@ -159,7 +87,30 @@ export function calculateFunctionDiscount(
   for (const func of deviceFunctions) {
     const state = functions[func.key]
 
-    if (state === 'not_working' && func.affectsPrice) {
+    // Специальная логика для критичных функций
+    if (
+      func.key === 'device_power' &&
+      state === 'not_working'
+    ) {
+      // Если телефон не включается, максимальная скидка
+      return 0.8 // 80% скидка
+    }
+
+    if (
+      func.key === 'repair_history' &&
+      state === 'working'
+    ) {
+      // Если был ремонт, значительная скидка
+      totalDiscount += 0.2 // 20% скидка
+    }
+
+    // Для остальных функций: если не работает, снижаем цену
+    if (
+      state === 'not_working' &&
+      func.affectsPrice &&
+      func.key !== 'device_power' &&
+      func.key !== 'repair_history'
+    ) {
       totalDiscount += func.weight
     }
   }

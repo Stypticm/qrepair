@@ -140,7 +140,8 @@ export const useDevices = () => {
         selectedOptions.storage
       ),
     enabled: Boolean(
-      selectedOptions.model && selectedOptions.storage
+      selectedOptions.model &&
+        selectedOptions.storage !== undefined
     ),
     staleTime: Infinity,
   })
@@ -162,8 +163,8 @@ export const useDevices = () => {
       ),
     enabled: Boolean(
       selectedOptions.model &&
-        selectedOptions.storage &&
-        selectedOptions.color
+        selectedOptions.storage !== undefined &&
+        selectedOptions.color !== undefined
     ),
     staleTime: Infinity,
   })
@@ -173,7 +174,8 @@ export const useDevices = () => {
     if (!selectedOptions.model) return
 
     if (
-      selectedOptions.variant &&
+      selectedOptions.variant !== null &&
+      selectedOptions.variant !== undefined &&
       !variantList.includes(selectedOptions.variant)
     ) {
       setSelectedOptions((prev) => ({
@@ -186,7 +188,7 @@ export const useDevices = () => {
     }
 
     if (
-      !selectedOptions.variant &&
+      selectedOptions.variant === undefined &&
       variantList.length === 1
     ) {
       setSelectedOptions((prev) => ({
@@ -204,25 +206,29 @@ export const useDevices = () => {
     const storageList = storagesQuery.data ?? []
     if (!selectedOptions.model) return
 
+    // Автоматически выбираем память только если есть ровно 1 вариант
     if (
-      selectedOptions.storage &&
-      !storageList.includes(selectedOptions.storage)
-    ) {
-      setSelectedOptions((prev) => ({
-        ...prev,
-        storage: storageList[0] ?? null,
-        color: null,
-      }))
-      return
-    }
-
-    if (
-      !selectedOptions.storage &&
+      selectedOptions.storage === undefined &&
       storageList.length === 1
     ) {
       setSelectedOptions((prev) => ({
         ...prev,
         storage: storageList[0] ?? null,
+      }))
+      return
+    }
+
+    // Если выбранная память не существует в списке, выбираем первую доступную
+    if (
+      selectedOptions.storage !== null &&
+      selectedOptions.storage !== undefined &&
+      !storageList.includes(selectedOptions.storage) &&
+      storageList.length > 0
+    ) {
+      setSelectedOptions((prev) => ({
+        ...prev,
+        storage: storageList[0] ?? null,
+        color: null,
       }))
     }
   }, [
@@ -234,12 +240,16 @@ export const useDevices = () => {
 
   useEffect(() => {
     const colorList = colorsQuery.data ?? []
-    if (!selectedOptions.model || !selectedOptions.storage)
+    if (
+      !selectedOptions.model ||
+      selectedOptions.storage === undefined
+    )
       return
 
+    // Автоматически выбираем цвет только если есть ровно 1 вариант
     if (
-      selectedOptions.color &&
-      !colorList.includes(selectedOptions.color)
+      selectedOptions.color === undefined &&
+      colorList.length === 1
     ) {
       setSelectedOptions((prev) => ({
         ...prev,
@@ -248,7 +258,13 @@ export const useDevices = () => {
       return
     }
 
-    if (!selectedOptions.color && colorList.length === 1) {
+    // Если выбранный цвет не существует в списке, выбираем первый доступный
+    if (
+      selectedOptions.color !== null &&
+      selectedOptions.color !== undefined &&
+      !colorList.includes(selectedOptions.color) &&
+      colorList.length > 0
+    ) {
       setSelectedOptions((prev) => ({
         ...prev,
         color: colorList[0] ?? null,
@@ -256,7 +272,6 @@ export const useDevices = () => {
     }
   }, [
     selectedOptions.model,
-    selectedOptions.variant,
     selectedOptions.storage,
     selectedOptions.color,
     colorsQuery.data,
@@ -264,20 +279,29 @@ export const useDevices = () => {
 
   const handleOptionSelect = (
     type: keyof typeof selectedOptions,
-    value: string
+    value: string | null
   ) => {
     setSelectedOptions((prev) => {
       const newOptions = { ...prev, [type]: value }
-      // Reset dependent options
+      // Reset dependent options только если они действительно изменились
       if (type === 'model') {
-        newOptions.variant = null
-        newOptions.storage = null
-        newOptions.color = null
+        // Сбрасываем только если модель действительно изменилась
+        if (prev.model !== value) {
+          newOptions.variant = null
+          newOptions.storage = null
+          newOptions.color = null
+        }
       } else if (type === 'variant') {
-        newOptions.storage = null
-        newOptions.color = null
+        // Сбрасываем только если вариант действительно изменился
+        if (prev.variant !== value) {
+          newOptions.storage = null
+          newOptions.color = null
+        }
       } else if (type === 'storage') {
-        newOptions.color = null
+        // Сбрасываем только если память действительно изменилась
+        if (prev.storage !== value) {
+          newOptions.color = null
+        }
       }
       return newOptions
     })
@@ -301,6 +325,10 @@ export const useDevices = () => {
       storagesQuery.isLoading ||
       colorsQuery.isLoading ||
       deviceQuery.isLoading,
+    // Individual loading states
+    isLoadingVariants: variantsQuery.isLoading,
+    isLoadingStorages: storagesQuery.isLoading,
+    isLoadingColors: colorsQuery.isLoading,
     error:
       modelsQuery.error ||
       variantsQuery.error ||

@@ -8,7 +8,6 @@ import { motion } from "framer-motion";
 import { Page } from "@/components/Page";
 import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAppStore } from "@/stores/authStore";
 import { init, swipeBehavior } from '@telegram-apps/sdk';
 import { getPictureUrl } from "@/core/lib/assets";
@@ -332,7 +331,6 @@ export default function EvaluationPage() {
   const { wearValues, priceRange, saveToDatabase } = useFormData();
   
   const [basePrice, setBasePrice] = useState<number | null>(null);
-  const [showResultDialog, setShowResultDialog] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [currentEvaluation, setCurrentEvaluation] = useState<EvaluationState | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -493,7 +491,7 @@ export default function EvaluationPage() {
       console.log('✅ Evaluation saved successfully:', result);
 
       // Переходим на страницу submit
-      router.push("/request/submit");
+      router.push("/request/device-functions");
     } catch (error) {
       console.error("❌ Error saving evaluation:", error);
       // Показываем пользователю ошибку, но всё равно переходим
@@ -523,60 +521,6 @@ export default function EvaluationPage() {
           />
         </div>
 
-        {/* Диалог результата */}
-        <Dialog
-          open={showResultDialog || isNavigating}
-          onOpenChange={(open) => {
-            if (submitting || isNavigating) return;
-            setShowResultDialog(open);
-          }}
-        >
-          <DialogContent className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg">
-            <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-4">
-              Итоговая оценка
-            </DialogTitle>
-            {priceRange.state && (
-              <div className="text-center space-y-4">
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-slate-600 uppercase tracking-wide">
-                    Диапазон оценки
-                  </div>
-                  <div className="text-2xl font-bold text-slate-900">
-                    {priceRange.state.min.toLocaleString()} — {priceRange.state.max.toLocaleString()} ₽
-                  </div>
-                </div>
-
-                <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div 
-                    className="absolute top-0 h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full"
-                    style={{ 
-                      left: '0%', 
-                      width: '100%',
-                      background: `linear-gradient(to right, 
-                        #10b981 0%, 
-                        #3b82f6 50%, 
-                        #f59e0b 100%)`
-                    }}
-                  />
-                  <div className="absolute top-0 left-0 w-1 h-full bg-slate-900 rounded-full" />
-                  <div className="absolute top-0 right-0 w-1 h-full bg-slate-900 rounded-full" />
-                </div>
-
-                {/* Убраны дополнительные текстовые пояснения по запросу */}
-
-                <div className="pt-2">
-                  <Button
-                    onClick={handleContinue}
-                    disabled={submitting || isNavigating}
-                    className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-80"
-                  >
-                    {submitting || isNavigating ? 'Переходим…' : 'Продолжить'}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
 
         {/* Индикатор навигации */}
         {isNavigating && (
@@ -589,7 +533,7 @@ export default function EvaluationPage() {
                 height={192} 
                 className="object-contain rounded-2xl" 
               />
-              <p className="mt-4 text-lg font-semibold text-gray-700">Переходим к подтверждению…</p>
+              <p className="mt-4 text-lg font-semibold text-gray-700">Переходим для проверки функций…</p>
             </div>
           </div>
         )}
@@ -604,7 +548,7 @@ export default function EvaluationPage() {
             <Button
               type="button"
               disabled={submitting}
-              onClick={() => {
+              onClick={async () => {
                 console.log('🔍 Continue button clicked:', {
                   priceRange: priceRange.state,
                   submitting,
@@ -623,11 +567,12 @@ export default function EvaluationPage() {
                   console.log('🔧 Created default price range:', defaultRange);
                 }
                 
-                setShowResultDialog(true);
+                // Сохраняем данные и переходим
+                await handleContinue();
               }}
               className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
-              {submitting ? 'Сохранение...' : 'Продолжить'}
+              {submitting ? 'Переходим для проверки функций...' : 'Продолжить'}
             </Button>
           </motion.div>
         </div>

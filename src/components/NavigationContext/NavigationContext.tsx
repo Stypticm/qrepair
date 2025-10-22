@@ -41,10 +41,11 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     'device-info',
     'form',
     'evaluation',
-    'submit',
+    'device-functions',
     'delivery-options',
     'pickup-points',
     'courier-booking',
+    'photos',
     'final'
   ];
 
@@ -73,8 +74,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         case 'evaluation':
           router.push('/request/evaluation');
           break;
-        case 'submit':
-          router.push('/request/submit');
+        case 'device-functions':
+          router.push('/request/device-functions');
           break;
         case 'delivery-options':
           router.push('/request/delivery-options');
@@ -84,6 +85,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
           break;
         case 'courier-booking':
           router.push('/request/courier-booking');
+          break;
+        case 'photos':
+          router.push('/request/photos');
           break;
         case 'final':
           router.push('/request/final');
@@ -116,8 +120,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         case 'evaluation':
           router.push('/request/evaluation');
           break;
-        case 'submit':
-          router.push('/request/submit');
+        case 'device-functions':
+          router.push('/request/device-functions');
           break;
         case 'delivery-options':
           router.push('/request/delivery-options');
@@ -127,6 +131,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
           break;
         case 'courier-booking':
           router.push('/request/courier-booking');
+          break;
+        case 'photos':
+          router.push('/request/photos');
           break;
         case 'final':
           router.push('/request/final');
