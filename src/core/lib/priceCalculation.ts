@@ -16,6 +16,10 @@ export interface AdditionalConditions {
   battery?: string
 }
 
+export interface DeviceFunctionState {
+  [key: string]: 'working' | 'not_working' | 'unknown'
+}
+
 export interface PriceRange {
   min: number
   max: number
@@ -141,7 +145,8 @@ export function getModelRiskFactor(
  */
 export function calculateDefectDiscount(
   deviceConditions: DeviceConditions,
-  additionalConditions: AdditionalConditions
+  additionalConditions: AdditionalConditions,
+  deviceFunctionStates?: DeviceFunctionState
 ): number {
   let totalDiscount = 0
 
@@ -211,8 +216,93 @@ export function calculateDefectDiscount(
       totalDiscount += 0.1
   }
 
-  // Ограничиваем максимальный дисконт 50%
-  return Math.min(totalDiscount, 0.5)
+  // НОВЫЕ ШТРАФЫ ЗА ФУНКЦИИ УСТРОЙСТВА
+  if (deviceFunctionStates) {
+    // Критические функции (стопперы)
+    if (
+      deviceFunctionStates.device_power === 'not_working'
+    ) {
+      totalDiscount += 0.6 // Критично - если не включается
+    }
+
+    // Ремонт
+    if (
+      deviceFunctionStates.repair_history === 'not_working'
+    ) {
+      totalDiscount += 0.1 // Умеренное влияние
+    }
+
+    // True Tone
+    if (deviceFunctionStates.true_tone === 'not_working') {
+      totalDiscount += 0.03 // Небольшое влияние
+    }
+
+    // Face ID
+    if (deviceFunctionStates.face_id === 'not_working') {
+      totalDiscount += 0.08 // Важная функция
+    }
+
+    // Touch ID
+    if (deviceFunctionStates.touch_id === 'not_working') {
+      totalDiscount += 0.06 // Важная функция
+    }
+
+    // Камеры
+    if (
+      deviceFunctionStates.front_camera === 'not_working'
+    ) {
+      totalDiscount += 0.05 // Умеренное влияние
+    }
+
+    if (
+      deviceFunctionStates.back_camera === 'not_working'
+    ) {
+      totalDiscount += 0.07 // Важная функция
+    }
+
+    // Аудио
+    if (deviceFunctionStates.microphone === 'not_working') {
+      totalDiscount += 0.04 // Умеренное влияние
+    }
+
+    if (deviceFunctionStates.speaker === 'not_working') {
+      totalDiscount += 0.04 // Умеренное влияние
+    }
+
+    // Батарея
+    if (deviceFunctionStates.battery === 'not_working') {
+      totalDiscount += 0.08 // Важная функция
+    }
+
+    // Кнопки
+    if (deviceFunctionStates.buttons === 'not_working') {
+      totalDiscount += 0.05 // Умеренное влияние
+    }
+
+    // Влагозащита
+    if (
+      deviceFunctionStates.water_resistance ===
+      'not_working'
+    ) {
+      totalDiscount += 0.06 // Важная функция
+    }
+
+    // Связь
+    if (deviceFunctionStates.cellular === 'not_working') {
+      totalDiscount += 0.05 // Умеренное влияние
+    }
+
+    if (deviceFunctionStates.wifi === 'not_working') {
+      totalDiscount += 0.04 // Умеренное влияние
+    }
+
+    if (deviceFunctionStates.bluetooth === 'not_working') {
+      totalDiscount += 0.03 // Небольшое влияние
+    }
+  }
+
+  // Ограничиваем максимальный дисконт 80%
+  return Math.min(totalDiscount, 0.8)
 }
 
 /**
@@ -232,7 +322,8 @@ export function calculatePriceRange(
   modelName: string,
   deviceConditions: DeviceConditions,
   additionalConditions: AdditionalConditions,
-  overrideDiscount?: number
+  overrideDiscount?: number,
+  deviceFunctionStates?: DeviceFunctionState
 ): PriceRange {
   // Рассчитываем дисконт за дефекты (или используем принудительный, если передан)
   const defectDiscount =
@@ -241,7 +332,8 @@ export function calculatePriceRange(
       ? Math.max(0, Math.min(1, overrideDiscount))
       : calculateDefectDiscount(
           deviceConditions,
-          additionalConditions
+          additionalConditions,
+          deviceFunctionStates
         )
 
   // Получаем фактор риска модели

@@ -30,10 +30,20 @@ export async function DELETE(request: NextRequest) {
       where: { id: requestId },
     })
 
+    console.log('🗑️ Admin deleted request:', {
+      id: deletedRequest.id,
+      telegramId: deletedRequest.telegramId,
+      status: deletedRequest.status,
+    })
+
     return NextResponse.json({
       success: true,
       message: 'Заявка успешно удалена',
-      deletedRequest,
+      deletedRequest: {
+        id: deletedRequest.id,
+        telegramId: deletedRequest.telegramId,
+        status: deletedRequest.status,
+      },
     })
   } catch (error) {
     console.error('Delete request error:', error)

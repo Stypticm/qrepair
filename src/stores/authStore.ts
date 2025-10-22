@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { shallow } from 'zustand/shallow'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import {
   hasFeature,
   isTester,
@@ -137,7 +138,37 @@ const stepOrder = [
   'final',
 ]
 
-export const useAppStore = create<AppState>((set, get) => ({
+// Создаем кастомное хранилище для sessionStorage
+const sessionStorage = {
+  getItem: (name: string) => {
+    if (typeof window === 'undefined') return null
+    try {
+      return window.sessionStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name: string, value: string) => {
+    if (typeof window === 'undefined') return
+    try {
+      window.sessionStorage.setItem(name, value)
+    } catch {
+      // Игнорируем ошибки
+    }
+  },
+  removeItem: (name: string) => {
+    if (typeof window === 'undefined') return
+    try {
+      window.sessionStorage.removeItem(name)
+    } catch {
+      // Игнорируем ошибки
+    }
+  },
+}
+
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
   // Auth
   role: 'client',
   userId: null,
@@ -625,7 +656,25 @@ export const useAppStore = create<AppState>((set, get) => ({
       addDebugInfo('❌ Telegram WebApp не доступен')
     }
   },
-}))
+    }),
+    {
+      name: 'app-store',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        // Сохраняем только критически важные данные
+        telegramId: state.telegramId,
+        username: state.username,
+        userPhotoUrl: state.userPhotoUrl,
+        role: state.role,
+        userId: state.userId,
+        modelname: state.modelname,
+        deviceConditions: state.deviceConditions,
+        price: state.price,
+        currentStep: state.currentStep,
+      }),
+    }
+  )
+)
 
 // Функция для проверки роли мастера
 export const isMaster = (

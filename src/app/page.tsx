@@ -272,23 +272,23 @@ function HomeContent() {
       const hasSelection = !!sessionStorage.getItem('phoneSelection');
 
       // Режим резюме: только если есть реальные данные выбора и шаг не device-info
-      if (savedStep && savedStep !== 'device-info' && (hasSerial || hasSelection)) {
+      if (savedStep && savedStep !== 'device-info' && savedStep !== 'evaluation-mode' && (hasSerial || hasSelection)) {
         router.push(`/request/${savedStep}`);
         return;
       }
 
-      // Иначе начинаем заново с device-info
+      // Иначе начинаем заново с evaluation-mode
       resetAllStates();
       // подчистим возможные хвосты
       sessionStorage.removeItem('currentStep');
       sessionStorage.removeItem('phoneSelection');
       sessionStorage.removeItem('priceRange');
       sessionStorage.removeItem('prefillSelection');
-      setCurrentStep('device-info');
-      router.push('/request/device-info');
+      setCurrentStep('evaluation-mode');
+      router.push('/request/evaluation-mode');
     } catch (error) {
       console.error('Ошибка при переходе:', error);
-      router.push('/request/device-info');
+      router.push('/request/evaluation-mode');
     }
   }, [router, resetAllStates, setCurrentStep]);
 

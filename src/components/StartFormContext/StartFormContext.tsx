@@ -8,12 +8,20 @@ import { useAppStore } from '@/stores/authStore';
 // Функция для получения пути по шагу
 const getPathForStep = (step: string): string | null => {
     switch (step) {
+        case 'evaluation-mode':
+            return '/request/evaluation-mode';
         case 'device-info':
             return '/request/device-info';
         case 'form':
             return '/request/form';
         case 'condition':
             return '/request/evaluation';
+        case 'device-functions':
+            return '/request/device-functions';
+        case 'photos':
+            return '/request/photos';
+        case 'pickup':
+            return '/request/pickup';
         case 'additional-condition':
             return '/request/additional-condition';
         case 'submit':

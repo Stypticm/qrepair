@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import prisma from '@/core/lib/prisma'
 
-type PriceRangePayload = {
-  min: number
-  max: number
-  midpoint: number
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const {
       telegramId,
@@ -15,109 +9,87 @@ export async function POST(req: NextRequest) {
       damagePercent,
       price,
       priceRange,
-    } = await req.json()
+    } = await request.json()
 
     if (!telegramId) {
       return NextResponse.json(
-        { error: 'telegramId is required' },
+        { error: 'Telegram ID is required' },
         { status: 400 }
       )
     }
 
-    const draft = await prisma.skupka.findFirst({
+    // Находим активную заявку пользователя
+    const activeRequest = await prisma.skupka.findFirst({
       where: {
-        telegramId: String(telegramId),
+        telegramId,
         status: 'draft',
+      },
+      orderBy: {
+        updatedAt: 'desc',
       },
     })
 
-    const pricingPayload =
-      priceRange || price !== undefined
-        ? {
-            ...(priceRange as
-              | PriceRangePayload
-              | undefined),
-            midpoint:
-              priceRange?.midpoint ??
-              (typeof price === 'number' ? price : null),
-            updatedAt: new Date().toISOString(),
-          }
-        : undefined
-
-    if (draft) {
-      const baseDeviceData =
-        draft.deviceData &&
-        typeof draft.deviceData === 'object'
-          ? {
-              ...(draft.deviceData as Record<
-                string,
-                unknown
-              >),
-            }
-          : {}
-
-      const existingPricing =
-        baseDeviceData &&
-        typeof (baseDeviceData as { pricing?: unknown })
-          .pricing === 'object'
-          ? {
-              ...((
-                baseDeviceData as {
-                  pricing?: Record<string, unknown>
-                }
-              ).pricing as Record<string, unknown>),
-            }
-          : {}
-
-      const updatedDeviceData =
-        pricingPayload !== undefined
-          ? {
-              ...baseDeviceData,
-              pricing: {
-                ...existingPricing,
-                ...pricingPayload,
-              },
-            }
-          : baseDeviceData
-
-      await prisma.skupka.update({
-        where: { id: draft.id },
-        data: {
-          userEvaluation,
-          damagePercent,
-          currentStep: 'submit',
-          ...(typeof price === 'number' ? { price } : {}),
-          ...(pricingPayload !== undefined
-            ? { deviceData: updatedDeviceData as any }
-            : {}),
-        },
-      })
-    } else {
-      await prisma.skupka.create({
-        data: {
-          telegramId: String(telegramId),
-          username: 'Unknown',
-          userEvaluation,
-          damagePercent,
-          status: 'draft',
-          currentStep: 'submit',
-          ...(typeof price === 'number' ? { price } : {}),
-          ...(pricingPayload !== undefined
-            ? {
-                deviceData: {
-                  pricing: pricingPayload,
-                } as any,
-              }
-            : {}),
-        },
-      })
+    if (!activeRequest) {
+      console.log(
+        '❌ No active request found for telegramId:',
+        telegramId
+      )
+      return NextResponse.json(
+        { error: 'No active request found' },
+        { status: 404 }
+      )
     }
 
-    return NextResponse.json({ success: true })
+    console.log('✅ Found active request:', {
+      id: activeRequest.id,
+      telegramId: activeRequest.telegramId,
+      currentStep: activeRequest.currentStep,
+      status: activeRequest.status,
+    })
+
+    // Обновляем заявку с данными оценки
+    const updatedRequest = await prisma.skupka.update({
+      where: { id: activeRequest.id },
+      data: {
+        userEvaluation: userEvaluation || null,
+        damagePercent: damagePercent || 0,
+        price: price || activeRequest.price,
+        // Сохраняем priceRange в deviceConditions как JSON
+        deviceConditions: priceRange
+          ? {
+              ...((activeRequest.deviceConditions as any) ||
+                {}),
+              priceRange: priceRange,
+            }
+          : activeRequest.deviceConditions,
+        currentStep: 'submit',
+        updatedAt: new Date(),
+      },
+    })
+
+    console.log('✅ Evaluation saved:', {
+      id: updatedRequest.id,
+      telegramId,
+      userEvaluation,
+      damagePercent,
+      price,
+      currentStep: updatedRequest.currentStep,
+    })
+
+    return NextResponse.json({
+      success: true,
+      request: {
+        id: updatedRequest.id,
+        userEvaluation: updatedRequest.userEvaluation,
+        damagePercent: updatedRequest.damagePercent,
+        price: updatedRequest.price,
+        currentStep: updatedRequest.currentStep,
+      },
+    })
   } catch (error) {
     console.error('Error saving evaluation:', error)
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

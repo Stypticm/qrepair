@@ -6,9 +6,13 @@ import { init, swipeBehavior } from '@telegram-apps/sdk';
 import { AdaptiveContainer } from '../AdaptiveContainer';
 import { TelegramFullScreen } from '../TelegramFullScreen';
 import { useAppStore } from '@/stores/authStore';
+import { useRequestSync } from '@/hooks/useRequestSync';
 
 export function ClientLayoutContent({ children }: PropsWithChildren) {
   const { initializeTelegram } = useAppStore();
+  
+  // Запускаем синхронизацию состояния заявки
+  useRequestSync();
 
   useEffect(() => {
     // Инициализируем Telegram SDK только если мы в Telegram WebApp

@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       telegramMessage += `🏪 Способ передачи: Личная доставка\n`
       telegramMessage += `📍 Точка: ${pickupPointAddress}\n`
     } else if (deliveryMethod === 'courier') {
-      telegramMessage += `🚚 Способ передачи: Мастер\n`
+      telegramMessage += `🚚 Способ передачи: Выезд курьера\n`
       telegramMessage += `🏠 Адрес: ${
         deliveryData?.courierAddress || 'Не указан'
       }\n`
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
       deliveryMethod === 'courier' &&
       deliveryData?.courierDate
     ) {
-      telegramMessage += `\n⏰ Время приезда мастера: ${new Date(
+      telegramMessage += `\n⏰ Время приезда курьера: ${new Date(
         deliveryData.courierDate
       ).toLocaleDateString('ru-RU')} в ${
         deliveryData.courierTime || 'Не указано'

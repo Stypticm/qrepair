@@ -74,6 +74,10 @@ export async function POST(req: Request) {
       }
     }
 
+    // Извлекаем priceRange из deviceConditions
+    const priceRange =
+      unifiedDeviceConditions?.priceRange || null
+
     // Возвращаем данные заявки с унифицированными условиями
     return NextResponse.json({
       id: draftRequest.id,
@@ -84,6 +88,7 @@ export async function POST(req: Request) {
       imei: draftRequest.imei,
       sn: draftRequest.sn,
       deviceConditions: unifiedDeviceConditions,
+      priceRange: priceRange, // ✅ Добавляем priceRange в ответ
       // additionalConditions оставляем для старых клиентов, можно удалить после миграции
       additionalConditions: legacyAdditional,
       currentStep: draftRequest.currentStep,

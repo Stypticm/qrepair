@@ -20,23 +20,42 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Строим whereClause без null значений
     const whereClause: any = {
       model,
       storage,
       color,
     }
 
-    if (variant !== undefined && variant !== '') {
+    // Добавляем variant только если он не пустой
+    if (variant && variant !== '' && variant !== 'null') {
       whereClause.variant = variant
     } else {
+      // Если variant пустой, ищем устройства с пустым variant
       whereClause.variant = ''
     }
 
     console.log('🔍 Device API - whereClause:', whereClause)
 
-    const device = await prisma.device.findFirst({
+    let device = await prisma.device.findFirst({
       where: whereClause,
     })
+
+    // Если не найдено с пустым variant, пробуем найти любое устройство с этой моделью
+    if (!device && (variant === '' || variant === 'null')) {
+      console.log(
+        '🔍 Device API - trying fallback search without variant'
+      )
+      const fallbackWhereClause = {
+        model,
+        storage,
+        color,
+      }
+
+      device = await prisma.device.findFirst({
+        where: fallbackWhereClause,
+      })
+    }
 
     if (!device) {
       return NextResponse.json(

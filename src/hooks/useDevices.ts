@@ -1,51 +1,65 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 type DeviceResponse = {
-  id: number;
-  model: string;
-  variant: string;
-  storage: string;
-  color: string;
-  basePrice: number;
-};
+  id: number
+  model: string
+  variant: string
+  storage: string
+  color: string
+  basePrice: number
+}
 
-const fetchJSON = async <T,>(url: string): Promise<T> => {
-  const response = await fetch(url);
+const fetchJSON = async <T>(url: string): Promise<T> => {
+  const response = await fetch(url)
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed: ${response.status}`);
+    const message = await response.text()
+    throw new Error(
+      message || `Request failed: ${response.status}`
+    )
   }
-  return response.json();
-};
+  return response.json()
+}
 
-const fetchModels = () => fetchJSON<string[]>('/api/devices/models');
+const fetchModels = () =>
+  fetchJSON<string[]>('/api/devices/models')
 
 const fetchVariants = (model: string) =>
-  fetchJSON<string[]>(`/api/devices/variants?model=${encodeURIComponent(model)}`);
+  fetchJSON<string[]>(
+    `/api/devices/variants?model=${encodeURIComponent(
+      model
+    )}`
+  )
 
-const fetchStorages = (model: string, variant: string | null) => {
-  const params = new URLSearchParams({ model });
+const fetchStorages = (
+  model: string,
+  variant: string | null
+) => {
+  const params = new URLSearchParams({ model })
   if (variant !== null && variant !== undefined) {
-    params.set('variant', variant);
+    params.set('variant', variant)
   }
-  return fetchJSON<string[]>(`/api/devices/storages?${params.toString()}`);
-};
+  return fetchJSON<string[]>(
+    `/api/devices/storages?${params.toString()}`
+  )
+}
 
 const fetchColors = (
   model: string,
   variant: string | null,
   storage: string | null
 ) => {
-  const params = new URLSearchParams({ model });
+  const params = new URLSearchParams({ model })
   if (variant !== null && variant !== undefined) {
-    params.set('variant', variant);
+    params.set('variant', variant)
   }
   if (storage) {
-    params.set('storage', storage);
+    params.set('storage', storage)
   }
-  return fetchJSON<string[]>(`/api/devices/colors?${params.toString()}`);
-};
+  return fetchJSON<string[]>(
+    `/api/devices/colors?${params.toString()}`
+  )
+}
 
 const fetchDevice = (
   model: string,
@@ -57,33 +71,45 @@ const fetchDevice = (
     model,
     storage,
     color,
-  });
-  if (variant !== null && variant !== undefined) {
-    params.set('variant', variant);
+  })
+  if (
+    variant !== null &&
+    variant !== undefined &&
+    variant !== ''
+  ) {
+    params.set('variant', variant)
   }
-  return fetchJSON<DeviceResponse>(`/api/devices/device?${params.toString()}`);
-};
+  return fetchJSON<DeviceResponse>(
+    `/api/devices/device?${params.toString()}`
+  )
+}
 
 export const useDevices = () => {
   const [selectedOptions, setSelectedOptions] = useState<{
-    model: string | null;
-    variant: string | null;
-    storage: string | null;
-    color: string | null;
-  }>({ model: null, variant: null, storage: null, color: null });
+    model: string | null
+    variant: string | null
+    storage: string | null
+    color: string | null
+  }>({
+    model: null,
+    variant: null,
+    storage: null,
+    color: null,
+  })
 
   const modelsQuery = useQuery<string[]>({
     queryKey: ['device-models'],
     queryFn: fetchModels,
     staleTime: Infinity,
-  });
+  })
 
   const variantsQuery = useQuery<string[]>({
     queryKey: ['device-variants', selectedOptions.model],
-    queryFn: () => fetchVariants(selectedOptions.model as string),
+    queryFn: () =>
+      fetchVariants(selectedOptions.model as string),
     enabled: Boolean(selectedOptions.model),
     staleTime: Infinity,
-  });
+  })
 
   const storagesQuery = useQuery<string[]>({
     queryKey: [
@@ -98,7 +124,7 @@ export const useDevices = () => {
       ),
     enabled: Boolean(selectedOptions.model),
     staleTime: Infinity,
-  });
+  })
 
   const colorsQuery = useQuery<string[]>({
     queryKey: [
@@ -117,7 +143,7 @@ export const useDevices = () => {
       selectedOptions.model && selectedOptions.storage
     ),
     staleTime: Infinity,
-  });
+  })
 
   const deviceQuery = useQuery<DeviceResponse>({
     queryKey: [
@@ -140,11 +166,11 @@ export const useDevices = () => {
         selectedOptions.color
     ),
     staleTime: Infinity,
-  });
+  })
 
   useEffect(() => {
-    const variantList = variantsQuery.data ?? [];
-    if (!selectedOptions.model) return;
+    const variantList = variantsQuery.data ?? []
+    if (!selectedOptions.model) return
 
     if (
       selectedOptions.variant &&
@@ -155,8 +181,8 @@ export const useDevices = () => {
         variant: variantList[0] ?? null,
         storage: null,
         color: null,
-      }));
-      return;
+      }))
+      return
     }
 
     if (
@@ -166,13 +192,17 @@ export const useDevices = () => {
       setSelectedOptions((prev) => ({
         ...prev,
         variant: variantList[0] ?? null,
-      }));
+      }))
     }
-  }, [selectedOptions.model, selectedOptions.variant, variantsQuery.data]);
+  }, [
+    selectedOptions.model,
+    selectedOptions.variant,
+    variantsQuery.data,
+  ])
 
   useEffect(() => {
-    const storageList = storagesQuery.data ?? [];
-    if (!selectedOptions.model) return;
+    const storageList = storagesQuery.data ?? []
+    if (!selectedOptions.model) return
 
     if (
       selectedOptions.storage &&
@@ -182,8 +212,8 @@ export const useDevices = () => {
         ...prev,
         storage: storageList[0] ?? null,
         color: null,
-      }));
-      return;
+      }))
+      return
     }
 
     if (
@@ -193,18 +223,19 @@ export const useDevices = () => {
       setSelectedOptions((prev) => ({
         ...prev,
         storage: storageList[0] ?? null,
-      }));
+      }))
     }
   }, [
     selectedOptions.model,
     selectedOptions.variant,
     selectedOptions.storage,
     storagesQuery.data,
-  ]);
+  ])
 
   useEffect(() => {
-    const colorList = colorsQuery.data ?? [];
-    if (!selectedOptions.model || !selectedOptions.storage) return;
+    const colorList = colorsQuery.data ?? []
+    if (!selectedOptions.model || !selectedOptions.storage)
+      return
 
     if (
       selectedOptions.color &&
@@ -213,15 +244,15 @@ export const useDevices = () => {
       setSelectedOptions((prev) => ({
         ...prev,
         color: colorList[0] ?? null,
-      }));
-      return;
+      }))
+      return
     }
 
     if (!selectedOptions.color && colorList.length === 1) {
       setSelectedOptions((prev) => ({
         ...prev,
         color: colorList[0] ?? null,
-      }));
+      }))
     }
   }, [
     selectedOptions.model,
@@ -229,26 +260,28 @@ export const useDevices = () => {
     selectedOptions.storage,
     selectedOptions.color,
     colorsQuery.data,
-  ]);
+  ])
 
-  const handleOptionSelect = (type: keyof typeof selectedOptions, value: string) => {
-    setSelectedOptions(prev => {
-      const newOptions = { ...prev, [type]: value };
+  const handleOptionSelect = (
+    type: keyof typeof selectedOptions,
+    value: string
+  ) => {
+    setSelectedOptions((prev) => {
+      const newOptions = { ...prev, [type]: value }
       // Reset dependent options
       if (type === 'model') {
-        newOptions.variant = null;
-        newOptions.storage = null;
-        newOptions.color = null;
-
+        newOptions.variant = null
+        newOptions.storage = null
+        newOptions.color = null
       } else if (type === 'variant') {
-        newOptions.storage = null;
-        newOptions.color = null;
+        newOptions.storage = null
+        newOptions.color = null
       } else if (type === 'storage') {
-        newOptions.color = null;
+        newOptions.color = null
       }
-      return newOptions;
-    });
-  };
+      return newOptions
+    })
+  }
 
   return {
     // Data
@@ -274,5 +307,5 @@ export const useDevices = () => {
       storagesQuery.error ||
       colorsQuery.error ||
       deviceQuery.error,
-  };
-};
+  }
+}
