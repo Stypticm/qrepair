@@ -156,15 +156,6 @@ export default function MasterRequestPage({ params }: PageProps) {
       isNegative: false,
     },
     {
-      id: 'touch_id',
-      name: 'Touch ID',
-      description: 'Сканер отпечатка работает',
-      icon: Fingerprint,
-      working: null,
-      penaltyPercent: 8,
-      isNegative: false,
-    },
-    {
       id: 'back_camera',
       name: 'Основная камера',
       description: 'Основная камера снимает без проблем',

@@ -242,11 +242,6 @@ export function calculateDefectDiscount(
       totalDiscount += 0.08 // Важная функция
     }
 
-    // Touch ID
-    if (deviceFunctionStates.touch_id === 'not_working') {
-      totalDiscount += 0.06 // Важная функция
-    }
-
     // Камеры
     if (
       deviceFunctionStates.front_camera === 'not_working'

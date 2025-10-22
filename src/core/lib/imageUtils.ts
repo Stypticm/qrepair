@@ -50,7 +50,6 @@ export function getPriorityImages(): string[] {
     'display_back_new',
     'display_back',
     'face_id_work',
-    'touch_id_work',
     'battery_95',
   ]
 }

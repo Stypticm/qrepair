@@ -22,23 +22,6 @@ export const faceIdConditions: AdditionalConditionOption[] =
     },
   ]
 
-// Touch ID условия (работает/не работает)
-export const touchIdConditions: AdditionalConditionOption[] =
-  [
-    {
-      id: 'touch_id_work',
-      label: 'Работает',
-      penalty: 0,
-      image: 'touch_id_work',
-    },
-    {
-      id: 'touch_id_not_work',
-      label: 'Не работает',
-      penalty: -8,
-      image: 'touch_id_not_work',
-    },
-  ]
-
 // Задняя камера условия (4 уровня как в condition)
 export const backCameraConditions: AdditionalConditionOption[] =
   [
@@ -103,7 +86,6 @@ export const getAdditionalConditionText = (
 ): string => {
   const allConditions = [
     ...faceIdConditions,
-    ...touchIdConditions,
     ...backCameraConditions,
     ...batteryConditions,
   ]
@@ -120,7 +102,6 @@ export const getAdditionalConditionPenalty = (
 ): number => {
   const allConditions = [
     ...faceIdConditions,
-    ...touchIdConditions,
     ...backCameraConditions,
     ...batteryConditions,
   ]

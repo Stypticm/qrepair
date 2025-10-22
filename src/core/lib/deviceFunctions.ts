@@ -46,15 +46,6 @@ export const DEVICE_FUNCTIONS: DeviceFunction[] = [
     icon: 'face',
   },
   {
-    key: 'touch_id',
-    title: 'Touch ID',
-    description: 'Сканер отпечатка пальца работает',
-    affectsPrice: true,
-    weight: 0.1, // важная функция - увеличили вес
-    critical: false,
-    icon: 'fingerprint',
-  },
-  {
     key: 'front_camera',
     title: 'Фронтальная камера',
     description: 'Камера для селфи работает без дефектов',
