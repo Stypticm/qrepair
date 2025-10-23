@@ -7,6 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const {
       telegramId,
+      username,
       modelname,
       price,
       deliveryMethod,
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 Submit-delivery API received:', {
       telegramId,
+      username,
       modelname,
       price,
       deliveryMethod,
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
       await prisma.skupka.create({
         data: {
           telegramId: telegramId,
-          username: telegramId, // Используем telegramId как username
+          username: username || 'Unknown', // Правильный username
           modelname: modelname,
           price: price,
           priceAgreed: true,

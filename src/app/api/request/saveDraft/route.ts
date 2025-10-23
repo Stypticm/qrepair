@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { RequestManager } from '@/core/lib/requestManager'
 
-const prisma = new PrismaClient()
-
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const {
       telegramId,
@@ -14,7 +12,14 @@ export async function POST(request: NextRequest) {
       devicePhotos,
       deliveryData,
       functionDiscount,
-    } = await request.json()
+      modelname,
+      deviceConditions,
+      wearValues,
+      imei,
+      sn,
+      price,
+      priceRange,
+    } = await req.json()
 
     if (!telegramId) {
       return NextResponse.json(
@@ -23,47 +28,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Создаём или обновляем черновик
-    const draftData = {
-      telegramId,
-      username: username || telegramId, // Fallback на telegramId если username нет
-      currentStep: currentStep || 'evaluation-mode',
-      deviceFunctionStates: deviceFunctionStates
-        ? JSON.stringify(deviceFunctionStates)
-        : null,
-      devicePhotos: devicePhotos
-        ? JSON.stringify(devicePhotos)
-        : null,
-      deliveryData: deliveryData
-        ? JSON.stringify(deliveryData)
-        : null,
-      functionDiscount: functionDiscount || 0,
-      updatedAt: new Date(),
-    }
-
-    let draft
-
-    if (requestId) {
-      // Обновляем существующий черновик
-      draft = await prisma.skupka.update({
-        where: { id: requestId },
-        data: draftData,
+    // Используем RequestManager для единой логики
+    const request =
+      await RequestManager.updateActiveRequest(telegramId, {
+        username: username || 'Unknown',
+        currentStep: currentStep || 'evaluation-mode',
+        deviceFunctionStates: deviceFunctionStates
+          ? JSON.stringify(deviceFunctionStates)
+          : null,
+        devicePhotos: devicePhotos
+          ? JSON.stringify(devicePhotos)
+          : null,
+        deliveryData: deliveryData
+          ? JSON.stringify(deliveryData)
+          : null,
+        functionDiscount: functionDiscount || 0,
+        modelname,
+        deviceConditions,
+        wearValues,
+        imei,
+        sn,
+        price,
+        priceRange,
       })
-    } else {
-      // Создаём новый черновик
-      draft = await prisma.skupka.create({
-        data: {
-          ...draftData,
-          status: 'draft',
-          createdAt: new Date(),
-        },
-      })
-    }
 
     return NextResponse.json({
       success: true,
-      requestId: draft.id,
-      currentStep: draft.currentStep,
+      requestId: request.id,
+      currentStep: request.currentStep,
     })
   } catch (error) {
     console.error('Ошибка при сохранении черновика:', error)
@@ -74,9 +66,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(req.url)
     const telegramId = searchParams.get('telegramId')
     const requestId = searchParams.get('requestId')
 
@@ -90,18 +82,12 @@ export async function GET(request: NextRequest) {
     let draft
 
     if (requestId) {
-      draft = await prisma.skupka.findUnique({
-        where: { id: requestId },
-      })
+      draft = await RequestManager.getRequestById(requestId)
     } else {
-      // telegramId гарантированно не null из-за проверки выше
-      draft = await prisma.skupka.findFirst({
-        where: {
-          telegramId: telegramId!, // Type assertion - мы знаем, что telegramId не null
-          status: 'draft',
-        },
-        orderBy: { updatedAt: 'desc' },
-      })
+      draft =
+        await RequestManager.getActiveRequestByTelegramId(
+          telegramId!
+        )
     }
 
     if (!draft) {

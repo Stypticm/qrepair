@@ -264,10 +264,10 @@ const CourierPage = () => {
                         >
                             <Button
                                 onClick={handleContinue}
-                                disabled={!selectedDate || !selectedTime || !address.trim()}
-                                className="w-full bg-white hover:bg-gray-50 text-gray-800 hover:text-gray-900 py-4 rounded-2xl text-lg font-semibold shadow-xl border-2 border-gray-200 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!selectedDate || !selectedTime || !address.trim() || isNavigating}
+                                className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                             >
-                                Продолжить
+                                {isNavigating ? 'Переходим к фото...' : 'Продолжить'}
                             </Button>
                         </motion.div>
                     </div>

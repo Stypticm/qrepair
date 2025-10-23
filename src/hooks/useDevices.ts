@@ -97,6 +97,36 @@ export const useDevices = () => {
     color: null,
   })
 
+  // Восстанавливаем данные из sessionStorage при инициализации
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    try {
+      const savedSelection = sessionStorage.getItem(
+        'phoneSelection'
+      )
+      if (savedSelection) {
+        const parsed = JSON.parse(savedSelection)
+        console.log(
+          '🔄 Восстанавливаем выбор из sessionStorage:',
+          parsed
+        )
+
+        setSelectedOptions({
+          model: parsed.model || null,
+          variant: parsed.variant || null,
+          storage: parsed.storage || null,
+          color: parsed.color || null,
+        })
+      }
+    } catch (error) {
+      console.warn(
+        'Ошибка при восстановлении выбора:',
+        error
+      )
+    }
+  }, [])
+
   const modelsQuery = useQuery<string[]>({
     queryKey: ['device-models'],
     queryFn: fetchModels,
@@ -122,7 +152,16 @@ export const useDevices = () => {
         selectedOptions.model as string,
         selectedOptions.variant
       ),
-    enabled: Boolean(selectedOptions.model),
+    // Загружаем память только если:
+    // 1. Выбрана модель И
+    // 2. Варианты загружены И
+    // 3. (Вариантов нет ИЛИ выбран конкретный вариант)
+    enabled: Boolean(
+      selectedOptions.model &&
+        variantsQuery.isSuccess &&
+        (variantsQuery.data?.length <= 1 ||
+          selectedOptions.variant !== null)
+    ),
     staleTime: Infinity,
   })
 
@@ -139,8 +178,14 @@ export const useDevices = () => {
         selectedOptions.variant,
         selectedOptions.storage
       ),
+    // Загружаем цвета только если:
+    // 1. Выбрана модель И
+    // 2. Память загружена И
+    // 3. Выбрана конкретная память
     enabled: Boolean(
       selectedOptions.model &&
+        storagesQuery.isSuccess &&
+        selectedOptions.storage !== null &&
         selectedOptions.storage !== undefined
     ),
     staleTime: Infinity,
@@ -161,9 +206,16 @@ export const useDevices = () => {
         selectedOptions.storage as string,
         selectedOptions.color as string
       ),
+    // Загружаем устройство только если:
+    // 1. Выбрана модель И
+    // 2. Цвета загружены И
+    // 3. Выбраны конкретные память и цвет (не null)
     enabled: Boolean(
       selectedOptions.model &&
+        colorsQuery.isSuccess &&
+        selectedOptions.storage !== null &&
         selectedOptions.storage !== undefined &&
+        selectedOptions.color !== null &&
         selectedOptions.color !== undefined
     ),
     staleTime: Infinity,
@@ -283,6 +335,7 @@ export const useDevices = () => {
   ) => {
     setSelectedOptions((prev) => {
       const newOptions = { ...prev, [type]: value }
+
       // Reset dependent options только если они действительно изменились
       if (type === 'model') {
         // Сбрасываем только если модель действительно изменилась
@@ -303,6 +356,26 @@ export const useDevices = () => {
           newOptions.color = null
         }
       }
+
+      // Сохраняем выбор в sessionStorage
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(
+            'phoneSelection',
+            JSON.stringify(newOptions)
+          )
+          console.log(
+            '💾 Сохранён выбор в sessionStorage:',
+            newOptions
+          )
+        } catch (error) {
+          console.warn(
+            'Ошибка при сохранении выбора:',
+            error
+          )
+        }
+      }
+
       return newOptions
     })
   }

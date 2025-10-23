@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       const newSkupka = await prisma.skupka.create({
         data: {
           telegramId: telegramId,
-          username: telegramId, // Fallback username
+          username: username || 'Unknown', // Правильный username
           modelname: modelname,
           price: price,
           feedback: feedback.trim(),

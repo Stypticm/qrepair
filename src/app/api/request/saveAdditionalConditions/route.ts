@@ -6,13 +6,19 @@ export async function POST(request: NextRequest) {
   try {
     const {
       telegramId,
+      username,
       additionalConditions,
       currentStep,
     } = await request.json()
 
     console.log(
       '[saveAdditionalConditions] Получены данные:',
-      { telegramId, additionalConditions, currentStep }
+      {
+        telegramId,
+        username,
+        additionalConditions,
+        currentStep,
+      }
     )
 
     if (!telegramId || !additionalConditions) {
@@ -58,11 +64,11 @@ export async function POST(request: NextRequest) {
         telegramId
       )
 
-      // Создаем новую заявку
+      // Создаем новую заявку только если действительно нет активной
       const newRequest = await prisma.skupka.create({
         data: {
           telegramId: telegramId,
-          username: telegramId,
+          username, // Правильный username
           modelname: 'Unknown',
           price: 0,
           status: 'draft',

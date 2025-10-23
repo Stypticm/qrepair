@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
 import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { 
   Power, 
@@ -18,7 +17,6 @@ import {
   XCircle,
   HelpCircle
 } from 'lucide-react';
-import { useDraftSave } from '@/hooks/useDraftSave';
 import { useFormData } from '@/hooks/usePersistentState';
 import { useAppStore } from '@/stores/authStore';
 import { 
@@ -28,6 +26,9 @@ import {
   type DeviceFunction 
 } from '@/core/lib/deviceFunctions';
 import { calculatePriceRange, type DeviceConditions, type AdditionalConditions } from '@/core/lib/priceCalculation';
+import { usePageState } from '@/hooks/usePageState';
+import { DeviceFunctionsContinueButton } from '@/components/ContinueButton';
+import { PriceRangeDialog } from '@/components/UniversalDialog';
 
 const ICON_MAP = {
   power: Power,
@@ -145,29 +146,39 @@ export default function DeviceFunctionsPage() {
   
   const { saveToDatabase } = useFormData();
   
-  const [functionStates, setFunctionStates] = useState<DeviceFunctionState>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [showResultDialog, setShowResultDialog] = useState(false);
-  const [priceRange, setPriceRange] = useState<{min: number, max: number, midpoint: number} | null>(null);
-
-  // Автоматическое сохранение черновика
-  useDraftSave({
+  // Используем новую систему управления состоянием
+  const {
+    state: pageState,
+    setState: setPageState,
+    navigationState,
+    setNavigationState,
+    handleContinue,
+    handleDialogContinue
+  } = usePageState({
     step: 'device-functions',
-    data: {
-      deviceFunctionStates: functionStates,
-      functionDiscount: calculateFunctionDiscount(functionStates, DEVICE_FUNCTIONS)
-    }
+    storageKey: 'deviceFunctionStates',
+    hasDialog: true,
+    restoreOnMount: true
+  }, {
+    functionStates: {} as DeviceFunctionState,
+    priceRange: undefined as {min: number, max: number, midpoint: number} | undefined
   });
+
+  const { functionStates, priceRange } = pageState;
+  const { isLoading, isNavigating, isDialogOpen, isDialogLocked } = navigationState;
+
 
   // Инициализация состояний функций
   useEffect(() => {
-    const initialStates: DeviceFunctionState = {};
-    DEVICE_FUNCTIONS.forEach(func => {
-      initialStates[func.key] = 'unknown';
-    });
-    setFunctionStates(initialStates);
+    if (Object.keys(functionStates).length === 0) {
+      const initialStates: DeviceFunctionState = {};
+      DEVICE_FUNCTIONS.forEach(func => {
+        initialStates[func.key] = 'unknown';
+      });
+      setPageState({ functionStates: initialStates });
+    }
     setCurrentStep('device-functions');
-  }, [setCurrentStep]);
+  }, [setCurrentStep, functionStates, setPageState]);
 
   // Получаем данные оценки при загрузке страницы
   useEffect(() => {
@@ -177,7 +188,7 @@ export default function DeviceFunctionsPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.priceRange) {
-            setPriceRange(data.priceRange);
+            setPageState({ priceRange: data.priceRange });
           }
         }
       } catch (error) {
@@ -186,14 +197,16 @@ export default function DeviceFunctionsPage() {
     };
     
     loadEvaluationData();
-  }, []);
+  }, [setPageState]);
 
   const handleStateChange = useCallback((key: string, state: 'working' | 'not_working' | 'unknown') => {
-    setFunctionStates(prev => ({
-      ...prev,
-      [key]: state
-    }));
-  }, []);
+    setPageState({
+      functionStates: {
+        ...functionStates,
+        [key]: state
+      }
+    });
+  }, [functionStates, setPageState]);
 
   // Автоматическое сохранение при изменении состояний функций
   useEffect(() => {
@@ -207,7 +220,7 @@ export default function DeviceFunctionsPage() {
   }, [functionStates, saveToDatabase]);
 
   const handleShowDialog = useCallback(async () => {
-    setIsLoading(true);
+    setNavigationState(prev => ({ ...prev, isLoading: true }));
     
     try {
       // Рассчитываем скидку от функций
@@ -245,49 +258,28 @@ export default function DeviceFunctionsPage() {
       );
       
       // Сохраняем рассчитанный диапазон цен
-      setPriceRange(calculatedPriceRange);
+      setPageState({ priceRange: calculatedPriceRange });
       
       // Сохраняем диапазон цен в sessionStorage для передачи на другие страницы
       sessionStorage.setItem('priceRange', JSON.stringify(calculatedPriceRange));
       
       // Открываем диалог
-      setShowResultDialog(true);
+      setNavigationState(prev => ({ ...prev, isDialogOpen: true }));
       
     } catch (error) {
       console.error('Ошибка при расчёте цены:', error);
     } finally {
-      setIsLoading(false);
+      setNavigationState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [functionStates, deviceConditions, additionalConditions, modelname]);
+  }, [functionStates, deviceConditions, additionalConditions, modelname, setPageState, setNavigationState]);
 
-  const handleContinue = useCallback(async () => {
-    try {
-      // Сохраняем цену
-      if (priceRange) {
-        setPrice(priceRange.midpoint);
-      }
-      
-      // Сохраняем состояния функций в sessionStorage
-      const functionDiscount = calculateFunctionDiscount(functionStates, DEVICE_FUNCTIONS);
-      sessionStorage.setItem('deviceFunctionStates', JSON.stringify(functionStates));
-      sessionStorage.setItem('functionDiscount', functionDiscount.toString());
-      
-      // Сохраняем диапазон цен в sessionStorage (если еще не сохранен)
-      if (priceRange && !sessionStorage.getItem('priceRange')) {
-        sessionStorage.setItem('priceRange', JSON.stringify(priceRange));
-      }
-      
-      // Сохраняем данные в базу данных
-      await saveToDatabase();
-      
-      // Переходим к следующему шагу
-      setCurrentStep('delivery-options');
-      router.push('/request/delivery-options');
-      
-    } catch (error) {
-      console.error('Ошибка при сохранении данных:', error);
-    }
-  }, [functionStates, priceRange, setPrice, setCurrentStep, router, saveToDatabase]);
+  const handleDialogContinueAction = useCallback(async () => {
+    await handleDialogContinue('/request/delivery-options', 'delivery-options', {
+      functionStates,
+      priceRange,
+      functionDiscount: calculateFunctionDiscount(functionStates, DEVICE_FUNCTIONS)
+    });
+  }, [functionStates, priceRange, handleDialogContinue]);
 
   const hasAnySelection = Object.values(functionStates).some(state => state !== 'unknown');
   
@@ -366,101 +358,24 @@ export default function DeviceFunctionsPage() {
 
       {/* Кнопка продолжения */}
       <div className="fixed bottom-4 left-4 right-4 z-50">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+        <DeviceFunctionsContinueButton
+          onClick={handleShowDialog}
+          disabled={!hasAnySelection}
+          isLoading={isLoading}
         >
-          <Button
-            onClick={handleShowDialog}
-            disabled={!hasAnySelection || isLoading}
-            className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-          >
-            {isLoading ? 'Рассчитываем цену...' : 'Продолжить'}
-          </Button>
-        </motion.div>
+          Продолжить
+        </DeviceFunctionsContinueButton>
       </div>
 
       {/* Диалог результата оценки */}
-      <Dialog
-        open={showResultDialog}
-        onOpenChange={(open) => {
-          if (isLoading) return;
-          setShowResultDialog(open);
-        }}
-      >
-        <DialogContent className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg">
-          <DialogTitle className="text-center text-lg font-semibold text-gray-900 mb-4">
-            Итоговая оценка
-          </DialogTitle>
-          {priceRange ? (
-            <div className="text-center space-y-4">
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-slate-600 uppercase tracking-wide">
-                  Диапазон оценки
-                </div>
-                <div className="text-2xl font-bold text-slate-900">
-                  {priceRange.min.toLocaleString()} — {priceRange.max.toLocaleString()} ₽
-                </div>
-              </div>
-
-              <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
-                <div 
-                  className="absolute top-0 h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full"
-                  style={{ 
-                    left: '0%', 
-                    width: '100%',
-                    background: `linear-gradient(to right, 
-                      #10b981 0%, 
-                      #3b82f6 50%, 
-                      #f59e0b 100%)`
-                  }}
-                />
-                <div className="absolute top-0 left-0 w-1 h-full bg-slate-900 rounded-full" />
-                <div className="absolute top-0 right-0 w-1 h-full bg-slate-900 rounded-full" />
-              </div>
-              
-              <div className="text-sm text-slate-600">
-                Средняя цена: <span className="font-semibold text-slate-900">{priceRange.midpoint.toLocaleString()} ₽</span>
-              </div>
-
-              <div className="pt-2">
-                <Button
-                  onClick={async () => {
-                    setShowResultDialog(false);
-                    await handleContinue();
-                  }}
-                  disabled={isLoading}
-                  className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-80"
-                >
-                  {isLoading ? 'Переходим…' : 'Продолжить'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="text-lg font-semibold text-slate-900">
-                Рассчитываем цену...
-              </div>
-              <div className="text-sm text-slate-600">
-                Пожалуйста, подождите
-              </div>
-              <div className="pt-2">
-                <Button
-                  onClick={async () => {
-                    setShowResultDialog(false);
-                    await handleContinue();
-                  }}
-                  disabled={isLoading}
-                  className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-80"
-                >
-                  {isLoading ? 'Переходим…' : 'Продолжить'}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PriceRangeDialog
+        open={isDialogOpen}
+        onOpenChange={(open) => setNavigationState(prev => ({ ...prev, isDialogOpen: open }))}
+        onContinue={handleDialogContinueAction}
+        isLoading={isLoading}
+        isNavigating={isNavigating}
+        priceRange={priceRange}
+      />
     </Page>
   );
 }

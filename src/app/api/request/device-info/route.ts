@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { RequestManager } from '@/core/lib/requestManager'
 
 export async function POST(request: Request) {
   try {
@@ -23,69 +23,23 @@ export async function POST(request: Request) {
       )
     }
 
-    // Ищем существующую заявку
+    // Используем RequestManager для единой логики
+    const updatedRequest =
+      await RequestManager.updateActiveRequest(telegramId, {
+        username: username || 'Unknown',
+        sn: serialNumber,
+        currentStep: 'device-info',
+      })
+
     console.log(
-      '🔍 API device-info: Ищем существующую заявку для telegramId:',
-      telegramId
+      '✅ API device-info: Заявка обновлена:',
+      updatedRequest.id
     )
-    let existingRequest = await prisma.skupka.findFirst({
-      where: {
-        telegramId: telegramId,
-        status: 'draft',
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+
+    return NextResponse.json({
+      success: true,
+      request: updatedRequest,
     })
-
-    if (existingRequest) {
-      console.log(
-        '✅ API device-info: Найдена существующая заявка, обновляем:',
-        existingRequest.id
-      )
-      // Обновляем существующую заявку
-      const updatedRequest = await prisma.skupka.update({
-        where: { id: existingRequest.id },
-        data: {
-          username: username || existingRequest.username,
-          sn: serialNumber,
-          currentStep: 'device-info',
-          updatedAt: new Date(),
-        },
-      })
-
-      console.log(
-        '✅ API device-info: Заявка обновлена:',
-        updatedRequest
-      )
-      return NextResponse.json({
-        success: true,
-        request: updatedRequest,
-      })
-    } else {
-      console.log(
-        '🆕 API device-info: Создаем новую заявку'
-      )
-      // Создаем новую заявку
-      const newRequest = await prisma.skupka.create({
-        data: {
-          telegramId: telegramId,
-          username: username || 'Unknown',
-          sn: serialNumber,
-          status: 'draft',
-          currentStep: 'device-info',
-        },
-      })
-
-      console.log(
-        '✅ API device-info: Новая заявка создана:',
-        newRequest
-      )
-      return NextResponse.json({
-        success: true,
-        request: newRequest,
-      })
-    }
   } catch (error) {
     console.error(
       '❌ API device-info: Ошибка при сохранении:',

@@ -393,14 +393,14 @@ export default function PhotosPage() {
               >
                 <Button
                   onClick={() => handleCanTakePhotos(true)}
-                  className="w-full h-16 bg-white hover:bg-gray-50 text-gray-800 hover:text-gray-900 rounded-2xl text-lg font-semibold shadow-xl border-2 border-gray-200 hover:border-gray-300"
+                  className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800"
                 >
                   Да, могу сделать фото
                 </Button>
                 
                 <Button
                   onClick={() => handleCanTakePhotos(false)}
-                  className="w-full h-16 bg-white hover:bg-gray-50 text-gray-800 hover:text-gray-900 rounded-2xl text-lg font-semibold shadow-xl border-2 border-gray-200 hover:border-gray-300"
+                  className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800"
                 >
                   Пропустить этот шаг
                 </Button>
@@ -442,9 +442,9 @@ export default function PhotosPage() {
                 <Button
                   onClick={handleSkip}
                   disabled={isLoading}
-                  className="w-full h-16 bg-white hover:bg-gray-50 text-gray-800 hover:text-gray-900 rounded-2xl text-lg font-semibold shadow-xl border-2 border-gray-200 hover:border-gray-300 disabled:opacity-50"
+                  className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
-                  {isLoading ? 'Продолжаем...' : 'Продолжить'}
+                  {isLoading ? 'Переходим...' : 'Продолжить'}
                 </Button>
               </motion.div>
             </div>
@@ -554,7 +554,7 @@ export default function PhotosPage() {
                 <Button
                   onClick={handleContinue}
                   disabled={isLoading}
-                  className="w-full h-12 bg-white hover:bg-gray-100 text-gray-800 hover:text-gray-900 rounded-2xl font-semibold shadow-xl border-2 border-gray-200 hover:border-gray-300 disabled:opacity-50"
+                  className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
                   {isLoading ? 'Сохраняем...' : 'Готово'}
                 </Button>

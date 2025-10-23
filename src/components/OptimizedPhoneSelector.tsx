@@ -529,7 +529,10 @@ export default function OptimizedPhoneSelector() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div 
+        className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center"
+        data-error="device-not-found"
+      >
         <div className="text-center">
           <p className="text-red-600 mb-4 text-sm">Ошибка загрузки: {error.message}</p>
           <Button onClick={() => window.location.reload()} size="sm">
@@ -644,19 +647,9 @@ export default function OptimizedPhoneSelector() {
                 <Button
                   onClick={handleContinue}
                   disabled={isLoading}
-                  className="w-full bg-white hover:bg-gray-50 text-gray-800 hover:text-gray-900 py-5 rounded-2xl text-xl font-semibold shadow-xl border-2 border-gray-200 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
-                  {isLoading ? (
-                    <div className="flex items-center space-x-3">
-                      <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-                      <span>Переходим...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <span>Продолжить оценку</span>
-                      <ArrowRight className="w-5 h-5 ml-3" />
-                    </>
-                  )}
+                  {isLoading ? 'Переходим к оценке...' : 'Продолжить'}
                 </Button>
               </motion.div>
             )}

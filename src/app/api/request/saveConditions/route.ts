@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
       discountPercent,
       currentStep,
       telegramId,
+      username,
     } = await request.json()
 
     console.log(
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
       activeRequest = await prisma.skupka.create({
         data: {
           telegramId: telegramId,
-          username: 'Unknown',
+          username: username || 'Unknown',
           status: 'draft',
         },
       })

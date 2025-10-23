@@ -30,6 +30,18 @@ export const useRequestSync = () => {
     '/request/delivery-options',
     '/request/pickup-points',
     '/request/photos',
+    '/admin/requests',
+    '/admin/masters',
+    '/admin/add-lot',
+    '/admin/market-prices',
+    '/admin/price-parsing',
+    '/admin/telegram-id',
+    '/request/evaluation-mode',
+    '/master/points',
+    '/master/requests',
+    '/debug',
+    '/test',
+    '/internal',
   ]
 
   const checkRequestStatus = useCallback(async () => {
@@ -44,6 +56,19 @@ export const useRequestSync = () => {
         )
       ) {
         return
+      }
+
+      // Пропускаем синхронизацию если на странице формы и есть ошибка загрузки
+      if (currentPath.includes('/request/form')) {
+        const hasError = document.querySelector(
+          '[data-error="device-not-found"]'
+        )
+        if (hasError) {
+          console.log(
+            '🔄 Пропускаем синхронизацию из-за ошибки на странице формы'
+          )
+          return
+        }
       }
     }
 

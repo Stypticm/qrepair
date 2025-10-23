@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Page } from '@/components/Page';
 import { useStepNavigation } from '@/hooks/useStepNavigation';
@@ -12,10 +12,48 @@ import { useAppStore } from '@/stores/authStore';
 export default function EvaluationModePage() {
   const router = useRouter();
   const { goBack } = useStepNavigation();
-  const { setCurrentStep } = useAppStore();
+  const { setCurrentStep, telegramId, username } = useAppStore();
   
   const [selectedMode, setSelectedMode] = useState<'ai' | 'manual' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Создаём заявку при загрузке страницы
+  useEffect(() => {
+    const createInitialRequest = async () => {
+      if (!telegramId) {
+        setIsInitializing(false);
+        return;
+      }
+
+      try {
+        // Создаём начальную заявку
+        const response = await fetch('/api/request/saveDraft', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            telegramId,
+            username: username || telegramId,
+            currentStep: 'evaluation-mode',
+          }),
+        });
+
+        if (response.ok) {
+          console.log('✅ Initial request created for evaluation-mode');
+        } else {
+          console.error('❌ Failed to create initial request');
+        }
+      } catch (error) {
+        console.error('❌ Error creating initial request:', error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    createInitialRequest();
+  }, [telegramId, username]);
 
   const handleModeSelect = async (mode: 'ai' | 'manual') => {
     setSelectedMode(mode);
@@ -38,6 +76,22 @@ export default function EvaluationModePage() {
   const handleBack = () => {
     goBack();
   };
+
+  // Показываем загрузку пока создаём заявку
+  if (isInitializing) {
+    return (
+      <Page back={false}>
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4">
+              <div className="w-full h-full border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+            </div>
+            <p className="text-gray-600">Инициализация...</p>
+          </div>
+        </div>
+      </Page>
+    );
+  }
 
   return (
     <Page back={handleBack}>

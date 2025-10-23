@@ -490,12 +490,13 @@ export default function EvaluationPage() {
       const result = await response.json();
       console.log('✅ Evaluation saved successfully:', result);
 
-      // Переходим на страницу submit
+      // Переходим на страницу submit сразу после сохранения
       router.push("/request/device-functions");
     } catch (error) {
       console.error("❌ Error saving evaluation:", error);
       // Показываем пользователю ошибку, но всё равно переходим
       alert("Ошибка при сохранении оценки. Попробуйте ещё раз.");
+      router.push("/request/device-functions");
     } finally {
       setSubmitting(false);
       setIsNavigating(false);
