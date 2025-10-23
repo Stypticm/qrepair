@@ -42,21 +42,28 @@ export function PaymentButton({
   // Проверяем доступность Telegram SDK
   useEffect(() => {
     const checkTelegram = () => {
+      console.log('=== PaymentButton: Starting Telegram check ===')
+      
+      const initialized = initializeTelegramSDK()
       const available = checkTelegramAvailable()
       setIsTelegramAvailable(available)
       
-      console.log('Telegram SDK check:', {
-        initialized: initializeTelegramSDK(),
+      console.log('PaymentButton Telegram check result:', {
+        initialized,
         available,
-        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'N/A'
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'N/A',
+        windowTelegram: !!window.Telegram,
+        windowTelegramWebApp: !!window.Telegram?.WebApp
       })
+      
+      console.log('=== PaymentButton: Telegram check complete ===')
     }
 
     // Проверяем сразу
     checkTelegram()
 
     // Проверяем еще раз через небольшую задержку
-    const timeout = setTimeout(checkTelegram, 200)
+    const timeout = setTimeout(checkTelegram, 500)
     
     return () => clearTimeout(timeout)
   }, [])
