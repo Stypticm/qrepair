@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { PaymentRequest } from '@/core/payments/types'
 import { paymentGateway } from '@/core/payments/PaymentGateway'
@@ -25,6 +25,7 @@ export function PaymentButton({
 }: PaymentButtonProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string>('')
+  const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
 
   const paymentRequest: PaymentRequest = {
     amount,
@@ -37,8 +38,29 @@ export function PaymentButton({
     }
   }
 
-  // Проверяем доступность Telegram WebApp
-  const isTelegramAvailable = typeof window !== 'undefined' && !!window.Telegram?.WebApp
+  // Проверяем доступность Telegram WebApp с задержкой
+  useEffect(() => {
+    const checkTelegram = () => {
+      const available = typeof window !== 'undefined' && !!window.Telegram?.WebApp
+      setIsTelegramAvailable(available)
+      
+      console.log('Telegram WebApp check:', {
+        windowExists: typeof window !== 'undefined',
+        telegramExists: !!window.Telegram,
+        webAppExists: !!window.Telegram?.WebApp,
+        isAvailable: available,
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'N/A'
+      })
+    }
+
+    // Проверяем сразу
+    checkTelegram()
+
+    // Проверяем еще раз через небольшую задержку (Telegram может инициализироваться асинхронно)
+    const timeout = setTimeout(checkTelegram, 100)
+    
+    return () => clearTimeout(timeout)
+  }, [])
 
   const handlePayment = async () => {
     if (!isTelegramAvailable) {
