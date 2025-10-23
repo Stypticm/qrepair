@@ -52,6 +52,8 @@ export class TelegramPaymentProvider
       }
 
       // Отправляем инвойс через Telegram Bot API
+      console.log('Sending invoice to API:', JSON.stringify(invoice, null, 2))
+      
       const response = await fetch(
         '/api/payments/create-invoice',
         {
@@ -62,6 +64,8 @@ export class TelegramPaymentProvider
           body: JSON.stringify(invoice),
         }
       )
+      
+      console.log('API response status:', response.status)
 
       if (!response.ok) {
         throw new Error('Failed to create invoice')
