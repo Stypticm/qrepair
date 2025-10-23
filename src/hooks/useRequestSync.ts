@@ -42,6 +42,8 @@ export const useRequestSync = () => {
     '/debug',
     '/test',
     '/internal',
+    '/cart',
+    '/favorites',
   ]
 
   const checkRequestStatus = useCallback(async () => {

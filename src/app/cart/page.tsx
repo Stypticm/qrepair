@@ -6,47 +6,20 @@ import { useCart } from '@/hooks/useCart'
 import { ShoppingCart, Trash2, Plus, Minus, CreditCard } from 'lucide-react'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
-import { sendTon } from '@/core/ton/tonconnect'
+import { PaymentButton } from '@/components/PaymentButton'
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, loading, getTotalPrice, getTotalItems } = useCart()
-  const [isCheckingOut, setIsCheckingOut] = useState(false)
 
   const formatPrice = (price: number | null) => {
     if (!price) return "Цена не указана"
     return `${price.toLocaleString('ru-RU')} ₽`
   }
 
-  const handleCheckout = async () => {
-    setIsCheckingOut(true)
-    try {
-      // Демонстрационная сумма (общая стоимость корзины в TON)
-      const totalPriceInTon = getTotalPrice() / 100 // Предполагаем курс 1 TON = 100₽
-      await sendTon('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', String(totalPriceInTon * 1e9))
-
-      // После успешной оплаты очищаем корзину
-      await clearCart()
-    } catch (e) {
-      console.error('Checkout error', e)
-    } finally {
-      setIsCheckingOut(false)
-    }
-  }
-
-  const handleBuyAllWithTon = async () => {
-    setIsCheckingOut(true)
-    try {
-      // Демонстрационная сумма (общая стоимость корзины в TON)
-      const totalPriceInTon = getTotalPrice() / 100 // Предполагаем курс 1 TON = 100₽
-      await sendTon('EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', String(totalPriceInTon * 1e9))
-
-      // После успешной оплаты очищаем корзину
-      await clearCart()
-    } catch (e) {
-      console.error('TON payment error', e)
-    } finally {
-      setIsCheckingOut(false)
-    }
+  const handlePaymentSuccess = async (result: any) => {
+    console.log('Payment successful:', result)
+    // После успешной оплаты очищаем корзину
+    await clearCart()
   }
 
   if (cartItems.length === 0) {
@@ -182,36 +155,15 @@ export default function CartPage() {
             </div>
 
             <div className="space-y-6 flex flex-col gap-2">
-              <button
-                onClick={handleCheckout}
-                disabled={loading || isCheckingOut}
-                className="w-full px-6 py-4 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              <PaymentButton
+                amount={getTotalPrice()}
+                description={`Оплата за ${getTotalItems()} товар(ов) в корзине`}
+                onSuccess={handlePaymentSuccess}
+                className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <CreditCard className="w-5 h-5" />
-                {isCheckingOut ? 'Обработка...' : 'Оформить заказ'}
-              </button>
-
-              <button
-                onClick={handleBuyAllWithTon}
-                disabled={loading || isCheckingOut}
-                className="w-full px-6 py-4 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  className="w-5 h-5"
-                  aria-hidden
-                >
-                  <path
-                    fill="#FFFFFF"
-                    stroke="#FFFFFF"
-                    strokeOpacity="0.85"
-                    strokeWidth="0.25"
-                    d="M12 2c5.523 0 10 2.477 10 5.533 0 1.42-.88 3.29-2.34 5.384-1.37 1.97-3.24 4.13-5.2 6.11-1.4 1.41-2.79 2.62-3.78 3.34a.99.99 0 0 1-1.36-.2c-.99-.72-2.38-1.93-3.78-3.34-1.96-1.98-3.83-4.14-5.2-6.11C.88 10.823 0 8.953 0 7.533 0 4.477 4.477 2 10 2h2Zm0 2h-2C6.06 4 2 5.57 2 7.533c0 .86.68 2.36 2.02 4.29 1.27 1.82 3.06 3.9 4.96 5.83 1.07 1.06 2.08 1.96 3.02 2.67.94-.71 1.95-1.61 3.02-2.67 1.9-1.93 3.69-4.01 4.96-5.83 1.34-1.93 2.02-3.43 2.02-4.29C22 5.57 17.94 4 14 4h-2Zm0 2 4 6h-3v6h-2v-6H8l4-6Z"
-                  />
-                </svg>
-                Оплатить TON
-              </button>
+                Оплатить заказ
+              </PaymentButton>
 
               <button
                 onClick={clearCart}
