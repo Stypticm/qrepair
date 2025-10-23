@@ -3,6 +3,7 @@ import {
   PaymentRequest,
   PaymentResult,
 } from '../types'
+import { getTelegramMiniApp } from '../../telegram/init'
 
 export class TelegramPaymentProvider
   implements PaymentProvider
@@ -11,19 +12,19 @@ export class TelegramPaymentProvider
   name = 'Telegram Payments'
 
   isAvailable(): boolean {
-    // Упрощенная проверка для демо - всегда доступен в браузере
-    return typeof window !== 'undefined'
+    const miniApp = getTelegramMiniApp()
+    return !!miniApp && !!miniApp.ready
   }
 
   async processPayment(
     request: PaymentRequest
   ): Promise<PaymentResult> {
     try {
-      const webApp = window.Telegram?.WebApp
-      if (!webApp) {
+      const miniApp = getTelegramMiniApp()
+      if (!miniApp || !miniApp.ready) {
         return {
           success: false,
-          error: 'Telegram WebApp недоступен. Откройте приложение через Telegram.',
+          error: 'Telegram Mini App недоступен. Откройте приложение через Telegram.',
           method: 'telegram',
         }
       }
@@ -68,22 +69,28 @@ export class TelegramPaymentProvider
 
       const { invoice_link } = await response.json()
 
-      // Открываем платежную форму Telegram
-      webApp.openInvoice(invoice_link, (status: string) => {
-        if (status === 'paid') {
-          return {
-            success: true,
-            transactionId: `telegram_${Date.now()}`,
-            method: 'telegram',
+      // Открываем платежную форму Telegram через SDK
+      // Пока используем старый метод, так как новый SDK может не поддерживать openInvoice
+      const webApp = window.Telegram?.WebApp
+      if (webApp) {
+        webApp.openInvoice(invoice_link, (status: string) => {
+          if (status === 'paid') {
+            return {
+              success: true,
+              transactionId: `telegram_${Date.now()}`,
+              method: 'telegram',
+            }
+          } else {
+            return {
+              success: false,
+              error: 'Payment cancelled or failed',
+              method: 'telegram',
+            }
           }
-        } else {
-          return {
-            success: false,
-            error: 'Payment cancelled or failed',
-            method: 'telegram',
-          }
-        }
-      })
+        })
+      } else {
+        throw new Error('Telegram WebApp not available')
+      }
 
       return {
         success: true,

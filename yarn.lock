@@ -842,10 +842,10 @@
   dependencies:
     "@telegram-apps/sdk" "^3.11.5"
 
-"@telegram-apps/sdk@^3.11.5":
-  version "3.11.5"
-  resolved "https://registry.npmjs.org/@telegram-apps/sdk/-/sdk-3.11.5.tgz"
-  integrity sha512-PwOvmfyYIoszqQK7WuxUyTKn6utSBiOVg0P/EeI6WblV4yKTPa7zHEBNbIjlCV3jk40oe0ACN0iH8GUVeP+RQw==
+"@telegram-apps/sdk@^3.11.5", "@telegram-apps/sdk@^3.11.8":
+  version "3.11.8"
+  resolved "https://registry.npmjs.org/@telegram-apps/sdk/-/sdk-3.11.8.tgz"
+  integrity sha512-vlpkYzMJCV9Cadsn9Q+/hbHNR39j5o96N9z4CjZ6AFHkkxOeOqVRrq9zRBw0gmffROkF2bU0WQxhRj8KZ/bPhw==
   dependencies:
     "@telegram-apps/bridge" "^2.11.0"
     "@telegram-apps/navigation" "^1.0.14"

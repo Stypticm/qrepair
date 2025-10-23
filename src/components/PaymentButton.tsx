@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { PaymentRequest } from '@/core/payments/types'
 import { paymentGateway } from '@/core/payments/PaymentGateway'
 import { CreditCard, Loader2 } from 'lucide-react'
+import { initializeTelegramSDK, isTelegramAvailable as checkTelegramAvailable } from '@/core/telegram/init'
 
 interface PaymentButtonProps {
   amount: number
@@ -38,17 +39,15 @@ export function PaymentButton({
     }
   }
 
-  // Проверяем доступность Telegram WebApp с задержкой
+  // Проверяем доступность Telegram SDK
   useEffect(() => {
     const checkTelegram = () => {
-      const available = typeof window !== 'undefined' && !!window.Telegram?.WebApp
+      const available = checkTelegramAvailable()
       setIsTelegramAvailable(available)
       
-      console.log('Telegram WebApp check:', {
-        windowExists: typeof window !== 'undefined',
-        telegramExists: !!window.Telegram,
-        webAppExists: !!window.Telegram?.WebApp,
-        isAvailable: available,
+      console.log('Telegram SDK check:', {
+        initialized: initializeTelegramSDK(),
+        available,
         userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'N/A'
       })
     }
@@ -56,8 +55,8 @@ export function PaymentButton({
     // Проверяем сразу
     checkTelegram()
 
-    // Проверяем еще раз через небольшую задержку (Telegram может инициализироваться асинхронно)
-    const timeout = setTimeout(checkTelegram, 100)
+    // Проверяем еще раз через небольшую задержку
+    const timeout = setTimeout(checkTelegram, 200)
     
     return () => clearTimeout(timeout)
   }, [])
