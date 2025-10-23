@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 import { Heart, ShoppingCart } from "lucide-react";
@@ -50,6 +50,16 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
       maximumFractionDigits: 0,
     }).format(price);
   };
+
+  // Обработчик события закрытия карточки после успешной оплаты
+  useEffect(() => {
+    const handleCloseDeviceCard = () => {
+      setActive(null);
+    };
+
+    window.addEventListener('closeDeviceCard', handleCloseDeviceCard);
+    return () => window.removeEventListener('closeDeviceCard', handleCloseDeviceCard);
+  }, []);
 
   return (
     <>
@@ -113,7 +123,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
           </DialogHeader>
 
           {/* Контент */}
-          <div className="flex-1 flex flex-col overflow-y-auto p-3">
+          <div className="flex-1 flex flex-col p-3">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <DialogTitle className="font-semibold text-lg text-gray-900 mb-1">

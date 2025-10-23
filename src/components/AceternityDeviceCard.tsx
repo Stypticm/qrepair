@@ -40,6 +40,11 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
       }
     }
 
+    function onCloseDeviceCard() {
+      setActive(null);
+      setCurrentPhotoIndex(0);
+    }
+
     if (active) {
       document.body.style.overflow = "hidden";
     } else {
@@ -47,7 +52,11 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
     }
 
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("closeDeviceCard", onCloseDeviceCard);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("closeDeviceCard", onCloseDeviceCard);
+    };
   }, [active]);
 
   useOutsideClick(ref, () => setActive(null));
@@ -180,7 +189,7 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                 </div>
               </motion.div>
 
-              <div className="flex-1 flex flex-col overflow-y-auto">
+              <div className="flex-1 flex flex-col">
                 <div className="flex justify-between items-start p-3">
                   <div className="flex-1">
                     <motion.h3

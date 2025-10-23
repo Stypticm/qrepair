@@ -20,85 +20,22 @@ export class TelegramPaymentProvider
     request: PaymentRequest
   ): Promise<PaymentResult> {
     try {
-      const miniApp = getTelegramMiniApp()
-      if (!miniApp || !miniApp.ready) {
-        return {
-          success: false,
-          error: 'Telegram Mini App недоступен. Откройте приложение через Telegram.',
-          method: 'telegram',
-        }
-      }
+      // Заглушка - имитация успешной оплаты
+      console.log('Processing payment (mock):', {
+        amount: request.amount,
+        description: request.description,
+        productId: request.productId,
+      })
 
-      // Создаем инвойс для Telegram Payments
-      const invoice = {
-        title: request.description,
-        description: `Оплата за ${request.description}`,
-        payload: JSON.stringify({
-          productId: request.productId,
-          amount: request.amount,
-          currency: request.currency,
-          ...request.metadata,
-        }),
-        provider_token:
-          process.env.NEXT_PUBLIC_TELEGRAM_PAYMENT_TOKEN ||
-          '',
-        currency: request.currency,
-        prices: [
-          {
-            label: request.description,
-            amount: Math.round(request.amount * 100), // Telegram требует копейки
-          },
-        ],
-      }
-
-      // Отправляем инвойс через Telegram Bot API
-      console.log('Sending invoice to API:', JSON.stringify(invoice, null, 2))
-      
-      const response = await fetch(
-        '/api/payments/create-invoice',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(invoice),
-        }
+      // Имитация задержки обработки платежа
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1500)
       )
-      
-      console.log('API response status:', response.status)
 
-      if (!response.ok) {
-        throw new Error('Failed to create invoice')
-      }
-
-      const { invoice_link } = await response.json()
-
-      // Открываем платежную форму Telegram через SDK
-      // Пока используем старый метод, так как новый SDK может не поддерживать openInvoice
-      const webApp = window.Telegram?.WebApp
-      if (webApp) {
-        webApp.openInvoice(invoice_link, (status: string) => {
-          if (status === 'paid') {
-            return {
-              success: true,
-              transactionId: `telegram_${Date.now()}`,
-              method: 'telegram',
-            }
-          } else {
-            return {
-              success: false,
-              error: 'Payment cancelled or failed',
-              method: 'telegram',
-            }
-          }
-        })
-      } else {
-        throw new Error('Telegram WebApp not available')
-      }
-
+      // Всегда возвращаем успех для демо
       return {
         success: true,
-        transactionId: `telegram_${Date.now()}`,
+        transactionId: `mock_${Date.now()}`,
         method: 'telegram',
       }
     } catch (error) {
@@ -107,7 +44,7 @@ export class TelegramPaymentProvider
         error:
           error instanceof Error
             ? error.message
-            : 'Telegram payment failed',
+            : 'Payment processing failed',
         method: 'telegram',
       }
     }

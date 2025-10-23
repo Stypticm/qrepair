@@ -6,6 +6,7 @@ import { PaymentRequest } from '@/core/payments/types'
 import { paymentGateway } from '@/core/payments/PaymentGateway'
 import { CreditCard, Loader2 } from 'lucide-react'
 import { initializeTelegramSDK, isTelegramAvailable as checkTelegramAvailable } from '@/core/telegram/init'
+import { PaymentSuccessDialog } from './PaymentSuccessDialog'
 
 interface PaymentButtonProps {
   amount: number
@@ -27,6 +28,7 @@ export function PaymentButton({
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string>('')
   const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
 
   const paymentRequest: PaymentRequest = {
     amount,
@@ -85,18 +87,31 @@ export function PaymentButton({
 
     try {
       const result = await paymentGateway.processPayment(availableMethods[0].id, paymentRequest)
-      
+
       if (result.success) {
-        onSuccess?.(result)
+        // Показываем диалог успеха
+        setShowSuccessDialog(true)
         console.log('Payment successful:', result)
       } else {
+        // Показываем ошибку, карточка остается открытой
         setError(result.error || 'Ошибка оплаты')
       }
     } catch (err) {
+      // Показываем ошибку, карточка остается открытой
       setError('Произошла ошибка при обработке платежа')
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleSuccessDialogClose = () => {
+    setShowSuccessDialog(false)
+    // Вызываем onSuccess после закрытия диалога
+    onSuccess?.({ success: true, transactionId: `mock_${Date.now()}` })
+    
+    // Закрываем карточку товара через событие (правильный способ)
+    const closeEvent = new CustomEvent('closeDeviceCard')
+    window.dispatchEvent(closeEvent)
   }
 
   // Если Telegram недоступен, показываем ошибку вместо кнопки
@@ -140,6 +155,15 @@ export function PaymentButton({
           <div className="text-sm text-red-600">{error}</div>
         </div>
       )}
+
+      {/* Диалог успешной оплаты */}
+      <PaymentSuccessDialog
+        isOpen={showSuccessDialog}
+        onClose={handleSuccessDialogClose}
+        amount={amount}
+        description={description}
+        autoCloseDuration={5000}
+      />
     </div>
   )
 }
