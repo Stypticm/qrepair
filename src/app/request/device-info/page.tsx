@@ -314,10 +314,17 @@ export default function DeviceInfoPage() {
                 });
                 
                 if (newTestDevice) {
+                    // Умный парсинг модели из deviceName (поддержка iPhone 17 Air, Pro, Pro Max)
+                    const getFullModelName = (deviceName: string): string => {
+                        // Ищем полное название модели после "iPhone "
+                        const match = deviceName.match(/iPhone\s+([^0-9\[]+)/);
+                        return match ? match[1].trim() : 'Unknown';
+                    };
+
                     const parsed = {
-                        model: 'Test',
-                        storage: '128GB',
-                        color: 'Black',
+                        model: getFullModelName(newTestDevice.normalized?.deviceName || ''),
+                        storage: newTestDevice.normalized?.deviceName?.match(/(\d+GB)/)?.[1] || '128GB',
+                        color: newTestDevice.normalized?.deviceName?.includes('Black') ? 'Black' : 'White',
                         image: newTestDevice.normalized?.image || '',
                         raw: newTestDevice.data,
                     };
