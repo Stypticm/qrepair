@@ -302,7 +302,7 @@ export default function DeviceInfoPage() {
                 // Создаем новые тестовые данные для этого серийного номера
                 addDebugInfo(`🆕 Создаем новые тестовые данные для SN: ${manualSerialNumber}`);
                 const newTestDevice = await createTestDeviceForSerial(manualSerialNumber, {
-                    deviceName: `iPhone Test ${manualSerialNumber}`,
+                    deviceName: `iPhone 13 Pro 256GB Black [A2639] [iPhone14,2]`,
                     image: 'https://sources.imeicheck.net/images/64664f0891ea173f2986918043423f9e.png',
                     imei: '',
                     warrantyStatus: 'Out Of Warranty',
