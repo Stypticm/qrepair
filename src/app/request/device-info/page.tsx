@@ -11,6 +11,9 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
 import { WelcomeModal } from '@/components/ui/welcome-modal';
 import { getPictureUrl } from '@/core/lib/assets';
+import { useIPhoneAdaptive } from '@/hooks/useIPhoneAdaptive';
+import { useTestDevices } from '@/hooks/useTestDevices';
+import { TestDeviceSelector } from '@/components/TestDeviceSelector';
 
 export default function DeviceInfoPage() {
     const {
@@ -22,6 +25,24 @@ export default function DeviceInfoPage() {
         setCurrentStep,
     } = useAppStore();
     const router = useRouter();
+    
+    // iPhone-адаптивные размеры
+    const { adaptiveSizes, isTelegramWebApp, telegramUtils } = useIPhoneAdaptive();
+    
+    // Тестовые устройства
+    const { 
+        testDevices, 
+        isLoading: isLoadingTestDevices, 
+        findTestDeviceBySerial, 
+        createTestDeviceForSerial 
+    } = useTestDevices();
+
+    // Отладочная информация
+    console.log('📱 DeviceInfoPage тестовые устройства:', {
+        count: testDevices.length,
+        devices: testDevices.map(d => ({ id: d.id, name: d.name, serial: d.serial })),
+        isLoading: isLoadingTestDevices
+    });
 
     const [manualSerialNumber, setManualSerialNumber] = useState('');
     const [isValid, setIsValid] = useState(false);
@@ -32,11 +53,12 @@ export default function DeviceInfoPage() {
     const [showErrorDialog, setShowErrorDialog] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
   const [checking, setChecking] = useState(false);
-  const [checkResult, setCheckResult] = useState<null | { model?: string; variant?: string; storage?: string; color?: string; image?: string; raw?: any }>(null);
+  const [checkResult, setCheckResult] = useState<null | { model?: string; storage?: string; color?: string; image?: string; raw?: any }>(null);
   const [showCheckDialog, setShowCheckDialog] = useState(false);
   const [isDialogLocked, setIsDialogLocked] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isTestLoading, setIsTestLoading] = useState(false);
+  const [showTestDeviceSelector, setShowTestDeviceSelector] = useState(false);
 
     const addDebugInfo = (message: string) => {
         const timestamp = new Date().toLocaleTimeString();
@@ -50,10 +72,19 @@ export default function DeviceInfoPage() {
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem('currentStep');
             sessionStorage.setItem('currentStep', 'device-info');
+            // Добавляем флаг, что пользователь активно работает на этой странице
+            sessionStorage.setItem('activeOnDeviceInfo', 'true');
         }
         addDebugInfo('Страница device-info загружена');
         addDebugInfo(`telegramId: ${telegramId || 'НЕТ'}`);
         addDebugInfo(`username: ${username || 'НЕТ'}`);
+        
+        // Очищаем флаг при размонтировании компонента
+        return () => {
+            if (typeof window !== 'undefined') {
+                sessionStorage.removeItem('activeOnDeviceInfo');
+            }
+        };
     }, [setCurrentStep, telegramId, username]);
 
     // Фиксируем шаг в БД при заходе на страницу
@@ -153,10 +184,44 @@ export default function DeviceInfoPage() {
         return true;
     };
 
+    // Защита от дурака - проверка на бессмысленные SN
+    const isDumbSerialNumber = (sn: string): boolean => {
+        // Проверяем на одинаковые символы (например: AAAAAAAAAA, 1111111111)
+        const allSame = /^(.)\1+$/.test(sn);
+        if (allSame) {
+            addDebugInfo(`🤖 Обнаружен "дурацкий" SN: все символы одинаковые`);
+            return true;
+        }
+
+        // Проверяем на последовательности (например: ABCDEFGHIJ, 1234567890)
+        const isSequential = /^(?:[A-Z](?=[B-Z])|[0-9](?=[0-9]))+$/.test(sn);
+        if (isSequential) {
+            addDebugInfo(`🤖 Обнаружен "дурацкий" SN: последовательные символы`);
+            return true;
+        }
+
+        // Проверяем на повторяющиеся паттерны (например: ABABABABAB, 1212121212)
+        const hasRepeatingPattern = /^(.{1,3})\1{2,}$/.test(sn);
+        if (hasRepeatingPattern) {
+            addDebugInfo(`🤖 Обнаружен "дурацкий" SN: повторяющийся паттерн`);
+            return true;
+        }
+
+        // Проверяем на слишком простые комбинации (например: A1A1A1A1A1)
+        const tooSimple = /^([A-Z][0-9]){3,}$/.test(sn);
+        if (tooSimple) {
+            addDebugInfo(`🤖 Обнаружен "дурацкий" SN: слишком простая комбинация`);
+            return true;
+        }
+
+        return false;
+    };
+
     const handleInputChange = (value: string) => {
         setManualSerialNumber(value);
         setError('');
-        setIsValid(value.length > 0);
+        // Кнопка активна только при правильной длине SN (10 или 12 символов)
+        setIsValid(value.length === 10 || value.length === 12);
     };
 
     const handleConfirm = async () => {
@@ -168,7 +233,7 @@ export default function DeviceInfoPage() {
             return;
         }
 
-        if (manualSerialNumber.length < 10 || manualSerialNumber.length > 12) {
+        if (manualSerialNumber.length !== 10 && manualSerialNumber.length !== 12) {
             addDebugInfo(`❌ Серийный номер некорректной длины: ${manualSerialNumber.length} символов`);
             setErrorMessage('Введён некорректный серийный номер');
             setShowErrorDialog(true);
@@ -182,6 +247,25 @@ export default function DeviceInfoPage() {
             return;
         }
 
+        // Защита от дурака - проверяем на бессмысленные SN
+        if (isDumbSerialNumber(manualSerialNumber)) {
+            addDebugInfo('🤖 Обнаружен подозрительный SN, переходим к форме без API запроса');
+            setErrorMessage('Серийный номер выглядит некорректно. Переходим к ручному выбору устройства.');
+            setShowErrorDialog(true);
+            
+            // Сохраняем SN и переходим к форме без API запроса
+            setTimeout(() => {
+                setSerialNumber(manualSerialNumber);
+                fetch('/api/request/device-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telegramId, username: username || 'Unknown', serialNumber: manualSerialNumber }),
+                }).catch(() => {});
+                router.push('/request/form');
+            }, 2000);
+            return;
+        }
+
         addDebugInfo('✅ Серийный номер прошел валидацию');
         setShowDialog(true);
     };
@@ -191,38 +275,89 @@ export default function DeviceInfoPage() {
         setChecking(true);
         try {
             setSerialNumber(manualSerialNumber);
-            // Try Reincubate (via ZenRows HTML parse) first
-            const reRes = await fetch('/api/serial-check/reincubate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sn: manualSerialNumber })
-            });
-            if (reRes.ok) {
-                const reData = await reRes.json();
-                const normalized = reData?.normalized;
-                const parsed = normalized ? {
-                    model: normalized.model || '',
-                    variant: normalized.variant || '',
-                    storage: normalized.storage || '',
-                    color: normalized.color || '',
-                    raw: reData,
-                } : normalizeFromRaw(reData);
+            
+            // Проверяем, есть ли тестовые данные для этого серийного номера
+            const existingTestDevice = findTestDeviceBySerial(manualSerialNumber);
+            
+            if (existingTestDevice) {
+                // Используем существующие тестовые данные
+                addDebugInfo(`✅ Найдены тестовые данные для SN: ${manualSerialNumber}`);
+                // Умный парсинг модели из deviceName (поддержка iPhone 17 Air, Pro, Pro Max)
+                const getFullModelName = (deviceName: string): string => {
+                    // Ищем полное название модели после "iPhone "
+                    const match = deviceName.match(/iPhone\s+([^0-9\[]+)/);
+                    return match ? match[1].trim() : 'Unknown';
+                };
+
+                const parsed = {
+                    model: getFullModelName(existingTestDevice.normalized?.deviceName || ''),
+                    storage: existingTestDevice.normalized?.deviceName?.match(/(\d+GB)/)?.[1] || '128GB',
+                    color: existingTestDevice.normalized?.deviceName?.includes('Black') ? 'Black' : 'White',
+                    image: existingTestDevice.normalized?.image || '',
+                    raw: existingTestDevice.data,
+                };
                 setCheckResult(parsed);
             } else {
-                // Fallback to imei.info proxy
-                const snRes = await fetch('/api/serial-check', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sn: manualSerialNumber })
+                // Создаем новые тестовые данные для этого серийного номера
+                addDebugInfo(`🆕 Создаем новые тестовые данные для SN: ${manualSerialNumber}`);
+                const newTestDevice = await createTestDeviceForSerial(manualSerialNumber, {
+                    deviceName: `iPhone Test ${manualSerialNumber}`,
+                    image: 'https://sources.imeicheck.net/images/64664f0891ea173f2986918043423f9e.png',
+                    imei: '',
+                    warrantyStatus: 'Out Of Warranty',
+                    simLock: false,
+                    fmiOn: false,
+                    lostMode: false,
+                    usaBlockStatus: 'Clean',
+                    network: 'Global'
                 });
-                if (!snRes.ok) {
-                    console.error('SN check failed:', snRes.status, snRes.statusText);
-                    router.push('/request/form');
-                    return;
+                
+                if (newTestDevice) {
+                    const parsed = {
+                        model: 'Test',
+                        storage: '128GB',
+                        color: 'Black',
+                        image: newTestDevice.normalized?.image || '',
+                        raw: newTestDevice.data,
+                    };
+                    setCheckResult(parsed);
+                } else {
+                    // Fallback к реальным API запросам
+                    addDebugInfo('⚠️ Переходим к реальным API запросам');
+                    
+                    // Try Reincubate (via ZenRows HTML parse) first
+                    const reRes = await fetch('/api/serial-check/reincubate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sn: manualSerialNumber })
+                    });
+                    if (reRes.ok) {
+                        const reData = await reRes.json();
+                        const normalized = reData?.normalized;
+                        const parsed = normalized ? {
+                            model: normalized.model || '',
+                            storage: normalized.storage || '',
+                            color: normalized.color || '',
+                            raw: reData,
+                        } : normalizeFromRaw(reData);
+                        setCheckResult(parsed);
+                    } else {
+                        // Fallback to imei.info proxy
+                        const snRes = await fetch('/api/serial-check', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sn: manualSerialNumber })
+                        });
+                        if (!snRes.ok) {
+                            console.error('SN check failed:', snRes.status, snRes.statusText);
+                            router.push('/request/form');
+                            return;
+                        }
+                        const snData = await snRes.json();
+                        const parsed = normalizeFromRaw(snData);
+                        setCheckResult(parsed);
+                    }
                 }
-                const snData = await snRes.json();
-                const parsed = normalizeFromRaw(snData);
-                setCheckResult(parsed);
             }
 
             // Save serial to DB (non-blocking)
@@ -241,37 +376,39 @@ export default function DeviceInfoPage() {
         }
     };
 
-    // TEST: показать диалог без реальных запросов, с мок-данными
+    // TEST: показать диалог выбора тестового устройства
     const handleTest = () => {
-        setIsTestLoading(true)
+        setShowTestDeviceSelector(true);
+    };
+
+    // Обработчик выбора тестового устройства
+    const handleSelectTestDevice = (device: any) => {
+        setIsTestLoading(true);
         setTimeout(() => {
-            // Префилл под структуру формы: model='X', variant='R' (XR), storage='128GB', color='Black'
-            setCheckResult({
-                model: 'X',
-                variant: 'R',
-                storage: '128GB',
-                color: 'Black',
-                image: 'https://sources.imeicheck.net/images/64664f0891ea173f2986918043423f9e.png',
-                raw: { sample: true },
-            })
-            setIsTestLoading(false)
-            setShowCheckDialog(true)
-        }, 1000)
-    }
+            // Парсим данные из выбранного тестового устройства
+            const parsed = {
+                model: device.normalized?.deviceName?.match(/iPhone\s+(\w+)/)?.[1] || 'X',
+                variant: device.normalized?.deviceName?.includes('XR') ? 'R' : '',
+                storage: device.normalized?.deviceName?.match(/(\d+GB)/)?.[1] || '128GB',
+                color: device.normalized?.deviceName?.includes('Black') ? 'Black' : 'White',
+                image: device.normalized?.image || 'https://sources.imeicheck.net/images/64664f0891ea173f2986918043423f9e.png',
+                raw: device.data,
+            };
+            setCheckResult(parsed);
+            setIsTestLoading(false);
+            setShowCheckDialog(true);
+        }, 1000);
+    };
 
     const normalizeFromRaw = (snData: any) => {
         // Best-effort normalization. Adjust when actual API format is known
         const raw = snData?.data || snData?.raw || snData;
         const text = typeof raw === 'string' ? raw : JSON.stringify(raw);
         const out: any = { raw };
-        // naive heuristics
-        const modelMatch = text.match(/iPhone\s?(\d+\s?(Pro\s?Max|Pro|Plus|mini)?)/i);
+        // Умный парсинг полного названия модели (поддержка iPhone 17 Air, Pro, Pro Max)
+        const modelMatch = text.match(/iPhone\s+([^0-9\[]+)/i);
         if (modelMatch) {
-            out.model = modelMatch[1].replace(/\s+/g, ' ').trim();
-            if (/Pro Max/i.test(modelMatch[2] || '')) out.variant = 'Pro Max';
-            else if (/Pro/i.test(modelMatch[2] || '')) out.variant = 'Pro';
-            else if (/Plus/i.test(modelMatch[2] || '')) out.variant = 'Plus';
-            else if (/mini/i.test(modelMatch[2] || '')) out.variant = 'mini';
+            out.model = modelMatch[1].trim();
         }
         const storageMatch = text.match(/(\d+\s?GB|\d+\s?TB)/i);
         if (storageMatch) out.storage = storageMatch[1].replace(/\s+/g, '').toUpperCase();
@@ -295,8 +432,15 @@ export default function DeviceInfoPage() {
 
     return (
         <Page back={true}>
-            <div className="w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full justify-center items-center min-h-screen">
-                <div className="w-full max-w-md mx-auto flex flex-col gap-2 px-4">
+            <div 
+                className={`w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full justify-center items-center min-h-screen ${telegramUtils.telegramClasses.container}`}
+                data-checking={checking}
+                data-transitioning={isTransitioning}
+                style={{
+                    minHeight: isTelegramWebApp ? `${telegramUtils.safeViewportHeight}px` : '100vh'
+                }}
+            >
+                <div className={`w-full max-w-md mx-auto flex flex-col gap-2 px-4 ${adaptiveSizes.sectionSpacing}`}>
                     {/* Instruction Card */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -304,18 +448,18 @@ export default function DeviceInfoPage() {
                         transition={{ duration: 0.2 }}
                     >
                         <Card className="bg-blue-50 border-blue-200">
-                            <CardContent className="p-2">
-                                <div className="flex flex-col items-center space-y-2">
+                            <CardContent className={adaptiveSizes.cardPadding}>
+                                <div className={`flex flex-col items-center ${adaptiveSizes.elementSpacing}`}>
                                     <div className="w-full max-w-xs mx-auto mb-2">
                                         <Image
                                             src={getPictureUrl('animation.gif') || '/animation.gif'}
                                             alt="Инструкция по поиску серийного номера"
-                                            width={300}
-                                            height={120}
+                                            width={telegramUtils.getTelegramAdaptiveSize(300)}
+                                            height={telegramUtils.getTelegramAdaptiveSize(120)}
                                             className="w-full h-auto rounded-lg border border-blue-200"
                                         />
                                     </div>
-                                    <div className="text-[10px] text-blue-800 space-y-1">
+                                    <div className={`${adaptiveSizes.captionSize} text-blue-800 ${adaptiveSizes.elementSpacing}`}>
                                         <p><strong>Где найти:</strong> Настройки → Основные → Об этом устройстве</p>
                                         <p><strong>Что делать:</strong> Скопируйте серийный номер и вставьте в поле ниже</p>
                                     </div>
@@ -331,17 +475,23 @@ export default function DeviceInfoPage() {
                         transition={{ duration: 0.2, delay: 0.1 }}
                     >
                         <Card className="bg-white border-gray-200">
-                            <CardContent className="p-2">
-                                <div className="space-y-1">
+                            <CardContent className={adaptiveSizes.cardPadding}>
+                                <div className={adaptiveSizes.elementSpacing}>
                                     <input
                                         ref={inputRef}
                                         type="text"
                                         value={manualSerialNumber}
                                         onChange={(e) => handleInputChange(e.target.value.toUpperCase())}
-                                        placeholder="Введите серийный номер"
-                                        className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors text-[11px]"
+                                        placeholder="Введите серийный номер (10 или 12 символов)"
+                                        className={`w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent outline-none transition-colors ${adaptiveSizes.bodySize} ${adaptiveSizes.inputHeight}`}
                                         maxLength={12}
                                     />
+                                    {/* Счетчик символов */}
+                                    <div className="mt-1 text-right">
+                                        <span className={`text-xs ${manualSerialNumber.length === 10 || manualSerialNumber.length === 12 ? 'text-green-600' : 'text-gray-400'}`}>
+                                            {manualSerialNumber.length}/12
+                                        </span>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -355,8 +505,8 @@ export default function DeviceInfoPage() {
                     >
                         <Button
                             onClick={handleConfirm}
-                            disabled={!manualSerialNumber}
-                            className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-[11px]"
+                            disabled={!isValid}
+                            className={`w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${adaptiveSizes.buttonHeight} ${adaptiveSizes.bodySize}`}
                         >
                             Продолжить
                         </Button>
@@ -364,7 +514,7 @@ export default function DeviceInfoPage() {
                             <Button
                                 variant="outline"
                                 onClick={handleTest}
-                                className="w-full text-[11px]"
+                                className={`w-full ${adaptiveSizes.bodySize} ${adaptiveSizes.buttonHeight}`}
                                 disabled={isTestLoading}
                             >
                                 {isTestLoading ? 'Проверяем данные…' : 'Тест (показать пример без запроса)'}
@@ -380,13 +530,21 @@ export default function DeviceInfoPage() {
                 onStart={() => setShowWelcomeModal(false)}
             />
 
+            <TestDeviceSelector
+                isOpen={showTestDeviceSelector}
+                onClose={() => setShowTestDeviceSelector(false)}
+                onSelectDevice={handleSelectTestDevice}
+                testDevices={testDevices}
+                isLoading={isLoadingTestDevices}
+            />
+
             <Dialog open={showDialog} onOpenChange={handleEdit}>
                 <DialogContent
-                    className="bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg"
+                    className={`bg-white border border-gray-200 w-[95vw] max-w-md mx-auto rounded-xl shadow-lg ${adaptiveSizes.dialogMaxHeight}`}
                     onClick={handleContinue}
                     showCloseButton={false}
                 >
-                    <DialogTitle className="text-center text-xl font-semibold text-gray-900 mb-3">
+                    <DialogTitle className={`text-center ${adaptiveSizes.titleSize} font-semibold text-gray-900 mb-3`}>
                         📱 Подтверждение серийного номера
                     </DialogTitle>
                     <div className="text-center">
@@ -429,9 +587,9 @@ export default function DeviceInfoPage() {
                             </div>
                         ) : null}
                         <div className="flex justify-between"><span className="text-gray-500">Модель</span><span className="font-semibold">{checkResult?.model || '—'}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500">Вариант</span><span className="font-semibold">{checkResult?.variant || '—'}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Память</span><span className="font-semibold">{checkResult?.storage || '—'}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Цвет</span><span className="font-semibold">{checkResult?.color || '—'}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">S/N</span><span className="font-semibold">{checkResult?.raw?.data?.properties?.serial || manualSerialNumber || '—'}</span></div>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                         <Button
@@ -443,7 +601,6 @@ export default function DeviceInfoPage() {
                                 // 1) Сохраняем префилл для совместимости
                                 const prefill = {
                                     model: checkResult.model || '',
-                                    variant: checkResult.variant || '',
                                     storage: checkResult.storage || '',
                                     color: mapColorToCode(checkResult.color || ''),
                                 };
@@ -455,28 +612,22 @@ export default function DeviceInfoPage() {
 
                                 // 2) Пытаемся заранее получить устройство и цену (с фоллбэками по цвету/варианту)
                                 try {
-                                    const attemptFetch = async (m: string, v: string, s: string, c: string) => {
+                                    const attemptFetch = async (m: string, s: string, c: string) => {
                                         const p = new URLSearchParams({ model: m, storage: s, color: c });
-                                        if (v) p.set('variant', v);
                                         const r = await fetch(`/api/devices/device?${p.toString()}`, { method: 'GET' });
                                         if (!r.ok) return null;
                                         return r.json();
                                     }
 
-                                    const primary = await attemptFetch(prefill.model, prefill.variant, prefill.storage, prefill.color);
+                                    const primary = await attemptFetch(prefill.model, prefill.storage, prefill.color);
                                     let device = primary;
 
                                     // Фоллбек по цвету: C ↔ Bl (разные кодировки чёрного для XR)
                                     if (!device) {
                                         const altColor = prefill.color === 'C' ? 'Bl' : (prefill.color === 'Bl' ? 'C' : '');
                                         if (altColor) {
-                                            device = await attemptFetch(prefill.model, prefill.variant, prefill.storage, altColor);
+                                            device = await attemptFetch(prefill.model, prefill.storage, altColor);
                                         }
-                                    }
-
-                                    // Фоллбек по варианту: убрать вариант, если не найдено
-                                    if (!device && prefill.variant) {
-                                        device = await attemptFetch(prefill.model, '', prefill.storage, prefill.color);
                                     }
 
                                     if (device?.basePrice) {
@@ -493,8 +644,7 @@ export default function DeviceInfoPage() {
                                         Lb: 'Светло-голубой', Lg: 'Светло-золотой', Gy: 'Серый', Db: 'Темно-синий', Or: 'Оранжевый'
                                     }
                                     const colorLabel = colorLabelMap[prefill.color] || prefill.color
-                                    const variantLabel = prefill.variant ? ` ${prefill.variant}` : ''
-                                    const modelname = `Apple iPhone ${prefill.model}${variantLabel} ${prefill.storage} ${colorLabel}`.trim()
+                                    const modelname = `Apple iPhone ${prefill.model} ${prefill.storage} ${colorLabel}`.trim()
                                     await fetch('/api/request/choose', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -542,9 +692,6 @@ export default function DeviceInfoPage() {
                         </div>
                       </div>
                     )}
-                    <div className="mt-2">
-                        <p className="text-[10px] text-gray-500 break-words">SN: {manualSerialNumber}</p>
-                    </div>
                 </DialogContent>
             </Dialog>
 

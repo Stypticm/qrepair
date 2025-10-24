@@ -150,6 +150,61 @@
     }
   }
 
+  /* iPhone-адаптивные стили для Telegram Mini App */
+  .telegram-container {
+    /* Используем реальную высоту viewport в Telegram WebApp */
+    min-height: 100dvh;
+    height: 100dvh;
+  }
+
+  .telegram-fullscreen {
+    /* Полноэкранный режим для Telegram WebApp */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .telegram-safe-area {
+    /* Учет safe area для iPhone с вырезом */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Адаптивные размеры для iPhone экранов */
+  @media (max-width: 375px) {
+    .iphone-se {
+      --image-size: 80px;
+      --button-height: 2.5rem;
+      --input-height: 2.25rem;
+      --text-size: 0.875rem;
+    }
+  }
+
+  @media (min-width: 376px) and (max-width: 390px) {
+    .iphone-standard {
+      --image-size: 100px;
+      --button-height: 2.75rem;
+      --input-height: 2.5rem;
+      --text-size: 0.875rem;
+    }
+  }
+
+  @media (min-width: 391px) and (max-width: 428px) {
+    .iphone-plus {
+      --image-size: 120px;
+      --button-height: 3rem;
+      --input-height: 2.75rem;
+      --text-size: 1rem;
+    }
+  }
+
   /* Улучшения для мобильных устройств и клавиатуры */
   @media (max-width: 768px) {
 

@@ -46,18 +46,80 @@ export const useRequestSync = () => {
     '/favorites',
   ]
 
+  // Страницы где синхронизация должна быть более осторожной
+  const carefulSyncPages = [
+    '/request/device-info',
+    '/request/form',
+    '/request/evaluation',
+    '/request/device-functions',
+  ]
+
   const checkRequestStatus = useCallback(async () => {
     if (!telegramId) return
 
     // Пропускаем синхронизацию на определенных страницах
     if (typeof window !== 'undefined') {
       const currentPath = window.location.pathname
+
+      // Полностью пропускаем синхронизацию на этих страницах
       if (
         skipSyncPages.some((page) =>
           currentPath.includes(page)
         )
       ) {
         return
+      }
+
+      // Осторожная синхронизация на критических страницах
+      if (
+        carefulSyncPages.some((page) =>
+          currentPath.includes(page)
+        )
+      ) {
+        // Проверяем, есть ли активные диалоги или формы
+        const hasActiveDialog = document.querySelector(
+          '[role="dialog"]:not([aria-hidden="true"])'
+        )
+        const hasActiveForm = document.querySelector(
+          'form:focus-within'
+        )
+        const hasActiveInput = document.querySelector(
+          'input:focus, textarea:focus, select:focus'
+        )
+
+        if (
+          hasActiveDialog ||
+          hasActiveForm ||
+          hasActiveInput
+        ) {
+          console.log(
+            '🔄 Пропускаем синхронизацию - пользователь активно работает со страницей'
+          )
+          return
+        }
+
+        // На странице device-info дополнительная защита
+        if (currentPath.includes('/request/device-info')) {
+          const isChecking = document.querySelector(
+            '[data-checking="true"]'
+          )
+          const isTransitioning = document.querySelector(
+            '[data-transitioning="true"]'
+          )
+          const isActiveOnDeviceInfo =
+            sessionStorage.getItem('activeOnDeviceInfo')
+
+          if (
+            isChecking ||
+            isTransitioning ||
+            isActiveOnDeviceInfo
+          ) {
+            console.log(
+              '🔄 Пропускаем синхронизацию - идет проверка, переход или пользователь активно работает'
+            )
+            return
+          }
+        }
       }
 
       // Пропускаем синхронизацию если на странице формы и есть ошибка загрузки
@@ -129,6 +191,43 @@ export const useRequestSync = () => {
 
         // Если шаг изменился, обновляем store
         if (lastStep !== currentStep) {
+          // Дополнительная проверка для страницы device-info
+          if (
+            typeof window !== 'undefined' &&
+            window.location.pathname.includes(
+              '/request/device-info'
+            )
+          ) {
+            // На странице device-info не меняем шаг, если пользователь активно работает
+            const hasActiveDialog = document.querySelector(
+              '[role="dialog"]:not([aria-hidden="true"])'
+            )
+            const hasActiveInput = document.querySelector(
+              'input:focus, textarea:focus, select:focus'
+            )
+            const isChecking = document.querySelector(
+              '[data-checking="true"]'
+            )
+            const isTransitioning = document.querySelector(
+              '[data-transitioning="true"]'
+            )
+            const isActiveOnDeviceInfo =
+              sessionStorage.getItem('activeOnDeviceInfo')
+
+            if (
+              hasActiveDialog ||
+              hasActiveInput ||
+              isChecking ||
+              isTransitioning ||
+              isActiveOnDeviceInfo
+            ) {
+              console.log(
+                '🔄 Пропускаем изменение шага на device-info - пользователь активно работает'
+              )
+              return
+            }
+          }
+
           console.log(
             '🔄 Step changed from',
             lastStep,
@@ -150,14 +249,28 @@ export const useRequestSync = () => {
     // Проверяем сразу
     checkRequestStatus()
 
-    // Увеличиваем интервал до 30 секунд для экономии ресурсов
+    // Адаптивный интервал в зависимости от страницы
+    const getInterval = () => {
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname
+        if (
+          carefulSyncPages.some((page) =>
+            currentPath.includes(page)
+          )
+        ) {
+          return 60000 // 1 минута для критических страниц
+        }
+      }
+      return 30000 // 30 секунд для остальных
+    }
+
     // Проверяем только когда пользователь активен
     intervalRef.current = setInterval(() => {
       // Проверяем только если страница видима
       if (document.visibilityState === 'visible') {
         checkRequestStatus()
       }
-    }, 30000) // 30 секунд вместо 5
+    }, getInterval())
   }, [checkRequestStatus])
 
   const stopSync = useCallback(() => {
