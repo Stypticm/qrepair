@@ -411,9 +411,18 @@ export default function EvaluationPage() {
       const parsed = Number(storedBase);
       if (!Number.isNaN(parsed)) {
         setBasePrice(parsed);
+        console.log('💰 Загружена базовая цена:', parsed);
       }
     }
   }, []);
+
+  // Сохраняем basePrice в sessionStorage для следующих страниц
+  useEffect(() => {
+    if (basePrice && typeof window !== "undefined") {
+      sessionStorage.setItem('basePrice', basePrice.toString());
+      console.log('💰 Сохранена базовая цена для следующих страниц:', basePrice);
+    }
+  }, [basePrice]);
 
   // Автоматическое сохранение при изменении данных
   useEffect(() => {

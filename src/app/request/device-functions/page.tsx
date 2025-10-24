@@ -220,6 +220,10 @@ export default function DeviceFunctionsPage() {
   }, [functionStates, saveToDatabase]);
 
   const handleShowDialog = useCallback(async () => {
+    console.log('🔍 handleShowDialog вызвана');
+    console.log('📱 functionStates:', functionStates);
+    console.log('💰 savedBasePrice:', sessionStorage.getItem('basePrice'));
+    
     setNavigationState(prev => ({ ...prev, isLoading: true }));
     
     try {
@@ -230,6 +234,7 @@ export default function DeviceFunctionsPage() {
       const savedBasePrice = sessionStorage.getItem('basePrice');
       if (!savedBasePrice) {
         console.error('Не найдена базовая цена');
+        setNavigationState(prev => ({ ...prev, isLoading: false }));
         return;
       }
       
@@ -265,6 +270,8 @@ export default function DeviceFunctionsPage() {
       
       // Открываем диалог
       setNavigationState(prev => ({ ...prev, isDialogOpen: true }));
+      
+      console.log('✅ Диалог открыт успешно');
       
     } catch (error) {
       console.error('Ошибка при расчёте цены:', error);
