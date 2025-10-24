@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
       damagePercent,
       price,
       priceRange,
+      wearValues,
     } = await request.json()
 
     if (!telegramId) {
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
         userEvaluation: userEvaluation || null,
         damagePercent: damagePercent || 0,
         price: price || activeRequest.price,
+        wearValues: wearValues || null,
         // Сохраняем priceRange в deviceConditions как JSON
         deviceConditions: priceRange
           ? {
