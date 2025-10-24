@@ -289,6 +289,7 @@ export default function DeviceInfoPage() {
                     return match ? match[1].trim() : 'Unknown';
                 };
 
+                console.log('📱 Тестовые данные найдены:', existingTestDevice.data);
                 const parsed = {
                     model: getFullModelName(existingTestDevice.normalized?.deviceName || ''),
                     storage: existingTestDevice.normalized?.deviceName?.match(/(\d+GB)/)?.[1] || '128GB',
@@ -333,6 +334,7 @@ export default function DeviceInfoPage() {
                     });
                     if (reRes.ok) {
                         const reData = await reRes.json();
+                        console.log('📱 API Reincubate ответ:', reData);
                         const normalized = reData?.normalized;
                         const parsed = normalized ? {
                             model: normalized.model || '',
@@ -354,6 +356,7 @@ export default function DeviceInfoPage() {
                             return;
                         }
                         const snData = await snRes.json();
+                        console.log('📱 API Fallback ответ:', snData);
                         const parsed = normalizeFromRaw(snData);
                         setCheckResult(parsed);
                     }
