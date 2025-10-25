@@ -3,10 +3,10 @@ import prisma from '@/core/lib/prisma'
 
 export async function PATCH(
   request: NextRequest,
-  context: any
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const requestId = context?.params?.id as string
+    const { id: requestId } = await params
     if (!requestId) {
       return NextResponse.json(
         { error: 'Missing id' },

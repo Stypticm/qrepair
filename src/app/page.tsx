@@ -66,7 +66,6 @@ function HomeContent() {
 
   // Функция загрузки marketplace данных
   const loadMoreMarketplaceItems = useCallback(async () => {
-    if (marketplaceLoading) return;
     console.log('Loading marketplace items...');
     setMarketplaceLoading(true);
     try {
@@ -96,7 +95,7 @@ function HomeContent() {
     } finally {
       setMarketplaceLoading(false);
     }
-  }, [marketplaceLoading]);
+  }, []);
 
   // Функция обновления marketplace данных (для автообновления)
   const refreshMarketplaceItems = useCallback(async () => {
@@ -121,12 +120,12 @@ function HomeContent() {
 
   // Загружаем данные при инициализации
   useEffect(() => {
-    if (!isLoading && marketplaceItems.length === 0 && marketplaceOffsetRef.current === 0) {
+    if (!isLoading && marketplaceItems.length === 0 && marketplaceOffsetRef.current === 0 && !marketplaceLoading) {
       loadMoreMarketplaceItems();
     }
     // намеренно не добавляем loadMoreMarketplaceItems в зависимости, чтобы не триггерить повторно
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, marketplaceItems.length]);
+  }, [isLoading, marketplaceItems.length, marketplaceLoading]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -267,17 +266,7 @@ function HomeContent() {
 
   const handleStartForm = useCallback(async () => {
     try {
-      const savedStep = sessionStorage.getItem('currentStep');
-      const hasSerial = !!sessionStorage.getItem('serialNumber');
-      const hasSelection = !!sessionStorage.getItem('phoneSelection');
-
-      // Режим резюме: только если есть реальные данные выбора и шаг не device-info
-      if (savedStep && savedStep !== 'device-info' && savedStep !== 'evaluation-mode' && (hasSerial || hasSelection)) {
-        router.push(`/request/${savedStep}`);
-        return;
-      }
-
-      // Иначе начинаем заново с evaluation-mode
+      // Всегда начинаем с выбора способа оценки
       resetAllStates();
       // подчистим возможные хвосты
       sessionStorage.removeItem('currentStep');

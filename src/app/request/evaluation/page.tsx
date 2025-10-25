@@ -14,6 +14,7 @@ import { getPictureUrl } from "@/core/lib/assets";
 import { useFormData } from '@/hooks/usePersistentState';
 import { calculatePriceRange } from "@/core/lib/priceCalculation";
 import { getBasePriceWithFallback } from '@/core/lib/basePriceUtils';
+import { EvaluationContinueButton } from '@/components/ContinueButton';
 
 // Типы для безопасности
 interface WearValues {
@@ -557,7 +558,7 @@ export default function EvaluationPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <Button
+            <EvaluationContinueButton
               type="button"
               disabled={submitting}
               onClick={async () => {
@@ -582,10 +583,11 @@ export default function EvaluationPage() {
                 // Сохраняем данные и переходим
                 await handleContinue();
               }}
-              className="w-full h-12 rounded-full bg-slate-900 px-8 text-sm font-semibold text-white shadow-[0_24px_60px_-25px_rgba(15,23,42,0.65)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              disabled={submitting}
+              isLoading={submitting}
             >
-              {submitting ? 'Переходим для проверки функций...' : 'Продолжить'}
-            </Button>
+              Продолжить
+            </EvaluationContinueButton>
           </motion.div>
         </div>
       </div>

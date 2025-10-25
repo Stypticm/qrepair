@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useAppStore } from '@/stores/authStore'
+import { useRouter } from 'next/navigation'
 
 export interface PageState {
   [key: string]: any
@@ -87,6 +88,7 @@ export function usePageState<T extends PageState>(
   initialState: T
 ) {
   const { telegramId, setCurrentStep } = useAppStore()
+  const router = useRouter()
   const [state, setState] = useState<T>(initialState)
   const [navigationState, setNavigationState] =
     useState<NavigationState>({
@@ -259,7 +261,7 @@ export function usePageState<T extends PageState>(
 
         // Переходим на следующую страницу
         setCurrentStep(nextStep)
-        window.location.href = nextPath
+        router.push(nextPath)
       } catch (error) {
         console.error(
           `❌ Ошибка при переходе из диалога ${config.step}:`,

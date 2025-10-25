@@ -6,9 +6,12 @@ import { useCallback } from 'react'
 // Определяем порядок шагов в процессе оценки
 const stepOrder: string[] = [
   '/', // Главная страница или начальная точка
+  '/request/device-info',
   '/request/form',
   '/request/evaluation',
-  '/request/submit',
+  '/request/device-functions',
+  '/request/delivery-options',
+  '/request/photos',
   '/request/final',
 ]
 

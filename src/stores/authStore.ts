@@ -199,7 +199,7 @@ export const useAppStore = create<AppState>()(
       debugInfo: [],
 
       // Device data
-      modelname: 'Apple iPhone 11',
+      modelname: '',
       comment: '',
       imei: null,
       serialNumber: null,
@@ -436,7 +436,7 @@ export const useAppStore = create<AppState>()(
       // Reset
       resetAllStates: () => {
         set({
-          modelname: 'Apple iPhone 11',
+          modelname: '',
           comment: '',
           imei: null,
           serialNumber: null,

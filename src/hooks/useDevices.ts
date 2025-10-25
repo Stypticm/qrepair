@@ -10,6 +10,186 @@ type DeviceResponse = {
   basePrice: number
 }
 
+// Функция для парсинга deviceData из БД
+const parseDeviceDataFromDB = (deviceData: any) => {
+  if (!deviceData || typeof deviceData !== 'object')
+    return null
+
+  try {
+    // Парсим deviceName: "iPhone XR 128GB Black [A2105] [iPhone11,8]"
+    const deviceName = deviceData.deviceName || ''
+
+    if (!deviceName) return null
+
+    // Сначала проверяем комбинированные модели типа XR, XS, SE, Pro, Pro Max
+    const combinedMatch = deviceName.match(
+      /iPhone\s+(XR|XS|SE|mini|Plus|Pro Max|Pro)/i
+    )
+    let model = ''
+    let variant = ''
+
+    if (combinedMatch) {
+      const combinedModel = combinedMatch[1]
+      if (combinedModel === 'XR') {
+        model = 'XR'
+        variant = ''
+      } else if (combinedModel === 'XS') {
+        model = 'XS'
+        variant = ''
+      } else if (combinedModel === 'SE') {
+        model = 'SE'
+        variant = ''
+      } else if (combinedModel === 'mini') {
+        // Для mini нужно найти номер модели
+        const miniMatch = deviceName.match(
+          /iPhone\s+(\d+)\s+mini/i
+        )
+        if (miniMatch) {
+          model = miniMatch[1]
+          variant = 'mini'
+        }
+      } else if (combinedModel === 'Plus') {
+        // Для Plus нужно найти номер модели
+        const plusMatch = deviceName.match(
+          /iPhone\s+(\d+)\s+Plus/i
+        )
+        if (plusMatch) {
+          model = plusMatch[1]
+          variant = 'Plus'
+        }
+      } else if (combinedModel === 'Pro Max') {
+        // Для Pro Max нужно найти номер модели
+        const proMaxMatch = deviceName.match(
+          /iPhone\s+(\d+)\s+Pro Max/i
+        )
+        if (proMaxMatch) {
+          model = proMaxMatch[1]
+          variant = 'Pro Max'
+        }
+      } else if (combinedModel === 'Pro') {
+        // Для Pro нужно найти номер модели
+        const proMatch = deviceName.match(
+          /iPhone\s+(\d+)\s+Pro/i
+        )
+        if (proMatch) {
+          model = proMatch[1]
+          variant = 'Pro'
+        }
+      }
+    } else {
+      // Обычные модели с номером
+      const modelVariantMatch = deviceName.match(
+        /iPhone\s+(\d+)(?:\s+(\w+(?:\s+\w+)?))?/i
+      )
+      if (modelVariantMatch) {
+        model = modelVariantMatch[1] || ''
+        variant = modelVariantMatch[2] || ''
+      }
+    }
+
+    // Парсим память
+    const storageMatch = deviceName.match(/(\d+GB)/i)
+    const storage = storageMatch ? storageMatch[1] : ''
+
+    // Парсим цвет
+    const colorMatch = deviceName.match(
+      /(Black|White|Red|Blue|Purple|Green|Gold|Silver|Space Gray|Midnight|Starlight)/i
+    )
+    const extractedColor = colorMatch ? colorMatch[1] : ''
+
+    // Маппинг цветов на коды БД
+    const colorMap: { [key: string]: string } = {
+      Black: 'Bl',
+      White: 'Wh',
+      Red: 'Re',
+      Blue: 'Bl',
+      Green: 'Gr',
+      Purple: 'Pu',
+      Yellow: 'Ye',
+      Pink: 'Pi',
+      Gold: 'Go',
+      Silver: 'Wh',
+      'Space Gray': 'Gr',
+      Midnight: 'Bl',
+      Starlight: 'Wh',
+    }
+
+    const color = colorMap[extractedColor] || 'Bl'
+
+    return {
+      model: model || null,
+      variant: variant || null,
+      storage: storage || null,
+      color: color,
+    }
+  } catch (error) {
+    console.warn('Ошибка при парсинге deviceData:', error)
+    return null
+  }
+}
+
+// Fallback функция для парсинга modelname (старая логика)
+const parseModelNameFromDB = (modelname: string) => {
+  if (!modelname || modelname === 'Модель не указана')
+    return null
+
+  // Примеры: "Apple iPhone XR 128GB Black", "iPhone 14 Pro 256GB Blue"
+  const match = modelname.match(
+    /iPhone\s+(XR|XS|SE|\d+(?:\s+(?:Pro|Pro Max|mini|Plus))?)\s+(\d+GB)\s+(\w+)/i
+  )
+
+  if (match) {
+    const [, modelVariant, storage, color] = match
+
+    // Парсим модель и вариант
+    let model = ''
+    let variant = ''
+
+    if (modelVariant === 'XR') {
+      model = 'XR'
+      variant = ''
+    } else if (modelVariant === 'XS') {
+      model = 'XS'
+      variant = ''
+    } else if (modelVariant === 'SE') {
+      model = 'SE'
+      variant = ''
+    } else {
+      // Для моделей типа "14 Pro", "15 Pro Max"
+      const modelMatch = modelVariant.match(
+        /(\d+)(?:\s+(Pro Max|Pro|mini|Plus))?/
+      )
+      if (modelMatch) {
+        model = modelMatch[1]
+        variant = modelMatch[2] || ''
+      }
+    }
+
+    // Маппинг цветов
+    const colorMap: { [key: string]: string } = {
+      Black: 'Bl',
+      White: 'Wh',
+      Red: 'Re',
+      Blue: 'Bl',
+      Green: 'Gr',
+      Purple: 'Pu',
+      Yellow: 'Ye',
+      Pink: 'Pi',
+      Gold: 'Go',
+      Silver: 'Wh',
+    }
+
+    return {
+      model: model || null,
+      variant: variant || null,
+      storage: storage || null,
+      color: colorMap[color] || 'Bl',
+    }
+  }
+
+  return null
+}
+
 const fetchJSON = async <T>(url: string): Promise<T> => {
   const response = await fetch(url)
   if (!response.ok) {
@@ -101,30 +281,90 @@ export const useDevices = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    try {
-      const savedSelection = sessionStorage.getItem(
-        'phoneSelection'
-      )
-      if (savedSelection) {
-        const parsed = JSON.parse(savedSelection)
-        console.log(
-          '🔄 Восстанавливаем выбор из sessionStorage:',
-          parsed
+    const restoreData = async () => {
+      try {
+        // Сначала проверяем sessionStorage
+        const savedSelection = sessionStorage.getItem(
+          'phoneSelection'
         )
+        if (savedSelection) {
+          const parsed = JSON.parse(savedSelection)
+          console.log(
+            '🔄 Восстанавливаем выбор из sessionStorage:',
+            parsed
+          )
 
-        setSelectedOptions({
-          model: parsed.model || null,
-          variant: parsed.variant || null,
-          storage: parsed.storage || null,
-          color: parsed.color || null,
-        })
+          setSelectedOptions({
+            model: parsed.model || null,
+            variant: parsed.variant || null,
+            storage: parsed.storage || null,
+            color: parsed.color || null,
+          })
+          return
+        }
+
+        // Если нет данных в sessionStorage, пробуем получить из БД
+        const telegramId =
+          sessionStorage.getItem('telegramId') ||
+          localStorage.getItem('telegramId')
+
+        if (telegramId) {
+          const response = await fetch(
+            '/api/request/getDraft',
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          )
+
+          if (response.ok) {
+            const data = await response.json()
+
+            // Сначала пробуем deviceData (приоритет)
+            if (data?.deviceData) {
+              const parsedModel = parseDeviceDataFromDB(
+                data.deviceData
+              )
+              if (parsedModel) {
+                console.log(
+                  '🔄 Восстанавливаем выбор из deviceData:',
+                  parsedModel
+                )
+                setSelectedOptions(parsedModel)
+                return
+              }
+            }
+
+            // Fallback на modelname если deviceData нет
+            if (
+              data?.modelname &&
+              data.modelname !== 'Модель не указана'
+            ) {
+              // Парсим modelname из БД (старая логика)
+              const parsedModel = parseModelNameFromDB(
+                data.modelname
+              )
+              if (parsedModel) {
+                console.log(
+                  '🔄 Восстанавливаем выбор из modelname:',
+                  parsedModel
+                )
+                setSelectedOptions(parsedModel)
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(
+          'Ошибка при восстановлении выбора:',
+          error
+        )
       }
-    } catch (error) {
-      console.warn(
-        'Ошибка при восстановлении выбора:',
-        error
-      )
     }
+
+    restoreData()
   }, [])
 
   const modelsQuery = useQuery<string[]>({

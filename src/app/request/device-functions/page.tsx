@@ -255,7 +255,7 @@ export default function DeviceFunctionsPage() {
       // Рассчитываем новый диапазон цен с учётом функций
       const calculatedPriceRange = calculatePriceRange(
         basePrice,
-        modelname || 'iPhone',
+        modelname || 'Модель не указана',
         deviceConditionsData,
         additionalConditionsData,
         functionDiscount

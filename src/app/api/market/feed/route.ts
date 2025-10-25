@@ -61,12 +61,12 @@ export async function GET(request: NextRequest) {
           color = modelParts.slice(2).join(' ')
         }
       } else {
-        model = item.modelname || 'Устройство'
+        model = item.modelname || 'Модель не указана'
       }
 
       return {
         id: item.id,
-        title: item.modelname || 'Устройство',
+        title: item.modelname || 'Модель не указана',
         price: item.price,
         date: item.createdAt.toISOString(),
         cover:

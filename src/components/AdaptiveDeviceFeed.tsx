@@ -76,8 +76,13 @@ export function AdaptiveDeviceFeed({
     }, 0);
   }, [onViewModeChange]);
 
-  // Используем реальные данные из props
+  // Используем реальные данные из props (без фильтрации для начала)
   const displayItems = items;
+  
+  // Отладка: логируем данные
+  console.log('🔍 AdaptiveDeviceFeed - items:', items.length, items);
+  console.log('🔍 AdaptiveDeviceFeed - displayItems:', displayItems.length, displayItems);
+  console.log('🔍 AdaptiveDeviceFeed - isLoading:', isLoading);
 
   const itemsPerPage = 1; // Показываем по 1 карточке за раз (настоящий carousel)
   const totalPages = Math.ceil(displayItems.length / itemsPerPage);
@@ -145,29 +150,50 @@ export function AdaptiveDeviceFeed({
   });
 
 
-  if (isLoading && displayItems.length === 0) {
+  // Показываем скелетон только при загрузке
+  if (isLoading) {
     return (
       <div className="w-full">
-        <div className="flex flex-col justify-center items-center h-64 space-y-4">
-          <div className="relative w-16 h-16">
-            <img
-              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-              alt="Загрузка"
-              width={64}
-              height={64}
-              className="object-contain w-full h-full"
-              style={{ imageRendering: 'auto' }}
-            />
+        <div className="space-y-2">
+          {/* Индикаторы страниц (скелетон) */}
+          <div className="flex justify-center gap-2 mb-4">
+            <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"></div>
           </div>
-          <div className="text-center">
-            <p className="text-gray-600 font-medium">Загружаем товары...</p>
-            <p className="text-gray-400 text-sm">Пожалуйста, подождите</p>
+
+          {/* Карусель скелетон - простой */}
+          <div className="relative outline-none flex justify-center w-full mx-auto bg-white/15 backdrop-blur-lg rounded-3xl shadow-3xl border border-white/30 pb-4">
+            <div className="h-[380px] w-full max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
+              {/* Изображение скелетон */}
+              <div className="h-78 bg-gray-200 flex items-center justify-center">
+                <div className="w-32 h-32 bg-gray-300 rounded-lg"></div>
+              </div>
+              
+              {/* Контент скелетон */}
+              <div className="p-4 flex flex-col h-full">
+                <div className="flex-1">
+                  {/* Заголовок скелетон */}
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                  
+                  {/* Цена скелетон */}
+                  <div className="h-6 bg-gray-200 rounded w-1/3 mt-auto"></div>
+                </div>
+                
+                {/* Кнопка скелетон */}
+                <div className="w-full mt-2">
+                  <div className="h-10 bg-gray-200 rounded-lg"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Если нет данных и не загружается - показываем сообщение
   if (displayItems.length === 0) {
     return (
       <div className="w-full text-center py-8 text-gray-500">
@@ -177,7 +203,15 @@ export function AdaptiveDeviceFeed({
   }
 
   return (
-    <div ref={rootRef} className="w-full space-y-1">
+    <AnimatePresence mode="wait">
+      <motion.div 
+        ref={rootRef} 
+        className="w-full space-y-1"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
       {viewMode === 'grid' && (
         <div className="bg-gray-50 rounded-xl p-4 space-y-3">
           {/* Кнопка возврата к рекомендациям по центру (вверху) */}
@@ -232,7 +266,13 @@ export function AdaptiveDeviceFeed({
 
       {/* Контент */}
       {viewMode === 'carousel' ? (
-        <div className="space-y-2">
+        <motion.div 
+          className="space-y-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.4 }}
+        >
           {/* Индикаторы страниц */}
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mb-4">
@@ -311,7 +351,7 @@ export function AdaptiveDeviceFeed({
               </motion.div>
             </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
       ) : (
         /* Сетка */
         <div className="space-y-2">
@@ -342,6 +382,7 @@ export function AdaptiveDeviceFeed({
         </div>
       )}
 
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

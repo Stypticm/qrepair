@@ -64,7 +64,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
         setDebugInfo(prev => [...prev.slice(-9), debugMessage]); // Показываем последние 10 сообщений
     }, []);
 
-    const [modelname, setModel] = useState<string>('Apple iPhone 11');
+    const [modelname, setModel] = useState<string>('Модель не указана');
     const [comment, setComment] = useState<string>('');
     const [imei, setImei] = useState<string | null>(null);
     const [serialNumber, setSerialNumber] = useState<string | null>(null);
