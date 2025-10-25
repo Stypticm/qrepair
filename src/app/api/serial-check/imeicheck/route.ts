@@ -130,6 +130,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (!apiKey) {
+      console.error(
+        '❌ IMEICHECK_API_KEY is not configured'
+      )
+      console.error('Environment variables:', {
+        IMEICHECK_API_KEY: process.env.IMEICHECK_API_KEY
+          ? 'SET'
+          : 'NOT SET',
+        imeicheck_api_key: process.env.imeicheck_api_key
+          ? 'SET'
+          : 'NOT SET',
+        NODE_ENV: process.env.NODE_ENV,
+      })
       return NextResponse.json(
         {
           ok: false,
@@ -157,6 +169,14 @@ export async function POST(req: NextRequest) {
     // Add small timeout via AbortController to avoid hanging forever
     const ac = new AbortController()
     const timeout = setTimeout(() => ac.abort(), 30000)
+
+    console.log('🔍 Making request to imeicheck:', {
+      url,
+      payload,
+      apiKey: apiKey ? 'SET' : 'NOT SET',
+      environment: process.env.NODE_ENV,
+    })
+
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -177,6 +197,15 @@ export async function POST(req: NextRequest) {
     } catch {
       // keep raw text for diagnostics
     }
+
+    console.log('📡 imeicheck response:', {
+      status: res.status,
+      ok: res.ok,
+      text:
+        text.substring(0, 200) +
+        (text.length > 200 ? '...' : ''),
+      data: data ? 'parsed' : 'raw text',
+    })
 
     if (!res.ok) {
       return NextResponse.json(
