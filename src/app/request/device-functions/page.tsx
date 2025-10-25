@@ -29,6 +29,7 @@ import { calculatePriceRange, type DeviceConditions, type AdditionalConditions }
 import { usePageState } from '@/hooks/usePageState';
 import { DeviceFunctionsContinueButton } from '@/components/ContinueButton';
 import { PriceRangeDialog } from '@/components/UniversalDialog';
+import { getBasePriceWithFallback } from '@/core/lib/basePriceUtils';
 
 const ICON_MAP = {
   power: Power,
@@ -230,15 +231,13 @@ export default function DeviceFunctionsPage() {
       // Рассчитываем скидку от функций
       const functionDiscount = calculateFunctionDiscount(functionStates, DEVICE_FUNCTIONS);
       
-      // Получаем базовую цену
-      const savedBasePrice = sessionStorage.getItem('basePrice');
-      if (!savedBasePrice) {
-        console.error('Не найдена базовая цена');
+      // Получаем базовую цену с fallback механизмом
+      const basePrice = await getBasePriceWithFallback(modelname);
+      if (!basePrice) {
+        console.error('Не удалось получить базовую цену');
         setNavigationState(prev => ({ ...prev, isLoading: false }));
         return;
       }
-      
-      const basePrice = parseFloat(savedBasePrice);
       
       // Получаем существующие условия
       const deviceConditionsData: DeviceConditions = {

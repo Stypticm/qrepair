@@ -20,7 +20,7 @@ export default function FormPage() {
 
     // Автоматическое сохранение при изменении выбора телефона
     useEffect(() => {
-        if (phoneSelection.state.model && phoneSelection.state.model !== 'Apple iPhone 11') {
+        if (phoneSelection.state.model && phoneSelection.state.model !== '') {
             // Сохраняем в БД с небольшой задержкой
             const timeoutId = setTimeout(() => {
                 saveToDatabase();

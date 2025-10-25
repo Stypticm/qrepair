@@ -143,7 +143,7 @@ const DeliveryOptionsPage = () => {
         setTimeout(() => router.push('/request/courier'), 200);
     };
 
-    const finalPrice = price || priceRange?.midpoint || 48000;
+    const finalPrice = price || priceRange?.midpoint || 0;
     const formattedRange = useMemo(() => {
         if (!priceRange) return null;
         const fmt = (n: number) => n.toLocaleString('ru-RU');

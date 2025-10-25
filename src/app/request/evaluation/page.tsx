@@ -13,6 +13,7 @@ import { init, swipeBehavior } from '@telegram-apps/sdk';
 import { getPictureUrl } from "@/core/lib/assets";
 import { useFormData } from '@/hooks/usePersistentState';
 import { calculatePriceRange } from "@/core/lib/priceCalculation";
+import { getBasePriceWithFallback } from '@/core/lib/basePriceUtils';
 
 // Типы для безопасности
 interface WearValues {
@@ -403,18 +404,19 @@ export default function EvaluationPage() {
     setCurrentStep('evaluation');
   }, [setCurrentStep]);
 
-  // Загрузка базовой цены
+  // Загрузка базовой цены с fallback механизмом
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const storedBase = sessionStorage.getItem("basePrice");
-    if (storedBase) {
-      const parsed = Number(storedBase);
-      if (!Number.isNaN(parsed)) {
-        setBasePrice(parsed);
-        console.log('💰 Загружена базовая цена:', parsed);
+    
+    const loadBasePrice = async () => {
+      const basePrice = await getBasePriceWithFallback(modelname);
+      if (basePrice) {
+        setBasePrice(basePrice);
       }
-    }
-  }, []);
+    };
+    
+    loadBasePrice();
+  }, [modelname]);
 
   // Сохраняем basePrice в sessionStorage для следующих страниц
   useEffect(() => {
@@ -526,8 +528,8 @@ export default function EvaluationPage() {
             setCurrentEvaluation={setCurrentEvaluation}
             setPriceRange={priceRange.setState}
             setPrice={setPrice}
-            basePrice={basePrice ?? 50000}
-            modelName={modelname ?? 'iPhone 14'}
+            basePrice={basePrice ?? 0}
+            modelName={modelname ?? 'iPhone'}
           />
         </div>
 

@@ -282,11 +282,26 @@ export default function DeviceInfoPage() {
             if (existingTestDevice) {
                 // Используем существующие тестовые данные
                 addDebugInfo(`✅ Найдены тестовые данные для SN: ${manualSerialNumber}`);
-                // Умный парсинг модели из deviceName (поддержка iPhone 17 Air, Pro, Pro Max)
+                // Умный парсинг модели из deviceName (поддержка iPhone XR, 17 Air, Pro, Pro Max)
                 const getFullModelName = (deviceName: string): string => {
-                    // Ищем полное название модели после "iPhone "
-                    const match = deviceName.match(/iPhone\s+([^0-9\[]+)/);
-                    return match ? match[1].trim() : 'Unknown';
+                    // Сначала пробуем найти номер модели (iPhone 14, 15, 16, 17)
+                    const numberMatch = deviceName.match(/iPhone\s+(\d+)/);
+                    if (numberMatch) {
+                        return numberMatch[1];
+                    }
+                    
+                    // Затем пробуем найти буквенные модели (XR, XS, XS Max)
+                    const letterMatch = deviceName.match(/iPhone\s+([A-Z][A-Za-z\s]*?)(?:\s+\d+GB|\s+\[)/);
+                    if (letterMatch) {
+                        const model = letterMatch[1].trim();
+                        // Специальная обработка для XR - в БД это model: 'X', variant: 'R'
+                        if (model === 'XR') {
+                            return 'X';
+                        }
+                        return model;
+                    }
+                    
+                    return 'Unknown';
                 };
 
                 console.log('📱 Тестовые данные найдены:', existingTestDevice.data);
@@ -314,11 +329,26 @@ export default function DeviceInfoPage() {
                 });
                 
                 if (newTestDevice) {
-                    // Умный парсинг модели из deviceName (поддержка iPhone 17 Air, Pro, Pro Max)
+                    // Умный парсинг модели из deviceName (поддержка iPhone XR, 17 Air, Pro, Pro Max)
                     const getFullModelName = (deviceName: string): string => {
-                        // Ищем полное название модели после "iPhone "
-                        const match = deviceName.match(/iPhone\s+([^0-9\[]+)/);
-                        return match ? match[1].trim() : 'Unknown';
+                        // Сначала пробуем найти номер модели (iPhone 14, 15, 16, 17)
+                        const numberMatch = deviceName.match(/iPhone\s+(\d+)/);
+                        if (numberMatch) {
+                            return numberMatch[1];
+                        }
+                        
+                        // Затем пробуем найти буквенные модели (XR, XS, XS Max)
+                        const letterMatch = deviceName.match(/iPhone\s+([A-Z][A-Za-z\s]*?)(?:\s+\d+GB|\s+\[)/);
+                        if (letterMatch) {
+                            const model = letterMatch[1].trim();
+                            // Специальная обработка для XR - в БД это model: 'X', variant: 'R'
+                            if (model === 'XR') {
+                                return 'X';
+                            }
+                            return model;
+                        }
+                        
+                        return 'Unknown';
                     };
 
                     const parsed = {
@@ -622,21 +652,34 @@ export default function DeviceInfoPage() {
 
                                 // 2) Пытаемся заранее получить устройство и цену (с фоллбэками по цвету/варианту)
                                 try {
-                                    const attemptFetch = async (m: string, s: string, c: string) => {
+                                    const attemptFetch = async (m: string, s: string, c: string, v?: string) => {
                                         const p = new URLSearchParams({ model: m, storage: s, color: c });
+                                        if (v) {
+                                            p.set('variant', v);
+                                        }
                                         const r = await fetch(`/api/devices/device?${p.toString()}`, { method: 'GET' });
                                         if (!r.ok) return null;
                                         return r.json();
                                     }
 
-                                    const primary = await attemptFetch(prefill.model, prefill.storage, prefill.color);
+                                    // Определяем variant для специальных случаев
+                                    let variant = '';
+                                    if (prefill.model === 'X' && checkResult?.model === 'X') {
+                                        // Проверяем, это ли XR по deviceName
+                                        const deviceName = checkResult?.raw?.data?.properties?.deviceName || '';
+                                        if (deviceName.includes('XR')) {
+                                            variant = 'R';
+                                        }
+                                    }
+
+                                    const primary = await attemptFetch(prefill.model, prefill.storage, prefill.color, variant);
                                     let device = primary;
 
                                     // Фоллбек по цвету: C ↔ Bl (разные кодировки чёрного для XR)
                                     if (!device) {
                                         const altColor = prefill.color === 'C' ? 'Bl' : (prefill.color === 'Bl' ? 'C' : '');
                                         if (altColor) {
-                                            device = await attemptFetch(prefill.model, prefill.storage, altColor);
+                                            device = await attemptFetch(prefill.model, prefill.storage, altColor, variant);
                                         }
                                     }
 

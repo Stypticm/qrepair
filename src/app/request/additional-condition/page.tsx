@@ -18,6 +18,7 @@ import {
 import { getPictureUrl } from '@/core/lib/assets';
 import { Tooltip } from '@/components/ui/tooltip';
 import { calculatePriceRange, DeviceConditions, AdditionalConditions } from "@/core/lib/priceCalculation";
+import { getBasePriceWithFallback } from '@/core/lib/basePriceUtils';
 import { motion } from 'framer-motion';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { ImagePreloader } from '@/components/ImagePreloader/ImagePreloader';
@@ -170,16 +171,10 @@ export default function AdditionalConditionPage() {
     // Функция расчета цены с учетом дополнительных условий
     const calculatePriceWithAdditionalConditions = useCallback(async () => {
         try {
-            // Получаем базовую цену из sessionStorage
-            const savedBasePrice = sessionStorage.getItem('basePrice');
-            if (!savedBasePrice) {
-                console.error('Не найдена базовая цена в sessionStorage');
-                return;
-            }
-
-            const basePrice = parseFloat(savedBasePrice);
-            if (!basePrice || basePrice <= 0) {
-                console.error('Невалидная базовая цена:', basePrice);
+            // Получаем базовую цену с fallback механизмом
+            const basePrice = await getBasePriceWithFallback(modelname);
+            if (!basePrice) {
+                console.error('Не удалось получить базовую цену');
                 return;
             }
 
