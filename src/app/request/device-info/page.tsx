@@ -38,7 +38,7 @@ export default function DeviceInfoPage() {
     const [showErrorDialog, setShowErrorDialog] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [checking, setChecking] = useState(false);
-    const [checkResult, setCheckResult] = useState<null | { model?: string; storage?: string; color?: string; image?: string; raw?: any }>(null);
+    const [checkResult, setCheckResult] = useState<null | { model?: string; variant?: string; storage?: string; color?: string; image?: string; raw?: any }>(null);
     const [showCheckDialog, setShowCheckDialog] = useState(false);
     const [isDialogLocked, setIsDialogLocked] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -185,7 +185,7 @@ export default function DeviceInfoPage() {
             
             if (parsedData) {
                 // Сохраняем данные в БД
-                await saveDeviceDataToDB(telegramId || '', manualSerialNumber, result.data, username);
+                await saveDeviceDataToDB(telegramId || '', manualSerialNumber, result.data, username || undefined);
                 
                 // Показываем диалог с данными
                 setCheckResult(parsedData);
@@ -331,7 +331,7 @@ export default function DeviceInfoPage() {
                             </div>
                         </div>
                         <p className="text-xs text-gray-600 mb-3">
-                            Нажмите "Продолжить" для перехода
+                            Нажмите &quot;Продолжить&quot; для перехода
                         </p>
                         
                         {/* Кнопка подтверждения */}

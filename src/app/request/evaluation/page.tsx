@@ -559,7 +559,6 @@ export default function EvaluationPage() {
             transition={{ delay: 0.5 }}
           >
             <EvaluationContinueButton
-              type="button"
               disabled={submitting}
               onClick={async () => {
                 console.log('🔍 Continue button clicked:', {
@@ -583,7 +582,6 @@ export default function EvaluationPage() {
                 // Сохраняем данные и переходим
                 await handleContinue();
               }}
-              disabled={submitting}
               isLoading={submitting}
             >
               Продолжить

@@ -10,89 +10,89 @@ type DeviceResponse = {
   basePrice: number
 }
 
-// Функция для парсинга deviceData из БД
+// Функция для парсинга deviceData из БД (упрощенная версия)
 const parseDeviceDataFromDB = (deviceData: any) => {
   if (!deviceData || typeof deviceData !== 'object')
     return null
 
   try {
-    // Парсим deviceName: "iPhone XR 128GB Black [A2105] [iPhone11,8]"
+    // Используем готовое поле apple/modelName: "iPhone XR"
+    const appleModelName =
+      deviceData['apple/modelName'] || ''
+
+    // Парсим deviceName до квадратной скобки: "iPhone XR 128GB Black [A2105] [iPhone11,8]"
     const deviceName = deviceData.deviceName || ''
+    const cleanDeviceName = deviceName.split(' [')[0] // "iPhone XR 128GB Black"
 
-    if (!deviceName) return null
+    if (!appleModelName && !cleanDeviceName) return null
 
-    // Сначала проверяем комбинированные модели типа XR, XS, SE, Pro, Pro Max
-    const combinedMatch = deviceName.match(
-      /iPhone\s+(XR|XS|SE|mini|Plus|Pro Max|Pro)/i
-    )
+    // Определяем модель и вариант из apple/modelName (приоритет)
     let model = ''
     let variant = ''
 
-    if (combinedMatch) {
-      const combinedModel = combinedMatch[1]
-      if (combinedModel === 'XR') {
-        model = 'XR'
-        variant = ''
-      } else if (combinedModel === 'XS') {
-        model = 'XS'
-        variant = ''
-      } else if (combinedModel === 'SE') {
-        model = 'SE'
-        variant = ''
-      } else if (combinedModel === 'mini') {
-        // Для mini нужно найти номер модели
-        const miniMatch = deviceName.match(
-          /iPhone\s+(\d+)\s+mini/i
-        )
-        if (miniMatch) {
-          model = miniMatch[1]
-          variant = 'mini'
-        }
-      } else if (combinedModel === 'Plus') {
-        // Для Plus нужно найти номер модели
-        const plusMatch = deviceName.match(
-          /iPhone\s+(\d+)\s+Plus/i
-        )
-        if (plusMatch) {
-          model = plusMatch[1]
-          variant = 'Plus'
-        }
-      } else if (combinedModel === 'Pro Max') {
-        // Для Pro Max нужно найти номер модели
-        const proMaxMatch = deviceName.match(
-          /iPhone\s+(\d+)\s+Pro Max/i
-        )
-        if (proMaxMatch) {
-          model = proMaxMatch[1]
-          variant = 'Pro Max'
-        }
-      } else if (combinedModel === 'Pro') {
-        // Для Pro нужно найти номер модели
-        const proMatch = deviceName.match(
-          /iPhone\s+(\d+)\s+Pro/i
-        )
-        if (proMatch) {
-          model = proMatch[1]
-          variant = 'Pro'
-        }
-      }
-    } else {
-      // Обычные модели с номером
-      const modelVariantMatch = deviceName.match(
-        /iPhone\s+(\d+)(?:\s+(\w+(?:\s+\w+)?))?/i
+    if (appleModelName) {
+      // "iPhone XR" → model: "XR", variant: ""
+      // "iPhone 14 Pro" → model: "14", variant: "Pro"
+      const appleMatch = appleModelName.match(
+        /iPhone\s+(XR|XS|SE|\d+(?:\s+(Pro Max|Pro|mini|Plus))?)/i
       )
-      if (modelVariantMatch) {
-        model = modelVariantMatch[1] || ''
-        variant = modelVariantMatch[2] || ''
+      if (appleMatch) {
+        const modelVariant = appleMatch[1]
+        if (modelVariant === 'XR') {
+          model = 'XR'
+          variant = ''
+        } else if (modelVariant === 'XS') {
+          model = 'XS'
+          variant = ''
+        } else if (modelVariant === 'SE') {
+          model = 'SE'
+          variant = ''
+        } else {
+          // Для моделей типа "14 Pro", "15 Pro Max"
+          const modelMatch = modelVariant.match(
+            /(\d+)(?:\s+(Pro Max|Pro|mini|Plus))?/
+          )
+          if (modelMatch) {
+            model = modelMatch[1]
+            variant = modelMatch[2] || ''
+          }
+        }
       }
     }
 
-    // Парсим память
-    const storageMatch = deviceName.match(/(\d+GB)/i)
+    // Если apple/modelName не дал результат, парсим cleanDeviceName
+    if (!model && cleanDeviceName) {
+      const deviceMatch = cleanDeviceName.match(
+        /iPhone\s+(XR|XS|SE|\d+(?:\s+(Pro Max|Pro|mini|Plus))?)/i
+      )
+      if (deviceMatch) {
+        const modelVariant = deviceMatch[1]
+        if (modelVariant === 'XR') {
+          model = 'XR'
+          variant = ''
+        } else if (modelVariant === 'XS') {
+          model = 'XS'
+          variant = ''
+        } else if (modelVariant === 'SE') {
+          model = 'SE'
+          variant = ''
+        } else {
+          const modelMatch = modelVariant.match(
+            /(\d+)(?:\s+(Pro Max|Pro|mini|Plus))?/
+          )
+          if (modelMatch) {
+            model = modelMatch[1]
+            variant = modelMatch[2] || ''
+          }
+        }
+      }
+    }
+
+    // Парсим память и цвет из cleanDeviceName
+    const storageMatch = cleanDeviceName.match(/(\d+GB)/i)
     const storage = storageMatch ? storageMatch[1] : ''
 
-    // Парсим цвет
-    const colorMatch = deviceName.match(
+    const colorMatch = cleanDeviceName.match(
       /(Black|White|Red|Blue|Purple|Green|Gold|Silver|Space Gray|Midnight|Starlight)/i
     )
     const extractedColor = colorMatch ? colorMatch[1] : ''
