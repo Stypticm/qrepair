@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useEvaluationNavStore, getAvailableDirections } from '@/stores/evaluationNavStore';
 import { useAppStore } from '@/stores/authStore';
 import { Page } from '@/components/Page';
-import { SwipeIndicator } from '@/components/SwipeIndicator';
 
 /**
  * Evaluation Mode Page - Свайповый интерфейс выбора режима
@@ -66,11 +65,33 @@ export default function EvaluationModePage() {
   const availableDirections = getAvailableDirections(position);
   
   // Определяем текущую секцию
-  const currentSection = Object.entries(SECTIONS).find(
-    ([_, config]) => config.position.x === position.x && config.position.y === position.y
-  )?.[0] || 'ai-evaluation';
+  const getCurrentSection = () => {
+    if (position.x === 0 && position.y === 0) return 'ai-evaluation';
+    if (position.x === 0 && position.y === -1) return 'ai-buyout';
+    if (position.x === 0 && position.y === 1) return 'repair';
+    if (position.x === 1 && position.y === -1) return 'ai-buyout-button';
+    if (position.x === 1 && position.y === 1) return 'repair-button';
+    return 'ai-evaluation';
+  };
   
-  const sectionConfig = SECTIONS[currentSection as keyof typeof SECTIONS];
+  const currentSection = getCurrentSection();
+
+  // Сбрасываем позицию при входе на страницу
+  useEffect(() => {
+    resetPosition();
+  }, []);
+
+  // Обработка перехода назад из (-1, 0)
+  useEffect(() => {
+    // Не делаем переход назад если мы были в секции с кнопками
+    // (иначе из секций Скупка/Ремонт после свайпа влево будет двойной переход)
+    if (position.x === -1 && position.y === 0) {
+      const timer = setTimeout(() => {
+        router.back();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [position.x, position.y, router]);
 
   // Инициализация заявки
   useEffect(() => {
@@ -121,7 +142,7 @@ export default function EvaluationModePage() {
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          if (availableDirections.left) router.back();
+          if (availableDirections.left) goLeft();
           break;
         case 'ArrowRight':
           e.preventDefault();
@@ -132,7 +153,7 @@ export default function EvaluationModePage() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [availableDirections, goUp, goDown, router]);
+  }, [availableDirections, goUp, goDown, goLeft, goRight, router]);
 
   // Touch handlers
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -159,11 +180,13 @@ export default function EvaluationModePage() {
     const isHorizontal = Math.abs(distanceX) > Math.abs(distanceY);
     const isPositive = isHorizontal ? distanceX > 0 : distanceY > 0;
 
-    if (isSwiped) {
+      if (isSwiped) {
       if (isHorizontal) {
-        // Горизонтальный свайп влево → назад
+        // Горизонтальный свайп
         if (!isPositive && availableDirections.left) {
-          router.back();
+          goLeft(); // Переход в предыдущую секцию или назад
+        } else if (isPositive && availableDirections.right) {
+          goRight();
         }
       } else {
         // Вертикальный свайп
@@ -182,8 +205,8 @@ export default function EvaluationModePage() {
 
   // Обработка перехода назад
   const handleBack = () => {
-    // Если в центре, делаем навигацию назад
-    if (position.x === 0 && position.y === 0) {
+    // Если в центре или на позиции (-1, 0), делаем навигацию назад
+    if ((position.x === 0 && position.y === 0) || (position.x === -1 && position.y === 0)) {
       router.back();
       return;
     }
@@ -199,9 +222,9 @@ export default function EvaluationModePage() {
     // Устанавливаем текст загрузки в зависимости от секции
     if (currentSection === 'ai-evaluation') {
       setLoadingText('Производится оценка...');
-    } else if (currentSection === 'ai-buyout') {
+    } else if (currentSection === 'ai-buyout-button') {
       setLoadingText('Производится скупка...');
-    } else if (currentSection === 'repair') {
+    } else if (currentSection === 'repair-button') {
       setLoadingText('Выбирается степень поломки...');
     }
     
@@ -232,7 +255,7 @@ export default function EvaluationModePage() {
   return (
     <Page back={handleBack}>
       <div 
-        className="fixed inset-0 overflow-hidden"
+        className="fixed inset-0 overflow-hidden bg-white"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -241,13 +264,12 @@ export default function EvaluationModePage() {
         <motion.div
           className="absolute inset-0 w-full h-full"
           animate={{
-            x: position.x * 100 + '%',
-            y: position.y * 100 + '%',
+            x: `${position.x * 100}%`,
+            y: `${position.y * 100}%`,
           }}
           transition={{
-            type: 'spring',
-            stiffness: 300,
-            damping: 30,
+            duration: 0.4,
+            ease: [0.32, 0.72, 0, 1],
           }}
         >
           {/* Секция: ИИ Оценка (Центр) */}
@@ -303,14 +325,6 @@ export default function EvaluationModePage() {
               <p className="text-gray-600 text-lg mb-8">
                 {SECTIONS['ai-buyout'].subtitle}
               </p>
-              
-              <Button
-                onClick={handleContinue}
-                disabled={isLoading}
-                className="h-14 px-8 bg-green-600 hover:bg-green-700 text-white text-lg rounded-xl shadow-lg"
-              >
-                {isLoading ? 'Переходим...' : 'Начать скупку'}
-              </Button>
             </div>
           </motion.div>
 
@@ -334,14 +348,98 @@ export default function EvaluationModePage() {
               <p className="text-gray-600 text-lg mb-8">
                 {SECTIONS['repair'].subtitle}
               </p>
+            </div>
+          </motion.div>
+
+          {/* Секция кнопки: Скупка (Свайп вправо из Скупки) */}
+          <motion.div
+            key="ai-buyout-button"
+            className={`absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center ${SECTIONS['ai-buyout'].bgColor}`}
+            style={{ transform: 'translate(-100%, -100%)' }}
+          >
+            <div className="text-center px-4">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {SECTIONS['ai-buyout'].title}
+              </h1>
+              <p className="text-gray-600 text-lg mb-8">
+                {SECTIONS['ai-buyout'].subtitle}
+              </p>
               
+              {/* Кнопка Начать */}
+              <Button
+                onClick={handleContinue}
+                disabled={isLoading}
+                className="h-14 px-8 bg-green-600 hover:bg-green-700 text-white text-lg rounded-xl shadow-lg"
+              >
+                {isLoading && currentSection === 'ai-buyout-button' ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {loadingText || 'Производится скупка...'}
+                  </span>
+                ) : (
+                  'Начать скупку'
+                )}
+              </Button>
+
+              {/* Кнопка Назад внизу в кругу */}
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="fixed bottom-8 left-1/2 transform -translate-x-1/2"
+              >
+                <button
+                  onClick={() => goLeft()}
+                  className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center border border-gray-200 hover:bg-white transition-colors"
+                >
+                  <ArrowLeft className="w-7 h-7 text-gray-600" />
+                </button>
+              </motion.div>
+            </div>
+          </motion.div>
+
+          {/* Секция кнопки: Ремонт (Свайп вправо из Ремонта) */}
+          <motion.div
+            key="repair-button"
+            className={`absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center ${SECTIONS['repair'].bgColor}`}
+            style={{ transform: 'translate(-100%, 100%)' }}
+          >
+            <div className="text-center px-4">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {SECTIONS['repair'].title}
+              </h1>
+              <p className="text-gray-600 text-lg mb-8">
+                {SECTIONS['repair'].subtitle}
+              </p>
+              
+              {/* Кнопка Начать */}
               <Button
                 onClick={handleContinue}
                 disabled={isLoading}
                 className="h-14 px-8 bg-yellow-600 hover:bg-yellow-700 text-white text-lg rounded-xl shadow-lg"
               >
-                {isLoading ? 'Переходим...' : 'Начать ремонт'}
+                {isLoading && currentSection === 'repair-button' ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    {loadingText || 'Выбирается степень поломки...'}
+                  </span>
+                ) : (
+                  'Начать ремонт'
+                )}
               </Button>
+
+              {/* Кнопка Назад внизу в кругу */}
+              <motion.div
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="fixed bottom-8 left-1/2 transform -translate-x-1/2"
+              >
+                <button
+                  onClick={() => goLeft()}
+                  className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center border border-gray-200 hover:bg-white transition-colors"
+                >
+                  <ArrowLeft className="w-7 h-7 text-gray-600" />
+                </button>
+              </motion.div>
             </div>
           </motion.div>
         </motion.div>
@@ -361,8 +459,10 @@ export default function EvaluationModePage() {
                 transition={{ repeat: Infinity, duration: 1.5 }}
                 className="flex flex-col items-center"
               >
-                <ArrowLeft className="w-8 h-8 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Назад</span>
+                <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
+                  <ArrowLeft className="w-6 h-6 text-gray-600" />
+                </div>
+                <span className="text-xs text-gray-500">Назад</span>
               </motion.div>
 
               {/* Вверх (Скупка) */}
@@ -371,8 +471,10 @@ export default function EvaluationModePage() {
                 transition={{ repeat: Infinity, duration: 1.5 }}
                 className="flex flex-col items-center"
               >
-                <ArrowUp className="w-8 h-8 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Скупка</span>
+                <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
+                  <ArrowUp className="w-6 h-6 text-green-600" />
+                </div>
+                <span className="text-xs text-gray-500">Скупка</span>
               </motion.div>
 
               {/* Вниз (Ремонт) */}
@@ -381,8 +483,10 @@ export default function EvaluationModePage() {
                 transition={{ repeat: Infinity, duration: 1.5 }}
                 className="flex flex-col items-center"
               >
-                <ArrowDown className="w-8 h-8 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Ремонт</span>
+                <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
+                  <ArrowDown className="w-6 h-6 text-yellow-600" />
+                </div>
+                <span className="text-xs text-gray-500">Ремонт</span>
               </motion.div>
             </motion.div>
           )}
@@ -402,8 +506,22 @@ export default function EvaluationModePage() {
                 transition={{ repeat: Infinity, duration: 1.5 }}
                 className="flex flex-col items-center"
               >
-                <ArrowDown className="w-8 h-8 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Вернуться</span>
+                <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
+                  <ArrowDown className="w-6 h-6 text-blue-600" />
+                </div>
+                <span className="text-xs text-gray-500">Вернуться</span>
+              </motion.div>
+              
+              {/* Стрелка вправо для секции с кнопками */}
+              <motion.div
+                animate={{ x: [0, 10, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex flex-col items-center ml-4"
+              >
+                <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
+                  <ArrowRight className="w-6 h-6 text-green-600" />
+                </div>
+                <span className="text-xs text-gray-500">Далее</span>
               </motion.div>
             </motion.div>
           )}
@@ -423,8 +541,22 @@ export default function EvaluationModePage() {
                 transition={{ repeat: Infinity, duration: 1.5 }}
                 className="flex flex-col items-center"
               >
-                <ArrowUp className="w-8 h-8 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-1">Вернуться</span>
+                <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
+                  <ArrowUp className="w-6 h-6 text-blue-600" />
+                </div>
+                <span className="text-xs text-gray-500">Вернуться</span>
+              </motion.div>
+              
+              {/* Стрелка вправо для секции с кнопками */}
+              <motion.div
+                animate={{ x: [0, 10, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex flex-col items-center ml-4"
+              >
+                <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
+                  <ArrowRight className="w-6 h-6 text-yellow-600" />
+                </div>
+                <span className="text-xs text-gray-500">Далее</span>
               </motion.div>
             </motion.div>
           )}

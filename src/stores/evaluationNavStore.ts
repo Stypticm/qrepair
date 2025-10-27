@@ -54,6 +54,13 @@ export const useEvaluationNavStore =
             ) {
               return { position: { x: 0, y: 0 } }
             }
+            // Из секции с кнопкой ремонта (1, 1) → вернуться в ремонт (0, 1)
+            if (
+              state.position.x === 1 &&
+              state.position.y === 1
+            ) {
+              return { position: { x: 0, y: 1 } }
+            }
             return state
           }),
 
@@ -87,18 +94,53 @@ export const useEvaluationNavStore =
             ) {
               return { position: { x: -1, y: 0 } }
             }
+            // Из секции с кнопкой скупки (1, -1) → вернуться в скупку (0, -1)
+            if (
+              state.position.x === 1 &&
+              state.position.y === -1
+            ) {
+              return { position: { x: 0, y: -1 } }
+            }
+            // Из секции с кнопкой ремонта (1, 1) → вернуться в ремонт (0, 1)
+            if (
+              state.position.x === 1 &&
+              state.position.y === 1
+            ) {
+              return { position: { x: 0, y: 1 } }
+            }
+            // Из ремонта (0, 1) → вернуться в центр (0, 0)
+            if (
+              state.position.x === 0 &&
+              state.position.y === 1
+            ) {
+              return { position: { x: 0, y: 0 } }
+            }
+            // Из скупки (0, -1) → вернуться в центр (0, 0)
+            if (
+              state.position.x === 0 &&
+              state.position.y === -1
+            ) {
+              return { position: { x: 0, y: 0 } }
+            }
             return state
           }),
 
-        // Навигация вправо → Вперёд (для будущих расширений)
+        // Навигация вправо → Секции с кнопками
         goRight: () =>
           set((state) => {
-            // Из "Назад" (-1, 0) → центр (0, 0)
+            // Из Скупки (0, -1) → секция с кнопкой (1, -1)
             if (
-              state.position.x === -1 &&
-              state.position.y === 0
+              state.position.x === 0 &&
+              state.position.y === -1
             ) {
-              return { position: { x: 0, y: 0 } }
+              return { position: { x: 1, y: -1 } }
+            }
+            // Из Ремонта (0, 1) → секция с кнопкой (1, 1)
+            if (
+              state.position.x === 0 &&
+              state.position.y === 1
+            ) {
+              return { position: { x: 1, y: 1 } }
             }
             return state
           }),
@@ -140,6 +182,8 @@ export const getSectionName = (pos: {
   if (pos.x === 0 && pos.y === 0) return 'ai-evaluation'
   if (pos.x === 0 && pos.y === -1) return 'ai-buyout'
   if (pos.x === 0 && pos.y === 1) return 'repair'
+  if (pos.x === 1 && pos.y === -1) return 'ai-buyout-button'
+  if (pos.x === 1 && pos.y === 1) return 'repair-button'
   if (pos.x === -1 && pos.y === 0) return 'back'
   return 'unknown'
 }
@@ -170,14 +214,28 @@ export const getAvailableDirections = (pos: {
     result.left = true
   }
 
-  // Из Скупки (0, -1): только вниз
+  // Из Скупки (0, -1): вниз, вправо, влево (вернуться в центр)
   if (pos.x === 0 && pos.y === -1) {
     result.down = true
+    result.right = true
+    result.left = true
   }
 
-  // Из Ремонта (0, 1): только вверх
+  // Из Ремонта (0, 1): вверх, вправо, влево (вернуться в центр)
   if (pos.x === 0 && pos.y === 1) {
     result.up = true
+    result.right = true
+    result.left = true
+  }
+
+  // Из секции с кнопкой скупки (1, -1): влево
+  if (pos.x === 1 && pos.y === -1) {
+    result.left = true
+  }
+
+  // Из секции с кнопкой ремонта (1, 1): влево
+  if (pos.x === 1 && pos.y === 1) {
+    result.left = true
   }
 
   return result
