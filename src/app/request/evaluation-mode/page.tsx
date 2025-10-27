@@ -1,24 +1,78 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Page } from '@/components/Page';
-import { useStepNavigation } from '@/hooks/useStepNavigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Bot, DollarSign, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { Bot, User, Lock } from 'lucide-react';
+import { useEvaluationNavStore, getAvailableDirections } from '@/stores/evaluationNavStore';
 import { useAppStore } from '@/stores/authStore';
+import { Page } from '@/components/Page';
+import { SwipeIndicator } from '@/components/SwipeIndicator';
+
+/**
+ * Evaluation Mode Page - Свайповый интерфейс выбора режима
+ * 
+ * Архитектура:
+ * - Координатная сетка: (x, y)
+ * - Плавная анимация через Framer Motion
+ * - Touch events для мобильных
+ * - Keyboard events для desktop
+ * - Persistent state через Zustand
+ */
+
+// Конфигурация секций
+const SECTIONS = {
+  'ai-evaluation': {
+    title: 'ИИ Оценка',
+    subtitle: 'Автоматическая оценка по фото',
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-blue-600',
+    position: { x: 0, y: 0 },
+  },
+  'ai-buyout': {
+    title: 'ИИ Скупка',
+    subtitle: 'Быстрая скупка устройства',
+    bgColor: 'bg-green-50',
+    iconColor: 'text-green-600',
+    position: { x: 0, y: -1 },
+  },
+  'repair': {
+    title: 'Ремонт',
+    subtitle: 'Пошаговая оценка для ремонта',
+    bgColor: 'bg-yellow-50',
+    iconColor: 'text-yellow-600',
+    position: { x: 0, y: 1 },
+  },
+} as const;
 
 export default function EvaluationModePage() {
   const router = useRouter();
-  const { goBack } = useStepNavigation();
   const { setCurrentStep, telegramId, username } = useAppStore();
+  const { position, goUp, goDown, goLeft, goRight, resetPosition } = useEvaluationNavStore();
   
-  const [selectedMode, setSelectedMode] = useState<'ai' | 'manual' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [loadingText, setLoadingText] = useState<string>('');
+  
+  // Touch handling
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchEndRef = useRef<{ x: number; y: number } | null>(null);
+  
+  // Minimum swipe distance (in pixels)
+  const minSwipeDistance = 50;
 
-  // Создаём заявку при загрузке страницы
+  // Получаем доступные направления
+  const availableDirections = getAvailableDirections(position);
+  
+  // Определяем текущую секцию
+  const currentSection = Object.entries(SECTIONS).find(
+    ([_, config]) => config.position.x === position.x && config.position.y === position.y
+  )?.[0] || 'ai-evaluation';
+  
+  const sectionConfig = SECTIONS[currentSection as keyof typeof SECTIONS];
+
+  // Инициализация заявки
   useEffect(() => {
     const createInitialRequest = async () => {
       if (!telegramId) {
@@ -27,12 +81,9 @@ export default function EvaluationModePage() {
       }
 
       try {
-        // Создаём начальную заявку
         const response = await fetch('/api/request/saveDraft', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             telegramId,
             username: username || telegramId,
@@ -42,8 +93,6 @@ export default function EvaluationModePage() {
 
         if (response.ok) {
           console.log('✅ Initial request created for evaluation-mode');
-        } else {
-          console.error('❌ Failed to create initial request');
         }
       } catch (error) {
         console.error('❌ Error creating initial request:', error);
@@ -55,33 +104,120 @@ export default function EvaluationModePage() {
     createInitialRequest();
   }, [telegramId, username]);
 
-  const handleModeSelect = async (mode: 'ai' | 'manual') => {
-    setSelectedMode(mode);
-    
-    if (mode === 'ai') {
-      // ИИ-режим: блёрим кнопки, блокируем переход
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Ignore if user is typing in input
+      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          if (availableDirections.up) goUp();
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (availableDirections.down) goDown();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (availableDirections.left) router.back();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (availableDirections.right) goRight();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [availableDirections, goUp, goDown, router]);
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = {
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndRef.current = {
+      x: e.targetTouches[0].clientX,
+      y: e.targetTouches[0].clientY,
+    };
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+
+    const distanceX = touchStartRef.current.x - touchEndRef.current.x;
+    const distanceY = touchStartRef.current.y - touchEndRef.current.y;
+
+    const isSwiped = Math.abs(distanceX) > minSwipeDistance || Math.abs(distanceY) > minSwipeDistance;
+    const isHorizontal = Math.abs(distanceX) > Math.abs(distanceY);
+    const isPositive = isHorizontal ? distanceX > 0 : distanceY > 0;
+
+    if (isSwiped) {
+      if (isHorizontal) {
+        // Горизонтальный свайп влево → назад
+        if (!isPositive && availableDirections.left) {
+          router.back();
+        }
+      } else {
+        // Вертикальный свайп
+        if (isPositive && availableDirections.up) {
+          goUp();
+        } else if (!isPositive && availableDirections.down) {
+          goDown();
+        }
+      }
+    }
+
+    // Reset
+    touchStartRef.current = null;
+    touchEndRef.current = null;
+  };
+
+  // Обработка перехода назад
+  const handleBack = () => {
+    // Если в центре, делаем навигацию назад
+    if (position.x === 0 && position.y === 0) {
+      router.back();
       return;
     }
     
-    // Ручной режим: переходим к device-info
+    // Из других позиций возвращаемся в центр
+    resetPosition();
+  };
+
+  // Обработка кнопки "Далее"
+  const handleContinue = async () => {
     setIsLoading(true);
-    setCurrentStep('device-info');
     
-    // Небольшая задержка для плавности
+    // Устанавливаем текст загрузки в зависимости от секции
+    if (currentSection === 'ai-evaluation') {
+      setLoadingText('Производится оценка...');
+    } else if (currentSection === 'ai-buyout') {
+      setLoadingText('Производится скупка...');
+    } else if (currentSection === 'repair') {
+      setLoadingText('Выбирается степень поломки...');
+    }
+    
+    setCurrentStep('delivery-options');
+    
+    // Задержка для плавности (2 секунды как в Apple стиле)
     setTimeout(() => {
-      router.push('/request/device-info');
-    }, 300);
+      router.push('/request/delivery-options');
+    }, 2000);
   };
 
-  const handleBack = () => {
-    goBack();
-  };
-
-  // Показываем загрузку пока создаём заявку
+  // Loading state
   if (isInitializing) {
     return (
       <Page back={false}>
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+        <div className="fixed inset-0 bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-4">
               <div className="w-full h-full border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -95,88 +231,204 @@ export default function EvaluationModePage() {
 
   return (
     <Page back={handleBack}>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white relative">
-        {/* Заголовок */}
-        <div className="text-center pt-8 pb-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Способ оценки
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Выберите как оценить устройство
-          </p>
-        </div>
-
-        {/* Абсолютно центрированные блоки выбора */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4">
-          <div className="space-y-3">
-            {/* ИИ-оценка */}
-            <div
-              className="p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 border-gray-200 bg-white hover:border-gray-300 blur-[0.5px] opacity-75"
-              onClick={() => handleModeSelect('ai')}
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <div className="w-10 h-10 bg-gray-400 rounded-lg flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 text-center">
-                  <div className="flex items-center justify-center space-x-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      ИИ-оценка
-                    </h3>
-                    <Lock className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <p className="text-gray-600 text-sm">
-                    Автоматическая оценка по фото
-                  </p>
-                </div>
-              </div>
+      <div 
+        className="fixed inset-0 overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Основной контейнер с анимацией */}
+        <motion.div
+          className="absolute inset-0 w-full h-full"
+          animate={{
+            x: position.x * 100 + '%',
+            y: position.y * 100 + '%',
+          }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30,
+          }}
+        >
+          {/* Секция: ИИ Оценка (Центр) */}
+          <motion.div
+            key="ai-evaluation"
+            className={`absolute inset-0 flex flex-col items-center justify-center ${SECTIONS['ai-evaluation'].bgColor}`}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="text-center px-4">
+              <motion.div
+                className={`w-20 h-20 ${SECTIONS['ai-evaluation'].bgColor} rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg`}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
+                <Bot className={`w-10 h-10 ${SECTIONS['ai-evaluation'].iconColor}`} />
+              </motion.div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {SECTIONS['ai-evaluation'].title}
+              </h1>
+              <p className="text-gray-600 text-lg mb-8">
+                {SECTIONS['ai-evaluation'].subtitle}
+              </p>
+              
+              <Button
+                onClick={handleContinue}
+                disabled={isLoading}
+                className="h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white text-lg rounded-xl shadow-lg"
+              >
+                {isLoading ? 'Переходим...' : 'Начать оценку'}
+              </Button>
             </div>
+          </motion.div>
 
-            {/* Ручная оценка */}
-            <div
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                selectedMode === 'manual' 
-                  ? 'border-[#2dc2c6] bg-[#2dc2c6]/5' 
-                  : 'border-gray-200 bg-white hover:border-gray-300'
-              }`}
-              onClick={() => handleModeSelect('manual')}
-            >
-              <div className="flex items-center justify-center space-x-3">
-                <div className="w-10 h-10 bg-[#2dc2c6] rounded-lg flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1 text-center">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Ручная оценка
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Пошаговая оценка состояния
-                  </p>
-                </div>
-              </div>
+          {/* Секция: ИИ Скупка (Свайп вверх) */}
+          <motion.div
+            key="ai-buyout"
+            className={`absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center ${SECTIONS['ai-buyout'].bgColor}`}
+            style={{ transform: 'translateY(-100%)' }}
+          >
+            <div className="text-center px-4">
+              <motion.div
+                className={`w-20 h-20 ${SECTIONS['ai-buyout'].bgColor} rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg`}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
+                <DollarSign className={`w-10 h-10 ${SECTIONS['ai-buyout'].iconColor}`} />
+              </motion.div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {SECTIONS['ai-buyout'].title}
+              </h1>
+              <p className="text-gray-600 text-lg mb-8">
+                {SECTIONS['ai-buyout'].subtitle}
+              </p>
+              
+              <Button
+                onClick={handleContinue}
+                disabled={isLoading}
+                className="h-14 px-8 bg-green-600 hover:bg-green-700 text-white text-lg rounded-xl shadow-lg"
+              >
+                {isLoading ? 'Переходим...' : 'Начать скупку'}
+              </Button>
             </div>
-          </div>
-        </div>
+          </motion.div>
 
-        {/* Кнопка продолжения */}
-        {selectedMode === 'manual' && (
-          <div className="absolute bottom-6 left-4 right-4">
-            <Button
-              onClick={() => handleModeSelect('manual')}
-              disabled={isLoading}
-              className="w-full h-12 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold rounded-xl transition-colors duration-200"
+          {/* Секция: Ремонт (Свайп вниз) */}
+          <motion.div
+            key="repair"
+            className={`absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center ${SECTIONS['repair'].bgColor}`}
+            style={{ transform: 'translateY(100%)' }}
+          >
+            <div className="text-center px-4">
+              <motion.div
+                className={`w-20 h-20 ${SECTIONS['repair'].bgColor} rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg`}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >
+                <Wrench className={`w-10 h-10 ${SECTIONS['repair'].iconColor}`} />
+              </motion.div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {SECTIONS['repair'].title}
+              </h1>
+              <p className="text-gray-600 text-lg mb-8">
+                {SECTIONS['repair'].subtitle}
+              </p>
+              
+              <Button
+                onClick={handleContinue}
+                disabled={isLoading}
+                className="h-14 px-8 bg-yellow-600 hover:bg-yellow-700 text-white text-lg rounded-xl shadow-lg"
+              >
+                {isLoading ? 'Переходим...' : 'Начать ремонт'}
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Подсказки навигации (стрелки) */}
+        <AnimatePresence>
+          {position.x === 0 && position.y === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              className="fixed bottom-8 left-0 right-0 flex justify-center items-center gap-4"
             >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Переходим...</span>
-                </div>
-              ) : (
-                'Начать оценку'
-              )}
-            </Button>
-          </div>
-        )}
+              {/* Влево (Назад) */}
+              <motion.div
+                animate={{ x: [-5, 0, -5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex flex-col items-center"
+              >
+                <ArrowLeft className="w-8 h-8 text-gray-400" />
+                <span className="text-xs text-gray-500 mt-1">Назад</span>
+              </motion.div>
+
+              {/* Вверх (Скупка) */}
+              <motion.div
+                animate={{ y: [-5, 0, -5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex flex-col items-center"
+              >
+                <ArrowUp className="w-8 h-8 text-gray-400" />
+                <span className="text-xs text-gray-500 mt-1">Скупка</span>
+              </motion.div>
+
+              {/* Вниз (Ремонт) */}
+              <motion.div
+                animate={{ y: [5, 0, 5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex flex-col items-center"
+              >
+                <ArrowDown className="w-8 h-8 text-gray-400" />
+                <span className="text-xs text-gray-500 mt-1">Ремонт</span>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Подсказка для секции Скупка */}
+        <AnimatePresence>
+          {position.x === 0 && position.y === -1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed bottom-8 left-0 right-0 flex justify-center"
+            >
+              <motion.div
+                animate={{ y: [5, 0, 5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex flex-col items-center"
+              >
+                <ArrowDown className="w-8 h-8 text-gray-400" />
+                <span className="text-xs text-gray-500 mt-1">Вернуться</span>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Подсказка для секции Ремонт */}
+        <AnimatePresence>
+          {position.x === 0 && position.y === 1 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed bottom-8 left-0 right-0 flex justify-center"
+            >
+              <motion.div
+                animate={{ y: [-5, 0, -5] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="flex flex-col items-center"
+              >
+                <ArrowUp className="w-8 h-8 text-gray-400" />
+                <span className="text-xs text-gray-500 mt-1">Вернуться</span>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </Page>
   );
