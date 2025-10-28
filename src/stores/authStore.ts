@@ -350,6 +350,19 @@ export const useAppStore = create<AppState>()(
         }
 
         // Специальная логика для разветвлений
+        // Не позволяем попадать в тестовую линию (evaluation-mode) из ручной оценки
+        if (currentStep === 'device-info') {
+          if (typeof window !== 'undefined') {
+            if (router) {
+              router.push('/')
+            } else {
+              window.location.href = '/'
+            }
+          }
+          set({ currentStep: null })
+          return
+        }
+
         if (currentStep === 'courier-booking') {
           // Из courier-booking идем обратно к delivery-options
           set({ currentStep: 'delivery-options' })
