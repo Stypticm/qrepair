@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Bot, DollarSign, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ChatPanel } from '@/components/ChatPanel';
+import { SectionTopBar } from '@/components/SectionTopBar';
 import { useEvaluationNavStore, getAvailableDirections } from '@/stores/evaluationNavStore';
 import { useAppStore } from '@/stores/authStore';
 import { Page } from '@/components/Page';
@@ -280,25 +282,19 @@ export default function EvaluationModePage() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="text-center px-4">
-              <motion.div
-                className={`w-20 h-20 ${SECTIONS['ai-evaluation'].bgColor} rounded-2xl flex items-center justify-center mb-6 mx-auto shadow-lg`}
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-              >
-                <Bot className={`w-10 h-10 ${SECTIONS['ai-evaluation'].iconColor}`} />
-              </motion.div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {SECTIONS['ai-evaluation'].title}
-              </h1>
-              <p className="text-gray-600 text-lg mb-8">
-                {SECTIONS['ai-evaluation'].subtitle}
-              </p>
-              
+            <SectionTopBar
+              section="ai-evaluation"
+              title={SECTIONS['ai-evaluation'].title}
+              subtitle={SECTIONS['ai-evaluation'].subtitle}
+              variant="large"
+              align="center"
+            />
+            <div className="w-full pt-24 flex flex-col items-center gap-4">
+              <ChatPanel />
               <Button
                 onClick={handleContinue}
                 disabled={isLoading}
-                className="h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white text-lg rounded-xl shadow-lg"
+                className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-xl shadow-lg"
               >
                 {isLoading ? 'Переходим...' : 'Начать оценку'}
               </Button>
@@ -357,19 +353,13 @@ export default function EvaluationModePage() {
             className={`absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center ${SECTIONS['ai-buyout'].bgColor}`}
             style={{ transform: 'translate(-100%, -100%)' }}
           >
-            <div className="text-center px-4">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {SECTIONS['ai-buyout'].title}
-              </h1>
-              <p className="text-gray-600 text-lg mb-8">
-                {SECTIONS['ai-buyout'].subtitle}
-              </p>
-              
+            <div className="text-center px-4 w-full pt-4 flex flex-col items-center gap-4">
+              <ChatPanel />
               {/* Кнопка Начать */}
               <Button
                 onClick={handleContinue}
                 disabled={isLoading}
-                className="h-14 px-8 bg-green-600 hover:bg-green-700 text-white text-lg rounded-xl shadow-lg"
+                className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white text-sm rounded-xl shadow-lg"
               >
                 {isLoading && currentSection === 'ai-buyout-button' ? (
                   <span className="flex items-center gap-2">
@@ -403,19 +393,13 @@ export default function EvaluationModePage() {
             className={`absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center ${SECTIONS['repair'].bgColor}`}
             style={{ transform: 'translate(-100%, 100%)' }}
           >
-            <div className="text-center px-4">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {SECTIONS['repair'].title}
-              </h1>
-              <p className="text-gray-600 text-lg mb-8">
-                {SECTIONS['repair'].subtitle}
-              </p>
-              
+            <div className="text-center px-4 w-full pt-4 flex flex-col items-center gap-4">
+              <ChatPanel />
               {/* Кнопка Начать */}
               <Button
                 onClick={handleContinue}
                 disabled={isLoading}
-                className="h-14 px-8 bg-yellow-600 hover:bg-yellow-700 text-white text-lg rounded-xl shadow-lg"
+                className="h-12 px-6 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-xl shadow-lg"
               >
                 {isLoading && currentSection === 'repair-button' ? (
                   <span className="flex items-center gap-2">
