@@ -10,6 +10,7 @@ export interface SectionTopBarProps {
   subtitle?: string;
   variant?: 'small' | 'large';
   align?: 'left' | 'center';
+  topPaddingClassName?: string;
 }
 
 const iconBySection: Record<SectionKey, React.ComponentType<{ className?: string }>> = {
@@ -24,12 +25,12 @@ const colorBySection: Record<SectionKey, string> = {
   'repair': 'text-yellow-600',
 };
 
-export function SectionTopBar({ section, title, subtitle, variant = 'small', align = 'left' }: SectionTopBarProps) {
+export function SectionTopBar({ section, title, subtitle, variant = 'small', align = 'left', topPaddingClassName }: SectionTopBarProps) {
   const Icon = iconBySection[section];
   const color = colorBySection[section];
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur-md">
+    <div className={`fixed top-0 left-0 right-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur-md ${topPaddingClassName || ''}`}>
       <div className={variant === 'large' ? 'mx-auto px-4 py-4' : 'mx-auto px-4 py-3'}>
         {variant === 'large' ? (
           <div className={align === 'center' ? 'flex items-center justify-center gap-3 text-center' : 'flex items-center gap-3'}>

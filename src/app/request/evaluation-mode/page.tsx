@@ -288,6 +288,7 @@ export default function EvaluationModePage() {
               subtitle={SECTIONS['ai-evaluation'].subtitle}
               variant="large"
               align="center"
+              topPaddingClassName="pt-10"
             />
             <div className="w-full pt-24 flex flex-col items-center gap-4">
               <ChatPanel />
