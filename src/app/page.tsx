@@ -283,7 +283,8 @@ function HomeContent() {
 
   // Мемоизированные обработчики для кнопок
   const handleRepairClick = useCallback(() => {
-    router.push('/repair');
+    // Ручной поток оценки: ввод серийного и выбор модели
+    router.push('/request/device-info');
   }, [router]);
 
   const handleTestAdminToggle = useCallback(() => {
@@ -347,7 +348,7 @@ function HomeContent() {
                   {!isGridViewMode && (
                     <div className="w-full px-2">
                       <div className="w-full max-w-md mx-auto flex items-center justify-center gap-2">
-                        {/* Кнопка Ремонт */}
+                        {/* Кнопка Оценка (ручной поток) */}
                         <Button
                           variant="outline"
                           className="group flex-1 h-16 bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
@@ -355,7 +356,7 @@ function HomeContent() {
                         >
                           <div className="flex items-center justify-center gap-2">
                             <Wrench className="w-6 h-6 text-white" />
-                            <span className="text-white font-semibold text-base">Ремонт</span>
+                            <span className="text-white font-semibold text-base">Оценка</span>
                           </div>
                         </Button>
 
@@ -377,17 +378,19 @@ function HomeContent() {
                           />
                         </div>
 
-                        {/* Кнопка Оценить смартфон */}
-                        <Button
-                          variant="outline"
-                          className="group flex-1 h-16 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse"
-                          onClick={handleStartForm}
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <Smartphone className="w-6 h-6 text-white" />
-                            <span className="text-white font-semibold text-base">Оценить</span>
-                          </div>
-                        </Button>
+                        {/* Кнопка Тест (быстрый переход в evaluation-mode) — только для админов */}
+                        {isMaster(userId) && (
+                          <Button
+                            variant="outline"
+                            className="group flex-1 h-16 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse"
+                            onClick={handleStartForm}
+                          >
+                            <div className="flex items-center justify-center gap-2">
+                              <Smartphone className="w-6 h-6 text-white" />
+                              <span className="text-white font-semibold text-base">Тест</span>
+                            </div>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   )}
