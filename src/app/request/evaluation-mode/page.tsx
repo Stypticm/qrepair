@@ -185,10 +185,12 @@ export default function EvaluationModePage() {
       if (isSwiped) {
       if (isHorizontal) {
         // Горизонтальный свайп
-        if (!isPositive && availableDirections.left) {
-          goLeft(); // Переход в предыдущую секцию или назад
-        } else if (isPositive && availableDirections.right) {
+        if (!isPositive && availableDirections.right) {
+          // свайп вправо
           goRight();
+        } else if (isPositive && availableDirections.left) {
+          // свайп влево
+          goLeft(); // Переход в предыдущую секцию или назад
         }
       } else {
         // Вертикальный свайп
