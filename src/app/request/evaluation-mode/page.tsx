@@ -358,34 +358,37 @@ export default function EvaluationModePage() {
           >
             <div className="text-center px-4 w-full pt-4 flex flex-col items-center gap-4">
               <ChatPanel />
-              {/* Кнопка Начать */}
-              <Button
-                onClick={handleContinue}
-                disabled={isLoading}
-                className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white text-sm rounded-xl shadow-lg"
-              >
-                {isLoading && currentSection === 'ai-buyout-button' ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {loadingText || 'Производится скупка...'}
-                  </span>
-                ) : (
-                  'Начать скупку'
-                )}
-              </Button>
+              {/* Кнопка Начать (анимация движения) */}
+              <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
+                <Button
+                  onClick={handleContinue}
+                  disabled={isLoading}
+                  className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white text-sm rounded-xl shadow-lg"
+                >
+                  {isLoading && currentSection === 'ai-buyout-button' ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {loadingText || 'Производится скупка...'}
+                    </span>
+                  ) : (
+                    'Начать скупку'
+                  )}
+                </Button>
+              </motion.div>
 
               {/* Кнопка Назад внизу в кругу */}
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
+                animate={{ scale: [1, 1.05, 1], x: [5, 0, 5] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className="fixed bottom-8 left-1/2 transform -translate-x-1/2"
+                className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
               >
                 <button
                   onClick={() => goLeft()}
                   className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center border border-gray-200 hover:bg-white transition-colors"
                 >
-                  <ArrowLeft className="w-7 h-7 text-gray-600" />
+                  <ArrowRight className="w-7 h-7 text-gray-600" />
                 </button>
+                <span className="mt-2 text-xs text-gray-500">Назад</span>
               </motion.div>
             </div>
           </motion.div>
@@ -398,34 +401,37 @@ export default function EvaluationModePage() {
           >
             <div className="text-center px-4 w-full pt-4 flex flex-col items-center gap-4">
               <ChatPanel />
-              {/* Кнопка Начать */}
-              <Button
-                onClick={handleContinue}
-                disabled={isLoading}
-                className="h-12 px-6 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-xl shadow-lg"
-              >
-                {isLoading && currentSection === 'repair-button' ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    {loadingText || 'Выбирается степень поломки...'}
-                  </span>
-                ) : (
-                  'Начать ремонт'
-                )}
-              </Button>
+              {/* Кнопка Начать (анимация движения) */}
+              <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
+                <Button
+                  onClick={handleContinue}
+                  disabled={isLoading}
+                  className="h-12 px-6 bg-yellow-600 hover:bg-yellow-700 text-white text-sm rounded-xl shadow-lg"
+                >
+                  {isLoading && currentSection === 'repair-button' ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {loadingText || 'Выбирается степень поломки...'}
+                    </span>
+                  ) : (
+                    'Начать ремонт'
+                  )}
+                </Button>
+              </motion.div>
 
               {/* Кнопка Назад внизу в кругу */}
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
+                animate={{ scale: [1, 1.05, 1], x: [5, 0, 5] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className="fixed bottom-8 left-1/2 transform -translate-x-1/2"
+                className="fixed bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
               >
                 <button
                   onClick={() => goLeft()}
                   className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center border border-gray-200 hover:bg-white transition-colors"
                 >
-                  <ArrowLeft className="w-7 h-7 text-gray-600" />
+                  <ArrowRight className="w-7 h-7 text-gray-600" />
                 </button>
+                <span className="mt-2 text-xs text-gray-500">Назад</span>
               </motion.div>
             </div>
           </motion.div>
@@ -486,7 +492,7 @@ export default function EvaluationModePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed bottom-8 left-0 right-0 flex justify-center"
+              className="fixed bottom-8 left-0 right-0 flex justify-center gap-8"
             >
               <motion.div
                 animate={{ y: [5, 0, 5] }}
@@ -499,14 +505,14 @@ export default function EvaluationModePage() {
                 <span className="text-xs text-gray-500">Вернуться</span>
               </motion.div>
               
-              {/* Стрелка вправо для секции с кнопками */}
+              {/* Стрелка влево для секции с кнопками */}
               <motion.div
-                animate={{ x: [0, 10, 0] }}
+                animate={{ x: [0, -10, 0] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className="flex flex-col items-center ml-4"
+                className="flex flex-col items-center"
               >
                 <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
-                  <ArrowRight className="w-6 h-6 text-green-600" />
+                  <ArrowLeft className="w-6 h-6 text-green-600" />
                 </div>
                 <span className="text-xs text-gray-500">Далее</span>
               </motion.div>
@@ -521,7 +527,7 @@ export default function EvaluationModePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed bottom-8 left-0 right-0 flex justify-center"
+              className="fixed bottom-8 left-0 right-0 flex justify-center gap-8"
             >
               <motion.div
                 animate={{ y: [-5, 0, -5] }}
@@ -538,10 +544,10 @@ export default function EvaluationModePage() {
               <motion.div
                 animate={{ x: [0, 10, 0] }}
                 transition={{ repeat: Infinity, duration: 1.5 }}
-                className="flex flex-col items-center ml-4"
+                className="flex flex-col items-center"
               >
                 <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center mb-2">
-                  <ArrowRight className="w-6 h-6 text-yellow-600" />
+                  <ArrowLeft className="w-6 h-6 text-yellow-600" />
                 </div>
                 <span className="text-xs text-gray-500">Далее</span>
               </motion.div>
