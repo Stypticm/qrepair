@@ -8,17 +8,22 @@ export async function POST(req: NextRequest) {
       username,
       requestId,
       currentStep,
-      deviceFunctionStates,
-      devicePhotos,
-      deliveryData,
-      functionDiscount,
+      // Новые / актуальные поля
       modelname,
-      deviceConditions,
-      wearValues,
       imei,
       sn,
       price,
       priceRange,
+      deviceData,
+      aiAnalysis,
+      chatHistory,
+      aiModelUsed,
+      analysisConfidence,
+      courier,
+      photoUrls,
+      videoUrls,
+      deviceConditions,
+      additionalConditions,
     } = await req.json()
 
     if (!telegramId) {
@@ -33,23 +38,21 @@ export async function POST(req: NextRequest) {
       await RequestManager.updateActiveRequest(telegramId, {
         username: username || 'Unknown',
         currentStep: currentStep || 'evaluation-mode',
-        deviceFunctionStates: deviceFunctionStates
-          ? JSON.stringify(deviceFunctionStates)
-          : null,
-        devicePhotos: devicePhotos
-          ? JSON.stringify(devicePhotos)
-          : null,
-        deliveryData: deliveryData
-          ? JSON.stringify(deliveryData)
-          : null,
-        functionDiscount: functionDiscount || 0,
         modelname,
-        deviceConditions,
-        wearValues,
         imei,
         sn,
         price,
         priceRange,
+        deviceData,
+        aiAnalysis,
+        chatHistory,
+        aiModelUsed,
+        analysisConfidence,
+        courier,
+        photoUrls,
+        videoUrls,
+        deviceConditions,
+        additionalConditions,
       })
 
     return NextResponse.json({
@@ -97,23 +100,10 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Парсим JSON поля
-    const parsedDraft = {
-      ...draft,
-      deviceFunctionStates: draft.deviceFunctionStates
-        ? JSON.parse(draft.deviceFunctionStates)
-        : null,
-      devicePhotos: draft.devicePhotos
-        ? JSON.parse(draft.devicePhotos)
-        : null,
-      deliveryData: draft.deliveryData
-        ? JSON.parse(draft.deliveryData)
-        : null,
-    }
-
+    // Новая схема уже хранит поля в корректных типах
     return NextResponse.json({
       success: true,
-      draft: parsedDraft,
+      draft,
     })
   } catch (error) {
     console.error('Ошибка при получении черновика:', error)

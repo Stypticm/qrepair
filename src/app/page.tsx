@@ -38,6 +38,12 @@ function HomeContent() {
   const [isDesktopLike, setIsDesktopLike] = useState(false);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
   const [isGridViewMode, setIsGridViewMode] = useState(false);
+  // Свайповая матрица: (0,0) — центр (главное меню); (0,1) — лента; (1,0) — выбор; (-1,0) — ремонт; (0,-1) — FAQ
+  const [position, setPosition] = useState<{x: number; y: number}>({ x: 0, y: 0 });
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchEndRef = useRef<{ x: number; y: number } | null>(null);
+  const navigatingRef = useRef(false);
+  const [instantTransition, setInstantTransition] = useState(false);
   const [screenHeight, setScreenHeight] = useState(0);
 
   // Состояние для marketplace
@@ -250,6 +256,21 @@ function HomeContent() {
     if (savedUsername && !useAppStore.getState().username) setUsername(savedUsername);
   }, [setCurrentStep, setTelegramId, setUsername, addDebugInfo]);
 
+  // Восстановление позиции домашней матрицы (например, вернуться к экрану Выбор)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const section = params.get('section') || sessionStorage.getItem('homePosition');
+    if (section === 'choice') {
+      setInstantTransition(true);
+      setPosition({ x: 1, y: 0 });
+      // очищаем флаг, чтобы не залипало
+      sessionStorage.removeItem('homePosition');
+      // выключаем мгновенный режим сразу после первого рендера
+      setTimeout(() => setInstantTransition(false), 0);
+    }
+  }, []);
+
   // Мемоизированный массив баннеров для предотвращения перерендеров
   const bannerList = useMemo(() => ['banner.png', 'banner2.png'], []);
 
@@ -296,6 +317,74 @@ function HomeContent() {
     setIsGridViewMode(mode === 'grid');
   }, []);
 
+  // Навигация по матрице
+  const goTo = useCallback((x: number, y: number) => setPosition({ x, y }), []);
+  const goLeft = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: Math.max(-1, p.x - 1), y: p.y })); }, []);
+  const goRight = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: Math.min(1, p.x + 1), y: p.y })); }, []);
+  const goUp = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: p.x, y: Math.max(-1, p.y - 1) })); }, []);
+  const goDown = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: p.x, y: Math.min(1, p.y + 1) })); }, []);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndRef.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+  };
+  const handleTouchEnd = () => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+    const dx = touchStartRef.current.x - touchEndRef.current.x;
+    const dy = touchStartRef.current.y - touchEndRef.current.y;
+    const min = 40;
+    const horizontal = Math.abs(dx) > Math.abs(dy);
+    if (navigatingRef.current) { touchStartRef.current = null; touchEndRef.current = null; return; }
+    if (horizontal && Math.abs(dx) > min) {
+      if (dx > 0) goRight(); else goLeft();
+    } else if (!horizontal && Math.abs(dy) > min) {
+      if (dy > 0) goUp(); else goDown();
+    }
+    touchStartRef.current = null; touchEndRef.current = null;
+  };
+
+  // Навигация стрелками на клавиатуре (ПК)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e as any).isComposing) return;
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowLeft') goLeft();
+      if (e.key === 'ArrowRight') goRight();
+      if (e.key === 'ArrowUp') goUp();
+      if (e.key === 'ArrowDown') goDown();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [goLeft, goRight, goUp, goDown]);
+
+  // Действия из экрана выбора: вверх/вниз
+  useEffect(() => {
+    if (navigatingRef.current) return;
+    if (position.x === 1 && position.y === -1) {
+      // Вверх из экрана выбора → ИИ Оценка (только для админов)
+      if (isMaster(userId)) {
+        setCurrentStep('evaluation-mode');
+        try { sessionStorage.setItem('homePosition', 'choice'); } catch {}
+        navigatingRef.current = true;
+        router.push('/request/evaluation-mode');
+      } else {
+        // Возвращаемся на экран выбора и показываем заметку (остаёмся на (1,0))
+        goTo(1, 0);
+      }
+    }
+    if (position.x === 1 && position.y === 1) {
+      // Вниз из экрана выбора → Ручная оценка
+      try { sessionStorage.setItem('homePosition', 'choice'); } catch {}
+      navigatingRef.current = true;
+      router.push('/request/device-info');
+    }
+  }, [position.x, position.y, router, setCurrentStep, userId, goTo]);
+
   if (isInTelegram === null) {
     return (
       <AdaptiveContainer>
@@ -324,96 +413,79 @@ function HomeContent() {
       <div className={`${isDesktopLike ? 'min-h-screen flex items-start justify-center p-6 md:p-8 bg-gray-100' : ''}`}>
         <div className={`${isDesktopLike ? 'w-full max-w-[520px] bg-gradient-to-b from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden' : ''}`}>
           <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
-            <div className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen flex flex-col items-center p-4 bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}>
-              <div className="w-full text-center space-y-2 mt-6">
-
-                <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
-                  <div className="w-full flex justify-center">
-                    <RotatingBanner
-                      banners={bannerList}
-                      interval={5000} // 5 секунд между сменами
-                      screenHeight={screenHeight}
-                    />
-                  </div>
-                  <AdaptiveDeviceFeed
-                    items={marketplaceItems}
-                    isLoading={marketplaceLoading}
-                    onLoadMore={loadMoreMarketplaceItems}
-                    hasMore={marketplaceHasMore}
-                    mode="auto"
-                    onViewModeChange={handleViewModeChange}
-                  />
-                  
-                  {/* Кнопки Ремонт и Оценка с логотипом - только в carousel режиме */}
-                  {!isGridViewMode && (
-                    <div className="w-full px-2">
-                      <div className="w-full max-w-md mx-auto flex items-center justify-center gap-2">
-                        {/* Кнопка Оценка (ручной поток) */}
-                        <Button
-                          variant="outline"
-                          className="group flex-1 h-16 bg-gradient-to-r from-[#ff6b6b] to-[#ff8e8e] hover:from-[#ff5252] hover:to-[#ff7979] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300"
-                          onClick={handleRepairClick}
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <Wrench className="w-6 h-6 text-white" />
-                            <span className="text-white font-semibold text-base">Оценка</span>
-                          </div>
-                        </Button>
-
-                        {/* Логотип */}
-                        <div 
-                          className="w-[60px] h-[60px] bg-white rounded-full shadow-lg grid place-items-center overflow-hidden mx-2 cursor-pointer hover:shadow-xl transition-all duration-300 active:scale-95"
-                          onClick={() => {
-                            const event = new CustomEvent('switchToGrid');
-                            window.dispatchEvent(event);
-                          }}
-                        >
-                          <img
-                            src={getImage('animation_logo2.gif') || '/animation_logo2.gif'}
-                            alt="Логотип"
-                            width={80}
-                            height={80}
-                            className="w-[60px] h-[60px] object-cover bg-white"
-                            style={{ imageRendering: 'auto' }}
-                          />
-                        </div>
-
-                        {/* Кнопка Тест (быстрый переход в evaluation-mode) — только для админов */}
-                        {isMaster(userId) && (
-                          <Button
-                            variant="outline"
-                            className="group flex-1 h-16 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold rounded-2xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 animate-pulse"
-                            onClick={handleStartForm}
-                          >
-                            <div className="flex items-center justify-center gap-2">
-                              <Smartphone className="w-6 h-6 text-white" />
-                              <span className="text-white font-semibold text-base">Тест</span>
-                            </div>
-                          </Button>
-                        )}
+            <div
+              className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen relative overflow-hidden bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* Панель с секциями */}
+              <motion.div
+                className="absolute inset-0"
+                animate={{ x: `${position.x * -100}%`, y: `${position.y * -100}%` }}
+                transition={{ duration: instantTransition ? 0 : 0.35, ease: [0.32, 0.72, 0, 1] }}
+              >
+                {/* Центр: Главное меню */}
+                <div className="absolute inset-0 p-4">
+                  <div className="w-full text-center space-y-2 mt-6">
+                    <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
+                      <div className="w-full flex justify-center">
+                        <RotatingBanner banners={bannerList} interval={5000} screenHeight={screenHeight} />
+                      </div>
+                      <div className="mt-6 text-gray-500 text-sm select-none">
+                        Свайпните влево — Ремонт · вправо — Выбор · вверх — FAQ · вниз — Лента
                       </div>
                     </div>
-                  )}
-                  
-                  {!isLoading && !isInTelegram && (
-                    <Button
-                      variant="outline"
-                      className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium text-sm rounded-xl border border-gray-300 shadow-sm hover:shadow-md transition-all duration-200"
-                      onClick={handleTestAdminToggle}
-                    >
-                      Переключить ID админа: {testAdminIds[testAdminIndex]}
-                    </Button>
-                  )}
+                  </div>
                 </div>
 
-                {/* ExpandButton - только в grid режиме */}
-                {isGridViewMode && (
-                  <div className="fixed bottom-5 left-1/2 -translate-x-1/2 w-1/2 flex flex-col gap-2">
-                    <ExpandButton className="w-full" />
+                {/* Низ: Лента отдельно */}
+                <div className="absolute inset-0" style={{ transform: 'translateY(100%)' }}>
+                  <div className="h-full grid place-items-center p-4">
+                    <div className="w-full max-w-[420px] bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/60 p-3">
+                      <AdaptiveDeviceFeed
+                        items={marketplaceItems}
+                        isLoading={marketplaceLoading}
+                        onLoadMore={loadMoreMarketplaceItems}
+                        hasMore={marketplaceHasMore}
+                        mode="auto"
+                        onViewModeChange={handleViewModeChange}
+                      />
+                    </div>
                   </div>
-                )}
+                </div>
 
-                {/* Фиксированное нижнее меню в стиле Apple Liquid Design */}
+                {/* Вверх: FAQ (заглушка) */}
+                <div className="absolute inset-0 grid place-items-center" style={{ transform: 'translateY(-100%)' }}>
+                  <div className="text-center p-6">
+                    <h1 className="text-2xl font-semibold text-gray-900 mb-2">FAQ</h1>
+                    <p className="text-gray-600 text-sm">Раздел в разработке</p>
+                  </div>
+                </div>
+
+                {/* Влево: Ремонт (заглушка) */}
+                <div className="absolute inset-0 grid place-items-center" style={{ transform: 'translateX(-100%)' }}>
+                  <div className="text-center p-6">
+                    <h1 className="text-2xl font-semibold text-gray-900 mb-2">Ремонт</h1>
+                    <p className="text-gray-600 text-sm">Страница появится позже</p>
+                  </div>
+                </div>
+
+                {/* Вправо: Экран выбора */}
+                <div className="absolute inset-0" style={{ transform: 'translateX(100%)' }}>
+                  <div className="h-full flex flex-col items-center justify-center p-6 text-center">
+                    <h1 className="text-2xl font-semibold text-gray-900">Выбор</h1>
+                    <p className="text-gray-600 mt-1">Свайп вверх — ИИ Оценка{!isMaster(userId) ? ' (для админов)' : ''}</p>
+                    <p className="text-gray-600">Свайп вниз — Ручная оценка</p>
+                    {!isMaster(userId) && (
+                      <div className="mt-3 text-xs text-gray-500">ИИ оценка в разработке, доступно администраторам</div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Нижнее меню — только в центре */}
+              {position.x === 0 && position.y === 0 && (
                 <div className="fixed bottom-4 left-4 right-4 z-50">
                   <div className="relative">
                     {/* Внешняя тень для глубины */}
@@ -471,7 +543,7 @@ function HomeContent() {
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div >

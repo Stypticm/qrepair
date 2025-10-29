@@ -48,10 +48,11 @@ export async function POST(req: Request) {
       )
     }
 
-    // Проверяем, что мастер назначен к этой заявке
-    if (
-      skupka.courierTelegramId !== masterUser.telegramId
-    ) {
+    // Проверяем, что мастер назначен к этой заявке (читаем из JSON courier)
+    const assignedTelegramId = (
+      (skupka as any).courier || {}
+    ).telegramId
+    if (assignedTelegramId !== masterUser.telegramId) {
       return NextResponse.json(
         { error: 'Master not assigned to this request' },
         { status: 403 }

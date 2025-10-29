@@ -139,8 +139,7 @@ const DeliveryOptionsPage = () => {
     const handleCourier = () => {
         setSelectedOption('courier');
         setIsNavigating(true);
-        // TODO: Переход на страницу выбора курьера
-        setTimeout(() => router.push('/request/courier'), 200);
+        setTimeout(() => router.push('/request/courier-booking'), 200);
     };
 
     const finalPrice = price || priceRange?.midpoint || 0;

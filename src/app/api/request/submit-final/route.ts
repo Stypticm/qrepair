@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       priceRange,
       formattedPriceRange,
       deliveryData,
+      videoUrls,
     } = requestBody
 
     if (!telegramId || !userTelegramId || !modelname) {
@@ -89,6 +90,16 @@ export async function POST(request: NextRequest) {
         status: 'submitted',
         submittedAt: new Date(),
         pickupPoint: pickupPointAddress,
+        deliveryMethod:
+          deliveryData?.deliveryMethod || 'pickup',
+        courier:
+          deliveryData?.deliveryMethod === 'courier'
+            ? deliveryData?.courier || null
+            : null,
+        priceRange: priceRange || undefined,
+        videoUrls: Array.isArray(videoUrls)
+          ? videoUrls
+          : undefined,
       },
     })
 
@@ -107,15 +118,17 @@ export async function POST(request: NextRequest) {
           deliveryMethod:
             deliveryData?.deliveryMethod || 'pickup',
           pickupPoint: pickupPointAddress,
-          courierAddress:
-            deliveryData?.courierAddress || null,
-          courierDate: deliveryData?.courierDate
-            ? new Date(deliveryData.courierDate)
-            : null,
-          courierTime: deliveryData?.courierTime || null,
+          courier:
+            deliveryData?.deliveryMethod === 'courier'
+              ? deliveryData?.courier || null
+              : null,
           status: 'submitted',
           submittedAt: new Date(),
           photoUrls: [],
+          videoUrls: Array.isArray(videoUrls)
+            ? videoUrls
+            : [],
+          priceRange: priceRange || null,
         },
       })
       skupkaId = newSkupka.id
@@ -164,18 +177,18 @@ export async function POST(request: NextRequest) {
     } else if (deliveryMethod === 'courier') {
       telegramMessage += `🚚 Способ передачи: Выезд курьера\n`
       telegramMessage += `🏠 Адрес: ${
-        deliveryData?.courierAddress || 'Не указан'
+        deliveryData?.courier?.address || 'Не указан'
       }\n`
     }
 
     if (
       deliveryMethod === 'courier' &&
-      deliveryData?.courierDate
+      deliveryData?.courier?.date
     ) {
       telegramMessage += `\n⏰ Время приезда курьера: ${new Date(
-        deliveryData.courierDate
+        deliveryData.courier.date
       ).toLocaleDateString('ru-RU')} в ${
-        deliveryData.courierTime || 'Не указано'
+        deliveryData.courier.time || 'Не указано'
       }`
     }
 

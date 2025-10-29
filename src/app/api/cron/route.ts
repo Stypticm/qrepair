@@ -33,18 +33,26 @@ export async function GET(req: Request) {
       now.getTime() + 60 * 60 * 1000
     )
 
-    const toRemind = await prisma.skupka.findMany({
-      where: {
-        courierReminderSent: false as any,
-        courierScheduledAt: {
-          gt: now,
-          lte:
-            process.env.NODE_ENV !== 'production'
-              ? inOneMinute
-              : inOneHour,
-        } as any,
-      } as any,
-      orderBy: { courierScheduledAt: 'asc' } as any,
+    const raw = await prisma.skupka.findMany({
+      where: { courierReminderSent: false as any } as any,
+      orderBy: { createdAt: 'asc' },
+    })
+
+    const upperBound =
+      process.env.NODE_ENV !== 'production'
+        ? inOneMinute
+        : inOneHour
+
+    const toRemind = raw.filter((app) => {
+      const c = ((app as any).courier || {}) as any
+      const scheduledAt = c.scheduledAt
+        ? new Date(c.scheduledAt)
+        : null
+      return (
+        !!scheduledAt &&
+        scheduledAt.getTime() > now.getTime() &&
+        scheduledAt.getTime() <= upperBound.getTime()
+      )
     })
 
     if (!toRemind.length) {
@@ -68,10 +76,11 @@ export async function GET(req: Request) {
 
     let sentCount = 0
     for (const app of toRemind) {
+      const c = ((app as any).courier || {}) as any
       const hhmm =
-        app.courierTimeSlot ||
-        (app.courierScheduledAt
-          ? app.courierScheduledAt
+        c.timeSlot ||
+        (c.scheduledAt
+          ? new Date(c.scheduledAt)
               .toISOString()
               .substring(11, 16)
           : '')
@@ -82,7 +91,7 @@ export async function GET(req: Request) {
         `Заявка: ${app.id}\n` +
         `Модель: ${app.modelname || '—'}\n` +
         `Время: ${hhmm || '—'}\n` +
-        `Мастер TG: ${app.courierTelegramId || '—'}\n` +
+        `Мастер TG: ${c.telegramId || '—'}\n` +
         `Свяжитесь с мастером и подтвердите выезд к клиенту.`
 
       // PROD: Доп. вариант за 30 минут (закомментирован для продакшена)

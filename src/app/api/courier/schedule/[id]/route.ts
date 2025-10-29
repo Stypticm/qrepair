@@ -53,15 +53,19 @@ export async function POST(
     )
 
   // Проверяем, отправлялось ли сообщение ранее
-  const isSent = app.courierTimeSlotSent
+  const isSent = (app as any).courierTimeSlotSent
   await prisma.skupka.update({
     where: { id },
     data: {
-      courierTelegramId: master.telegramId,
-      courierUserConfirmed: false,
-      // Устанавливаем флаг только если не отправлялось
-      ...(isSent ? {} : { courierTimeSlotSent: false }),
-    },
+      courier: {
+        set: {
+          ...((app as any).courier || {}),
+          telegramId: master.telegramId,
+          userConfirmed: false,
+          ...(isSent ? {} : { timeSlotSent: false }),
+        },
+      },
+    } as any,
   })
 
   // Генерация слотов в зависимости от времени
@@ -123,7 +127,14 @@ export async function POST(
     // const messageId = sent?.result?.message_id
     await prisma.skupka.update({
       where: { id },
-      data: { courierTimeSlotSent: true },
+      data: {
+        courier: {
+          set: {
+            ...((app as any).courier || {}),
+            timeSlotSent: true,
+          },
+        },
+      } as any,
     })
   }
 

@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         modelname: true,
         price: true,
         pickupPoint: true,
-        courierAddress: true,
+        courier: true,
         deliveryMethod: true,
       },
     })
@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
         modelname: skupka.modelname,
         price: skupka.price,
         pickupPoint: skupka.pickupPoint,
-        courierAddress: skupka.courierAddress,
+        courierAddress:
+          ((skupka as any).courier || {}).address || null,
         deliveryMethod: skupka.deliveryMethod,
       },
     })

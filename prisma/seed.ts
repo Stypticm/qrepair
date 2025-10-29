@@ -101,6 +101,107 @@ async function main() {
   ])
 
   console.log('✅ Мастера созданы:', masters)
+
+  // Демо заявки Skupka
+  const demoRequests = [
+    {
+      telegramId: 'browser_test_user',
+      username: 'demo1',
+      modelname: 'iPhone 13 Pro 256GB',
+      price: 65000,
+      priceRange: { min: 60000, max: 70000 },
+      deviceData: {
+        imei: '356789012345678',
+        sn: 'XYZ12345',
+        color: 'Graphite',
+        storage: '256GB',
+      },
+      aiAnalysis: {
+        condition: 'good',
+        damagePercent: 5,
+        notes: 'minor scratches',
+      },
+      photoUrls: ['/submit.png'],
+      videoUrls: ['https://example.com/video1.mp4'],
+      courier: null,
+      deliveryMethod: 'pickup',
+      pickupPoint: points[0].address,
+    },
+    {
+      telegramId: 'browser_test_user',
+      username: 'demo2',
+      modelname: 'iPhone 12 128GB',
+      price: 38000,
+      priceRange: { min: 34000, max: 40000 },
+      deviceData: {
+        imei: '351111111111111',
+        sn: 'ABC98765',
+        color: 'Blue',
+        storage: '128GB',
+      },
+      aiAnalysis: {
+        condition: 'fair',
+        damagePercent: 12,
+        notes: 'battery wear',
+      },
+      photoUrls: ['/submit.png'],
+      videoUrls: ['https://example.com/video2.mp4'],
+      courier: {
+        method: 'courier',
+        address: 'Москва, Тверская 1',
+        date: new Date().toISOString(),
+        time: '18:00',
+        confirmed: false,
+      },
+      deliveryMethod: 'courier',
+      pickupPoint: null,
+    },
+    {
+      telegramId: '296925626',
+      username: 'roman_qtwe',
+      modelname: 'iPhone 15 Pro 256GB',
+      price: 105000,
+      priceRange: { min: 99000, max: 112000 },
+      deviceData: {
+        imei: '359999999999999',
+        sn: 'QWE12345',
+        color: 'Natural Titanium',
+        storage: '256GB',
+      },
+      aiAnalysis: {
+        condition: 'excellent',
+        damagePercent: 2,
+        notes: 'like new',
+      },
+      photoUrls: ['/submit.png'],
+      videoUrls: ['https://example.com/video3.mp4'],
+      courier: null,
+      deliveryMethod: 'pickup',
+      pickupPoint: points[1].address,
+    },
+  ]
+
+  for (const r of demoRequests) {
+    await prisma.skupka.create({
+      data: {
+        telegramId: r.telegramId,
+        username: r.username,
+        status: 'paid',
+        modelname: r.modelname,
+        price: r.price,
+        priceRange: r.priceRange as any,
+        deviceData: r.deviceData as any,
+        aiAnalysis: r.aiAnalysis as any,
+        photoUrls: r.photoUrls,
+        videoUrls: r.videoUrls,
+        courier: r.courier as any,
+        deliveryMethod: r.deliveryMethod,
+        pickupPoint: r.pickupPoint,
+      },
+    })
+  }
+
+  console.log('✅ Демо заявки Skupka созданы')
 }
 
 main()

@@ -95,8 +95,8 @@ const CourierBookingPage = () => {
                 try {
                     const parsed = JSON.parse(savedCourierData);
                     if (parsed.address) setAddress(parsed.address);
-                    if (parsed.selectedDate) setSelectedDate(new Date(parsed.selectedDate));
-                    if (parsed.selectedTime) setSelectedTime(parsed.selectedTime);
+                    if (parsed.date) setSelectedDate(new Date(parsed.date));
+                    if (parsed.time) setSelectedTime(parsed.time);
                     if (parsed.locationMethod) setLocationMethod(parsed.locationMethod);
                 } catch (e) {
                     console.error('Ошибка при восстановлении данных мастера:', e);
@@ -111,8 +111,8 @@ const CourierBookingPage = () => {
         if (typeof window !== 'undefined' && (address || selectedDate || selectedTime || locationMethod)) {
             const courierData = {
                 address,
-                selectedDate: selectedDate?.toISOString(),
-                selectedTime,
+                date: selectedDate?.toISOString(),
+                time: selectedTime,
                 locationMethod
             };
             sessionStorage.setItem('courierBookingData', JSON.stringify(courierData));
@@ -257,19 +257,27 @@ const CourierBookingPage = () => {
                     modelname: getFullModelName(),
                     price: finalPrice,
                     deliveryMethod: 'courier',
-                    courierAddress: address.trim(),
-                    courierDate: selectedDate,
-                    courierTime: selectedTime,
+                    courier: {
+                        method: 'courier',
+                        address: address.trim(),
+                        date: selectedDate.toISOString(),
+                        time: selectedTime,
+                        confirmed: false,
+                    },
                 }),
             });
 
             if (response.ok) {
-                // Сохраняем данные о доставке в sessionStorage
+                // Сохраняем данные о доставке в sessionStorage в новом формате
                 const deliveryData = {
                     deliveryMethod: 'courier',
-                    courierAddress: address.trim(),
-                    courierDate: selectedDate,
-                    courierTime: selectedTime,
+                    courier: {
+                        method: 'courier',
+                        address: address.trim(),
+                        date: selectedDate.toISOString(),
+                        time: selectedTime,
+                        confirmed: false,
+                    },
                 };
                 sessionStorage.setItem('deliveryData', JSON.stringify(deliveryData));
                 

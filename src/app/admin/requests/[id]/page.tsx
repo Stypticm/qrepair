@@ -445,11 +445,11 @@ const RequestById = () => {
                                                                      ? 'Оплачено'
                                                                      : application?.status === 'completed' && 'Выполнена'}
                                              </Badge>
-                                             {(application?.status === 'in_progress' || application?.status === 'on_the_way') && (
-                                                 <Badge className={`${application?.priceConfirmed ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-full text-sm font-medium`}>
-                                                     {application?.priceConfirmed ? 'Цена подтверждена' : 'Цена не подтверждена'}
-                                                 </Badge>
-                                             )}
+                                            {(application?.status === 'in_progress' || application?.status === 'on_the_way') && (
+                                                <Badge className={`${(application as any)?.priceConfirmed ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-full text-sm font-medium`}>
+                                                    {(application as any)?.priceConfirmed ? 'Цена подтверждена' : 'Цена не подтверждена'}
+                                                </Badge>
+                                            )}
                                          </div>
                                      </div>
                                 </CardDescription>

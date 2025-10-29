@@ -12,9 +12,7 @@ export async function POST(request: NextRequest) {
       price,
       deliveryMethod,
       pickupPoint,
-      courierAddress,
-      courierDate,
-      courierTime,
+      courier, // { address, date, time, method, confirmed, courierId }
     } = await request.json()
 
     console.log('🔍 Submit-delivery API received:', {
@@ -24,9 +22,7 @@ export async function POST(request: NextRequest) {
       price,
       deliveryMethod,
       pickupPoint,
-      courierAddress,
-      courierDate,
-      courierTime,
+      courier,
     })
 
     if (!telegramId || !modelname || !deliveryMethod) {
@@ -46,12 +42,10 @@ export async function POST(request: NextRequest) {
 
     if (deliveryMethod === 'pickup') {
       updateData.pickupPoint = pickupPoint
+      updateData.courier = null
     } else if (deliveryMethod === 'courier') {
-      updateData.courierAddress = courierAddress
-      updateData.courierDate = courierDate
-        ? new Date(courierDate)
-        : null
-      updateData.courierTime = courierTime
+      updateData.courier = courier || null
+      updateData.pickupPoint = null
     }
 
     // Обновляем запись в базе данных
@@ -73,14 +67,17 @@ export async function POST(request: NextRequest) {
           price: price,
           priceAgreed: true,
           deliveryMethod: deliveryMethod,
-          pickupPoint: pickupPoint,
-          courierAddress: courierAddress,
-          courierDate: courierDate
-            ? new Date(courierDate)
-            : null,
-          courierTime: courierTime,
+          pickupPoint:
+            deliveryMethod === 'pickup'
+              ? pickupPoint
+              : null,
+          courier:
+            deliveryMethod === 'courier'
+              ? courier || null
+              : null,
           status: 'draft', // Оставляем как draft до финального подтверждения
           photoUrls: [],
+          videoUrls: [],
         },
       })
     }
@@ -88,10 +85,12 @@ export async function POST(request: NextRequest) {
     // Сохраняем данные в sessionStorage для финальной страницы
     const deliveryData = {
       deliveryMethod,
-      pickupPoint,
-      courierAddress,
-      courierDate,
-      courierTime,
+      pickupPoint:
+        deliveryMethod === 'pickup' ? pickupPoint : null,
+      courier:
+        deliveryMethod === 'courier'
+          ? courier || null
+          : null,
     }
 
     return NextResponse.json({

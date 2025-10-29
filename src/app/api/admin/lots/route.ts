@@ -13,6 +13,22 @@ export async function POST(request: NextRequest) {
   let photoFiles: File[] = []
 
   try {
+    // Валидация переменных окружения (ранний выход с понятной ошибкой)
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('ENV validation failed', {
+        NEXT_PUBLIC_SUPABASE_URL:
+          !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY:
+          !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      })
+      return NextResponse.json(
+        {
+          error:
+            'Конфигурация Supabase не задана: проверьте NEXT_PUBLIC_SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY',
+        },
+        { status: 500 }
+      )
+    }
     // Проверяем права доступа
     const telegramId = request.headers.get('x-telegram-id')
     const adminIds = ['1', '296925626', '531360988']

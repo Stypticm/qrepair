@@ -71,30 +71,41 @@ export interface SkupkaRequest {
   telegramId: string
   username: string
   modelname?: string
-  photoUrls?: string[]
   status?: string
   comment?: string
   imei?: string
   sn?: string
-  contractUrl?: string
   price?: number
+  finalPrice?: number
+  priceAgreed?: boolean
   damagePercent?: number
-  priceConfirmed?: boolean
+
+  // Медиа
+  photoUrls?: string[]
+  videoUrls?: string[]
+
+  // Данные и аналитика
+  deviceData?: any
+  aiAnalysis?: any
+  priceRange?: any
+  aiModelUsed?: string
+  analysisConfidence?: number
+  chatHistory?: any
+  deviceConditions?: any
+  additionalConditions?: any
+
+  // Логистика
+  deliveryMethod?: string
+  pickupPoint?: string
+  courier?: any
+  courierReminderSent?: boolean
+  courierUserConfirmed?: boolean
+
+  // Статусы / метаданные
+  currentStep?: string
   inspection?: any
   inspectionCompleted?: boolean
   inspectionToken?: string
-  deviceData?: any
-  phoneData?: any
-  currentStep?: string
-  courierTelegramId?: string
-  courierScheduledAt?: string
-  courierTimeSlot?: string
-  courierUserConfirmed?: boolean
-  courierReminderSent?: boolean
-  courierTimeSlotSent?: boolean
-  finalPrice?: number
-  deviceConditions?: any
-  additionalConditions?: any
   submittedAt?: string
   createdAt: string
   updatedAt: string

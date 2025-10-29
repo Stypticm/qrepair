@@ -42,6 +42,44 @@ export default function DeviceInfoPage() {
     const [showCheckDialog, setShowCheckDialog] = useState(false);
     const [isDialogLocked, setIsDialogLocked] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+    const touchEndRef = useRef<{ x: number; y: number } | null>(null);
+
+    // Навигация стрелкой вверх (ПК) → к секции Выбор
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const tag = (e.target as HTMLElement)?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || (e as any).isComposing) return;
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                window.location.href = '/?section=choice';
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
+    // Свайп вверх → к секции Выбор
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartRef.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+    };
+    const handleTouchMove = (e: React.TouchEvent) => {
+        touchEndRef.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
+    };
+    const handleTouchEnd = () => {
+        if (!touchStartRef.current || !touchEndRef.current) return;
+        const dx = touchStartRef.current.x - touchEndRef.current.x;
+        const dy = touchStartRef.current.y - touchEndRef.current.y;
+        const min = 40;
+        const vertical = Math.abs(dy) > Math.abs(dx);
+        if (vertical && Math.abs(dy) > min) {
+            if (dy > 0) {
+                // свайп вверх
+                window.location.href = '/?section=choice';
+            }
+        }
+        touchStartRef.current = null; touchEndRef.current = null;
+    };
     const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
@@ -219,7 +257,7 @@ export default function DeviceInfoPage() {
     };
 
     return (
-        <Page back={true}>
+        <Page back={() => router.push('/?section=choice') }>
             <div 
                 className={`w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full justify-center items-center min-h-screen ${telegramUtils.telegramClasses.container}`}
                 data-checking={checking}
@@ -227,6 +265,9 @@ export default function DeviceInfoPage() {
                 style={{
                     minHeight: isTelegramWebApp ? '100vh' : '100vh',
                 }}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             >
                 <div className="w-full max-w-md mx-auto px-4">
                     <motion.div

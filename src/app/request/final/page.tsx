@@ -94,38 +94,41 @@ const FinalPage = () => {
     useEffect(() => {
         const loadDeliveryData = async () => {
             if (typeof window !== 'undefined') {
-                // Сначала проверяем deliveryOptionsData для определения способа доставки
+                // Пробуем взять из sessionStorage единый объект deliveryData
+                const savedDeliveryData = sessionStorage.getItem('deliveryData');
+                if (savedDeliveryData) {
+                    try {
+                        const parsed = JSON.parse(savedDeliveryData);
+                        setDeliveryData(parsed);
+                        return;
+                    } catch {}
+                }
+                // Fallback на старые ключи (обратная совместимость)
                 const deliveryOptionsData = sessionStorage.getItem('deliveryOptionsData');
                 let deliveryMethod = 'pickup';
-                
                 if (deliveryOptionsData) {
                     try {
                         const parsed = JSON.parse(deliveryOptionsData);
                         deliveryMethod = parsed.selectedOption || 'pickup';
-                    } catch (e) {
-                        console.error('Error parsing delivery options data:', e);
-                    }
+                    } catch {}
                 }
-
-                // Загружаем данные в зависимости от способа доставки
                 if (deliveryMethod === 'courier') {
-                    // Загружаем данные курьера
                     const savedCourierData = sessionStorage.getItem('courierData');
                     if (savedCourierData) {
                         try {
                             const parsed = JSON.parse(savedCourierData);
                             setDeliveryData({
                                 deliveryMethod: 'courier',
-                                courierAddress: parsed.address,
-                                courierDate: parsed.selectedDate,
-                                courierTime: parsed.selectedTime,
+                                courier: {
+                                    address: parsed.address,
+                                    date: parsed.selectedDate,
+                                    time: parsed.selectedTime,
+                                },
                             });
-                        } catch (e) {
-                            console.error('Error parsing courier data:', e);
-                        }
+                            return;
+                        } catch {}
                     }
                 } else {
-                    // Загружаем данные самовывоза
                     const savedPickupData = sessionStorage.getItem('pickupData');
                     if (savedPickupData) {
                         try {
@@ -134,35 +137,32 @@ const FinalPage = () => {
                                 deliveryMethod: 'pickup',
                                 pickupPoint: parsed.selectedPoint || 'Адрес не указан',
                             });
-                        } catch (e) {
-                            console.error('Error parsing pickup data:', e);
-                        }
-                    } else {
-                        // Fallback: пытаемся получить из БД
-                        try {
-                            const effectiveTelegramId = telegramId || 'browser_test_user';
-                            const response = await fetch('/api/request/getDraft', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    telegramId: effectiveTelegramId,
-                                }),
-                            });
-
-                            if (response.ok) {
-                                const data = await response.json();
-                                if (data.draft) {
-                                    setDeliveryData({
-                                        deliveryMethod: 'pickup',
-                                        pickupPoint: data.draft.pickupPoint || 'Адрес не указан',
-                                    });
-                                }
+                            return;
+                        } catch {}
+                    }
+                    // Fallback: пытаемся получить из БД
+                    try {
+                        const effectiveTelegramId = telegramId || 'browser_test_user';
+                        const response = await fetch('/api/request/getDraft', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                telegramId: effectiveTelegramId,
+                            }),
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.draft) {
+                                setDeliveryData({
+                                    deliveryMethod: 'pickup',
+                                    pickupPoint: data.draft.pickupPoint || 'Адрес не указан',
+                                });
                             }
-                        } catch (error) {
-                            console.error('Error loading delivery data from DB:', error);
                         }
+                    } catch (error) {
+                        console.error('Error loading delivery data from DB:', error);
                     }
                 }
             }
@@ -310,9 +310,10 @@ const FinalPage = () => {
                 details: deliveryData.pickupPoint
             };
         } else if (deliveryData.deliveryMethod === 'courier') {
+            const d = deliveryData.courier;
             return {
                 method: 'Мастер',
-                details: `${deliveryData.courierAddress} - ${new Date(deliveryData.courierDate).toLocaleDateString('ru-RU')} в ${deliveryData.courierTime}`
+                details: `${d?.address || 'Не указан'}${d?.date ? ' - ' + new Date(d.date).toLocaleDateString('ru-RU') : ''}${d?.time ? ' в ' + d.time : ''}`
             };
         }
 

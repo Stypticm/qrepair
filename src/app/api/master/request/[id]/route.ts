@@ -52,7 +52,6 @@ export async function GET(
         additionalConditions: request.additionalConditions,
         aiAnalysis: request.aiAnalysis,
         photoUrls: request.photoUrls,
-        phoneData: request.phoneData,
         deviceData: request.deviceData,
         assignedMaster: request.assignedMaster,
       },

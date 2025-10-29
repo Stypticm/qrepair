@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
         id: true,
         deviceConditions: true,
         modelname: true,
-        phoneData: true,
+        deviceData: true,
         price: true,
         status: true,
       },
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         deviceConditions:
           activeRequest.deviceConditions || null,
         modelname: activeRequest.modelname,
-        phoneData: activeRequest.phoneData,
+        deviceData: (activeRequest as any).deviceData,
         price: activeRequest.price,
         status: activeRequest.status,
       })

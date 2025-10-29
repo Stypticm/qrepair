@@ -5,8 +5,15 @@ const prisma = new PrismaClient()
 
 export async function POST(req: NextRequest) {
   try {
-    const { requestId, photos, telegramId } =
-      await req.json()
+    const {
+      requestId,
+      photos,
+      telegramId,
+      videoUrls,
+      aiModelUsed,
+      analysisConfidence,
+      priceRange,
+    } = await req.json()
 
     if (!requestId || !photos || !telegramId) {
       return NextResponse.json(
@@ -56,7 +63,7 @@ export async function POST(req: NextRequest) {
         damagePercent: 0,
         description: 'Отличное состояние',
       },
-      finalPrice: Math.round(request.price! * 0.89), // Примерная финальная цена
+      finalPrice: Math.round((request.price || 0) * 0.89), // Примерная финальная цена
       analysisDate: new Date().toISOString(),
       masterId: master.id,
     }
@@ -67,6 +74,15 @@ export async function POST(req: NextRequest) {
       data: {
         aiAnalysis: analysisResult,
         photoUrls: photos, // Сохраняем ссылки на фото
+        videoUrls: Array.isArray(videoUrls)
+          ? videoUrls
+          : undefined,
+        aiModelUsed: aiModelUsed || undefined,
+        analysisConfidence:
+          typeof analysisConfidence === 'number'
+            ? analysisConfidence
+            : undefined,
+        priceRange: priceRange || undefined,
       },
     })
 

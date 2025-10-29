@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
       damagePercent,
       price,
       priceRange,
-      wearValues,
     } = await request.json()
 
     if (!telegramId) {
@@ -54,16 +53,8 @@ export async function POST(request: NextRequest) {
       data: {
         userEvaluation: userEvaluation || null,
         damagePercent: damagePercent || 0,
-        price: price || activeRequest.price,
-        wearValues: wearValues || null,
-        // Сохраняем priceRange в deviceConditions как JSON
-        deviceConditions: priceRange
-          ? {
-              ...((activeRequest.deviceConditions as any) ||
-                {}),
-              priceRange: priceRange,
-            }
-          : activeRequest.deviceConditions,
+        price: price ?? activeRequest.price,
+        priceRange: priceRange || activeRequest.priceRange,
         currentStep: 'submit',
         updatedAt: new Date(),
       },
@@ -85,6 +76,7 @@ export async function POST(request: NextRequest) {
         userEvaluation: updatedRequest.userEvaluation,
         damagePercent: updatedRequest.damagePercent,
         price: updatedRequest.price,
+        priceRange: updatedRequest.priceRange,
         currentStep: updatedRequest.currentStep,
       },
     })

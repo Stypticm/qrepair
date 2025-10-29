@@ -13,14 +13,17 @@ export interface RequestData {
   price?: number
   deviceConditions?: any
   additionalConditions?: any
-  wearValues?: any
   imei?: string
   sn?: string
   priceRange?: any
-  deviceFunctionStates?: any
-  functionDiscount?: number
-  devicePhotos?: any
-  deliveryData?: any
+  deviceData?: any
+  aiAnalysis?: any
+  chatHistory?: any
+  aiModelUsed?: string
+  analysisConfidence?: number
+  courier?: any
+  photoUrls?: string[]
+  videoUrls?: string[]
   [key: string]: any
 }
 
@@ -58,22 +61,23 @@ export class RequestManager {
           currentStep:
             initialData?.currentStep || 'evaluation-mode',
           modelname: initialData?.modelname || null,
-          price: initialData?.price || null,
+          price: initialData?.price ?? null,
           deviceConditions:
             initialData?.deviceConditions || null,
           additionalConditions:
             initialData?.additionalConditions || null,
-          wearValues: initialData?.wearValues || null,
           imei: initialData?.imei || null,
           sn: initialData?.sn || null,
           priceRange: initialData?.priceRange || null,
-          deviceFunctionStates:
-            initialData?.deviceFunctionStates || null,
-          functionDiscount:
-            initialData?.functionDiscount || 0,
-          devicePhotos: initialData?.devicePhotos || null,
-          deliveryData: initialData?.deliveryData || null,
-          photoUrls: [],
+          deviceData: initialData?.deviceData || null,
+          aiAnalysis: initialData?.aiAnalysis || null,
+          chatHistory: initialData?.chatHistory || null,
+          aiModelUsed: initialData?.aiModelUsed || null,
+          analysisConfidence:
+            initialData?.analysisConfidence || null,
+          courier: initialData?.courier || null,
+          photoUrls: initialData?.photoUrls || [],
+          videoUrls: initialData?.videoUrls || [],
         },
       })
 

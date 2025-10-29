@@ -192,19 +192,19 @@ const MyDevices = () => {
                                   </div>
                                 )}
 
-                                {device.courierTelegramId && (
+                                {((device as any).courier || {}).telegramId && (
                                   <div>
                                     <span className="font-semibold text-gray-600">Курьер:</span>
                                     <div className="text-gray-800 bg-orange-50 p-2 rounded-lg">
-                                      ID: {device.courierTelegramId}
-                                      {device.courierTimeSlot && (
+                                      ID: {(((device as any).courier || {}).telegramId)}
+                                      {(((device as any).courier || {}).timeSlot) && (
                                         <div className="text-sm text-orange-700 mt-1">
-                                          Время: {device.courierTimeSlot}
+                                          Время: {(((device as any).courier || {}).timeSlot)}
                                         </div>
                                       )}
-                                      {device.courierScheduledAt && (
+                                      {(((device as any).courier || {}).scheduledAt) && (
                                         <div className="text-sm text-orange-700">
-                                          Дата: {new Date(device.courierScheduledAt).toLocaleDateString('ru-RU')}
+                                          Дата: {new Date((((device as any).courier || {}).scheduledAt)).toLocaleDateString('ru-RU')}
                                         </div>
                                       )}
                                     </div>

@@ -196,8 +196,8 @@ export function AdaptiveDeviceFeed({
   // Если нет данных и не загружается - показываем сообщение
   if (displayItems.length === 0) {
     return (
-      <div className="w-full text-center py-8 text-gray-500">
-        Ещё нет предложений — загляните позже
+      <div className="w-full text-center py-10 text-gray-500">
+        Пока нет новых объявлений
       </div>
     );
   }

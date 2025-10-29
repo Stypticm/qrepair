@@ -9,57 +9,63 @@ datasource db {
 }
 
 model Skupka {
-  id                   String             @id @default(cuid())
-  telegramId           String
-  username             String
-  modelname            String?
-  photoUrls            String[]
-  status               SkupkaStatus       @default(draft)
-  comment              String?
-  imei                 String?
-  contractUrl          String?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  price                Float?
-  damagePercent        Float              @default(0)
-  priceConfirmed       Boolean            @default(false)
-  courierReminderSent  Boolean            @default(false)
-  courierScheduledAt   DateTime?
-  courierTelegramId    String?
-  courierTimeSlot      String?
-  courierUserConfirmed Boolean            @default(false)
-  inspection           Json?
-  inspectionCompleted  Boolean            @default(false)
-  inspectionToken      String?
-  courierTimeSlotSent  Boolean            @default(false)
-  finalPrice           Float?
-  submittedAt          DateTime?
+  id         String       @id @default(cuid())
+  telegramId String
+  username   String
+  modelname  String?
+  imei       String?
+  sn         String?
+  status     SkupkaStatus @default(draft)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  // 📸 медиа
+  photoUrls String[]
+  videoUrls String[]
+
+  // 📊 данные устройства и анализа
+  deviceData         Json? // из IMEICheck
+  aiAnalysis         Json? // состояние, дефекты, цена
+  priceRange         Json? // {min, max}
+  aiModelUsed        String?
+  analysisConfidence Float?
+  chatHistory        Json? // ИИ-диалог с клиентом
+  deviceConditions   Json? // структурированные дефекты
+
+  // 💰 финансовая часть
+  price            Float?
+  finalPrice       Float?
+  priceAgreed      Boolean?
+  damagePercent    Float    @default(0)
+  functionDiscount Float?   @default(0)
+
+  // 🚚 логистика
+  courier        Json? // {address, date, time, method, confirmed, courierId}
+  deliveryMethod String?
+  pickupPoint    String?
+
+  // 📋 статусы
   currentStep          String?
-  deviceConditions     Json?
-  sn                   String?
-  deviceData           Json?
-  courierAddress       String?
-  courierDate          DateTime?
-  courierTime          String?
-  deliveryMethod       String?
+  inspection           Json?
+  inspectionCompleted  Boolean   @default(false)
+  statusNote           String?
+  submittedAt          DateTime?
+  priceConfirmed       Boolean   @default(false)
+  courierReminderSent  Boolean   @default(false)
+  courierUserConfirmed Boolean   @default(false)
+
+  // 💬 взаимодействие
+  comment              String?
   feedback             String?
-  pickupPoint          String?
-  priceAgreed          Boolean?
-  telegramIdConfirmed  Boolean            @default(false)
-  userTelegramId       String?
-  assignedMasterId     String?
   userEvaluation       String?
   additionalConditions Json?
-  aiAnalysis           Json?
-  phoneData            Json?
-  deliveryData         String?
-  deviceFunctionStates String?
-  devicePhotos         String?
-  functionDiscount     Float?             @default(0)
-  wearValues           Json?
-  priceRange           Json?
-  inspections          DeviceInspection[]
-  assignedMaster       Master?            @relation(fields: [assignedMasterId], references: [id])
+  telegramIdConfirmed  Boolean @default(false)
+  userTelegramId       String?
+  assignedMasterId     String?
+  assignedMaster       Master? @relation(fields: [assignedMasterId], references: [id])
+
+  // связи
+  inspections DeviceInspection[]
 }
 
 model Master {

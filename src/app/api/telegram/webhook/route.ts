@@ -180,15 +180,21 @@ export async function POST(req: Request) {
           await prisma.skupka.update({
             where: { id },
             data: {
-              courierTimeSlot: `${hh
-                .toString()
-                .padStart(2, '0')}:${mm
-                .toString()
-                .padStart(2, '0')}`,
-              courierScheduledAt: scheduled,
-              courierUserConfirmed: true,
-              courierTimeSlotSent: true,
-            },
+              courier: {
+                set: {
+                  ...(((existing as any) || {}).courier ||
+                    {}),
+                  timeSlot: `${hh
+                    .toString()
+                    .padStart(2, '0')}:${mm
+                    .toString()
+                    .padStart(2, '0')}`,
+                  scheduledAt: scheduled.toISOString(),
+                  userConfirmed: true,
+                  timeSlotSent: true,
+                },
+              },
+            } as any,
           })
 
           // Отправляем уведомление мастеру о выбранном времени
@@ -197,15 +203,18 @@ export async function POST(req: Request) {
               where: { id },
             })
 
-          if (masterNotification?.courierTelegramId) {
+          const courierData = ((
+            (masterNotification as any) || {}
+          ).courier || {}) as any
+          if (courierData?.telegramId) {
             const deviceInfo =
-              masterNotification.modelname || 'Не указано'
-            const priceInfo = masterNotification.price
+              masterNotification?.modelname || 'Не указано'
+            const priceInfo = masterNotification?.price
               ? `${Math.round(masterNotification.price)} ₽`
               : 'Не указана'
 
             await sendTelegramMessage(
-              masterNotification.courierTelegramId,
+              courierData.telegramId,
               `👨‍🔧 Вам назначена встреча!\n\n📱 Устройство: ${deviceInfo}\n💰 Цена: ${priceInfo}\n🕒 Время встречи: ${time}\n\nКлиент ожидает вас в указанное время для проверки устройства.`,
               { parse_mode: 'Markdown' }
             )
