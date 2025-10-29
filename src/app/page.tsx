@@ -484,8 +484,8 @@ function HomeContent() {
                 </div>
               </motion.div>
 
-              {/* Нижнее меню — только в центре */}
-              {position.x === 0 && position.y === 0 && (
+              {/* Нижнее меню — в центре и в секции Лента */}
+              {(position.x === 0 && (position.y === 0 || position.y === 1)) && (
                 <div className="fixed bottom-4 left-4 right-4 z-50">
                   <div className="relative">
                     {/* Внешняя тень для глубины */}
