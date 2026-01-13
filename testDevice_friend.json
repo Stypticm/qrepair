@@ -1,0 +1,54 @@
+{
+    "ok": true,
+    "provider": "imeicheck",
+    "data": {
+        "id": "FRIEND_TEST_DEVICE",
+        "type": "api",
+        "status": "successful",
+        "orderId": null,
+        "service": {
+            "id": 2,
+            "title": "Apple Basic Info"
+        },
+        "amount": "0.08",
+        "deviceId": "F9FQ2S1KXK7",
+        "processedAt": 1760547904,
+        "properties": {
+            "deviceName": "iPhone 13 Pro 256GB Silver [A2639] [iPhone14,2]",
+            "image": "https://sources.imeicheck.net/images/64664f0891ea173f2986918043423f9e.png",
+            "imei": "352885111257308",
+            "imei2": "352885111994546",
+            "serial": "F9FQ2S1KXK7",
+            "meid": "35288511125731",
+            "estPurchaseDate": 1633046400,
+            "simLock": false,
+            "fmiOn": false,
+            "replaced": false,
+            "warrantyStatus": "In Warranty",
+            "repairCoverage": true,
+            "technicalSupport": true,
+            "apple/modelName": "iPhone 13 Pro",
+            "lostMode": false,
+            "usaBlockStatus": "Clean",
+            "network": "Global"
+        }
+    },
+    "normalized": {
+        "deviceName": "iPhone 13 Pro 256GB Silver [A2639] [iPhone14,2]",
+        "image": "https://sources.imeicheck.net/images/64664f0891ea173f2986918043423f9e.png",
+        "imei": "352885111257308",
+        "serial": "F9FQ2S1KXK7",
+        "estPurchaseDate": 1633046400,
+        "simLock": false,
+        "warrantyStatus": "In Warranty",
+        "repairCoverage": true,
+        "technicalSupport": true,
+        "modelDesc": "iPhone 13 Pro",
+        "purchaseCountry": "USA",
+        "region": "North America",
+        "fmiOn": false,
+        "lostMode": false,
+        "usaBlockStatus": "Clean",
+        "network": "Global"
+    }
+}

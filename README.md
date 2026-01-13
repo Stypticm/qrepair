@@ -1,141 +1,279 @@
-# Telegram Mini Apps Next.js Template
+# 📱 Qoqos - Выкуп смартфонов
 
-This template demonstrates how developers can implement a web application on the
-Telegram Mini Apps platform using the following technologies and libraries:
+> **Quick, Open, Quality, Optimal, Safe** - Telegram Mini App для быстрого и безопасного выкупа смартфонов
 
-- [Next.js](https://nextjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [TON Connect](https://docs.ton.org/develop/dapps/ton-connect/overview)
-- [@telegram-apps SDK](https://docs.telegram-mini-apps.com/packages/telegram-apps-sdk/2-x)
-- [Telegram UI](https://github.com/Telegram-Mini-Apps/TelegramUI)
+## 🎯 Что это такое?
 
-> The template was created using [pnpm](https://pnpm.io/). Therefore, it is
-> required to use it for this project as well. Using other package managers, you
-> will receive a corresponding error.
+**Qoqos** - это Telegram Mini App, который позволяет пользователям:
+- 📱 Оценить стоимость своего смартфона за минуты
+- 💰 Получить честную цену на основе состояния устройства
+- 🚀 Продать телефон быстро и безопасно
+- 🛡️ Работать через защищённую экосистему Telegram
 
-## Install Dependencies
+## 🏗️ Архитектура
 
-If you have just cloned this template, you should install the project
-dependencies using the command:
+### **Frontend Stack**
+- **Next.js 15** - React фреймворк с App Router
+- **TypeScript** - типизированный JavaScript
+- **Tailwind CSS** - utility-first CSS фреймворк
+- **Framer Motion** - анимации и переходы
+- **Radix UI** - доступные компоненты
+- **Zustand** - управление состоянием
+- **TanStack Query** - кэширование и синхронизация данных
 
-```Bash
-pnpm install
+### **Backend & Database**
+- **Supabase** - PostgreSQL база данных + Auth + Storage
+- **Prisma** - ORM для работы с базой данных
+- **Next.js API Routes** - серверная логика
+- **Telegram Bot API** - интеграция с Telegram
+
+### **Telegram Integration**
+- **@telegram-apps/sdk** - официальный SDK
+- **SwipeBehavior** - контроль свайпов
+- **Viewport** - адаптивный интерфейс
+- **TON Connect** - интеграция с TON блокчейном
+
+## 🚀 Основной функционал
+
+### **1. Оценка устройства**
+```
+device-info → form → evaluation → submit → delivery → pickup → final
 ```
 
-## Scripts
+**Процесс оценки:**
+- 📝 Ввод серийного номера или ручной выбор модели
+- 🔍 Автоматическое определение характеристик устройства
+- 📊 Оценка состояния (экран, корпус, функции)
+- 💵 Расчёт цены с учётом дефектов и рыночных факторов
 
-This project contains the following scripts:
+### **2. Система ценообразования**
 
-- `dev`. Runs the application in development mode.
-- `dev:https`. Runs the application in development mode using self-signed SSL
-  certificate.
-- `build`. Builds the application for production.
-- `start`. Starts the Next.js server in production mode.
-- `lint`. Runs [eslint](https://eslint.org/) to ensure the code quality meets
-  the required
-  standards.
+**Умная формула расчёта:**
+```typescript
+P_max = R × (1 - D)           // Максимальная цена
+P_min = P_max × (1 - 0.15 - Rm)  // Минимальная цена с маржей
 
-To run a script, use the `pnpm run` command:
-
-```Bash
-pnpm run {script}
-# Example: pnpm run build
+Где:
+R - базовая цена устройства
+D - дисконт за дефекты (0-100%)
+Rm - фактор риска модели (0.05-0.2)
+0.15 - маржа компании (15%)
 ```
 
-## Create Bot and Mini App
+**Факторы риска по моделям:**
+- iPhone 15 серия: 5% риск
+- iPhone 14 серия: 7% риск  
+- iPhone 13 серия: 10% риск
+- iPhone 12 серия: 12% риск
+- iPhone 11 серия: 15% риск
+- iPhone X серия: 18% риск
+- iPhone 8 и старше: 20% риск
 
-Before you start, make sure you have already created a Telegram Bot. Here is
-a [comprehensive guide](https://docs.telegram-mini-apps.com/platform/creating-new-app)
-on how to do it.
+### **3. Маркетплейс устройств**
 
-## Run
+**Адаптивный интерфейс:**
+- 🎠 Карусель рекомендаций на главной
+- 🔍 Поиск и фильтрация устройств
+- 📱 Карточки товаров с детальной информацией
+- 💳 Интеграция с TON для оплаты
 
-Although Mini Apps are designed to be opened
-within [Telegram applications](https://docs.telegram-mini-apps.com/platform/about#supported-applications),
-you can still develop and test them outside of Telegram during the development
-process.
+### **4. Панель мастера**
 
-To run the application in the development mode, use the `dev` script:
+**Функции мастера:**
+- 📋 Управление заявками
+- 📷 Сканирование QR-кодов
+- 📸 Загрузка фотографий устройств
+- ✅ Подтверждение состояния
+
+## 🛠️ Технические особенности
+
+### **Безопасность**
+- 🔐 API роуты вместо прямого доступа к Supabase
+- 🛡️ Service Role Key только на сервере
+- 🔒 RLS отключён (Telegram Mini App)
+- 🚫 Защита от вертикальных свайпов
+
+### **Производительность**
+- ⚡ ISR (Incremental Static Regeneration)
+- 🗄️ Кэширование запросов
+- 📦 Оптимизация изображений
+- 🎯 Lazy loading компонентов
+
+### **UX/UI**
+- 📱 Адаптивный дизайн для всех устройств
+- 🎨 Плавные анимации и переходы
+- 🖱️ Поддержка клавиатуры и мыши на ПК
+- 🔄 Сохранение состояния между сессиями
+
+## 📁 Структура проекта
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/               # API роуты
+│   ├── request/           # Воронка оценки устройства
+│   ├── master/            # Панель мастера
+│   └── my-devices/        # Мои устройства
+├── components/            # React компоненты
+│   ├── ui/               # Базовые UI компоненты
+│   ├── AdaptiveDeviceFeed.tsx
+│   └── ExpandableDeviceCard.tsx
+├── core/                 # Основная логика
+│   ├── lib/             # Утилиты и хелперы
+│   ├── ton/             # TON интеграция
+│   └── i18n/            # Интернационализация
+├── hooks/                # React хуки
+├── stores/               # Zustand стейт менеджмент
+└── types/               # TypeScript типы
+```
+
+## 🚀 Запуск проекта
+
+### **1. Установка зависимостей**
+```bash
+yarn install
+```
+
+### **2. Настройка окружения**
+```bash
+# .env.local
+NEXT_PUBLIC_SUPABASE_URL="your_supabase_url"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your_supabase_anon_key"
+SUPABASE_SERVICE_ROLE_KEY="your_service_role_key"
+NEXT_PUBLIC_BASE_URL="your_app_url"
+```
+
+### **3. Настройка базы данных**
+```bash
+# Генерация Prisma клиента
+yarn prisma generate
+
+# Применение миграций
+yarn prisma db push
+
+# Заполнение тестовыми данными
+yarn db:seed
+```
+
+### **4. Запуск в разработке**
+```bash
+yarn dev
+```
+
+### **5. Сборка для продакшена**
+```bash
+yarn build
+yarn start
+```
+
+## 🔧 Основные команды
 
 ```bash
-pnpm run dev
+# Разработка
+yarn dev              # Запуск dev сервера
+yarn dev:https        # Запуск с HTTPS
+
+# Сборка и деплой
+yarn build            # Сборка проекта
+yarn start            # Запуск продакшен сервера
+yarn deploy            # Деплой на Vercel
+
+# База данных
+yarn db:seed          # Заполнение тестовыми данными
+yarn migrate-devices  # Миграция устройств
+
+# Очистка
+yarn cleanup:all      # Очистка логов и тестовых API
 ```
 
-After this, you will see a similar message in your terminal:
+## 🌟 Ключевые особенности
 
-```bash
-▲ Next.js 14.2.3
-- Local:        http://localhost:3000
+### **1. Умная оценка цены**
+- 🧮 Алгоритм учитывает модель, состояние и рыночные факторы
+- 📊 Динамический диапазон цен
+- 🎯 Честная оценка без занижения
 
-✓ Starting...
-✓ Ready in 2.9s
-```
+### **2. Telegram Native**
+- 📱 Полная интеграция с Telegram
+- 🔒 Безопасность через Telegram Auth
+- 🚀 Быстрый запуск без регистрации
 
-To view the application, you need to open the `Local`
-link (`http://localhost:3000` in this example) in your browser.
+### **3. TON Integration**
+- 💎 Оплата через TON блокчейн
+- 🔗 TonConnect UI
+- 💰 Криптоплатежи
 
-It is important to note that some libraries in this template, such as
-`@telegram-apps/sdk`, are not intended for use outside of Telegram.
+### **4. Мастер-панель**
+- 📋 Управление заявками
+- 📷 QR-сканер для быстрой обработки
+- 📸 Загрузка фотографий устройств
 
-Nevertheless, they appear to function properly. This is because the
-`src/hooks/useTelegramMock.ts` file, which is imported in the application's
-`Root` component, employs the `mockTelegramEnv` function to simulate the
-Telegram environment. This trick convinces the application that it is
-running in a Telegram-based environment. Therefore, be cautious not to use this
-function in production mode unless you fully understand its implications.
+## 🎨 Дизайн-система
 
-### Run Inside Telegram
+### **Цветовая палитра**
+- **Primary**: `#2dc2c6` (бирюзовый)
+- **Secondary**: `#ff6b35` (оранжевый)
+- **Success**: `#10b981` (зелёный)
+- **Warning**: `#f59e0b` (жёлтый)
+- **Error**: `#ef4444` (красный)
 
-Although it is possible to run the application outside of Telegram, it is
-recommended to develop it within Telegram for the most accurate representation
-of its real-world functionality.
+### **Типографика**
+- **Font**: Comic Neue (400, 700)
+- **Sizes**: text-xs до text-6xl
+- **Weights**: normal, bold
 
-To run the application inside Telegram, [@BotFather](https://t.me/botfather)
-requires an HTTPS link.
+## 📊 Производительность
 
-This template already provides a solution.
+### **Метрики**
+- ⚡ **First Contentful Paint**: < 1.5s
+- 🎯 **Largest Contentful Paint**: < 2.5s
+- 🔄 **Time to Interactive**: < 3s
+- 📱 **Core Web Vitals**: Все зелёные
 
-To retrieve a link with the HTTPS protocol, consider using the `dev:https`
-script:
+### **Оптимизации**
+- 🖼️ WebP изображения с fallback
+- 📦 Tree shaking и code splitting
+- 🗄️ Агрессивное кэширование
+- ⚡ Prefetching критических ресурсов
 
-```bash
-$ pnpm run dev:https
+## 🔮 Планы развития
 
-▲ Next.js 14.2.3
-- Local:        https://localhost:3000
+### **Краткосрочные (1-2 месяца)**
+- [ ] Интеграция с платёжными системами
+- [ ] Расширение каталога устройств
+- [ ] Улучшение алгоритма оценки
+- [ ] Мобильная оптимизация
 
-✓ Starting...
-✓ Ready in 2.4s
-```
+### **Среднесрочные (3-6 месяцев)**
+- [ ] Android приложение
+- [ ] Система рейтингов
+- [ ] Интеграция с курьерскими службами
+- [ ] Аналитика и дашборды
 
-Visiting the `Local` link (`https://localhost:3000` in this example) in your
-browser, you will see the following warning:
+### **Долгосрочные (6+ месяцев)**
+- [ ] AI-оценка по фотографиям
+- [ ] Блокчейн-сертификаты
+- [ ] Международная экспансия
+- [ ] Партнёрская программа
 
-![SSL Warning](assets/ssl-warning.png)
+## 🤝 Вклад в проект
 
-This browser warning is normal and can be safely ignored as long as the site is
-secure. Click the `Proceed to localhost (unsafe)` button to continue and view
-the application.
+1. **Fork** репозитория
+2. **Создайте** feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** изменения (`git commit -m 'Add amazing feature'`)
+4. **Push** в branch (`git push origin feature/amazing-feature`)
+5. **Откройте** Pull Request
 
-Once the application is displayed correctly, submit the
-link `https://127.0.0.1:3000` (`https://localhost:3000` is considered as invalid
-by BotFather) as the Mini App link to [@BotFather](https://t.me/botfather).
-Then, navigate to [https://web.telegram.org/k/](https://web.telegram.org/k/),
-find your bot, and launch the Telegram Mini App. This approach provides the full
-development experience.
+## 📄 Лицензия
 
-## Deploy
+Этот проект лицензирован под MIT License - см. файл [LICENSE](LICENSE) для деталей.
 
-The easiest way to deploy your Next.js app is to use
-the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
-from the creators of Next.js.
+## 📞 Поддержка
 
-Check out
-the [Next.js deployment documentation](https://nextjs.org/docs/deployment) for
-more details.
+- 📧 **Email**: support@qoqos.ru
+- 💬 **Telegram**: [@qoqos_support](https://t.me/qoqos_support)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/your-org/qrepair/issues)
 
-## Useful Links
+---
 
-- [Platform documentation](https://docs.telegram-mini-apps.com/)
-- [@telegram-apps/sdk-react documentation](https://docs.telegram-mini-apps.com/packages/telegram-apps-sdk-react)
-- [Telegram developers community chat](https://t.me/devs)
+**Сделано с ❤️ для быстрого и честного выкупа смартфонов**

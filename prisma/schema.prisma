@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Skupka {
+  id         String       @id @default(cuid())
+  telegramId String
+  username   String
+  modelname  String?
+  imei       String?
+  sn         String?
+  status     SkupkaStatus @default(draft)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  // 📸 медиа
+  photoUrls String[]
+  videoUrls String[]
+
+  // 📊 данные устройства и анализа
+  deviceData         Json? // из IMEICheck
+  aiAnalysis         Json? // состояние, дефекты, цена
+  priceRange         Json? // {min, max}
+  aiModelUsed        String?
+  analysisConfidence Float?
+  chatHistory        Json? // ИИ-диалог с клиентом
+  deviceConditions   Json? // структурированные дефекты
+
+  // 💰 финансовая часть
+  price            Float?
+  finalPrice       Float?
+  priceAgreed      Boolean?
+  damagePercent    Float    @default(0)
+  functionDiscount Float?   @default(0)
+
+  // 🚚 логистика
+  courier        Json? // {address, date, time, method, confirmed, courierId}
+  deliveryMethod String?
+  pickupPoint    String?
+
+  // 📋 статусы
+  currentStep          String?
+  inspection           Json?
+  inspectionCompleted  Boolean   @default(false)
+  statusNote           String?
+  submittedAt          DateTime?
+  priceConfirmed       Boolean   @default(false)
+  courierReminderSent  Boolean   @default(false)
+  courierUserConfirmed Boolean   @default(false)
+
+  // 💬 взаимодействие
+  comment              String?
+  feedback             String?
+  userEvaluation       String?
+  additionalConditions Json?
+  telegramIdConfirmed  Boolean @default(false)
+  userTelegramId       String?
+  assignedMasterId     String?
+  assignedMaster       Master? @relation(fields: [assignedMasterId], references: [id])
+
+  // связи
+  inspections DeviceInspection[]
+}
+
+model Master {
+  id               String             @id @default(cuid())
+  telegramId       String             @unique
+  username         String             @unique
+  name             String?
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  pointId          Int?
+  inspections      DeviceInspection[]
+  point            Point?             @relation(fields: [pointId], references: [id])
+  assignedRequests Skupka[]
+}
+
+model Point {
+  id           Int      @id @default(autoincrement())
+  address      String   @unique
+  workingHours String   @default("10:00 - 22:00")
+  name         String   @default("Точка приёма")
+  masters      Master[]
+}
+
+model DeviceInspection {
+  id              String    @id @default(cuid())
+  skupkaId        String
+  inspectionToken String
+  tokenExpiresAt  DateTime
+  testsResults    Json
+  finalPrice      Float?
+  inspectionNotes String?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  masterUsername  String
+  master          Master    @relation(fields: [masterUsername], references: [username], onDelete: Cascade)
+  skupka          Skupka    @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
+
+  @@index([skupkaId])
+  @@index([masterUsername])
+  @@index([inspectionToken])
+}
+
+model Device {
+  id           String        @id @default(cuid())
+  model        String
+  variant      String
+  storage      String
+  color        String
+  country      String
+  simType      String
+  basePrice    Float
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  marketPrices MarketPrice[]
+
+  @@index([model])
+  @@index([model, variant])
+  @@index([model, variant, storage])
+  @@index([model, variant, storage, color])
+  @@index([country])
+  @@index([simType])
+  @@index([basePrice])
+}
+
+model MarketPrice {
+  id          String   @id @default(cuid())
+  deviceId    String
+  source      String
+  price       Float
+  url         String?
+  title       String?
+  description String?
+  location    String?
+  condition   String?
+  sellerType  String?
+  parsedAt    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@index([source])
+  @@index([parsedAt])
+  @@index([price])
+  @@index([source, deviceId])
+}
+
+enum SkupkaStatus {
+  draft
+  on_the_way
+  in_progress
+  accepted
+  paid
+  completed
+  submitted
+  inspected
+}

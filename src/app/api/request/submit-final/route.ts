@@ -1,0 +1,356 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
+import {
+  sendTelegramMessage,
+  sendTelegramPhoto,
+} from '@/core/lib/sendTelegramMessage'
+import { getServerImageUrl } from '@/core/lib/assets'
+import fs from 'fs'
+import path from 'path'
+
+const prisma = new PrismaClient()
+
+export async function POST(request: NextRequest) {
+  try {
+    const requestBody = await request.json()
+    console.log('=== SUBMIT-FINAL REQUEST ===')
+    console.log(
+      'Request body:',
+      JSON.stringify(requestBody, null, 2)
+    )
+    console.log('============================')
+
+    const {
+      telegramId,
+      userTelegramId,
+      username,
+      modelname,
+      price,
+      priceRange,
+      formattedPriceRange,
+      deliveryData,
+      videoUrls,
+    } = requestBody
+
+    if (!telegramId || !userTelegramId || !modelname) {
+      return NextResponse.json(
+        { error: 'Недостаточно данных' },
+        { status: 400 }
+      )
+    }
+
+    // Получаем информацию о точке из базы данных
+    let pickupPointAddress = 'Адрес не указан'
+
+    console.log(
+      '🔍 Submit-final - deliveryData received:',
+      deliveryData
+    )
+
+    if (deliveryData?.pickupPoint) {
+      // Если адрес передан в deliveryData, используем его
+      pickupPointAddress = deliveryData.pickupPoint
+      console.log(
+        '📍 Используем адрес из deliveryData:',
+        pickupPointAddress
+      )
+    } else {
+      // Иначе получаем из базы данных
+      const draftRecord = await prisma.skupka.findFirst({
+        where: {
+          telegramId: telegramId,
+          status: 'draft',
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      })
+
+      if (draftRecord?.pickupPoint) {
+        pickupPointAddress = draftRecord.pickupPoint
+        console.log(
+          '📍 Используем адрес из БД:',
+          pickupPointAddress
+        )
+      } else {
+        console.log('⚠️ Адрес точки не найден в БД')
+      }
+    }
+
+    // Обновляем запись в базе данных
+    const updatedSkupka = await prisma.skupka.updateMany({
+      where: {
+        telegramId: telegramId,
+        status: 'draft',
+      },
+      data: {
+        telegramIdConfirmed: true,
+        userTelegramId: userTelegramId,
+        priceAgreed: true, // Пользователь согласен с ценой
+        status: 'submitted',
+        submittedAt: new Date(),
+        pickupPoint: pickupPointAddress,
+        deliveryMethod:
+          deliveryData?.deliveryMethod || 'pickup',
+        courier:
+          deliveryData?.deliveryMethod === 'courier'
+            ? deliveryData?.courier || null
+            : null,
+        priceRange: priceRange || undefined,
+        videoUrls: Array.isArray(videoUrls)
+          ? videoUrls
+          : undefined,
+      },
+    })
+
+    let skupkaId: string | null = null
+    if (updatedSkupka.count === 0) {
+      // Если запись не найдена, создаем новую
+      const newSkupka = await prisma.skupka.create({
+        data: {
+          telegramId: telegramId,
+          username: username || 'Unknown', // Правильный username
+          modelname: modelname,
+          price: price,
+          priceAgreed: true,
+          telegramIdConfirmed: true,
+          userTelegramId: userTelegramId,
+          deliveryMethod:
+            deliveryData?.deliveryMethod || 'pickup',
+          pickupPoint: pickupPointAddress,
+          courier:
+            deliveryData?.deliveryMethod === 'courier'
+              ? deliveryData?.courier || null
+              : null,
+          status: 'submitted',
+          submittedAt: new Date(),
+          photoUrls: [],
+          videoUrls: Array.isArray(videoUrls)
+            ? videoUrls
+            : [],
+          priceRange: priceRange || null,
+        },
+      })
+      skupkaId = newSkupka.id
+    } else {
+      // Получаем ID обновленной записи
+      const updatedRecord = await prisma.skupka.findFirst({
+        where: {
+          telegramId: telegramId,
+          status: 'submitted',
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      })
+      skupkaId = updatedRecord?.id || null
+    }
+
+    // Формируем сообщение для Telegram
+    const requestId = skupkaId || 'UNKNOWN'
+    let telegramMessage = `📱 Новая заявка на выкуп устройства\n\n`
+    telegramMessage += `🆔 ID заявки: <b>${requestId}</b>\n`
+    telegramMessage += `👤 Пользователь: @${username}\n`
+    telegramMessage += `📱 Устройство: ${modelname}\n`
+    if (formattedPriceRange) {
+      telegramMessage += `💰 Диапазон цены: ${formattedPriceRange}\n\n`
+    } else if (
+      priceRange &&
+      typeof priceRange.min === 'number' &&
+      typeof priceRange.max === 'number'
+    ) {
+      const fmt = (n: number) =>
+        Number(n).toLocaleString('ru-RU')
+      telegramMessage += `💰 Диапазон цены: ${fmt(
+        priceRange.min
+      )} — ${fmt(priceRange.max)} ₽\n\n`
+    } else {
+      telegramMessage += `💰 Предварительная цена: ${price?.toLocaleString()} ₽\n\n`
+    }
+
+    const deliveryMethod =
+      deliveryData?.deliveryMethod || 'pickup'
+
+    if (deliveryMethod === 'pickup') {
+      telegramMessage += `🏪 Способ передачи: Личная доставка\n`
+      telegramMessage += `📍 Точка: ${pickupPointAddress}\n`
+    } else if (deliveryMethod === 'courier') {
+      telegramMessage += `🚚 Способ передачи: Выезд курьера\n`
+      telegramMessage += `🏠 Адрес: ${
+        deliveryData?.courier?.address || 'Не указан'
+      }\n`
+    }
+
+    if (
+      deliveryMethod === 'courier' &&
+      deliveryData?.courier?.date
+    ) {
+      telegramMessage += `\n⏰ Время приезда курьера: ${new Date(
+        deliveryData.courier.date
+      ).toLocaleDateString('ru-RU')} в ${
+        deliveryData.courier.time || 'Не указано'
+      }`
+    }
+
+    telegramMessage += `\n\n📞 Менеджер свяжется с вами для уточнения деталей и подтверждения времени`
+
+    // Маппинг тестовых ID на реальные
+    const getRealTelegramId = (id: string) => {
+      if (id === '1') return '531360988' // @Stypticm
+      if (id === '2') return '296925626' // Другой админ
+      if (id === '3') return '1' // Третий админ
+      return id
+    }
+
+    const realTelegramId = getRealTelegramId(telegramId)
+
+    // Проверяем, является ли telegramId реальным ID пользователя Telegram
+    const isRealTelegramId =
+      telegramId &&
+      !['browser_test_user'].includes(telegramId)
+
+    console.log(
+      '🚀 Submit-Final API - Начинаем отправку Telegram сообщения'
+    )
+    console.log(
+      '🚀 Submit-Final API - original telegramId:',
+      telegramId
+    )
+    console.log(
+      '🚀 Submit-Final API - real telegramId:',
+      realTelegramId
+    )
+    console.log(
+      '🚀 Submit-Final API - isTestId:',
+      ['1', '2', '3'].includes(telegramId)
+    )
+    console.log(
+      '🚀 Submit-Final API - isRealTelegramId:',
+      isRealTelegramId
+    )
+    console.log(
+      '🚀 Submit-Final API - BOT_TOKEN exists:',
+      !!process.env.BOT_TOKEN
+    )
+    console.log(
+      '🚀 Submit-Final API - BOT_TOKEN length:',
+      process.env.BOT_TOKEN?.length || 0
+    )
+    console.log(
+      '🚀 Submit-Final API - BOT_TOKEN first 10 chars:',
+      process.env.BOT_TOKEN?.substring(0, 10) || 'undefined'
+    )
+    console.log(
+      '🚀 Submit-Final API - message content:',
+      telegramMessage
+    )
+    console.log(
+      '🚀 Submit-Final API - userTelegramId:',
+      userTelegramId
+    )
+    console.log('🚀 Submit-Final API - username:', username)
+
+    if (isRealTelegramId && process.env.BOT_TOKEN) {
+      console.log(
+        '✅ Условия для отправки выполнены, начинаем отправку...'
+      )
+      try {
+        // Отправляем фото по URL из Supabase Storage (рабочий способ)
+        const imageUrl =
+          'https://aygvejwrrifuhbkbivoa.supabase.co/storage/v1/object/public/pictures/submit.png'
+        console.log('📸 Sending photo by URL:', imageUrl)
+
+        // Создаем FormData для отправки фото по URL
+        const formData = new FormData()
+        formData.append('chat_id', realTelegramId) // Используем реальный ID
+        formData.append('photo', imageUrl)
+        formData.append('caption', telegramMessage)
+        formData.append('parse_mode', 'HTML')
+
+        // Отправляем в Telegram
+        const url = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendPhoto`
+        console.log('🌐 Telegram API URL:', url)
+        console.log(
+          '📤 Sending to chat_id:',
+          realTelegramId
+        )
+
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData,
+        })
+
+        console.log(
+          '📡 Telegram API response status:',
+          response.status
+        )
+        const data = await response.json()
+        console.log('📡 Telegram API response data:', data)
+
+        if (!data.ok) {
+          throw new Error(
+            data.description || 'Telegram API error'
+          )
+        }
+
+        console.log(
+          '✅ Telegram photo with message sent successfully to:',
+          realTelegramId
+        )
+      } catch (error) {
+        console.error(
+          '❌ Error sending Telegram photo:',
+          error
+        )
+
+        // Fallback: если не удалось отправить фото, отправляем обычное сообщение
+        try {
+          console.log(
+            '🔄 Trying fallback: sending text message...'
+          )
+          await sendTelegramMessage(
+            realTelegramId, // Используем реальный ID
+            telegramMessage,
+            { parse_mode: 'HTML' }
+          )
+          console.log(
+            '✅ Fallback: Telegram message sent successfully to:',
+            realTelegramId
+          )
+        } catch (fallbackError) {
+          console.error(
+            '❌ Error sending fallback Telegram message:',
+            fallbackError
+          )
+          // Не прерываем выполнение, если не удалось отправить в Telegram
+        }
+      }
+    } else {
+      console.log(
+        '⚠️ Skipping Telegram message - test mode or missing BOT_TOKEN'
+      )
+      console.log(
+        '📝 Message that would be sent to:',
+        realTelegramId
+      )
+      console.log('📝 Message content:', telegramMessage)
+    }
+
+    console.log('Telegram message:', telegramMessage)
+
+    return NextResponse.json({
+      success: true,
+      message: telegramMessage,
+      requestId: skupkaId,
+    })
+  } catch (error) {
+    console.error(
+      'Ошибка при финальной отправке заявки:',
+      error
+    )
+    return NextResponse.json(
+      { error: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    )
+  }
+}

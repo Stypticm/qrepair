@@ -1,4 +1,9 @@
 {
+  "url": "https://example.com",
+  "name": "qrepair",
+  "iconUrl": "/logo3.png"
+}
+{
   "url": "https://ton.vote",
   "name": "TON Vote",
   "iconUrl": "https://ton.vote/logo.png"

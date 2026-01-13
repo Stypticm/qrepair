@@ -1,29 +1,50 @@
 import type { PropsWithChildren } from 'react';
-import type { Metadata } from 'next';
-import { getLocale } from 'next-intl/server';
-
-import { Root } from '@/components/Root/Root';
+import { ReactQueryProvider } from '@/lib/react-query-provider';
 import { I18nProvider } from '@/core/i18n/provider';
+import { Comic_Neue } from 'next/font/google';
+import { ClientLayoutContent } from '@/components/ClientLayoutContent/ClientLayoutContent';
+import { Toaster } from 'sonner';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
 import 'normalize.css/normalize.css';
-import './_assets/globals.css';
+import './globals.css';
 
-export const metadata: Metadata = {
-  title: 'Your Application Title Goes Here',
-  description: 'Your application description goes here',
-};
+const comicNeue = Comic_Neue({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap',
+  preload: true,
+});
 
-export default async function RootLayout({ children }: PropsWithChildren) {
-  const locale = await getLocale();
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <I18nProvider>
-          <Root>{children}</Root>
-        </I18nProvider>
+    <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="description" content="Qoqos - Выкуп смартфонов" />
+        <meta name="theme-color" content="#2dc2c6" />
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/logo2.png" />
+      </head>
+      <body style={{ backgroundColor: '#ffffff' }}>
+        <ReactQueryProvider>
+          <I18nProvider>
+            <ClientLayoutContent>
+              {children}
+            </ClientLayoutContent>
+          </I18nProvider>
+        </ReactQueryProvider>
+        <Toaster position="top-center" richColors />
       </body>
     </html>
-  );
+  )
 }
