@@ -51,7 +51,23 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
             // Прямой вызов через WebApp API (быстрее)
             if (typeof wa?.disableVerticalSwipes === 'function') {
               wa.disableVerticalSwipes();
-              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ДО ready() (мобильная платформа)');
+              
+              // Проверяем, что настройка применилась (Bot API 7.7+)
+              const isEnabled = wa?.isVerticalSwipesEnabled;
+              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ДО ready()', {
+                isVerticalSwipesEnabled: isEnabled,
+                platform: platform,
+                version: wa?.version
+              });
+              
+              // Если все еще включено, пробуем еще раз
+              if (isEnabled === true) {
+                console.warn('⚠️ isVerticalSwipesEnabled все еще true, повторная попытка...');
+                setTimeout(() => {
+                  wa.disableVerticalSwipes();
+                  console.log('🔍 Повторный вызов disableVerticalSwipes, isVerticalSwipesEnabled:', wa?.isVerticalSwipesEnabled);
+                }, 100);
+              }
             }
             // Фоллбек через SDK postEvent для совместимости
             try {
@@ -78,13 +94,40 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
             // Прямой вызов через WebApp API
             if (typeof wa?.disableVerticalSwipes === 'function') {
               wa.disableVerticalSwipes();
-              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ПОСЛЕ ready() (мобильная платформа)');
+              
+              // Проверяем, что настройка применилась (Bot API 7.7+)
+              const isEnabled = wa?.isVerticalSwipesEnabled;
+              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ПОСЛЕ ready()', {
+                isVerticalSwipesEnabled: isEnabled,
+                platform: platform,
+                version: wa?.version
+              });
+              
+              // Если все еще включено, пробуем еще раз
+              if (isEnabled === true) {
+                console.warn('⚠️ isVerticalSwipesEnabled все еще true после ready(), повторная попытка...');
+                setTimeout(() => {
+                  wa.disableVerticalSwipes();
+                  console.log('🔍 Повторный вызов disableVerticalSwipes после ready(), isVerticalSwipesEnabled:', wa?.isVerticalSwipesEnabled);
+                }, 100);
+              }
             }
             // Фоллбек через SDK postEvent для совместимости
             try {
               postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false });
             } catch (e) {
               // Игнорируем ошибки, если метод недоступен
+            }
+            
+            // Дополнительная защита: включаем подтверждение закрытия
+            // Это предотвратит случайное закрытие приложения
+            try {
+              if (typeof wa?.enableClosingConfirmation === 'function') {
+                wa.enableClosingConfirmation();
+                console.log('🔍 enableClosingConfirmation применён - требуется подтверждение для закрытия');
+              }
+            } catch (e) {
+              console.warn('enableClosingConfirmation недоступен:', e);
             }
           } catch (error) {
             console.error('disableVerticalSwipes failed after ready:', error);
@@ -181,6 +224,12 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
               // На мобильных - отключаем свайп вниз для закрытия
               if (typeof wa?.disableVerticalSwipes === 'function') {
                 wa.disableVerticalSwipes();
+                // Проверяем состояние
+                const isEnabled = wa?.isVerticalSwipesEnabled;
+                if (isEnabled === true) {
+                  console.warn('⚠️ isVerticalSwipesEnabled все еще true в rearm(), повторная попытка...');
+                  setTimeout(() => wa.disableVerticalSwipes(), 50);
+                }
               }
             } else if (isDesktopPlatform) {
               // На десктопе - ВКЛЮЧАЕМ свайпы для тачпада

@@ -225,7 +225,30 @@ function HomeContent() {
                 // На мобильных - отключаем только свайп вниз для закрытия приложения
                 if (typeof wa?.disableVerticalSwipes === 'function') {
                   wa.disableVerticalSwipes();
-                  addDebugInfo('disableVerticalSwipes применён ПОСЛЕ ready() (мобильная платформа)');
+                  
+                  // Проверяем, что настройка применилась (Bot API 7.7+)
+                  const isEnabled = wa?.isVerticalSwipesEnabled;
+                  addDebugInfo(`disableVerticalSwipes применён ПОСЛЕ ready() - isVerticalSwipesEnabled: ${isEnabled}`);
+                  
+                  // Если все еще включено, пробуем еще раз
+                  if (isEnabled === true) {
+                    console.warn('⚠️ isVerticalSwipesEnabled все еще true, повторная попытка...');
+                    setTimeout(() => {
+                      wa.disableVerticalSwipes();
+                      const newState = wa?.isVerticalSwipesEnabled;
+                      addDebugInfo(`Повторный вызов disableVerticalSwipes - isVerticalSwipesEnabled: ${newState}`);
+                    }, 100);
+                  }
+                  
+                  // Дополнительная защита: включаем подтверждение закрытия
+                  try {
+                    if (typeof wa?.enableClosingConfirmation === 'function') {
+                      wa.enableClosingConfirmation();
+                      addDebugInfo('enableClosingConfirmation применён - требуется подтверждение для закрытия');
+                    }
+                  } catch (e) {
+                    console.warn('enableClosingConfirmation недоступен:', e);
+                  }
                 }
               } else if (isDesktopPlatform) {
                 // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
