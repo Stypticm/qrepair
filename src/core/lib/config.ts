@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.182'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.183'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -121,6 +121,27 @@ export function useSafeArea() {
       document.documentElement.classList.add(
         'telegram-fullscreen'
       )
+
+      // Добавляем класс для определения платформы Telegram
+      const platform = webApp.platform
+      const isMobilePlatform =
+        platform === 'android' || platform === 'ios'
+      const isDesktopPlatform =
+        !isMobilePlatform &&
+        (platform === 'tdesktop' ||
+          platform === 'macos' ||
+          platform === 'web' ||
+          platform === 'weba')
+
+      if (isMobilePlatform) {
+        document.documentElement.classList.add(
+          'telegram-mobile'
+        )
+      } else if (isDesktopPlatform) {
+        document.documentElement.classList.add(
+          'telegram-desktop'
+        )
+      }
 
       const setup = async () => {
         try {
@@ -347,25 +368,31 @@ export function useSafeArea() {
           )
           setIsFullscreen(event.isFullscreen)
 
-          // ПРИНУДИТЕЛЬНО expand если не в fullscreen
+          // ПРИНУДИТЕЛЬНО expand если не в fullscreen (только для мобильных)
           if (!event.isFullscreen) {
-            console.log(
-              'Not in fullscreen, FORCING expand...'
-            )
-            webApp.expand()
+            const platform = webApp.platform
+            const isMobilePlatform =
+              platform === 'android' || platform === 'ios'
 
-            // Если поддерживается fullscreen, пробуем снова
-            if (
-              webApp.isVersionAtLeast('8.0') &&
-              'requestFullscreen' in webApp
-            ) {
-              try {
-                webApp.requestFullscreen?.()
-              } catch (error) {
-                console.error(
-                  'requestFullscreen failed in fullscreen handler:',
-                  error
-                )
+            if (isMobilePlatform) {
+              console.log(
+                'Not in fullscreen, FORCING expand...'
+              )
+              webApp.expand()
+
+              // Если поддерживается fullscreen, пробуем снова
+              if (
+                webApp.isVersionAtLeast('8.0') &&
+                'requestFullscreen' in webApp
+              ) {
+                try {
+                  webApp.requestFullscreen?.()
+                } catch (error) {
+                  console.error(
+                    'requestFullscreen failed in fullscreen handler:',
+                    error
+                  )
+                }
               }
             }
           }
@@ -379,11 +406,17 @@ export function useSafeArea() {
             new Date().toISOString()
           )
 
-          // ПРИНУДИТЕЛЬНО expand если fullscreen не удался
-          console.log(
-            'Fullscreen failed, FORCING expand...'
-          )
-          webApp.expand()
+          // ПРИНУДИТЕЛЬНО expand если fullscreen не удался (только для мобильных)
+          const platform = webApp.platform
+          const isMobilePlatform =
+            platform === 'android' || platform === 'ios'
+
+          if (isMobilePlatform) {
+            console.log(
+              'Fullscreen failed, FORCING expand...'
+            )
+            webApp.expand()
+          }
         }
 
         webApp.onEvent(
@@ -429,9 +462,11 @@ export function useSafeArea() {
               themeChangedHandler
             )
           }
-          // Удаляем CSS-класс при размонтировании
+          // Удаляем CSS-классы при размонтировании
           document.documentElement.classList.remove(
-            'telegram-fullscreen'
+            'telegram-fullscreen',
+            'telegram-mobile',
+            'telegram-desktop'
           )
         }
       }

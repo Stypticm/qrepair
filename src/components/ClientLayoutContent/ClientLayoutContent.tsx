@@ -20,13 +20,21 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
       try {
         init();
         console.log('🔍 ClientLayoutContent - Telegram SDK initialized');
-        // Дополнительно попробуем полноэкранный режим и expand
+        // Дополнительно попробуем полноэкранный режим и expand (только для мобильных)
         try {
           const wa: any = window.Telegram?.WebApp;
-          if (wa?.isVersionAtLeast?.('8.0')) {
-            wa.requestFullscreen?.();
+          const platform = wa?.platform;
+          const isMobilePlatform = platform === 'android' || platform === 'ios';
+          
+          // Для мобильных - fullscreen
+          if (isMobilePlatform) {
+            if (wa?.isVersionAtLeast?.('8.0')) {
+              wa.requestFullscreen?.();
+            }
+            wa?.expand?.();
           }
-          wa?.expand?.();
+          // Для десктопа - не вызываем expand/requestFullscreen (компактный режим)
+          
           wa.headerColor = '#2dc2c6';
           wa.backgroundColor = '#ffffff';
           wa.ready?.();
@@ -55,7 +63,13 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         const rearm = () => {
           try {
             const wa: any = window.Telegram?.WebApp;
-            wa?.expand?.();
+            const platform = wa?.platform;
+            const isMobilePlatform = platform === 'android' || platform === 'ios';
+            
+            // Для мобильных - expand, для десктопа - не вызываем
+            if (isMobilePlatform) {
+              wa?.expand?.();
+            }
             manager?.disableVertical?.();
           } catch {}
         };
