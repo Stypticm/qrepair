@@ -20,14 +20,13 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
       try {
         init();
         console.log('🔍 ClientLayoutContent - Telegram SDK initialized');
-        // ОТКЛЮЧЕНО: Автоматическое разворачивание на весь экран
-        // Оставляем приложение в compact mode (маленькое окно)
+        // Дополнительно попробуем полноэкранный режим и expand
         try {
           const wa: any = window.Telegram?.WebApp;
-          // if (wa?.isVersionAtLeast?.('8.0')) {
-          //   wa.requestFullscreen?.();
-          // }
-          // wa?.expand?.();
+          if (wa?.isVersionAtLeast?.('8.0')) {
+            wa.requestFullscreen?.();
+          }
+          wa?.expand?.();
           wa.headerColor = '#2dc2c6';
           wa.backgroundColor = '#ffffff';
           wa.ready?.();
@@ -56,7 +55,7 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         const rearm = () => {
           try {
             const wa: any = window.Telegram?.WebApp;
-            // wa?.expand?.(); // ОТКЛЮЧЕНО: оставляем compact mode
+            wa?.expand?.();
             manager?.disableVertical?.();
           } catch {}
         };

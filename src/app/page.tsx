@@ -251,9 +251,11 @@ function HomeContent() {
           if (inTelegram) {
             setupTelegramFeatures();
           } else {
-            // Только после повторной проверки - редиректим на страницу-заглушку
-            addDebugInfo('❌ Не в Telegram - редирект на /telegram');
-            // Редирект произойдет в компоненте через условие ниже
+            // Только после повторной проверки редиректим
+            addDebugInfo('Браузерный режим - используем fallback ID');
+            const testId = testAdminIds[testAdminIndex];
+            setTelegramId(testId);
+            setRole('master', parseInt(testId));
           }
         }, 1000); // Даем 1 секунду на инициализацию SDK
       } else {
@@ -450,8 +452,8 @@ function HomeContent() {
     );
     
     if (!finalCheck) {
-      router.push('/telegram');
-      return null;
+    router.push('/telegram');
+    return null;
     }
   }
 
