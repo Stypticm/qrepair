@@ -48,6 +48,20 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         // Используем SDK postEvent для корректной работы на всех платформах (web/desktop/mobile)
         if (isMobilePlatform) {
           try {
+            // ВАЖНО: Включаем подтверждение закрытия ДО ready() для максимальной защиты
+            // Это покажет диалог с кнопками "Всё равно закрыть" и "Отмена" при попытке закрыть
+            try {
+              if (typeof wa?.enableClosingConfirmation === 'function') {
+                wa.enableClosingConfirmation();
+                console.log('🔍 enableClosingConfirmation применён ДО ready()', {
+                  isClosingConfirmationEnabled: wa?.isClosingConfirmationEnabled,
+                  platform: platform
+                });
+              }
+            } catch (e) {
+              console.warn('enableClosingConfirmation недоступен ДО ready():', e);
+            }
+            
             // Прямой вызов через WebApp API (быстрее)
             if (typeof wa?.disableVerticalSwipes === 'function') {
               wa.disableVerticalSwipes();
@@ -120,15 +134,38 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
             }
             
             // Дополнительная защита: включаем подтверждение закрытия
-            // Это предотвратит случайное закрытие приложения
+            // Это предотвратит случайное закрытие приложения - покажет диалог с кнопками "Всё равно закрыть" и "Отмена"
             try {
               if (typeof wa?.enableClosingConfirmation === 'function') {
                 wa.enableClosingConfirmation();
-                console.log('🔍 enableClosingConfirmation применён - требуется подтверждение для закрытия');
+                const isEnabled = wa?.isClosingConfirmationEnabled;
+                console.log('🔍 enableClosingConfirmation применён', {
+                  isClosingConfirmationEnabled: isEnabled,
+                  platform: platform
+                });
+                
+                // Если не включено, пробуем еще раз
+                if (isEnabled === false) {
+                  setTimeout(() => {
+                    wa.enableClosingConfirmation();
+                    console.log('🔍 Повторный вызов enableClosingConfirmation, isClosingConfirmationEnabled:', wa?.isClosingConfirmationEnabled);
+                  }, 100);
+                }
               }
             } catch (e) {
               console.warn('enableClosingConfirmation недоступен:', e);
             }
+            
+            // Дополнительные ретраи для надежности
+            const retryClosingConfirmation = () => {
+              try {
+                if (typeof wa?.enableClosingConfirmation === 'function') {
+                  wa.enableClosingConfirmation();
+                }
+              } catch {}
+            };
+            setTimeout(retryClosingConfirmation, 300);
+            setTimeout(retryClosingConfirmation, 1000);
           } catch (error) {
             console.error('disableVerticalSwipes failed after ready:', error);
           }
@@ -256,10 +293,23 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
             document.removeEventListener('touchstart', handleTouchStart);
           }
           
-          // Восстанавливаем свайпы при размонтировании
+          // НЕ восстанавливаем свайпы при размонтировании на мобильных
+          // Оставляем disableVerticalSwipes активным для предотвращения сворачивания
+          // На десктопе можно восстановить, но на мобильных - нет
           try {
             const wa: any = window.Telegram?.WebApp;
-            if (typeof wa?.enableVerticalSwipes === 'function') {
+            const platform = wa?.platform;
+            const isDesktopPlatform = platform && !['android', 'ios'].includes(platform) && (
+              platform === 'tdesktop' || 
+              platform === 'macos' || 
+              platform === 'web' || 
+              platform === 'weba' ||
+              platform === 'windows' ||
+              platform === 'linux'
+            );
+            
+            // Только на десктопе восстанавливаем свайпы
+            if (isDesktopPlatform && typeof wa?.enableVerticalSwipes === 'function') {
               wa.enableVerticalSwipes();
             }
           } catch {}

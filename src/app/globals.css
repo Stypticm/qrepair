@@ -80,10 +80,18 @@
     will-change: transform;
   }
 
-  /* Плавные переходы для свайпов */
+  /* Плавные переходы для свайпов - iOS-style плавность */
   .swipe-transition {
-    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: transform;
+  }
+  
+  /* Дополнительная оптимизация для плавных свайпов */
+  [data-swipe-container] * {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
 
   /* Оптимизация для элементов с touch событиями */

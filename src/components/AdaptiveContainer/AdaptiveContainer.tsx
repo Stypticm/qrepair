@@ -72,9 +72,21 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       return () => {
         clearTimeout(t1);
         clearTimeout(t2);
-        // Восстанавливаем свайпы при размонтировании
+        // НЕ восстанавливаем свайпы при размонтировании на мобильных
+        // Оставляем disableVerticalSwipes активным для предотвращения сворачивания
         try {
-          if (typeof wa?.enableVerticalSwipes === 'function') {
+          const platform = wa?.platform;
+          const isDesktopPlatform = platform && !['android', 'ios'].includes(platform) && (
+            platform === 'tdesktop' || 
+            platform === 'macos' || 
+            platform === 'web' || 
+            platform === 'weba' ||
+            platform === 'windows' ||
+            platform === 'linux'
+          );
+          
+          // Только на десктопе восстанавливаем свайпы
+          if (isDesktopPlatform && typeof wa?.enableVerticalSwipes === 'function') {
             wa.enableVerticalSwipes();
           }
         } catch {}

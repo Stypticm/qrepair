@@ -351,8 +351,8 @@ export function AdaptiveDeviceFeed({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ 
-                  duration: 0.35, 
-                  ease: [0.32, 0.72, 0, 1] // Плавная кривая для свайпов
+                  duration: 0.5, // Увеличена длительность для плавности
+                  ease: [0.25, 0.46, 0.45, 0.94] // Более плавная кривая (iOS-style easing)
                 }}
                 className="h-full w-full"
                 style={{

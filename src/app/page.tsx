@@ -204,9 +204,31 @@ function HomeContent() {
           // На мобильных - отключаем свайп вниз для закрытия ПЕРЕД ready()
           if (isMobilePlatform) {
             try {
+              // ВАЖНО: Включаем подтверждение закрытия ДО ready() для максимальной защиты
+              // Это покажет диалог с кнопками "Всё равно закрыть" и "Отмена" при попытке закрыть
+              try {
+                if (typeof wa?.enableClosingConfirmation === 'function') {
+                  wa.enableClosingConfirmation();
+                  addDebugInfo(`enableClosingConfirmation применён ДО ready() - isClosingConfirmationEnabled: ${wa?.isClosingConfirmationEnabled}`);
+                }
+              } catch (e) {
+                console.warn('enableClosingConfirmation недоступен ДО ready():', e);
+              }
+              
               if (typeof wa?.disableVerticalSwipes === 'function') {
                 wa.disableVerticalSwipes();
-                addDebugInfo('disableVerticalSwipes применён ДО ready() (мобильная платформа)');
+                
+                // Проверяем, что настройка применилась
+                const isEnabled = wa?.isVerticalSwipesEnabled;
+                addDebugInfo(`disableVerticalSwipes применён ДО ready() - isVerticalSwipesEnabled: ${isEnabled}`);
+                
+                // Если все еще включено, пробуем еще раз
+                if (isEnabled === true) {
+                  setTimeout(() => {
+                    wa.disableVerticalSwipes();
+                    addDebugInfo(`Повторный вызов disableVerticalSwipes ДО ready() - isVerticalSwipesEnabled: ${wa?.isVerticalSwipesEnabled}`);
+                  }, 100);
+                }
               }
             } catch (error) {
               console.error('disableVerticalSwipes failed:', error);
@@ -241,14 +263,35 @@ function HomeContent() {
                   }
                   
                   // Дополнительная защита: включаем подтверждение закрытия
+                  // Это покажет диалог с кнопками "Всё равно закрыть" и "Отмена" при попытке закрыть
                   try {
                     if (typeof wa?.enableClosingConfirmation === 'function') {
                       wa.enableClosingConfirmation();
-                      addDebugInfo('enableClosingConfirmation применён - требуется подтверждение для закрытия');
+                      const isEnabled = wa?.isClosingConfirmationEnabled;
+                      addDebugInfo(`enableClosingConfirmation применён - isClosingConfirmationEnabled: ${isEnabled}`);
+                      
+                      // Если не включено, пробуем еще раз
+                      if (isEnabled === false) {
+                        setTimeout(() => {
+                          wa.enableClosingConfirmation();
+                          addDebugInfo(`Повторный вызов enableClosingConfirmation - isClosingConfirmationEnabled: ${wa?.isClosingConfirmationEnabled}`);
+                        }, 100);
+                      }
                     }
                   } catch (e) {
                     console.warn('enableClosingConfirmation недоступен:', e);
                   }
+                  
+                  // Дополнительные ретраи для надежности
+                  const retryClosingConfirmation = () => {
+                    try {
+                      if (typeof wa?.enableClosingConfirmation === 'function') {
+                        wa.enableClosingConfirmation();
+                      }
+                    } catch {}
+                  };
+                  setTimeout(retryClosingConfirmation, 300);
+                  setTimeout(retryClosingConfirmation, 1000);
                 }
               } else if (isDesktopPlatform) {
                 // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
@@ -568,9 +611,11 @@ function HomeContent() {
                 className="absolute inset-0"
                 animate={{ x: `${position.x * -100}%`, y: `${position.y * -100}%` }}
                 transition={{ 
-                  duration: instantTransition ? 0 : 0.35, 
-                  ease: [0.32, 0.72, 0, 1], // Плавная кривая для свайпов
-                  type: 'tween'
+                  duration: instantTransition ? 0 : 0.5, // Увеличена длительность для плавности
+                  ease: [0.25, 0.46, 0.45, 0.94], // Более плавная кривая (iOS-style easing)
+                  type: 'tween',
+                  stiffness: 100,
+                  damping: 20
                 }}
                 style={{
                   willChange: 'transform',
