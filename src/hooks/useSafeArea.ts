@@ -147,22 +147,24 @@ export function useSafeArea() {
       const setup = async () => {
         try {
           webApp.ready()
-          const platform = webApp.platform
-          const isMobilePlatform =
-            platform === 'android' || platform === 'ios'
-          if (isMobilePlatform) {
-            if (
-              'requestFullscreen' in webApp &&
-              typeof webApp.requestFullscreen ===
-                'function' &&
-              webApp.isVersionAtLeast?.('8.0')
-            ) {
-              webApp.requestFullscreen()
-              webApp.expand()
-            } else {
-              webApp.expand()
-            }
-          }
+          // ОТКЛЮЧЕНО: Автоматическое разворачивание на весь экран
+          // Оставляем приложение в compact mode (маленькое окно)
+          // const platform = webApp.platform
+          // const isMobilePlatform =
+          //   platform === 'android' || platform === 'ios'
+          // if (isMobilePlatform) {
+          //   if (
+          //     'requestFullscreen' in webApp &&
+          //     typeof webApp.requestFullscreen ===
+          //       'function' &&
+          //     webApp.isVersionAtLeast?.('8.0')
+          //   ) {
+          //     webApp.requestFullscreen()
+          //     webApp.expand()
+          //   } else {
+          //     webApp.expand()
+          //   }
+          // }
 
           webApp.headerColor = '#2dc2c6'
           webApp.backgroundColor = '#ffffff'
@@ -254,7 +256,8 @@ export function useSafeArea() {
 
         const fullscreenFailedHandler = (error: any) => {
           console.error('Fullscreen request failed:', error)
-          webApp.expand()
+          // ОТКЛЮЧЕНО: оставляем compact mode
+          // webApp.expand()
         }
 
         const themeChangedHandler = () => {
