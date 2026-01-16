@@ -20,9 +20,12 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
       try {
         init();
         console.log('🔍 ClientLayoutContent - Telegram SDK initialized');
+        
+        // Получаем WebApp объект один раз для использования во всех блоках
+        const wa: any = window.Telegram?.WebApp;
+        
         // Дополнительно попробуем полноэкранный режим и expand (только для мобильных)
         try {
-          const wa: any = window.Telegram?.WebApp;
           const platform = wa?.platform;
           const isMobilePlatform = platform === 'android' || platform === 'ios';
           
@@ -42,8 +45,6 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
               }
             }
           }
-          // Для десктопа - не вызываем expand/requestFullscreen (компактный режим)
-          // Для десктопа - не вызываем expand/requestFullscreen (компактный режим)
           
           wa.headerColor = '#2dc2c6';
           wa.backgroundColor = '#ffffff';
@@ -53,7 +54,7 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         // Отключаем только свайп вниз для закрытия приложения (как в болванке)
         // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
         try {
-          if (typeof wa.disableVerticalSwipes === 'function') {
+          if (typeof wa?.disableVerticalSwipes === 'function') {
             wa.disableVerticalSwipes();
             console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён');
           }
