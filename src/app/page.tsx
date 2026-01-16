@@ -182,28 +182,8 @@ function HomeContent() {
   useEffect(() => {
     addDebugInfo('Запуск инициализации Telegram WebApp');
     if (typeof window !== 'undefined') {
-      const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
-      const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
-      const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy;
-
-      addDebugInfo(`hasTelegramWebApp: ${hasTelegramWebApp}`);
-      addDebugInfo(`hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`);
-      addDebugInfo(`inTelegram: ${inTelegram}`);
-
-      setIsInTelegram(inTelegram);
-      setIsLoading(false);
-
-      // Детект десктопа для «оконного» вида (визуально)
-      const detectDesktop = () => {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const isSmallMobile = w < 768;
-        setIsDesktopLike(!isSmallMobile);
-      };
-      detectDesktop();
-      window.addEventListener('resize', detectDesktop);
-
-      if (inTelegram) {
+      // Функция настройки Telegram фич
+      const setupTelegramFeatures = () => {
         initializeTelegram(initDataState);
         // Официальный API SwipeBehavior: монтируем и отключаем вертикальные свайпы
         try {
@@ -230,12 +210,68 @@ function HomeContent() {
             bindViewportCssVars();
           }
         } catch { }
+      };
+
+      // Функция проверки Telegram с несколькими способами
+      const checkTelegram = () => {
+        const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
+        const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
+        
+        // Дополнительная проверка через initData в cookies (Telegram передает это)
+        const initDataCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('_initData='));
+        const hasInitData = !!initDataCookie;
+        
+        // Проверка через URL параметры (Telegram может передавать tgWebAppStartParam)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasTelegramParams = urlParams.has('tgWebAppStartParam') || urlParams.has('tgWebAppVersion');
+        
+        const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy || hasInitData || hasTelegramParams;
+
+        addDebugInfo(`hasTelegramWebApp: ${hasTelegramWebApp}`);
+        addDebugInfo(`hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`);
+        addDebugInfo(`hasInitData: ${hasInitData}`);
+        addDebugInfo(`hasTelegramParams: ${hasTelegramParams}`);
+        addDebugInfo(`inTelegram: ${inTelegram}`);
+
+        return inTelegram;
+      };
+
+      // Первая проверка сразу
+      let inTelegram = checkTelegram();
+      
+      // Если не определили, ждем немного и проверяем снова (SDK может инициализироваться с задержкой)
+      if (!inTelegram) {
+        setTimeout(() => {
+          inTelegram = checkTelegram();
+          setIsInTelegram(inTelegram);
+          setIsLoading(false);
+          
+          if (inTelegram) {
+            setupTelegramFeatures();
+          } else {
+            // Только после повторной проверки - редиректим на страницу-заглушку
+            addDebugInfo('❌ Не в Telegram - редирект на /telegram');
+            // Редирект произойдет в компоненте через условие ниже
+          }
+        }, 1000); // Даем 1 секунду на инициализацию SDK
       } else {
-        addDebugInfo('Браузерный режим - используем fallback ID');
-        const testId = testAdminIds[testAdminIndex];
-        setTelegramId(testId);
-        setRole('master', parseInt(testId));
+        setIsInTelegram(inTelegram);
+        setIsLoading(false);
+        setupTelegramFeatures();
       }
+
+      // Детект десктопа для «оконного» вида (визуально)
+      const detectDesktop = () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const isSmallMobile = w < 768;
+        setIsDesktopLike(!isSmallMobile);
+      };
+      detectDesktop();
+      window.addEventListener('resize', detectDesktop);
+
       // cleanup
       return () => window.removeEventListener('resize', detectDesktop);
     }
@@ -403,9 +439,20 @@ function HomeContent() {
     );
   }
 
-  if (isInTelegram === false) {
-    router.push('/telegram');
-    return null;
+  // Не редиректим сразу - даем время на инициализацию
+  // Редирект произойдет только если после всех проверок точно не в Telegram
+  if (isInTelegram === false && !isLoading) {
+    // Дополнительная проверка перед редиректом
+    const finalCheck = typeof window !== 'undefined' && (
+      !!(window as any).Telegram?.WebApp ||
+      !!(window as any).TelegramWebviewProxy ||
+      document.cookie.split('; ').some(row => row.startsWith('_initData='))
+    );
+    
+    if (!finalCheck) {
+      router.push('/telegram');
+      return null;
+    }
   }
 
   return (
