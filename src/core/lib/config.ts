@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.185'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.186'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -131,7 +131,9 @@ export function useSafeArea() {
         (platform === 'tdesktop' ||
           platform === 'macos' ||
           platform === 'web' ||
-          platform === 'weba')
+          platform === 'weba' ||
+          platform === 'windows' ||
+          platform === 'linux')
 
       if (isMobilePlatform) {
         document.documentElement.classList.add(
@@ -209,6 +211,16 @@ export function useSafeArea() {
           } else {
             // Для десктопа - компактный режим (не вызываем expand/requestFullscreen)
             console.log('Desktop platform detected, keeping compact mode')
+            
+            // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
+            if (typeof (webApp as any).enableVerticalSwipes === 'function') {
+              try {
+                (webApp as any).enableVerticalSwipes()
+                console.log('Desktop: enableVerticalSwipes applied for touchpad support')
+              } catch (error) {
+                console.error('enableVerticalSwipes failed on desktop:', error)
+              }
+            }
           }
 
           // Устанавливаем цвета
@@ -334,10 +346,19 @@ export function useSafeArea() {
           setIsFullscreen(event.isFullscreen)
 
           // ПРИНУДИТЕЛЬНО expand если не в fullscreen (только для мобильных)
+          // На десктопе - НЕ разворачиваем, оставляем компактный режим
           if (!event.isFullscreen) {
             const platform = webApp.platform
             const isMobilePlatform =
               platform === 'android' || platform === 'ios'
+            const isDesktopPlatform = !isMobilePlatform && (
+              platform === 'tdesktop' ||
+              platform === 'macos' ||
+              platform === 'web' ||
+              platform === 'weba' ||
+              platform === 'windows' ||
+              platform === 'linux'
+            )
 
             if (isMobilePlatform) {
               console.log('Not in fullscreen, FORCING expansion...')
@@ -356,6 +377,9 @@ export function useSafeArea() {
                   )
                 }
               }
+            } else if (isDesktopPlatform) {
+              // На десктопе - НЕ разворачиваем, оставляем компактный режим
+              console.log('Desktop: keeping compact mode, not expanding')
             }
           }
         }
@@ -369,15 +393,27 @@ export function useSafeArea() {
           )
 
           // ПРИНУДИТЕЛЬНО expand если fullscreen не удался (только для мобильных)
+          // На десктопе - НЕ разворачиваем, оставляем компактный режим
           const platform = webApp.platform
           const isMobilePlatform =
             platform === 'android' || platform === 'ios'
+          const isDesktopPlatform = !isMobilePlatform && (
+            platform === 'tdesktop' ||
+            platform === 'macos' ||
+            platform === 'web' ||
+            platform === 'weba' ||
+            platform === 'windows' ||
+            platform === 'linux'
+          )
 
           if (isMobilePlatform) {
             console.log(
               'Fullscreen failed, FORCING expand...'
             )
             webApp.expand()
+          } else if (isDesktopPlatform) {
+            // На десктопе - НЕ разворачиваем, оставляем компактный режим
+            console.log('Desktop: fullscreen failed, keeping compact mode')
           }
         }
 

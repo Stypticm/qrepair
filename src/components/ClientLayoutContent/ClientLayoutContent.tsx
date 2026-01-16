@@ -51,15 +51,35 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
           wa.ready?.();
         } catch {}
         
-        // Отключаем только свайп вниз для закрытия приложения (как в болванке)
-        // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
+        // Управление свайпами в зависимости от платформы
         try {
-          if (typeof wa?.disableVerticalSwipes === 'function') {
-            wa.disableVerticalSwipes();
-            console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён');
+          const platform = wa?.platform;
+          const isMobilePlatform = platform === 'android' || platform === 'ios';
+          const isDesktopPlatform = !isMobilePlatform && (
+            platform === 'tdesktop' || 
+            platform === 'macos' || 
+            platform === 'web' || 
+            platform === 'weba' ||
+            platform === 'windows' ||
+            platform === 'linux'
+          );
+          
+          if (isMobilePlatform) {
+            // На мобильных - отключаем только свайп вниз для закрытия приложения
+            // Внутренние свайпы должны работать
+            if (typeof wa?.disableVerticalSwipes === 'function') {
+              wa.disableVerticalSwipes();
+              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён (мобильная платформа)');
+            }
+          } else if (isDesktopPlatform) {
+            // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
+            if (typeof wa?.enableVerticalSwipes === 'function') {
+              wa.enableVerticalSwipes();
+              console.log('🔍 ClientLayoutContent - enableVerticalSwipes применён (десктоп платформа)');
+            }
           }
         } catch (error) {
-          console.error('disableVerticalSwipes failed:', error);
+          console.error('Swipe management failed:', error);
         }
 
         // Убираем глобальную блокировку скролла - пусть работает нормально
@@ -75,14 +95,27 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
             const wa: any = window.Telegram?.WebApp;
             const platform = wa?.platform;
             const isMobilePlatform = platform === 'android' || platform === 'ios';
+            const isDesktopPlatform = !isMobilePlatform && (
+              platform === 'tdesktop' || 
+              platform === 'macos' || 
+              platform === 'web' || 
+              platform === 'weba' ||
+              platform === 'windows' ||
+              platform === 'linux'
+            );
             
-            // Для мобильных - expand, для десктопа - не вызываем
+            // Для мобильных - expand, для десктопа - НЕ вызываем (компактный режим)
             if (isMobilePlatform) {
               wa?.expand?.();
-            }
-            // Отключаем только свайп вниз для закрытия
-            if (typeof wa?.disableVerticalSwipes === 'function') {
-              wa.disableVerticalSwipes();
+              // На мобильных - отключаем свайп вниз для закрытия
+              if (typeof wa?.disableVerticalSwipes === 'function') {
+                wa.disableVerticalSwipes();
+              }
+            } else if (isDesktopPlatform) {
+              // На десктопе - ВКЛЮЧАЕМ свайпы для тачпада
+              if (typeof wa?.enableVerticalSwipes === 'function') {
+                wa.enableVerticalSwipes();
+              }
             }
           } catch {}
         };
@@ -97,7 +130,7 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
           window.removeEventListener('focus', rearm as any);
           document.removeEventListener('visibilitychange', onVisibility as any);
           window.removeEventListener('resize', rearm as any);
-          // Восстанавливаем свайп вниз при размонтировании (опционально)
+          // Восстанавливаем свайпы при размонтировании
           try {
             const wa: any = window.Telegram?.WebApp;
             if (typeof wa?.enableVerticalSwipes === 'function') {

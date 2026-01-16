@@ -185,25 +185,51 @@ function HomeContent() {
       // Функция настройки Telegram фич
       const setupTelegramFeatures = () => {
         initializeTelegram(initDataState);
-        // Отключаем только свайп вниз для закрытия приложения (как в болванке)
-        // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
+        // Управление свайпами в зависимости от платформы
         try {
           const wa: any = window.Telegram?.WebApp;
-          const applyDisable = () => {
+          const platform = wa?.platform;
+          const isMobilePlatform = platform === 'android' || platform === 'ios';
+          const isDesktopPlatform = !isMobilePlatform && (
+            platform === 'tdesktop' || 
+            platform === 'macos' || 
+            platform === 'web' || 
+            platform === 'weba' ||
+            platform === 'windows' ||
+            platform === 'linux'
+          );
+          
+          const applySwipeSettings = () => {
             try {
-              if (typeof wa?.disableVerticalSwipes === 'function') {
-                wa.disableVerticalSwipes();
-                addDebugInfo('disableVerticalSwipes применён (не блокирует свайпы внутри)');
+              if (isMobilePlatform) {
+                // На мобильных - отключаем только свайп вниз для закрытия приложения
+                if (typeof wa?.disableVerticalSwipes === 'function') {
+                  wa.disableVerticalSwipes();
+                  addDebugInfo('disableVerticalSwipes применён (мобильная платформа)');
+                }
+              } else if (isDesktopPlatform) {
+                // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
+                if (typeof wa?.enableVerticalSwipes === 'function') {
+                  wa.enableVerticalSwipes();
+                  addDebugInfo('enableVerticalSwipes применён (десктоп платформа)');
+                }
               }
             } catch {}
           };
-          applyDisable();
+          applySwipeSettings();
           // ретраи на случай ленивой инициализации клиента
-          setTimeout(applyDisable, 300);
-          setTimeout(applyDisable, 1000);
+          setTimeout(applySwipeSettings, 300);
+          setTimeout(applySwipeSettings, 1000);
         } catch (e) {
-          // Фоллбек через postEvent, если метод недоступен
-          try { postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); } catch {}
+          // Фоллбек через postEvent, если метод недоступен (только для мобильных)
+          try { 
+            const wa: any = window.Telegram?.WebApp;
+            const platform = wa?.platform;
+            const isMobilePlatform = platform === 'android' || platform === 'ios';
+            if (isMobilePlatform) {
+              postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); 
+            }
+          } catch {}
         }
         // Привяжем CSS переменные viewport (влияет на безопасные отступы)
         try {

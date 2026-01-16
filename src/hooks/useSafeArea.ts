@@ -60,54 +60,64 @@ export function useSafeArea() {
     }
 
     const webApp = window.Telegram.WebApp
+    // Проверяем платформу - только для мобильных вызываем expand/requestFullscreen
     const platform = webApp.platform
     const isMobilePlatform =
       platform === 'android' || platform === 'ios'
+    const isDesktopPlatform = !isMobilePlatform && (
+      platform === 'tdesktop' ||
+      platform === 'macos' ||
+      platform === 'web' ||
+      platform === 'weba' ||
+      platform === 'windows' ||
+      platform === 'linux'
+    )
 
-    if (!isMobilePlatform) {
-      return
-    }
+    // Только для мобильных - разворачиваем на fullscreen
+    if (isMobilePlatform) {
+      const supportsFullscreen =
+        webApp.isVersionAtLeast?.('8.0') || false
+      if (
+        supportsFullscreen &&
+        'requestFullscreen' in webApp &&
+        typeof webApp.requestFullscreen === 'function'
+      ) {
+        webApp.requestFullscreen()
+        webApp.expand()
+      } else {
+        webApp.expand()
+      }
 
-    const supportsFullscreen =
-      webApp.isVersionAtLeast?.('8.0') || false
-    if (
-      supportsFullscreen &&
-      'requestFullscreen' in webApp &&
-      typeof webApp.requestFullscreen === 'function'
-    ) {
-      webApp.requestFullscreen()
-      webApp.expand()
-    } else {
-      webApp.expand()
-    }
-
-    const retryFullscreen = (
-      attempt = 1,
-      maxAttempts = 3
-    ) => {
-      setTimeout(() => {
-        const isCurrentlyFullscreen =
-          'isFullscreen' in webApp
-            ? webApp.isFullscreen
-            : webApp.isExpanded
-        if (
-          !isCurrentlyFullscreen &&
-          attempt <= maxAttempts
-        ) {
+      const retryFullscreen = (
+        attempt = 1,
+        maxAttempts = 3
+      ) => {
+        setTimeout(() => {
+          const isCurrentlyFullscreen =
+            'isFullscreen' in webApp
+              ? webApp.isFullscreen
+              : webApp.isExpanded
           if (
-            supportsFullscreen &&
-            'requestFullscreen' in webApp
+            !isCurrentlyFullscreen &&
+            attempt <= maxAttempts
           ) {
-            webApp?.requestFullscreen?.()
-          } else {
-            webApp.expand()
+            if (
+              supportsFullscreen &&
+              'requestFullscreen' in webApp
+            ) {
+              webApp?.requestFullscreen?.()
+            } else {
+              webApp.expand()
+            }
+            retryFullscreen(attempt + 1, maxAttempts)
           }
-          retryFullscreen(attempt + 1, maxAttempts)
-        }
-      }, attempt * 100)
+        }, attempt * 100)
+      }
+      retryFullscreen()
+    } else if (isDesktopPlatform) {
+      // На десктопе - НЕ разворачиваем, оставляем компактный режим
+      console.log('useSafeArea: Desktop platform detected, keeping compact mode')
     }
-
-    retryFullscreen()
   }, [])
 
   useEffect(() => {
@@ -254,7 +264,13 @@ export function useSafeArea() {
 
         const fullscreenFailedHandler = (error: any) => {
           console.error('Fullscreen request failed:', error)
-          webApp.expand()
+          // Только для мобильных - пробуем expand при ошибке
+          const platform = webApp.platform
+          const isMobilePlatform =
+            platform === 'android' || platform === 'ios'
+          if (isMobilePlatform) {
+            webApp.expand()
+          }
         }
 
         const themeChangedHandler = () => {

@@ -34,17 +34,35 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     checkDevice();
   }, [isMounted, safeArea]);
 
-  // Отключаем только свайп вниз для закрытия приложения (как в болванке)
-  // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
+  // Управление свайпами в зависимости от платформы
   useEffect(() => {
     if (!isMounted) return;
     if (!safeArea.isTelegram) return;
     try {
       const wa: any = window.Telegram?.WebApp;
+      const platform = wa?.platform;
+      const isMobilePlatform = platform === 'android' || platform === 'ios';
+      const isDesktopPlatform = !isMobilePlatform && (
+        platform === 'tdesktop' || 
+        platform === 'macos' || 
+        platform === 'web' || 
+        platform === 'weba' ||
+        platform === 'windows' ||
+        platform === 'linux'
+      );
+      
       const apply = () => {
         try {
-          if (typeof wa?.disableVerticalSwipes === 'function') {
-            wa.disableVerticalSwipes();
+          if (isMobilePlatform) {
+            // На мобильных - отключаем только свайп вниз для закрытия приложения
+            if (typeof wa?.disableVerticalSwipes === 'function') {
+              wa.disableVerticalSwipes();
+            }
+          } else if (isDesktopPlatform) {
+            // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
+            if (typeof wa?.enableVerticalSwipes === 'function') {
+              wa.enableVerticalSwipes();
+            }
           }
         } catch {}
       };
@@ -54,7 +72,7 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       return () => {
         clearTimeout(t1);
         clearTimeout(t2);
-        // Восстанавливаем свайп вниз при размонтировании (опционально)
+        // Восстанавливаем свайпы при размонтировании
         try {
           if (typeof wa?.enableVerticalSwipes === 'function') {
             wa.enableVerticalSwipes();
