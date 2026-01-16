@@ -544,7 +544,15 @@ function HomeContent() {
               <motion.div
                 className="absolute inset-0"
                 animate={{ x: `${position.x * -100}%`, y: `${position.y * -100}%` }}
-                transition={{ duration: instantTransition ? 0 : 0.35, ease: [0.32, 0.72, 0, 1] }}
+                transition={{ 
+                  duration: instantTransition ? 0 : 0.35, 
+                  ease: [0.32, 0.72, 0, 1], // Плавная кривая для свайпов
+                  type: 'tween'
+                }}
+                style={{
+                  willChange: 'transform',
+                  touchAction: 'pan-x pan-y'
+                }}
               >
                 {/* Центр: Главное меню */}
                 <div className="absolute inset-0 p-4">

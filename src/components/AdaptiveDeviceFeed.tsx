@@ -291,10 +291,16 @@ export function AdaptiveDeviceFeed({
 
           {/* Карусель с ручным свайпом */}
           <div
-            className="relative outline-none flex justify-center w-full mx-auto bg-white/15 backdrop-blur-lg rounded-3xl shadow-3xl border border-white/30 hover:bg-white/20 transition-all duration-500 ring-1 ring-white/20 pb-4"
+            className="relative outline-none flex justify-center w-full mx-auto bg-white/15 backdrop-blur-lg rounded-3xl shadow-3xl border border-white/30 hover:bg-white/20 transition-all duration-500 ring-1 ring-white/20 pb-4 swipe-transition"
             role="region"
             aria-label="Карусель устройств"
             tabIndex={0}
+            data-swipe-container
+            style={{
+              touchAction: 'pan-x pan-y',
+              WebkitOverflowScrolling: 'touch',
+              willChange: 'transform'
+            }}
             onTouchStart={(e) => {
               touchStartX.current = e.changedTouches[0].clientX;
               touchStartY.current = e.changedTouches[0].clientY;
@@ -344,8 +350,14 @@ export function AdaptiveDeviceFeed({
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ 
+                  duration: 0.35, 
+                  ease: [0.32, 0.72, 0, 1] // Плавная кривая для свайпов
+                }}
                 className="h-full w-full"
+                style={{
+                  willChange: 'transform, opacity'
+                }}
               >
                   <SimpleDeviceCard cards={currentItems} isSingle={true} />
               </motion.div>

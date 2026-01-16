@@ -2,7 +2,7 @@
 
 import type { PropsWithChildren } from 'react';
 import { useEffect } from 'react';
-import { init } from '@telegram-apps/sdk';
+import { init, postEvent } from '@telegram-apps/sdk';
 import { AdaptiveContainer } from '../AdaptiveContainer';
 import { TelegramFullScreen } from '../TelegramFullScreen';
 import { useAppStore } from '@/stores/authStore';
@@ -16,12 +16,18 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
 
   useEffect(() => {
     // Инициализируем Telegram SDK только если мы в Telegram WebApp
+    // SDK автоматически определяет платформу (web/desktop/mobile) и использует правильный способ вызова методов
+    // Web: window.parent.postMessage
+    // Desktop/Mobile: window.TelegramWebviewProxy.postEvent
+    // См. https://docs.telegram-mini-apps.com/platform/methods#desktop-and-mobile
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       try {
+        // Инициализируем SDK - это необходимо для корректной работы postEvent на всех платформах
         init();
         console.log('🔍 ClientLayoutContent - Telegram SDK initialized');
         
         // Получаем WebApp объект один раз для использования во всех блоках
+        // Прямые вызовы через wa.* работают на всех платформах, но SDK postEvent обеспечивает лучшую совместимость
         const wa: any = window.Telegram?.WebApp;
         
         // КРИТИЧЕСКИ ВАЖНО: Отключаем свайп вниз для закрытия ПЕРЕД ready()
@@ -39,11 +45,19 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         
         // На мобильных - отключаем свайп вниз для закрытия ПЕРЕД ready()
         // Это позволяет внутренним свайпам работать, но блокирует закрытие приложения
+        // Используем SDK postEvent для корректной работы на всех платформах (web/desktop/mobile)
         if (isMobilePlatform) {
           try {
+            // Прямой вызов через WebApp API (быстрее)
             if (typeof wa?.disableVerticalSwipes === 'function') {
               wa.disableVerticalSwipes();
               console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ДО ready() (мобильная платформа)');
+            }
+            // Фоллбек через SDK postEvent для совместимости
+            try {
+              postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false });
+            } catch (e) {
+              // Игнорируем ошибки, если метод недоступен
             }
           } catch (error) {
             console.error('disableVerticalSwipes failed:', error);
@@ -58,11 +72,19 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         } catch {}
         
         // После ready() - повторно применяем настройки свайпов для надежности
+        // Используем SDK postEvent для корректной работы на всех платформах
         if (isMobilePlatform) {
           try {
+            // Прямой вызов через WebApp API
             if (typeof wa?.disableVerticalSwipes === 'function') {
               wa.disableVerticalSwipes();
               console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ПОСЛЕ ready() (мобильная платформа)');
+            }
+            // Фоллбек через SDK postEvent для совместимости
+            try {
+              postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false });
+            } catch (e) {
+              // Игнорируем ошибки, если метод недоступен
             }
           } catch (error) {
             console.error('disableVerticalSwipes failed after ready:', error);
@@ -70,9 +92,16 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         } else if (isDesktopPlatform) {
           // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
           try {
+            // Прямой вызов через WebApp API
             if (typeof wa?.enableVerticalSwipes === 'function') {
               wa.enableVerticalSwipes();
               console.log('🔍 ClientLayoutContent - enableVerticalSwipes применён (десктоп платформа)');
+            }
+            // Фоллбек через SDK postEvent для совместимости
+            try {
+              postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: true });
+            } catch (e) {
+              // Игнорируем ошибки, если метод недоступен
             }
           } catch (error) {
             console.error('enableVerticalSwipes failed:', error);
