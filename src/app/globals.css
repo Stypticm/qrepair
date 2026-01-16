@@ -153,7 +153,8 @@
 
   /* Для Telegram WebView на десктопе - компактный режим (размер телефона) */
   /* Не расширяем на весь экран, показываем как будто размер телефона */
-  html.telegram-fullscreen.telegram-desktop {
+  /* Используем только telegram-desktop, БЕЗ telegram-fullscreen */
+  html.telegram-desktop {
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -162,13 +163,13 @@
     overflow: visible;
   }
 
-  html.telegram-fullscreen.telegram-desktop body {
+  html.telegram-desktop body {
     height: auto;
     max-height: 90vh;
     overflow: visible;
   }
 
-  html.telegram-fullscreen.telegram-desktop #__next {
+  html.telegram-desktop #__next {
     width: 100%;
     max-width: 480px;
     min-height: 600px;

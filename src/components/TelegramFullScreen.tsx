@@ -17,9 +17,14 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
 
     const webApp = (window as any).Telegram?.WebApp;
 
-    // Добавляем класс на html для страховки растяжения
+    // Добавляем класс на html только для мобильных платформ
+    // На десктопе НЕ добавляем telegram-fullscreen, чтобы сохранить компактный режим
     try {
-      document.documentElement.classList.add('telegram-fullscreen');
+      const platform = webApp?.platform;
+      const isMobile = platform === 'android' || platform === 'ios';
+      if (isMobile) {
+        document.documentElement.classList.add('telegram-fullscreen');
+      }
     } catch {}
 
     const tryTelegramFullscreen = () => {
@@ -108,15 +113,26 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
     };
   }, []); // Убираем зависимости чтобы избежать бесконечного цикла
 
+  // Определяем платформу для условных стилей
+  const isDesktop = typeof window !== 'undefined' && 
+    (window as any).Telegram?.WebApp?.platform &&
+    !['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
+
   return (
     <div
       className="w-full min-h-dvh bg-white"
       style={{
-        minHeight: '100dvh',
-        width: '100vw',
-        maxWidth: '100vw',
+        minHeight: isDesktop ? 'auto' : '100dvh',
+        width: isDesktop ? '100%' : '100vw',
+        maxWidth: isDesktop ? '480px' : '100vw',
         overflowX: 'hidden',
         backgroundColor: '#ffffff',
+        ...(isDesktop && {
+          margin: '0 auto',
+          borderRadius: '32px',
+          boxShadow: '0 0 50px rgba(0, 0, 0, 0.2)',
+          maxHeight: '844px',
+        }),
       }}
     >
       {children}

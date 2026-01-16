@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.186'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.187'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -117,11 +117,6 @@ export function useSafeArea() {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
-      // Добавляем CSS-класс для корневого элемента
-      document.documentElement.classList.add(
-        'telegram-fullscreen'
-      )
-
       // Добавляем класс для определения платформы Telegram
       const platform = webApp.platform
       const isMobilePlatform =
@@ -135,11 +130,17 @@ export function useSafeArea() {
           platform === 'windows' ||
           platform === 'linux')
 
+      // Добавляем CSS-классы в зависимости от платформы
+      // На мобильных - fullscreen класс (для fullscreen режима)
+      // На десктопе - НЕ добавляем fullscreen класс (компактный режим)
       if (isMobilePlatform) {
         document.documentElement.classList.add(
+          'telegram-fullscreen',
           'telegram-mobile'
         )
       } else if (isDesktopPlatform) {
+        // На десктопе - НЕ добавляем telegram-fullscreen, только telegram-desktop
+        // Это позволит CSS стилям ограничить размер окна
         document.documentElement.classList.add(
           'telegram-desktop'
         )

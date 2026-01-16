@@ -121,8 +121,14 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
         wrapper: 'w-[390px] h-[844px] mx-auto p-0',
       };
     } else {
+      // Для десктопа - НЕ добавляем telegram-fullscreen класс
+      // Проверяем платформу
+      const isDesktop = typeof window !== 'undefined' && 
+        (window as any).Telegram?.WebApp?.platform &&
+        !['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
+      
       return {
-        container: `min-h-dvh w-full flex flex-col bg-white telegram-fullscreen`,
+        container: `min-h-dvh w-full flex flex-col bg-white ${isDesktop ? '' : 'telegram-fullscreen'}`,
         main: 'flex-1 w-full',
         wrapper: 'w-full',
       };

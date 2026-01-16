@@ -24,11 +24,63 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         // Получаем WebApp объект один раз для использования во всех блоках
         const wa: any = window.Telegram?.WebApp;
         
+        // КРИТИЧЕСКИ ВАЖНО: Отключаем свайп вниз для закрытия ПЕРЕД ready()
+        // Это должно быть сделано как можно раньше, чтобы предотвратить сворачивание
+        const platform = wa?.platform;
+        const isMobilePlatform = platform === 'android' || platform === 'ios';
+        const isDesktopPlatform = !isMobilePlatform && (
+          platform === 'tdesktop' || 
+          platform === 'macos' || 
+          platform === 'web' || 
+          platform === 'weba' ||
+          platform === 'windows' ||
+          platform === 'linux'
+        );
+        
+        // На мобильных - отключаем свайп вниз для закрытия ПЕРЕД ready()
+        // Это позволяет внутренним свайпам работать, но блокирует закрытие приложения
+        if (isMobilePlatform) {
+          try {
+            if (typeof wa?.disableVerticalSwipes === 'function') {
+              wa.disableVerticalSwipes();
+              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ДО ready() (мобильная платформа)');
+            }
+          } catch (error) {
+            console.error('disableVerticalSwipes failed:', error);
+          }
+        }
+        
+        // Вызываем ready() - это уведомляет Telegram о готовности приложения
+        try {
+          wa.headerColor = '#2dc2c6';
+          wa.backgroundColor = '#ffffff';
+          wa.ready?.();
+        } catch {}
+        
+        // После ready() - повторно применяем настройки свайпов для надежности
+        if (isMobilePlatform) {
+          try {
+            if (typeof wa?.disableVerticalSwipes === 'function') {
+              wa.disableVerticalSwipes();
+              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён ПОСЛЕ ready() (мобильная платформа)');
+            }
+          } catch (error) {
+            console.error('disableVerticalSwipes failed after ready:', error);
+          }
+        } else if (isDesktopPlatform) {
+          // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
+          try {
+            if (typeof wa?.enableVerticalSwipes === 'function') {
+              wa.enableVerticalSwipes();
+              console.log('🔍 ClientLayoutContent - enableVerticalSwipes применён (десктоп платформа)');
+            }
+          } catch (error) {
+            console.error('enableVerticalSwipes failed:', error);
+          }
+        }
+        
         // Дополнительно попробуем полноэкранный режим и expand (только для мобильных)
         try {
-          const platform = wa?.platform;
-          const isMobilePlatform = platform === 'android' || platform === 'ios';
-          
           // Для мобильных - fullscreen (на весь экран телефона)
           // Для десктопа - компактный режим (не вызываем expand/requestFullscreen)
           if (isMobilePlatform) {
@@ -45,41 +97,31 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
               }
             }
           }
-          
-          wa.headerColor = '#2dc2c6';
-          wa.backgroundColor = '#ffffff';
-          wa.ready?.();
         } catch {}
         
-        // Управление свайпами в зависимости от платформы
-        try {
-          const platform = wa?.platform;
-          const isMobilePlatform = platform === 'android' || platform === 'ios';
-          const isDesktopPlatform = !isMobilePlatform && (
-            platform === 'tdesktop' || 
-            platform === 'macos' || 
-            platform === 'web' || 
-            platform === 'weba' ||
-            platform === 'windows' ||
-            platform === 'linux'
-          );
+        // Защита от свайпа вниз в начале страницы (scrollY === 0)
+        // Когда пользователь в начале страницы, свайп вниз может восприниматься как жест на сворачивание
+        let handleTouchStart: ((e: TouchEvent) => void) | null = null;
+        if (isMobilePlatform) {
+          const preventCollapseOnTopSwipe = () => {
+            // Если мы в начале страницы, немного прокручиваем вниз
+            if (window.scrollY === 0 && document.documentElement.scrollTop === 0) {
+              window.scrollTo({ top: 1, behavior: 'instant' });
+            }
+          };
           
-          if (isMobilePlatform) {
-            // На мобильных - отключаем только свайп вниз для закрытия приложения
-            // Внутренние свайпы должны работать
-            if (typeof wa?.disableVerticalSwipes === 'function') {
-              wa.disableVerticalSwipes();
-              console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён (мобильная платформа)');
+          // Проверяем при загрузке
+          setTimeout(preventCollapseOnTopSwipe, 100);
+          
+          // Перехватываем touchstart в начале страницы
+          handleTouchStart = (e: TouchEvent) => {
+            if (window.scrollY === 0 && document.documentElement.scrollTop === 0) {
+              // Небольшая прокрутка вниз, чтобы предотвратить сворачивание
+              window.scrollTo({ top: 1, behavior: 'instant' });
             }
-          } else if (isDesktopPlatform) {
-            // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
-            if (typeof wa?.enableVerticalSwipes === 'function') {
-              wa.enableVerticalSwipes();
-              console.log('🔍 ClientLayoutContent - enableVerticalSwipes применён (десктоп платформа)');
-            }
-          }
-        } catch (error) {
-          console.error('Swipe management failed:', error);
+          };
+          
+          document.addEventListener('touchstart', handleTouchStart, { passive: true });
         }
 
         // Убираем глобальную блокировку скролла - пусть работает нормально
@@ -130,6 +172,12 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
           window.removeEventListener('focus', rearm as any);
           document.removeEventListener('visibilitychange', onVisibility as any);
           window.removeEventListener('resize', rearm as any);
+          
+          // Удаляем обработчик touchstart для защиты от сворачивания
+          if (handleTouchStart) {
+            document.removeEventListener('touchstart', handleTouchStart);
+          }
+          
           // Восстанавливаем свайпы при размонтировании
           try {
             const wa: any = window.Telegram?.WebApp;

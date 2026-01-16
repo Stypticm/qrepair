@@ -185,7 +185,9 @@ function HomeContent() {
       // Функция настройки Telegram фич
       const setupTelegramFeatures = () => {
         initializeTelegram(initDataState);
-        // Управление свайпами в зависимости от платформы
+        
+        // КРИТИЧЕСКИ ВАЖНО: Управление свайпами ДО ready()
+        // Это должно быть сделано как можно раньше, чтобы предотвратить сворачивание
         try {
           const wa: any = window.Telegram?.WebApp;
           const platform = wa?.platform;
@@ -199,13 +201,31 @@ function HomeContent() {
             platform === 'linux'
           );
           
+          // На мобильных - отключаем свайп вниз для закрытия ПЕРЕД ready()
+          if (isMobilePlatform) {
+            try {
+              if (typeof wa?.disableVerticalSwipes === 'function') {
+                wa.disableVerticalSwipes();
+                addDebugInfo('disableVerticalSwipes применён ДО ready() (мобильная платформа)');
+              }
+            } catch (error) {
+              console.error('disableVerticalSwipes failed:', error);
+            }
+          }
+          
+          // Вызываем ready() - это уведомляет Telegram о готовности приложения
+          try {
+            wa?.ready?.();
+          } catch {}
+          
+          // После ready() - повторно применяем настройки свайпов для надежности
           const applySwipeSettings = () => {
             try {
               if (isMobilePlatform) {
                 // На мобильных - отключаем только свайп вниз для закрытия приложения
                 if (typeof wa?.disableVerticalSwipes === 'function') {
                   wa.disableVerticalSwipes();
-                  addDebugInfo('disableVerticalSwipes применён (мобильная платформа)');
+                  addDebugInfo('disableVerticalSwipes применён ПОСЛЕ ready() (мобильная платформа)');
                 }
               } else if (isDesktopPlatform) {
                 // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
@@ -216,10 +236,35 @@ function HomeContent() {
               }
             } catch {}
           };
+          
           applySwipeSettings();
           // ретраи на случай ленивой инициализации клиента
           setTimeout(applySwipeSettings, 300);
           setTimeout(applySwipeSettings, 1000);
+          
+          // Защита от свайпа вниз в начале страницы (scrollY === 0)
+          // Когда пользователь в начале страницы, свайп вниз может восприниматься как жест на сворачивание
+          if (isMobilePlatform) {
+            const preventCollapseOnTopSwipe = () => {
+              // Если мы в начале страницы, немного прокручиваем вниз
+              if (window.scrollY === 0 && document.documentElement.scrollTop === 0) {
+                window.scrollTo({ top: 1, behavior: 'instant' });
+              }
+            };
+            
+            // Проверяем при загрузке
+            setTimeout(preventCollapseOnTopSwipe, 100);
+            
+            // Перехватываем touchstart в начале страницы
+            const handleTouchStart = (e: TouchEvent) => {
+              if (window.scrollY === 0 && document.documentElement.scrollTop === 0) {
+                // Небольшая прокрутка вниз, чтобы предотвратить сворачивание
+                window.scrollTo({ top: 1, behavior: 'instant' });
+              }
+            };
+            
+            document.addEventListener('touchstart', handleTouchStart, { passive: true });
+          }
         } catch (e) {
           // Фоллбек через postEvent, если метод недоступен (только для мобильных)
           try { 
