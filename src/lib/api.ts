@@ -1,83 +1,200 @@
-export const fetchAdminData = async (telegramId: string) => {
-  const requestsResponse = await fetch(`/api/admin/requests?adminTelegramId=${telegramId}`);
+export const fetchAdminData = async (
+  telegramId: string
+) => {
+  const requestsResponse = await fetch(
+    `/api/admin/requests?adminTelegramId=${telegramId}`
+  )
   if (!requestsResponse.ok) {
-    const errorData = await requestsResponse.json();
-    throw new Error(errorData.error || 'Failed to fetch requests');
+    const errorData = await requestsResponse.json()
+    throw new Error(
+      errorData.error || 'Failed to fetch requests'
+    )
   }
-  const requestsData = await requestsResponse.json();
+  const requestsData = await requestsResponse.json()
 
-  const mastersResponse = await fetch(`/api/admin/masters?adminTelegramId=${telegramId}`);
+  const mastersResponse = await fetch(
+    `/api/admin/masters?adminTelegramId=${telegramId}`
+  )
   if (!mastersResponse.ok) {
-    const errorData = await mastersResponse.json();
-    throw new Error(errorData.error || 'Failed to fetch masters');
+    const errorData = await mastersResponse.json()
+    throw new Error(
+      errorData.error || 'Failed to fetch masters'
+    )
   }
-  const mastersData = await mastersResponse.json();
+  const mastersData = await mastersResponse.json()
 
-  const pointsResponse = await fetch(`/api/admin/points?adminTelegramId=${telegramId}`);
+  const pointsResponse = await fetch(
+    `/api/admin/points?adminTelegramId=${telegramId}`
+  )
   if (!pointsResponse.ok) {
-    const errorData = await pointsResponse.json();
-    throw new Error(errorData.error || 'Failed to fetch points');
+    const errorData = await pointsResponse.json()
+    throw new Error(
+      errorData.error || 'Failed to fetch points'
+    )
   }
-  const pointsData = await pointsResponse.json();
+  const pointsData = await pointsResponse.json()
 
-  return { 
-    requests: requestsData.requests, 
-    masters: mastersData.masters, 
-    points: pointsData.points 
-  };
-};
+  return {
+    requests: requestsData.requests,
+    masters: mastersData.masters,
+    points: pointsData.points,
+  }
+}
 
-export const transferRequest = async ({ requestId, newPointId, newMasterId, adminTelegramId }: { requestId: string; newPointId: number; newMasterId: string; adminTelegramId: string }) => {
-  const response = await fetch('/api/admin/transfer-request', {
+export const transferRequest = async ({
+  requestId,
+  newPointId,
+  newMasterId,
+  adminTelegramId,
+}: {
+  requestId: string
+  newPointId: number
+  newMasterId: string
+  adminTelegramId: string
+}) => {
+  const response = await fetch(
+    '/api/admin/transfer-request',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requestId,
+        newPointId,
+        newMasterId,
+        adminTelegramId,
+      }),
+    }
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(
+      errorData.error || 'Failed to transfer request'
+    )
+  }
+
+  return response.json()
+}
+
+export const assignRequest = async ({
+  requestId,
+  masterId,
+  adminTelegramId,
+}: {
+  requestId: string
+  masterId: string
+  adminTelegramId: string
+}) => {
+  const response = await fetch(
+    '/api/admin/assign-request',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requestId,
+        masterId,
+        adminTelegramId,
+      }),
+    }
+  )
+  if (!response.ok) {
+    const data = await response.json()
+    throw new Error(
+      data.error || 'Failed to assign request'
+    )
+  }
+  return response.json()
+}
+
+export const fetchMasterDashboard = async (
+  telegramId: string
+) => {
+  const response = await fetch(
+    `/api/master/dashboard?telegramId=${telegramId}`
+  )
+  if (!response.ok) {
+    const json = await response.json()
+    throw new Error(
+      json?.error || `HTTP ${response.status}`
+    )
+  }
+  return response.json()
+}
+
+export const transferMasterRequest = async (
+  requestId: string
+) => {
+  const response = await fetch(
+    '/api/master/transfer-request',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestId }),
+    }
+  )
+  if (!response.ok) {
+    const data = await response.json()
+    throw new Error(
+      data.error || 'Failed to transfer request'
+    )
+  }
+  return response.json()
+}
+
+export const createMaster = async ({
+  telegramId,
+  username,
+  name,
+  pointId,
+  adminTelegramId,
+}: {
+  telegramId: string
+  username: string
+  name: string
+  pointId: number | null
+  adminTelegramId: string
+}) => {
+  const response = await fetch('/api/admin/create-master', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      requestId,
-      newPointId,
-      newMasterId,
-      adminTelegramId
-    })
-  });
-
+      telegramId,
+      username,
+      name,
+      pointId,
+      adminTelegramId,
+    }),
+  })
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || 'Failed to transfer request');
+    const data = await response.json()
+    throw new Error(data.error || 'Failed to create master')
   }
+  return response.json()
+}
 
-  return response.json();
-};
-
-export const assignRequest = async ({ requestId, masterId, adminTelegramId }: { requestId: string; masterId: string; adminTelegramId: string }) => {
-  const response = await fetch('/api/admin/assign-request', {
+export const assignMasterToPoint = async ({
+  masterId,
+  pointId,
+  adminTelegramId,
+}: {
+  masterId: string
+  pointId: number
+  adminTelegramId: string
+}) => {
+  const response = await fetch('/api/admin/assign-master', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requestId, masterId, adminTelegramId })
-  });
+    body: JSON.stringify({
+      masterId,
+      pointId,
+      adminTelegramId,
+    }),
+  })
   if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || 'Failed to assign request');
+    const data = await response.json()
+    throw new Error(
+      data.error || 'Failed to assign master to point'
+    )
   }
-  return response.json();
-};
-
-export const fetchMasterDashboard = async (telegramId: string) => {
-  const response = await fetch(`/api/master/dashboard?telegramId=${telegramId}`);
-  if (!response.ok) {
-    const json = await response.json();
-    throw new Error(json?.error || `HTTP ${response.status}`);
-  }
-  return response.json();
-};
-
-export const transferMasterRequest = async (requestId: string) => {
-  const response = await fetch('/api/master/transfer-request', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ requestId }),
-  });
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || 'Failed to transfer request');
-  }
-  return response.json();
-};
+  return response.json()
+}
