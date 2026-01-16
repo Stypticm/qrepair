@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { mountSwipeBehavior, disableVerticalSwipes } from '@telegram-apps/sdk';
+// Убрали импорт SDK методов для свайпов - используем прямой доступ к Telegram WebApp API
 import Image from 'next/image';
 import { useSafeArea } from '@/hooks/useSafeArea';
 
@@ -34,21 +34,33 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     checkDevice();
   }, [isMounted, safeArea]);
 
-  // Глобально отключаем вертикальный свайп в Telegram Mini App на уровне контейнера
+  // Отключаем только свайп вниз для закрытия приложения (как в болванке)
+  // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
   useEffect(() => {
     if (!isMounted) return;
     if (!safeArea.isTelegram) return;
     try {
-      if ((mountSwipeBehavior as any)?.isAvailable?.()) {
-        mountSwipeBehavior();
-      }
+      const wa: any = window.Telegram?.WebApp;
       const apply = () => {
-        try { (disableVerticalSwipes as any)?.isAvailable?.() && disableVerticalSwipes(); } catch {}
+        try {
+          if (typeof wa?.disableVerticalSwipes === 'function') {
+            wa.disableVerticalSwipes();
+          }
+        } catch {}
       };
       apply();
       const t1 = setTimeout(apply, 300);
       const t2 = setTimeout(apply, 1000);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        // Восстанавливаем свайп вниз при размонтировании (опционально)
+        try {
+          if (typeof wa?.enableVerticalSwipes === 'function') {
+            wa.enableVerticalSwipes();
+          }
+        } catch {}
+      };
     } catch {}
   }, [isMounted, safeArea.isTelegram]);
 

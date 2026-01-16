@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.183'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.184'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -173,73 +173,43 @@ export function useSafeArea() {
             Object.keys(webApp)
           )
 
-          // Способ 1: Множественные вызовы expand
-          console.log(
-            'Calling webApp.expand() multiple times...'
-          )
-          if (isMobilePlatform) webApp.expand()
-
-          // Способ 2: Проверяем fullscreen поддержку
-          const supportsFullscreen =
-            webApp.isVersionAtLeast('8.0')
-          console.log(
-            'Fullscreen support:',
-            supportsFullscreen
-          )
-
-          // Способ 3: Если поддерживается, пробуем fullscreen
-          if (
-            supportsFullscreen &&
-            'requestFullscreen' in webApp
-          ) {
-            console.log('Attempting requestFullscreen...')
-            try {
-              if (isMobilePlatform)
+          // Для мобильных - fullscreen (на весь экран телефона)
+          // Для десктопа - НЕ вызываем expand/requestFullscreen (компактный режим)
+          if (isMobilePlatform) {
+            const supportsFullscreen =
+              webApp.isVersionAtLeast('8.0') && 'requestFullscreen' in webApp
+            
+            console.log('Mobile platform detected, expanding to fullscreen...')
+            
+            // Вызываем expand() и requestFullscreen() сразу (без задержек)
+            webApp.expand()
+            
+            if (supportsFullscreen) {
+              try {
                 webApp.requestFullscreen?.()
-            } catch (error) {
-              console.error(
-                'requestFullscreen failed:',
-                error
-              )
-            }
-          }
-
-          // Способ 4: Принудительно expand каждые 100ms в течение 2 секунд
-          const expandInterval = setInterval(() => {
-            console.log('Forcing expand...')
-            if (isMobilePlatform) webApp.expand()
-          }, 100)
-
-          // Останавливаем интервал через 2 секунды
-          setTimeout(() => {
-            clearInterval(expandInterval)
-            console.log('Stopped forced expand interval')
-          }, 2000)
-
-          // Способ 5: Дополнительные попытки с задержками
-          const delays = [500, 1000, 1500, 2000, 2500, 3000]
-          delays.forEach((delay: number) => {
-            setTimeout(() => {
-              console.log(`Retry expand at ${delay}ms...`)
-              if (isMobilePlatform) webApp.expand()
-
-              // Если поддерживается fullscreen, пробуем снова
-              if (
-                supportsFullscreen &&
-                'requestFullscreen' in webApp
-              ) {
-                try {
-                  if (isMobilePlatform)
-                    webApp.requestFullscreen?.()
-                } catch (error) {
-                  console.error(
-                    `requestFullscreen failed at ${delay}ms:`,
-                    error
-                  )
-                }
+              } catch (error) {
+                console.error('requestFullscreen failed:', error)
               }
-            }, delay)
-          })
+            }
+            
+            // Дополнительные ретраи для надежности (как в болванке)
+            const retryDelays = [120, 300, 700]
+            retryDelays.forEach((delay: number) => {
+              setTimeout(() => {
+                webApp.expand()
+                if (supportsFullscreen) {
+                  try {
+                    webApp.requestFullscreen?.()
+                  } catch (error) {
+                    console.error(`requestFullscreen failed at ${delay}ms:`, error)
+                  }
+                }
+              }, delay)
+            })
+          } else {
+            // Для десктопа - компактный режим (не вызываем expand/requestFullscreen)
+            console.log('Desktop platform detected, keeping compact mode')
+          }
 
           // Устанавливаем цвета
           webApp.headerColor = '#2dc2c6'
@@ -322,33 +292,28 @@ export function useSafeArea() {
           )
           setIsFullscreen(event.is_expanded || false)
 
-          // ПРИНУДИТЕЛЬНО expand если viewport не развернут (только мобильные)
+          // Разворачиваем если viewport не развернут (только мобильные)
           if (!event.is_expanded) {
-            console.log(
-              'Viewport not expanded, FORCING expand...'
-            )
             const platform = webApp.platform
             const isMobilePlatform =
               platform === 'android' || platform === 'ios'
-            if (isMobilePlatform) webApp.expand()
-
-            // Если поддерживается fullscreen, пробуем снова
-            if (
-              webApp.isVersionAtLeast('8.0') &&
-              'requestFullscreen' in webApp
-            ) {
-              try {
-                const platform2 = webApp.platform
-                const isMobilePlatform2 =
-                  platform2 === 'android' ||
-                  platform2 === 'ios'
-                if (isMobilePlatform2)
+            
+            if (isMobilePlatform) {
+              console.log('Viewport not expanded, FORCING expansion...')
+              webApp.expand()
+              
+              if (
+                webApp.isVersionAtLeast('8.0') &&
+                'requestFullscreen' in webApp
+              ) {
+                try {
                   webApp.requestFullscreen?.()
-              } catch (error) {
-                console.error(
-                  'requestFullscreen failed in viewport handler:',
-                  error
-                )
+                } catch (error) {
+                  console.error(
+                    'requestFullscreen failed in viewport handler:',
+                    error
+                  )
+                }
               }
             }
           }
@@ -375,12 +340,9 @@ export function useSafeArea() {
               platform === 'android' || platform === 'ios'
 
             if (isMobilePlatform) {
-              console.log(
-                'Not in fullscreen, FORCING expand...'
-              )
+              console.log('Not in fullscreen, FORCING expansion...')
               webApp.expand()
 
-              // Если поддерживается fullscreen, пробуем снова
               if (
                 webApp.isVersionAtLeast('8.0') &&
                 'requestFullscreen' in webApp

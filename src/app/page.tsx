@@ -15,7 +15,7 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore, isMaster } from '@/stores/authStore';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 import { postEvent } from '@telegram-apps/sdk';
-import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen, mountSwipeBehavior, disableVerticalSwipes, isSwipeBehaviorMounted } from '@telegram-apps/sdk';
+import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen } from '@telegram-apps/sdk';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 import { Smartphone, Wrench, Smartphone as DevicesIcon, Heart, ShoppingCart, Settings } from 'lucide-react';
 import { useTelegramCloudImages } from '@/hooks/useTelegramCloudImages'
@@ -185,23 +185,24 @@ function HomeContent() {
       // Функция настройки Telegram фич
       const setupTelegramFeatures = () => {
         initializeTelegram(initDataState);
-        // Официальный API SwipeBehavior: монтируем и отключаем вертикальные свайпы
+        // Отключаем только свайп вниз для закрытия приложения (как в болванке)
+        // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
         try {
-          if ((mountSwipeBehavior as any)?.isAvailable?.()) {
-            mountSwipeBehavior();
-          }
+          const wa: any = window.Telegram?.WebApp;
           const applyDisable = () => {
             try {
-              if ((disableVerticalSwipes as any)?.isAvailable?.()) disableVerticalSwipes();
-              addDebugInfo('SwipeBehavior: disableVerticalSwipes применён');
+              if (typeof wa?.disableVerticalSwipes === 'function') {
+                wa.disableVerticalSwipes();
+                addDebugInfo('disableVerticalSwipes применён (не блокирует свайпы внутри)');
+              }
             } catch {}
           };
           applyDisable();
-          // ретраи на случай ленивого инициализации клиента
+          // ретраи на случай ленивой инициализации клиента
           setTimeout(applyDisable, 300);
           setTimeout(applyDisable, 1000);
         } catch (e) {
-          // Фоллбек через postEvent, если компонент недоступен
+          // Фоллбек через postEvent, если метод недоступен
           try { postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); } catch {}
         }
         // Привяжем CSS переменные viewport (влияет на безопасные отступы)

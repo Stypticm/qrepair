@@ -2,7 +2,7 @@
 
 import type { PropsWithChildren } from 'react';
 import { useEffect } from 'react';
-import { init, swipeBehavior } from '@telegram-apps/sdk';
+import { init } from '@telegram-apps/sdk';
 import { AdaptiveContainer } from '../AdaptiveContainer';
 import { TelegramFullScreen } from '../TelegramFullScreen';
 import { useAppStore } from '@/stores/authStore';
@@ -26,31 +26,40 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
           const platform = wa?.platform;
           const isMobilePlatform = platform === 'android' || platform === 'ios';
           
-          // Для мобильных - fullscreen
+          // Для мобильных - fullscreen (на весь экран телефона)
+          // Для десктопа - компактный режим (не вызываем expand/requestFullscreen)
           if (isMobilePlatform) {
-            if (wa?.isVersionAtLeast?.('8.0')) {
-              wa.requestFullscreen?.();
-            }
+            const supportsFullscreen = wa?.isVersionAtLeast?.('8.0') && 'requestFullscreen' in wa;
+            
+            // Вызываем expand() и requestFullscreen() сразу (без задержек)
             wa?.expand?.();
+            
+            if (supportsFullscreen) {
+              try {
+                wa.requestFullscreen?.();
+              } catch (error) {
+                console.error('requestFullscreen failed:', error);
+              }
+            }
           }
+          // Для десктопа - не вызываем expand/requestFullscreen (компактный режим)
           // Для десктопа - не вызываем expand/requestFullscreen (компактный режим)
           
           wa.headerColor = '#2dc2c6';
           wa.backgroundColor = '#ffffff';
           wa.ready?.();
         } catch {}
-        // Глобально ограничиваем вертикальные свайпы (можно отключать точечно на страницах)
-        const manager = swipeBehavior;
-        let restore: (() => void) | undefined;
-        // Mount per docs (v3 uses direct methods on variable)
-        try { manager?.mount?.(); } catch {}
+        
+        // Отключаем только свайп вниз для закрытия приложения (как в болванке)
+        // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
         try {
-          manager?.disableVertical?.();
-          restore = () => {
-            try { manager?.enableVertical?.(); } catch {}
-            try { manager?.unmount?.(); } catch {}
-          };
-        } catch {}
+          if (typeof wa.disableVerticalSwipes === 'function') {
+            wa.disableVerticalSwipes();
+            console.log('🔍 ClientLayoutContent - disableVerticalSwipes применён');
+          }
+        } catch (error) {
+          console.error('disableVerticalSwipes failed:', error);
+        }
 
         // Убираем глобальную блокировку скролла - пусть работает нормально
         // Только настраиваем базовые стили для Telegram WebApp
@@ -70,7 +79,10 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
             if (isMobilePlatform) {
               wa?.expand?.();
             }
-            manager?.disableVertical?.();
+            // Отключаем только свайп вниз для закрытия
+            if (typeof wa?.disableVerticalSwipes === 'function') {
+              wa.disableVerticalSwipes();
+            }
           } catch {}
         };
         const onVisibility = () => { if (document.visibilityState === 'visible') rearm(); };
@@ -79,12 +91,18 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
         window.addEventListener('resize', rearm, { passive: true });
 
         return () => {
-          try { restore?.(); } catch {}
           document.body.style.overflow = prevOverflow;
           document.body.style.height = prevHeight;
           window.removeEventListener('focus', rearm as any);
           document.removeEventListener('visibilitychange', onVisibility as any);
           window.removeEventListener('resize', rearm as any);
+          // Восстанавливаем свайп вниз при размонтировании (опционально)
+          try {
+            const wa: any = window.Telegram?.WebApp;
+            if (typeof wa?.enableVerticalSwipes === 'function') {
+              wa.enableVerticalSwipes();
+            }
+          } catch {}
         };
       } catch (error) {
         console.error('❌ ClientLayoutContent - Error initializing Telegram SDK:', error);

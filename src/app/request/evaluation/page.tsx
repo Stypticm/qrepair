@@ -9,7 +9,7 @@ import { Page } from "@/components/Page";
 import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/stores/authStore";
-import { init, swipeBehavior } from '@telegram-apps/sdk';
+import { init } from '@telegram-apps/sdk';
 import { getPictureUrl } from "@/core/lib/assets";
 import { useFormData } from '@/hooks/usePersistentState';
 import { calculatePriceRange } from "@/core/lib/priceCalculation";
@@ -356,47 +356,43 @@ export default function EvaluationPage() {
     try {
       if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
         init();
-        const manager = swipeBehavior;
-        try { manager?.mount?.(); } catch {}
+        const wa: any = (window as any).Telegram?.WebApp;
         try {
-          manager?.disableVertical?.();
-          try { (window as any).Telegram.WebApp.expand(); } catch {}
-          try { (window as any).Telegram.WebApp.enableClosingConfirmation(); } catch {}
+          // Отключаем только свайп вниз для закрытия приложения (как в болванке)
+          // Это НЕ блокирует горизонтальные и вертикальные свайпы внутри приложения
+          if (typeof wa.disableVerticalSwipes === 'function') {
+            wa.disableVerticalSwipes();
+          }
+          // Для мобильных - expand
+          const platform = wa?.platform;
+          const isMobilePlatform = platform === 'android' || platform === 'ios';
+          if (isMobilePlatform) {
+            try { wa.expand(); } catch {}
+          }
+          try { wa.enableClosingConfirmation(); } catch {}
           destroy = () => {
-            try { manager?.enableVertical?.(); } catch {}
-            try { manager?.unmount?.(); } catch {}
+            // Восстанавливаем свайп вниз при размонтировании (опционально)
+            try {
+              if (typeof wa?.enableVerticalSwipes === 'function') {
+                wa.enableVerticalSwipes();
+              }
+            } catch {}
           }
         } catch {}
       }
     } catch {}
     
-    // Fallback для предотвращения вертикальных жестов
-    const prevTouchAction = document.body.style.touchAction;
-    const prevOverscrollY = (document.body.style as any).overscrollBehaviorY;
-    const prevHtmlOverscrollY = (document.documentElement.style as any).overscrollBehaviorY;
+    // УБРАЛИ блокировку всех свайпов - теперь свайпы работают внутри приложения
+    // Оставляем только базовые стили для Telegram WebApp
     const prevOverflow = document.body.style.overflow;
     const prevHeight = document.body.style.height;
-    
-    document.body.style.touchAction = 'pan-x';
-    (document.body.style as any).overscrollBehaviorY = 'contain';
-    (document.documentElement.style as any).overscrollBehaviorY = 'contain';
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'auto';
     document.body.style.height = '100dvh';
-    
-    const onTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-    };
-    
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
     
     return () => {
       try { destroy?.(); } catch {}
-      document.body.style.touchAction = prevTouchAction;
-      (document.body.style as any).overscrollBehaviorY = prevOverscrollY;
-      (document.documentElement.style as any).overscrollBehaviorY = prevHtmlOverscrollY;
       document.body.style.overflow = prevOverflow;
       document.body.style.height = prevHeight;
-      document.removeEventListener('touchmove', onTouchMove as any);
     };
   }, []);
 
