@@ -6,8 +6,10 @@ import { ClientLayoutContent } from '@/components/ClientLayoutContent/ClientLayo
 import { Toaster } from 'sonner';
 
 import '@telegram-apps/telegram-ui/dist/styles.css';
+import Script from 'next/script';
 import 'normalize.css/normalize.css';
 import './globals.css';
+import { TelegramInit } from '@/components/TelegramInit';
 
 const comicNeue = Comic_Neue({
   subsets: ['latin'],
@@ -27,6 +29,12 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="description" content="Qoqos - Выкуп смартфонов" />
         <meta name="theme-color" content="#2dc2c6" />
+
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
@@ -36,6 +44,8 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo2.png" />
       </head>
       <body style={{ backgroundColor: '#ffffff' }}>
+        <TelegramInit />
+
         <ReactQueryProvider>
           <I18nProvider>
             <ClientLayoutContent>
