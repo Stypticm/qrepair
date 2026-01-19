@@ -1,28 +1,23 @@
 'use client';
 
-import { useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 
 export function TelegramInit() {
-    useLayoutEffect(() => {
-        if (!window.Telegram?.WebApp) return;
+  useEffect(() => {
+    if (!window.Telegram?.WebApp) return;
 
-        const tg = window.Telegram.WebApp;
+    const tg = window.Telegram.WebApp;
+    tg.ready();
 
-        // 1️⃣ Расширяем ДО ready
-        tg.expand?.();
+    const html = document.documentElement;
+    const platform = tg.platform;
 
-        // 2️⃣ Сообщаем, что всё готово
-        tg.ready?.();
+    if (platform === 'android' || platform === 'ios') {
+      html.dataset.env = 'tg-mobile';
+    } else {
+      html.dataset.env = 'tg-desktop';
+    }
+  }, []);
 
-        // 3️⃣ Классы для CSS
-        const html = document.documentElement;
-
-        if (tg.platform === 'android' || tg.platform === 'ios') {
-            html.classList.add('telegram-mobile', 'telegram-fullscreen');
-        } else {
-            html.classList.add('telegram-desktop');
-        }
-    }, []);
-
-    return null;
+  return null;
 }
