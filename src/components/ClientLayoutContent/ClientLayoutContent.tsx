@@ -6,8 +6,6 @@ import { useRequestSync } from '@/hooks/useRequestSync';
 import { useTelegramDisableVerticalSwipes } from '@/app/telegram/telegram-web-view/useTelegramDisableVerticalSwipes';
 
 export function ClientLayoutContent({ children }: PropsWithChildren) {
-
-  // Запускаем синхронизацию состояния заявки
   useRequestSync();
   useTelegramDisableVerticalSwipes();  
 

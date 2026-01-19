@@ -135,8 +135,8 @@
 
   /* Скрытие BottomSheet Telegram */
   .tg-bottom-sheet {
-    display: none !important;
-  }
+  display: none !important;
+}
 
   /* Скрываем только основные элементы Telegram UI */
   .tg-bottom-sheet {

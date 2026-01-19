@@ -684,7 +684,14 @@ function HomeContent() {
               {/* Нижнее меню — в центре и в секции Лента */}
               {(position.x === 0 && (position.y === 0 || position.y === 1)) && (
                 <div className="fixed bottom-4 left-4 right-4 z-50">
-                  <div className="relative">
+                  <div className="relative"
+                    style={{
+                      // ещё более прозрачное стекло как в iOS
+                      background: "rgba(255, 255, 255, 0.02)",
+                      border: "1px solid rgba(255, 255, 255, 0.22)",
+                      pointerEvents: "auto",
+                    }}
+                  >
                     {/* Внешняя тень для глубины */}
                     <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 rounded-full blur-xl"></div>
 
