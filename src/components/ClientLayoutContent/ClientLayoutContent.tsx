@@ -14,8 +14,7 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
 
   // Запускаем синхронизацию состояния заявки
   useRequestSync();
-  useTelegramDisableVerticalSwipes();
-  
+  useTelegramDisableVerticalSwipes();  
 
   // useEffect(() => {
   //   // Инициализируем Telegram SDK только если мы в Telegram WebApp

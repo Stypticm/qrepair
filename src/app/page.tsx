@@ -39,7 +39,7 @@ function HomeContent() {
   const [testAdminIndex, setTestAdminIndex] = useState(0);
   const [isGridViewMode, setIsGridViewMode] = useState(false);
   // Свайповая матрица: (0,0) — центр (главное меню); (0,1) — лента; (1,0) — выбор; (-1,0) — ремонт; (0,-1) — FAQ
-  const [position, setPosition] = useState<{x: number; y: number}>({ x: 0, y: 0 });
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const touchEndRef = useRef<{ x: number; y: number } | null>(null);
   const navigatingRef = useRef(false);
@@ -47,11 +47,11 @@ function HomeContent() {
   const [screenHeight, setScreenHeight] = useState(0);
 
   // Состояние для marketplace
-  const [marketplaceItems, setMarketplaceItems] = useState<Array<{ 
-    id: string; 
-    title: string; 
-    price: number | null; 
-    date: string; 
+  const [marketplaceItems, setMarketplaceItems] = useState<Array<{
+    id: string;
+    title: string;
+    price: number | null;
+    date: string;
     cover: string | null;
     photos: string[];
     model?: string;
@@ -159,7 +159,7 @@ function HomeContent() {
 
     // Слушаем событие добавления лота
     window.addEventListener('lotAdded', handleLotAdded);
-    
+
     return () => {
       window.removeEventListener('lotAdded', handleLotAdded);
     };
@@ -171,10 +171,10 @@ function HomeContent() {
       const updateScreenHeight = () => {
         setScreenHeight(window.innerHeight);
       };
-      
+
       updateScreenHeight();
       window.addEventListener('resize', updateScreenHeight);
-      
+
       return () => window.removeEventListener('resize', updateScreenHeight);
     }
   }, []);
@@ -185,7 +185,7 @@ function HomeContent() {
       // Функция настройки Telegram фич
       const setupTelegramFeatures = () => {
         initializeTelegram(initDataState);
-        
+
         // КРИТИЧЕСКИ ВАЖНО: Управление свайпами ДО ready()
         // Это должно быть сделано как можно раньше, чтобы предотвратить сворачивание
         try {
@@ -193,14 +193,14 @@ function HomeContent() {
           const platform = wa?.platform;
           const isMobilePlatform = platform === 'android' || platform === 'ios';
           const isDesktopPlatform = !isMobilePlatform && (
-            platform === 'tdesktop' || 
-            platform === 'macos' || 
-            platform === 'web' || 
+            platform === 'tdesktop' ||
+            platform === 'macos' ||
+            platform === 'web' ||
             platform === 'weba' ||
             platform === 'windows' ||
             platform === 'linux'
           );
-          
+
           // На мобильных - отключаем свайп вниз для закрытия ПЕРЕД ready()
           if (isMobilePlatform) {
             try {
@@ -214,14 +214,14 @@ function HomeContent() {
               } catch (e) {
                 console.warn('enableClosingConfirmation недоступен ДО ready():', e);
               }
-              
+
               if (typeof wa?.disableVerticalSwipes === 'function') {
                 wa.disableVerticalSwipes();
-                
+
                 // Проверяем, что настройка применилась
                 const isEnabled = wa?.isVerticalSwipesEnabled;
                 addDebugInfo(`disableVerticalSwipes применён ДО ready() - isVerticalSwipesEnabled: ${isEnabled}`);
-                
+
                 // Если все еще включено, пробуем еще раз
                 if (isEnabled === true) {
                   setTimeout(() => {
@@ -234,12 +234,12 @@ function HomeContent() {
               console.error('disableVerticalSwipes failed:', error);
             }
           }
-          
+
           // Вызываем ready() - это уведомляет Telegram о готовности приложения
           try {
             wa?.ready?.();
-          } catch {}
-          
+          } catch { }
+
           // После ready() - повторно применяем настройки свайпов для надежности
           const applySwipeSettings = () => {
             try {
@@ -247,11 +247,11 @@ function HomeContent() {
                 // На мобильных - отключаем только свайп вниз для закрытия приложения
                 if (typeof wa?.disableVerticalSwipes === 'function') {
                   wa.disableVerticalSwipes();
-                  
+
                   // Проверяем, что настройка применилась (Bot API 7.7+)
                   const isEnabled = wa?.isVerticalSwipesEnabled;
                   addDebugInfo(`disableVerticalSwipes применён ПОСЛЕ ready() - isVerticalSwipesEnabled: ${isEnabled}`);
-                  
+
                   // Если все еще включено, пробуем еще раз
                   if (isEnabled === true) {
                     console.warn('⚠️ isVerticalSwipesEnabled все еще true, повторная попытка...');
@@ -261,7 +261,7 @@ function HomeContent() {
                       addDebugInfo(`Повторный вызов disableVerticalSwipes - isVerticalSwipesEnabled: ${newState}`);
                     }, 100);
                   }
-                  
+
                   // Дополнительная защита: включаем подтверждение закрытия
                   // Это покажет диалог с кнопками "Всё равно закрыть" и "Отмена" при попытке закрыть
                   try {
@@ -269,7 +269,7 @@ function HomeContent() {
                       wa.enableClosingConfirmation();
                       const isEnabled = wa?.isClosingConfirmationEnabled;
                       addDebugInfo(`enableClosingConfirmation применён - isClosingConfirmationEnabled: ${isEnabled}`);
-                      
+
                       // Если не включено, пробуем еще раз
                       if (isEnabled === false) {
                         setTimeout(() => {
@@ -281,14 +281,14 @@ function HomeContent() {
                   } catch (e) {
                     console.warn('enableClosingConfirmation недоступен:', e);
                   }
-                  
+
                   // Дополнительные ретраи для надежности
                   const retryClosingConfirmation = () => {
                     try {
                       if (typeof wa?.enableClosingConfirmation === 'function') {
                         wa.enableClosingConfirmation();
                       }
-                    } catch {}
+                    } catch { }
                   };
                   setTimeout(retryClosingConfirmation, 300);
                   setTimeout(retryClosingConfirmation, 1000);
@@ -300,14 +300,14 @@ function HomeContent() {
                   addDebugInfo('enableVerticalSwipes применён (десктоп платформа)');
                 }
               }
-            } catch {}
+            } catch { }
           };
-          
+
           applySwipeSettings();
           // ретраи на случай ленивой инициализации клиента
           setTimeout(applySwipeSettings, 300);
           setTimeout(applySwipeSettings, 1000);
-          
+
           // Защита от свайпа вниз в начале страницы (scrollY === 0)
           // Когда пользователь в начале страницы, свайп вниз может восприниматься как жест на сворачивание
           if (isMobilePlatform) {
@@ -317,10 +317,10 @@ function HomeContent() {
                 window.scrollTo({ top: 1, behavior: 'instant' });
               }
             };
-            
+
             // Проверяем при загрузке
             setTimeout(preventCollapseOnTopSwipe, 100);
-            
+
             // Перехватываем touchstart в начале страницы
             const handleTouchStart = (e: TouchEvent) => {
               if (window.scrollY === 0 && document.documentElement.scrollTop === 0) {
@@ -328,19 +328,19 @@ function HomeContent() {
                 window.scrollTo({ top: 1, behavior: 'instant' });
               }
             };
-            
+
             document.addEventListener('touchstart', handleTouchStart, { passive: true });
           }
         } catch (e) {
           // Фоллбек через postEvent, если метод недоступен (только для мобильных)
-          try { 
+          try {
             const wa: any = window.Telegram?.WebApp;
             const platform = wa?.platform;
             const isMobilePlatform = platform === 'android' || platform === 'ios';
             if (isMobilePlatform) {
-              postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false }); 
+              postEvent('web_app_setup_swipe_behavior', { allow_vertical_swipe: false });
             }
-          } catch {}
+          } catch { }
         }
         // Привяжем CSS переменные viewport (влияет на безопасные отступы)
         try {
@@ -354,17 +354,17 @@ function HomeContent() {
       const checkTelegram = () => {
         const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
         const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
-        
+
         // Дополнительная проверка через initData в cookies (Telegram передает это)
         const initDataCookie = document.cookie
           .split('; ')
           .find(row => row.startsWith('_initData='));
         const hasInitData = !!initDataCookie;
-        
+
         // Проверка через URL параметры (Telegram может передавать tgWebAppStartParam)
         const urlParams = new URLSearchParams(window.location.search);
         const hasTelegramParams = urlParams.has('tgWebAppStartParam') || urlParams.has('tgWebAppVersion');
-        
+
         const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy || hasInitData || hasTelegramParams;
 
         addDebugInfo(`hasTelegramWebApp: ${hasTelegramWebApp}`);
@@ -378,14 +378,14 @@ function HomeContent() {
 
       // Первая проверка сразу
       let inTelegram = checkTelegram();
-      
+
       // Если не определили, ждем немного и проверяем снова (SDK может инициализироваться с задержкой)
       if (!inTelegram) {
         setTimeout(() => {
           inTelegram = checkTelegram();
           setIsInTelegram(inTelegram);
           setIsLoading(false);
-          
+
           if (inTelegram) {
             setupTelegramFeatures();
           } else {
@@ -545,7 +545,7 @@ function HomeContent() {
       // Вверх из экрана выбора → ИИ Оценка (только для админов)
       if (isMaster(userId)) {
         setCurrentStep('evaluation-mode');
-        try { sessionStorage.setItem('homePosition', 'choice'); } catch {}
+        try { sessionStorage.setItem('homePosition', 'choice'); } catch { }
         navigatingRef.current = true;
         router.push('/request/evaluation-mode');
       } else {
@@ -555,7 +555,7 @@ function HomeContent() {
     }
     if (position.x === 1 && position.y === 1) {
       // Вниз из экрана выбора → Ручная оценка
-      try { sessionStorage.setItem('homePosition', 'choice'); } catch {}
+      try { sessionStorage.setItem('homePosition', 'choice'); } catch { }
       navigatingRef.current = true;
       router.push('/request/device-info');
     }
@@ -588,17 +588,17 @@ function HomeContent() {
       !!(window as any).TelegramWebviewProxy ||
       document.cookie.split('; ').some(row => row.startsWith('_initData='))
     );
-    
+
     if (!finalCheck) {
-    router.push('/telegram');
-    return null;
+      router.push('/telegram');
+      return null;
     }
   }
 
   return (
     <AdaptiveContainer>
-      <div className={`${isDesktopLike ? 'min-h-screen flex items-start justify-center p-6 md:p-8 bg-gray-100' : ''}`}>
-        <div className={`${isDesktopLike ? 'w-full max-w-[520px] bg-gradient-to-b from-white to-gray-50 rounded-2xl shadow-xl border border-gray-200 overflow-hidden' : ''}`}>
+      <div className={`${isDesktopLike ? 'flex justify-center' : ''}`}>
+        <div className="w-full max-w-[420px]">
           <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
             <div
               className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen relative overflow-hidden bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}
@@ -610,7 +610,7 @@ function HomeContent() {
               <motion.div
                 className="absolute inset-0"
                 animate={{ x: `${position.x * -100}%`, y: `${position.y * -100}%` }}
-                transition={{ 
+                transition={{
                   duration: instantTransition ? 0 : 0.5, // Увеличена длительность для плавности
                   ease: [0.25, 0.46, 0.45, 0.94], // Более плавная кривая (iOS-style easing)
                   type: 'tween',
@@ -687,12 +687,12 @@ function HomeContent() {
                   <div className="relative">
                     {/* Внешняя тень для глубины */}
                     <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 rounded-full blur-xl"></div>
-                    
+
                     {/* Основной контейнер с многослойностью */}
                     <div className="relative bg-gradient-to-r from-white/8 via-white/12 to-white/8 backdrop-blur-3xl border border-white/20 rounded-full px-6 py-4 shadow-2xl">
                       {/* Внутренний градиент для объема */}
                       <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent rounded-full"></div>
-                      
+
                       {/* Контент меню */}
                       <div className={`relative max-w-md mx-auto flex ${!isLoading && isMaster(userId) ? 'justify-around' : 'justify-evenly'} items-center`}>
                         {/* Мои устройства */}

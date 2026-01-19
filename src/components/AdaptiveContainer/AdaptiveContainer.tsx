@@ -77,9 +77,10 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
 
     if (isDesktop) {
       return {
-        container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-        main: 'w-[390px] h-[844px] overflow-hidden my-auto-center',
-        wrapper: 'w-[390px] h-[844px] mx-auto p-0',
+        // В Telegram Desktop заполняем весь webview, без внутренних рамок и фоновых полей
+        container: 'w-full h-full flex flex-col items-stretch justify-stretch bg-transparent',
+        main: 'w-full h-full overflow-hidden',
+        wrapper: 'w-full h-full',
       };
     } else {
       // Для десктопа - НЕ добавляем telegram-fullscreen класс
