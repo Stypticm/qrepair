@@ -126,21 +126,48 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
     (window as any).Telegram?.WebApp?.platform &&
     !['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
 
+  // На десктопе: заполняем всё доступное пространство webview (без фонов и рамок),
+  // чтобы не было видимых полей вокруг.
+  if (isDesktop) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'transparent',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'stretch',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            minHeight: '100%',
+            backgroundColor: '#ffffff',
+            borderRadius: 0,
+            boxShadow: 'none',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  // На мобильных: полный экран как обычно
   return (
     <div
       className="w-full min-h-dvh bg-white"
       style={{
-        minHeight: isDesktop ? 'auto' : '100dvh',
-        width: isDesktop ? '100%' : '100vw',
-        maxWidth: isDesktop ? '480px' : '100vw',
+        minHeight: '100dvh',
+        width: '100vw',
         overflowX: 'hidden',
         backgroundColor: '#ffffff',
-        ...(isDesktop && {
-          margin: '0 auto',
-          borderRadius: '32px',
-          boxShadow: '0 0 50px rgba(0, 0, 0, 0.2)',
-          maxHeight: '844px',
-        }),
       }}
     >
       {children}
