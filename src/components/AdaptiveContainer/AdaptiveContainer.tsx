@@ -38,60 +38,9 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
   useEffect(() => {
     if (!isMounted) return;
     if (!safeArea.isTelegram) return;
-    try {
-      const wa: any = window.Telegram?.WebApp;
-      const platform = wa?.platform;
-      const isMobilePlatform = platform === 'android' || platform === 'ios';
-      const isDesktopPlatform = !isMobilePlatform && (
-        platform === 'tdesktop' || 
-        platform === 'macos' || 
-        platform === 'web' || 
-        platform === 'weba' ||
-        platform === 'windows' ||
-        platform === 'linux'
-      );
-      
-      const apply = () => {
-        try {
-          if (isMobilePlatform) {
-            // На мобильных - отключаем только свайп вниз для закрытия приложения
-            if (typeof wa?.disableVerticalSwipes === 'function') {
-              wa.disableVerticalSwipes();
-            }
-          } else if (isDesktopPlatform) {
-            // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
-            if (typeof wa?.enableVerticalSwipes === 'function') {
-              wa.enableVerticalSwipes();
-            }
-          }
-        } catch {}
-      };
-      apply();
-      const t1 = setTimeout(apply, 300);
-      const t2 = setTimeout(apply, 1000);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        // НЕ восстанавливаем свайпы при размонтировании на мобильных
-        // Оставляем disableVerticalSwipes активным для предотвращения сворачивания
-        try {
-          const platform = wa?.platform;
-          const isDesktopPlatform = platform && !['android', 'ios'].includes(platform) && (
-            platform === 'tdesktop' || 
-            platform === 'macos' || 
-            platform === 'web' || 
-            platform === 'weba' ||
-            platform === 'windows' ||
-            platform === 'linux'
-          );
-          
-          // Только на десктопе восстанавливаем свайпы
-          if (isDesktopPlatform && typeof wa?.enableVerticalSwipes === 'function') {
-            wa.enableVerticalSwipes();
-          }
-        } catch {}
-      };
-    } catch {}
+    // Важно: управление свайпами централизовано в `useTelegramDisableVerticalSwipes()`.
+    // Дублирующие enable/disable + ретраи на мобильных часто вызывают дерганье скролла/viewport.
+    return;
   }, [isMounted, safeArea.isTelegram]);
 
   if (!isMounted) {

@@ -16,6 +16,13 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
     if (typeof window === 'undefined') return;
 
     const webApp = (window as any).Telegram?.WebApp;
+    // Глобальный гард: fullscreen/expand пытаемся применить только один раз за сессию.
+    // Иначе при навигации/перемонтировании возникают циклы viewport-resize → дерганье свайпов на мобиле.
+    const g = window as any;
+    if (g.__qoqos_tg_fullscreen_init) {
+      return;
+    }
+    g.__qoqos_tg_fullscreen_init = true;
 
     // Добавляем класс на html только для мобильных платформ
     // На десктопе НЕ добавляем telegram-fullscreen, чтобы сохранить компактный режим
@@ -98,7 +105,8 @@ export function TelegramFullScreen({ children }: TelegramFullScreenProps) {
 
     // Первая попытка и несколько повторов
     attempt();
-    const retryIntervals = [100, 300, 600, 1000];
+    // Минимальные ретраи: лишние expand/requestFullscreen на iOS Telegram дают "дёрганье".
+    const retryIntervals = [200, 700];
     retryIntervals.forEach((delay) => {
       setTimeout(() => {
         if (!isFullscreen) attempt();

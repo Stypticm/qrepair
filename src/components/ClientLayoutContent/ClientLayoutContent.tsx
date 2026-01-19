@@ -7,7 +7,6 @@ import { AdaptiveContainer } from '../AdaptiveContainer';
 import { TelegramFullScreen } from '../TelegramFullScreen';
 import { useAppStore } from '@/stores/authStore';
 import { useRequestSync } from '@/hooks/useRequestSync';
-import { useTelegramWindowMode } from '@/app/telegram/telegram-web-view/useTelegramWindowMode';
 import { useTelegramDisableVerticalSwipes } from '@/app/telegram/telegram-web-view/useTelegramDisableVerticalSwipes';
 
 export function ClientLayoutContent({ children }: PropsWithChildren) {
@@ -15,7 +14,6 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
 
   // Запускаем синхронизацию состояния заявки
   useRequestSync();
-  useTelegramWindowMode();
   useTelegramDisableVerticalSwipes();
   
 

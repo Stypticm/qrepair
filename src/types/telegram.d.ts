@@ -15,6 +15,8 @@ declare global {
       show(): void;
       hide(): void;
       onClick(cb: () => void): void;
+      color: string;
+      textColor: string;
     };
 
     BackButton: {
@@ -30,6 +32,13 @@ declare global {
     };
 
     [key: string]: any;
+    onViewportChanged(callback: (event: any) => void): void;
+    offViewportChanged(callback: (event: any) => void): void;
+    onEvent(event: string, callback: (event: any) => void): void;
+    offEvent(event: string, callback: (event: any) => void): void;
+    isVersionAtLeast(version: string): boolean;
+    requestFullscreen(): void;
+    colorScheme: 'light' | 'dark';
   }
 
   interface Window {

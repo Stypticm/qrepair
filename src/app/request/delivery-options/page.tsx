@@ -39,6 +39,8 @@ const DeliveryOptionsPage = () => {
 
     // Определяем размер экрана iPhone
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+        
         const updateScreenSize = () => {
             setScreenSize(getIPhoneScreenSize());
         };

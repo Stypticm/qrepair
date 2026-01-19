@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+'use client';
 
-const tg = (window as any).Telegram?.WebApp;
+import { useEffect, useRef } from "react";
 
 /**
  * Управляет режимом окна Telegram Mini App:
@@ -13,6 +13,9 @@ export function useTelegramWindowMode() {
     const initializedRef = useRef(false);
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const tg = (window as any).Telegram?.WebApp;
         if (!tg || initializedRef.current) return;
         initializedRef.current = true;
 

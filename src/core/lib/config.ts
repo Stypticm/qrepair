@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.192'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.193'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -296,7 +296,7 @@ export function useSafeArea() {
 
       // Обработчик изменений viewport
       if (webApp.onViewportChanged) {
-        webApp.onViewportChanged((event) => {
+        webApp.onViewportChanged((event: { is_expanded: boolean }) => {
           console.log(
             'Viewport changed:',
             event,

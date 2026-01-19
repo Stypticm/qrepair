@@ -1,7 +1,5 @@
 import { useEffect } from "react";
 
-const tg = (window as any).Telegram?.WebApp;
-
 /**
  * Отключает свайп-вниз (vertical swipes) в Telegram Mini App,
  * чтобы пользователь закрывал приложение только через кнопку "Закрыть".
@@ -10,6 +8,9 @@ const tg = (window as any).Telegram?.WebApp;
  */
 export function useTelegramDisableVerticalSwipes() {
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const tg = (window as any).Telegram?.WebApp;
     if (!tg || typeof tg.disableVerticalSwipes !== "function") return;
 
     try {
@@ -19,7 +20,7 @@ export function useTelegramDisableVerticalSwipes() {
     }
 
     return () => {
-      if (typeof tg.enableVerticalSwipes === "function") {
+      if (typeof tg?.enableVerticalSwipes === "function") {
         try {
           tg.enableVerticalSwipes();
         } catch {

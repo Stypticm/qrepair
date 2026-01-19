@@ -1,11 +1,16 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QrCode, Download } from 'lucide-react';
-import { QRCodeCanvas } from 'qrcode.react';
 import { getPictureUrl } from '@/core/lib/assets';
+
+const QRCodeCanvas = dynamic(
+  () => import('qrcode.react').then((m) => m.QRCodeCanvas),
+  { ssr: false }
+);
 
 interface QRCodeGeneratorProps {
   skupkaId: string;
@@ -27,6 +32,8 @@ export function QRCodeGenerator({ skupkaId, pointId, showHeader = true, showId =
   const canvasWrapRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const draw = () => {
       const wrapper = canvasWrapRef.current
       if (!wrapper) return

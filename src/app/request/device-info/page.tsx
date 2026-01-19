@@ -47,6 +47,8 @@ export default function DeviceInfoPage() {
 
     // Навигация стрелкой вверх (ПК) → к секции Выбор
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+        
         const onKey = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement)?.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || (e as any).isComposing) return;

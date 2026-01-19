@@ -384,6 +384,12 @@ export default function EvaluationPage() {
     
     // УБРАЛИ блокировку всех свайпов - теперь свайпы работают внутри приложения
     // Оставляем только базовые стили для Telegram WebApp
+    if (typeof document === 'undefined') {
+      return () => {
+        try { destroy?.(); } catch {}
+      };
+    }
+    
     const prevOverflow = document.body.style.overflow;
     const prevHeight = document.body.style.height;
     document.body.style.overflow = 'auto';
