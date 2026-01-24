@@ -1,4 +1,3 @@
-import type { PropsWithChildren } from 'react';
 import { ReactQueryProvider } from '@/lib/react-query-provider';
 import { I18nProvider } from '@/core/i18n/provider';
 import { Comic_Neue } from 'next/font/google';
@@ -48,9 +47,9 @@ export default function RootLayout({
 
         <ReactQueryProvider>
           <I18nProvider>
-            <ClientLayoutContent>
-              {children}
-            </ClientLayoutContent>
+              <ClientLayoutContent>
+                {children}
+              </ClientLayoutContent>
           </I18nProvider>
         </ReactQueryProvider>
         <Toaster position="top-center" richColors />

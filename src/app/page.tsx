@@ -2,26 +2,31 @@
 
 export const dynamic = 'force-dynamic';
 
-import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { getPictureUrl } from '@/core/lib/assets';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
-import { Menubar, MenubarContent, MenubarItem, MenubarTrigger } from '@/components/ui/menubar';
-import { ExpandButton } from '@/components/ExpandButton';
-import { useSafeArea } from '@/hooks/useSafeArea';
+import { RotatingBanner } from '@/components/RotatingBanner';
+import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
+
 import { useAppStore, isMaster } from '@/stores/authStore';
+
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 import { postEvent } from '@telegram-apps/sdk';
-import { bindViewportCssVars, requestFullscreen, exitFullscreen, isFullscreen } from '@telegram-apps/sdk';
-import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
-import { Smartphone, Wrench, Smartphone as DevicesIcon, Heart, ShoppingCart, Settings } from 'lucide-react';
+import { bindViewportCssVars } from '@telegram-apps/sdk';
+import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings } from 'lucide-react';
 import { useTelegramCloudImages } from '@/hooks/useTelegramCloudImages'
-import { RotatingBanner } from '@/components/RotatingBanner'
+
+import { useNavigation } from './navigation/NavigationProvider';
+import { useKeyboardNavigation } from './navigation/useKeyboardNavigation';
+import { useSwipeNavigation } from './navigation/useSwipeNavigation';
 
 function HomeContent() {
+  useKeyboardNavigation();
+  useSwipeNavigation();
+  const { position } = useNavigation()
+  
   const initDataState = useSignal(_initDataState);
   const {
     setRole,
@@ -38,12 +43,7 @@ function HomeContent() {
   const [isDesktopLike, setIsDesktopLike] = useState(false);
   const [testAdminIndex, setTestAdminIndex] = useState(0);
   const [isGridViewMode, setIsGridViewMode] = useState(false);
-  // Свайповая матрица: (0,0) — центр (главное меню); (0,1) — лента; (1,0) — выбор; (-1,0) — ремонт; (0,-1) — FAQ
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const touchEndRef = useRef<{ x: number; y: number } | null>(null);
-  const navigatingRef = useRef(false);
-  const [instantTransition, setInstantTransition] = useState(false);
+
   const [screenHeight, setScreenHeight] = useState(0);
 
   // Состояние для marketplace
@@ -66,7 +66,6 @@ function HomeContent() {
   const [marketplaceLoading, setMarketplaceLoading] = useState(false);
 
   const router = useRouter();
-  const { forceFullscreen, isFullscreen } = useSafeArea();
   const { getImage } = useTelegramCloudImages();
   const testAdminIds = useMemo(() => ['1', '296925626', '531360988'], []);
 
@@ -432,21 +431,6 @@ function HomeContent() {
     if (savedUsername && !useAppStore.getState().username) setUsername(savedUsername);
   }, [setCurrentStep, setTelegramId, setUsername, addDebugInfo]);
 
-  // Восстановление позиции домашней матрицы (например, вернуться к экрану Выбор)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(window.location.search);
-    const section = params.get('section') || sessionStorage.getItem('homePosition');
-    if (section === 'choice') {
-      setInstantTransition(true);
-      setPosition({ x: 1, y: 0 });
-      // очищаем флаг, чтобы не залипало
-      sessionStorage.removeItem('homePosition');
-      // выключаем мгновенный режим сразу после первого рендера
-      setTimeout(() => setInstantTransition(false), 0);
-    }
-  }, []);
-
   // Мемоизированный массив баннеров для предотвращения перерендеров
   const bannerList = useMemo(() => ['banner.png', 'banner2.png'], []);
 
@@ -493,74 +477,6 @@ function HomeContent() {
     setIsGridViewMode(mode === 'grid');
   }, []);
 
-  // Навигация по матрице
-  const goTo = useCallback((x: number, y: number) => setPosition({ x, y }), []);
-  const goLeft = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: Math.max(-1, p.x - 1), y: p.y })); }, []);
-  const goRight = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: Math.min(1, p.x + 1), y: p.y })); }, []);
-  const goUp = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: p.x, y: Math.max(-1, p.y - 1) })); }, []);
-  const goDown = useCallback(() => { if (navigatingRef.current) return; setPosition((p) => ({ x: p.x, y: Math.min(1, p.y + 1) })); }, []);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartRef.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
-  };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndRef.current = { x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY };
-  };
-  const handleTouchEnd = () => {
-    if (!touchStartRef.current || !touchEndRef.current) return;
-    const dx = touchStartRef.current.x - touchEndRef.current.x;
-    const dy = touchStartRef.current.y - touchEndRef.current.y;
-    const min = 40;
-    const horizontal = Math.abs(dx) > Math.abs(dy);
-    if (navigatingRef.current) { touchStartRef.current = null; touchEndRef.current = null; return; }
-    if (horizontal && Math.abs(dx) > min) {
-      if (dx > 0) goRight(); else goLeft();
-    } else if (!horizontal && Math.abs(dy) > min) {
-      if (dy > 0) goUp(); else goDown();
-    }
-    touchStartRef.current = null; touchEndRef.current = null;
-  };
-
-  // Навигация стрелками на клавиатуре (ПК)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e as any).isComposing) return;
-      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-        e.preventDefault();
-      }
-      if (e.key === 'ArrowLeft') goLeft();
-      if (e.key === 'ArrowRight') goRight();
-      if (e.key === 'ArrowUp') goUp();
-      if (e.key === 'ArrowDown') goDown();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [goLeft, goRight, goUp, goDown]);
-
-  // Действия из экрана выбора: вверх/вниз
-  useEffect(() => {
-    if (navigatingRef.current) return;
-    if (position.x === 1 && position.y === -1) {
-      // Вверх из экрана выбора → ИИ Оценка (только для админов)
-      if (isMaster(userId)) {
-        setCurrentStep('evaluation-mode');
-        try { sessionStorage.setItem('homePosition', 'choice'); } catch { }
-        navigatingRef.current = true;
-        router.push('/request/evaluation-mode');
-      } else {
-        // Возвращаемся на экран выбора и показываем заметку (остаёмся на (1,0))
-        goTo(1, 0);
-      }
-    }
-    if (position.x === 1 && position.y === 1) {
-      // Вниз из экрана выбора → Ручная оценка
-      try { sessionStorage.setItem('homePosition', 'choice'); } catch { }
-      navigatingRef.current = true;
-      router.push('/request/device-info');
-    }
-  }, [position.x, position.y, router, setCurrentStep, userId, goTo]);
-
   if (isInTelegram === null) {
     return (
       <AdaptiveContainer>
@@ -602,16 +518,12 @@ function HomeContent() {
           <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
             <div
               className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen relative overflow-hidden bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
             >
               {/* Панель с секциями */}
               <motion.div
                 className="absolute inset-0"
                 animate={{ x: `${position.x * -100}%`, y: `${position.y * -100}%` }}
                 transition={{
-                  duration: instantTransition ? 0 : 0.5, // Увеличена длительность для плавности
                   ease: [0.25, 0.46, 0.45, 0.94], // Более плавная кривая (iOS-style easing)
                   type: 'tween',
                   stiffness: 100,
@@ -629,8 +541,9 @@ function HomeContent() {
                       <div className="w-full flex justify-center">
                         <RotatingBanner banners={bannerList} interval={5000} screenHeight={screenHeight} />
                       </div>
-                      <div className="mt-6 text-gray-500 text-sm select-none">
-                        Свайпните влево — Ремонт · вправо — Выбор · вверх — FAQ · вниз — Лента
+                      <div className="mt-6 text-gray-500 text-sm text-center select-none">
+                        ← Ремонт · → Оценка<br />
+                        ↑ FAQ · ↓ Лента
                       </div>
                     </div>
                   </div>
@@ -649,34 +562,6 @@ function HomeContent() {
                         onViewModeChange={handleViewModeChange}
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Вверх: FAQ (заглушка) */}
-                <div className="absolute inset-0 grid place-items-center" style={{ transform: 'translateY(-100%)' }}>
-                  <div className="text-center p-6">
-                    <h1 className="text-2xl font-semibold text-gray-900 mb-2">FAQ</h1>
-                    <p className="text-gray-600 text-sm">Раздел в разработке</p>
-                  </div>
-                </div>
-
-                {/* Влево: Ремонт (заглушка) */}
-                <div className="absolute inset-0 grid place-items-center" style={{ transform: 'translateX(-100%)' }}>
-                  <div className="text-center p-6">
-                    <h1 className="text-2xl font-semibold text-gray-900 mb-2">Ремонт</h1>
-                    <p className="text-gray-600 text-sm">Страница появится позже</p>
-                  </div>
-                </div>
-
-                {/* Вправо: Экран выбора */}
-                <div className="absolute inset-0" style={{ transform: 'translateX(100%)' }}>
-                  <div className="h-full flex flex-col items-center justify-center p-6 text-center">
-                    <h1 className="text-2xl font-semibold text-gray-900">Выбор</h1>
-                    <p className="text-gray-600 mt-1">Свайп вверх — ИИ Оценка{!isMaster(userId) ? ' (для админов)' : ''}</p>
-                    <p className="text-gray-600">Свайп вниз — Ручная оценка</p>
-                    {!isMaster(userId) && (
-                      <div className="mt-3 text-xs text-gray-500">ИИ оценка в разработке, доступно администраторам</div>
-                    )}
                   </div>
                 </div>
               </motion.div>

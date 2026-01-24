@@ -259,7 +259,7 @@ export default function DeviceInfoPage() {
     };
 
     return (
-        <Page back={() => router.push('/?section=choice') }>
+        <Page back={() => router.push('/') }>
             <div 
                 className={`w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full justify-center items-center min-h-screen ${telegramUtils.telegramClasses.container}`}
                 data-checking={checking}
