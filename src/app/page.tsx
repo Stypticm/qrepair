@@ -14,18 +14,19 @@ import { useAppStore, isMaster } from '@/stores/authStore';
 import { useSignal, initDataState as _initDataState } from '@telegram-apps/sdk-react';
 import { postEvent } from '@telegram-apps/sdk';
 import { bindViewportCssVars } from '@telegram-apps/sdk';
-import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings } from 'lucide-react';
 import { useTelegramCloudImages } from '@/hooks/useTelegramCloudImages'
 
 import { useNavigation } from './navigation/NavigationProvider';
 import { useKeyboardNavigation } from './navigation/useKeyboardNavigation';
 import { useSwipeNavigation } from './navigation/useSwipeNavigation';
+import MenuComponent from '@/components/Menu/MenuComponent';
+import { SwipeHint } from '@/components/SwipeHint/page';
 
 function HomeContent() {
   useKeyboardNavigation();
   useSwipeNavigation();
   const { position } = useNavigation()
-  
+
   const initDataState = useSignal(_initDataState);
   const {
     setRole,
@@ -43,6 +44,11 @@ function HomeContent() {
   const [testAdminIndex, setTestAdminIndex] = useState(0);
 
   const [screenHeight, setScreenHeight] = useState(0);
+
+  const [showHint, setShowHint] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return sessionStorage.getItem('swipe-hint') !== 'hidden'
+  })
 
   const router = useRouter();
   const { getImage } = useTelegramCloudImages();
@@ -346,34 +352,6 @@ function HomeContent() {
     return '';
   }, [screenHeight]);
 
-  const handleStartForm = useCallback(async () => {
-    try {
-      // Всегда начинаем с выбора способа оценки
-      resetAllStates();
-      // подчистим возможные хвосты
-      sessionStorage.removeItem('currentStep');
-      sessionStorage.removeItem('phoneSelection');
-      sessionStorage.removeItem('priceRange');
-      sessionStorage.removeItem('prefillSelection');
-      setCurrentStep('evaluation-mode');
-      router.push('/request/evaluation-mode');
-    } catch (error) {
-      console.error('Ошибка при переходе:', error);
-      router.push('/request/evaluation-mode');
-    }
-  }, [router, resetAllStates, setCurrentStep]);
-
-  // Мемоизированные обработчики для кнопок
-  const handleRepairClick = useCallback(() => {
-    // Ручной поток оценки: ввод серийного и выбор модели
-    router.push('/request/device-info');
-  }, [router]);
-
-  const handleTestAdminToggle = useCallback(() => {
-    const nextIndex = (testAdminIndex + 1) % testAdminIds.length;
-    setTestAdminIndex(nextIndex);
-  }, [testAdminIndex, testAdminIds.length]);
-
   if (isInTelegram === null) {
     return (
       <AdaptiveContainer>
@@ -434,86 +412,24 @@ function HomeContent() {
               >
                 {/* Центр: Главное меню */}
                 <div className="absolute inset-0 p-4">
-                  <div className="w-full text-center space-y-2 mt-6">
-                    <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
-                      <div className="w-full flex justify-center">
-                        <RotatingBanner banners={bannerList} interval={5000} screenHeight={screenHeight} />
-                      </div>
-                      <div className="mt-6 text-gray-500 text-sm text-center select-none">
-                        ← Ремонт · → Оценка<br />
-                        ↑ FAQ · ↓ Лента
-                      </div>
+                  <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
+                    <div className="w-full flex justify-center">
+                      <RotatingBanner banners={bannerList} interval={5000} screenHeight={screenHeight} />
                     </div>
+                    {position.x === 0 && position.y === 0 && (
+                      <div className="flex flex-1 items-center justify-center pointer-events-none">
+                        <SwipeHint />
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
 
-              {/* Нижнее меню — в центре и в секции Лента */}
+              {/* Подсказка */}
+
+              {/* Нижнее меню — в центре */}
               {(position.x === 0 && (position.y === 0 || position.y === 1)) && (
-                <div className="fixed bottom-4 left-4 right-4 z-50">
-                  <div className="relative"
-                    style={{
-                      // ещё более прозрачное стекло как в iOS
-                      background: "rgba(255, 255, 255, 0.02)",
-                      border: "1px solid rgba(255, 255, 255, 0.22)",
-                      pointerEvents: "auto",
-                    }}
-                  >
-                    {/* Внешняя тень для глубины */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 rounded-full blur-xl"></div>
-
-                    {/* Основной контейнер с многослойностью */}
-                    <div className="relative bg-gradient-to-r from-white/8 via-white/12 to-white/8 backdrop-blur-3xl border border-white/20 rounded-full px-6 py-4 shadow-2xl">
-                      {/* Внутренний градиент для объема */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent rounded-full"></div>
-
-                      {/* Контент меню */}
-                      <div className={`relative max-w-md mx-auto flex ${!isLoading && isMaster(userId) ? 'justify-around' : 'justify-evenly'} items-center`}>
-                        {/* Мои устройства */}
-                        <button
-                          onClick={() => router.push('/my-devices')}
-                          className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white/40 to-white/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-white/50 hover:to-white/30 shadow-lg"
-                          aria-label="Мои устройства"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                          <DevicesIcon className="relative w-6 h-6 text-gray-800 drop-shadow-sm" />
-                        </button>
-
-                        {/* Избранное */}
-                        <button
-                          onClick={() => router.push('/favorites')}
-                          className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white/40 to-white/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-white/50 hover:to-white/30 shadow-lg"
-                          aria-label="Избранное"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                          <Heart className="relative w-6 h-6 text-gray-800 drop-shadow-sm" />
-                        </button>
-
-                        {/* Корзина */}
-                        <button
-                          onClick={() => router.push('/cart')}
-                          className="relative w-12 h-12 rounded-full bg-gradient-to-br from-white/40 to-white/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-white/50 hover:to-white/30 shadow-lg"
-                          aria-label="Корзина"
-                        >
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                          <ShoppingCart className="relative w-6 h-6 text-gray-800 drop-shadow-sm" />
-                        </button>
-
-                        {/* Системная кнопка для админов */}
-                        {!isLoading && isMaster(userId) && (
-                          <button
-                            onClick={() => router.push('/internal')}
-                            className="relative w-12 h-12 rounded-full bg-gradient-to-br from-purple-600/90 to-purple-700/80 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-purple-500/90 hover:to-purple-600/80 shadow-lg"
-                            aria-label="Открыть админ панель"
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                            <Settings className="relative w-6 h-6 text-white drop-shadow-sm" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
               )}
             </div>
           </div>

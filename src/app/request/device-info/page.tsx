@@ -13,6 +13,7 @@ import { WelcomeModal } from '@/components/ui/welcome-modal';
 import { getPictureUrl } from '@/core/lib/assets';
 import { useIPhoneAdaptive } from '@/hooks/useIPhoneAdaptive';
 import { createIMEICheck, parseIMEIDeviceData, saveDeviceDataToDB } from '@/core/lib/imeicheckUtils';
+import { ArrowLeft } from 'lucide-react';
 
 export default function DeviceInfoPage() {
     const {
@@ -260,6 +261,16 @@ export default function DeviceInfoPage() {
 
     return (
         <Page back={() => router.push('/') }>
+            <div className='flex justify-center items-center fixed top-5 right-1/2 left-1/2'>
+                <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => router.back()}
+                    className="p-2 hover:bg-gray-100 rounded-full bg-gray-400"
+                >
+                    <ArrowLeft className="w-10 h-10" />
+                </Button>
+            </div>
             <div 
                 className={`w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full justify-center items-center min-h-screen ${telegramUtils.telegramClasses.container}`}
                 data-checking={checking}

@@ -49,10 +49,6 @@ export const NAV_GRAPH: Record<
   },
 }
 
-/* ===========================
-   HELPERS
-=========================== */
-
 export function routeToPosition(
   route: string,
 ): Position | null {

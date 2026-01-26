@@ -1,9 +1,19 @@
 'use client'
 
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed'
+import { Button } from '@/components/ui/button';
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { ArrowUp } from 'lucide-react'
+import { useRouter } from 'next/navigation';
+import { useNavigation } from '../navigation/NavigationProvider';
+import MenuComponent from '@/components/Menu/MenuComponent';
+import { useAppStore } from '@/stores/authStore';
 
 export default function FeedPage() {
+    const router = useRouter();
+    const { position } = useNavigation()
+    const {userId} = useAppStore();
+
     // Состояние для marketplace
     const [marketplaceItems, setMarketplaceItems] = useState<Array<{
         id: string;
@@ -109,6 +119,16 @@ export default function FeedPage() {
 
     return (
         <div className="w-full h-screen grid place-items-center p-4">
+            <div className='flex justify-center items-center fixed top-5 right-1/2 left-1/2'>
+                <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={() => router.back()}
+                    className="p-2 hover:bg-gray-100 rounded-full bg-gray-400"
+                >
+                    <ArrowUp className="w-10 h-10" />
+                </Button>
+            </div>
             <div className="w-full max-w-[420px] bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/60 p-3">
                 <AdaptiveDeviceFeed
                     items={marketplaceItems}
@@ -119,6 +139,10 @@ export default function FeedPage() {
                     onViewModeChange={handleViewModeChange}
                 />
             </div>
+            {/* Нижнее меню — в центре */}
+            {(position.x === 0 && (position.y === 0 || position.y === 1)) && (
+                <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
+            )}
         </div>
     )
 }

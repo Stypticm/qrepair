@@ -24,11 +24,17 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   const pathname = usePathname()
 
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 })
+
+  const hasMoved = useRef(false)
+  const stack = useRef<string[]>(['/'])
   const navigating = useRef(false)
-  const history = useRef<string[]>([])
 
   /* sync URL → position */
   useEffect(() => {
+    if (!stack.current.includes(pathname)) {
+      stack.current = [pathname]
+    }
+
     const pos = routeToPosition(pathname)
     if (pos) setPosition(pos)
   }, [pathname])
@@ -36,11 +42,13 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
   const move = (direction: Direction) => {
     if (navigating.current) return
 
-    const nextRoute = getNextRoute(pathname, direction)
+    const current = stack.current[stack.current.length - 1]
+    const nextRoute = getNextRoute(current, direction)
     if (!nextRoute) return
 
     navigating.current = true
-    history.current.push(pathname)
+
+    stack.current.push(nextRoute)
 
     const nextPos = NAV_POSITIONS[nextRoute]
     if (nextPos) setPosition(nextPos)
@@ -49,13 +57,22 @@ export function NavigationProvider({ children }: { children: React.ReactNode }) 
 
     setTimeout(() => {
       navigating.current = false
-    }, 350)
+    }, 300)
   }
 
   const goBack = () => {
-    const prev = history.current.pop()
-    if (prev) router.push(prev)
-    else router.back()
+    if (stack.current.length > 1) {
+      stack.current.pop()
+      const prev = stack.current[stack.current.length - 1]
+
+      if (prev === '/') {
+        stack.current = ['/']
+      }
+      router.push(prev)
+    }
+    else {
+      router.back()
+    }
   }
 
   return (
