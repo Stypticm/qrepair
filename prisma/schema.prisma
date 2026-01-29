@@ -94,6 +94,7 @@ model Point {
   workingHours String   @default("10:00 - 22:00")
   name         String   @default("Точка приёма")
   masters      Master[]
+  orders       Order[]  // Заказы с самовывозом
 
   @@schema("public")
 }
@@ -217,6 +218,7 @@ model MarketplaceLot {
   skupka              Skupka?             @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
   cartItems           CartItem[]
   favoriteItems       FavoriteItem[]
+  orderItems          OrderItem[]         // Заказы с этим лотом
   
   @@index([sellerId])
   @@index([status])
@@ -255,6 +257,74 @@ model FavoriteItem {
   
   @@unique([userId, lotId]) // один лот = одна запись в избранном
   @@index([userId])
+  @@index([lotId])
+  @@schema("public")
+}
+
+enum OrderStatus {
+  pending      // ожидает обработки
+  confirmed    // подтвержден
+  in_delivery  // в доставке
+  completed    // завершен
+  cancelled    // отменен
+
+  @@schema("public")
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String      // telegramId
+  
+  // Доставка
+  deliveryMethod  String      // 'courier' | 'pickup'
+  deliveryAddress String?     // для курьера
+  pickupPointId   Int?        // для самовывоза
+  pickupPoint     Point?      @relation(fields: [pickupPointId], references: [id])
+  
+  // Даты
+  deliveryDate    DateTime?
+  deliveryTime    String?
+  
+  // Статус и цена
+  status          OrderStatus @default(pending)
+  totalPrice      Float
+  
+  // Tracking
+  confirmedAt     DateTime?
+  inDeliveryAt    DateTime?
+  completedAt     DateTime?
+  
+  // Курьер (опционально)
+  courierName     String?
+  courierPhone    String?
+  trackingNotes   String?  // заметки админа
+  
+  // Связи
+  items           OrderItem[]
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@schema("public")
+}
+
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  lotId   String
+  
+  // Копируем данные лота на момент покупки
+  title   String
+  price   Float
+  
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lot     MarketplaceLot @relation(fields: [lotId], references: [id])
+
+  @@index([orderId])
   @@index([lotId])
   @@schema("public")
 }

@@ -165,8 +165,10 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                 <button
                   onClick={async () => {
                     if (active && isInCart(active.id)) {
+                      // Если уже в корзине - переходим
                       router.push('/cart')
                     } else {
+                      // Просто добавляем в корзину
                       await addToCart({
                         id: active!.id,
                         title: active!.title,

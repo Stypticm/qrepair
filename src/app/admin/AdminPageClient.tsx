@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BarChart3, Plus } from 'lucide-react';
+import { Users, BarChart3, Plus, ShoppingBag } from 'lucide-react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 
@@ -84,6 +84,13 @@ export function AdminPageClient() {
       color: 'bg-purple-500',
     },
     {
+      id: 'orders',
+      title: 'Заказы',
+      description: 'Управление заказами из магазина',
+      icon: ShoppingBag,
+      color: 'bg-blue-500',
+    },
+    {
       id: 'add-lot',
       title: 'Добавление лота',
       description: 'Создание нового лота с фото и характеристиками',
@@ -97,6 +104,8 @@ export function AdminPageClient() {
       router.push('/admin/masters');
     } else if (sectionId === 'requests') {
       router.push('/admin/requests');
+    } else if (sectionId === 'orders') {
+      router.push('/admin/orders');
     } else if (sectionId === 'add-lot') {
       router.push('/admin/add-lot');
     }

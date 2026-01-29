@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Grid, List, Filter, Search } from "lucide-react";
 import { AceternityDeviceCard } from './AceternityDeviceCard';
 import { SimpleDeviceCard } from './SimpleDeviceCard';
+import { HorizontalScrollCarousel } from './HorizontalScrollCarousel';
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 
@@ -273,95 +274,27 @@ export function AdaptiveDeviceFeed({
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4 }}
           >
-            {/* Индикаторы страниц */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mb-4">
-                {Array.from({ length: totalPages }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToPage(index)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
-                      ? 'bg-[#2dc2c6] shadow-lg shadow-[#2dc2c6]/50 scale-110'
-                      : 'bg-gray-400 hover:bg-gray-300 hover:scale-105'
-                      }`}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Карусель с ручным свайпом */}
-            <div
-              className="relative outline-none flex justify-center w-full mx-auto bg-white/15 backdrop-blur-lg rounded-3xl shadow-3xl border border-white/30 hover:bg-white/20 transition-all duration-500 ring-1 ring-white/20 pb-4 swipe-transition"
-              role="region"
-              aria-label="Карусель устройств"
-              tabIndex={0}
-              data-swipe-container
-              style={{
-                touchAction: 'pan-x pan-y',
-                WebkitOverflowScrolling: 'touch',
-                willChange: 'transform'
-              }}
-              onTouchStart={(e) => {
-                touchStartX.current = e.changedTouches[0].clientX;
-                touchStartY.current = e.changedTouches[0].clientY;
-              }}
-              onTouchMove={(e) => {
-                // Блокируем вертикальный свайп/скролл в пределах карусели, если горизонтальное движение доминирует
-                const x = e.changedTouches[0].clientX;
-                const y = e.changedTouches[0].clientY;
-                if (touchStartX.current != null && touchStartY.current != null) {
-                  const dx = Math.abs(x - touchStartX.current);
-                  const dy = Math.abs(y - touchStartY.current);
-                  if (dx > dy && dx > 8) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }
-              }}
-              onTouchEnd={(e) => {
-                touchEndX.current = e.changedTouches[0].clientX;
-                const endY = e.changedTouches[0].clientY;
-                if (touchStartX.current !== null && touchEndX.current !== null && touchStartY.current !== null) {
-                  const dx = touchEndX.current - touchStartX.current;
-                  const dy = Math.abs(endY - touchStartY.current);
-                  if (Math.abs(dx) > Math.max(30, dy)) {
-                    if (dx < 0) goToNext(); else goToPrevious();
-                  }
-                }
-                touchStartX.current = null;
-                touchStartY.current = null;
-                touchEndX.current = null;
-              }}
-              onWheel={(e) => {
-                const now = Date.now();
-                if (now - lastWheelTs.current < 350) return; // дебаунс
-                lastWheelTs.current = now;
-                if (e.deltaY > 20) goToNext();
-                else if (e.deltaY < -20) goToPrevious();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowRight') goToNext();
-                if (e.key === 'ArrowLeft') goToPrevious();
-              }}
+            {/* Горизонтальный скролл с карточками */}
+            <HorizontalScrollCarousel
+              itemWidth="85vw"
+              gap={16}
+              showArrows={true}
+              showIndicators={true}
             >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -50 }}
-                  transition={{
-                    duration: 0.5, // Увеличена длительность для плавности
-                    ease: [0.25, 0.46, 0.45, 0.94] // Более плавная кривая (iOS-style easing)
-                  }}
-                  className="h-full w-full"
-                  style={{
-                    willChange: 'transform, opacity'
-                  }}
-                >
-                  <SimpleDeviceCard cards={currentItems} isSingle={true} />
-                </motion.div>
-              </AnimatePresence>
+              {displayItems.map((item) => (
+                <SimpleDeviceCard key={item.id} cards={[item]} isSingle={true} />
+              ))}
+            </HorizontalScrollCarousel>
+
+            {/* Кнопка "Все устройства" */}
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={switchToGrid}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+              >
+                <Grid className="w-5 h-5" />
+                Все устройства
+              </button>
             </div>
           </motion.div>
         ) : (

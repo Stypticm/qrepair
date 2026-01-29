@@ -3,13 +3,11 @@ import prisma from '@/core/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    const telegramId = request.headers.get('x-telegram-id')
-
+    let telegramId = request.headers.get('x-telegram-id')
+    
+    // Fallback для браузера (тестирование)
     if (!telegramId) {
-      return NextResponse.json(
-        { error: 'Необходима авторизация' },
-        { status: 401 }
-      )
+      telegramId = 'browser_test_user'
     }
 
     // Получаем корзину пользователя из БД
@@ -61,13 +59,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const telegramId = request.headers.get('x-telegram-id')
-
+    let telegramId = request.headers.get('x-telegram-id')
+    
+    // Fallback для браузера (тестирование)
     if (!telegramId) {
-      return NextResponse.json(
-        { error: 'Необходима авторизация' },
-        { status: 401 }
-      )
+      telegramId = 'browser_test_user'
     }
 
     // Добавление в корзину
