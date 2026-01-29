@@ -2,12 +2,14 @@
 
 export const dynamic = 'force-dynamic';
 
-import { motion } from 'framer-motion';
+// TODO: Uncomment for swipe navigation
+// import { motion } from 'framer-motion';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { RotatingBanner } from '@/components/RotatingBanner';
+import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 
 import { useAppStore, isMaster } from '@/stores/authStore';
 
@@ -16,16 +18,19 @@ import { postEvent } from '@telegram-apps/sdk';
 import { bindViewportCssVars } from '@telegram-apps/sdk';
 import { useTelegramCloudImages } from '@/hooks/useTelegramCloudImages'
 
-import { useNavigation } from './navigation/NavigationProvider';
-import { useKeyboardNavigation } from './navigation/useKeyboardNavigation';
-import { useSwipeNavigation } from './navigation/useSwipeNavigation';
+// TODO: Uncomment for swipe navigation
+// import { useNavigation } from './navigation/NavigationProvider';
+// import { useKeyboardNavigation } from './navigation/useKeyboardNavigation';
+// import { useSwipeNavigation } from './navigation/useSwipeNavigation';
 import MenuComponent from '@/components/Menu/MenuComponent';
-import { SwipeHint } from '@/components/SwipeHint/page';
+// TODO: Uncomment for swipe navigation
+// import { SwipeHint } from '@/components/SwipeHint/page';
 
 function HomeContent() {
-  useKeyboardNavigation();
-  useSwipeNavigation();
-  const { position } = useNavigation()
+  // TODO: Uncomment for swipe navigation
+  // useKeyboardNavigation();
+  // useSwipeNavigation();
+  // const { position } = useNavigation()
 
   const initDataState = useSignal(_initDataState);
   const {
@@ -45,10 +50,33 @@ function HomeContent() {
 
   const [screenHeight, setScreenHeight] = useState(0);
 
-  const [showHint, setShowHint] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return sessionStorage.getItem('swipe-hint') !== 'hidden'
-  })
+  // TODO: Uncomment for swipe navigation
+  // const [showHint, setShowHint] = useState(() => {
+  //   if (typeof window === 'undefined') return false
+  //   return sessionStorage.getItem('swipe-hint') !== 'hidden'
+  // })
+
+  // Marketplace Feed state
+  const [marketplaceItems, setMarketplaceItems] = useState<Array<{
+    id: string;
+    title: string;
+    price: number | null;
+    date: string;
+    cover: string | null;
+    photos: string[];
+    model?: string;
+    storage?: string;
+    color?: string;
+    condition?: string;
+    description?: string;
+  }>>([]);
+  const [marketplaceOffset, setMarketplaceOffset] = useState(0);
+  const marketplaceOffsetRef = useRef(0);
+  const [marketplaceHasMore, setMarketplaceHasMore] = useState(true);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+
+  // ViewMode state для управления видимостью баннера
+  const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
 
   const router = useRouter();
   const { getImage } = useTelegramCloudImages();
@@ -338,6 +366,81 @@ function HomeContent() {
     if (savedUsername && !useAppStore.getState().username) setUsername(savedUsername);
   }, [setCurrentStep, setTelegramId, setUsername, addDebugInfo]);
 
+  // Функция загрузки marketplace данных
+  const loadMoreMarketplaceItems = useCallback(async () => {
+    console.log('Loading marketplace items...');
+    setMarketplaceLoading(true);
+    try {
+      const limit = 12;
+      const currentOffset = marketplaceOffsetRef.current;
+      console.log('Fetching from API with offset:', currentOffset);
+      const res = await fetch(`/api/market/feed?limit=${limit}&offset=${currentOffset}`, { cache: 'no-store' });
+      const data = await res.json();
+      console.log('API response:', data);
+      if (!res.ok) throw new Error(data?.error || 'Failed to load feed');
+
+      const newItems = Array.isArray(data.items) ? data.items : [];
+      console.log('New items loaded:', newItems.length);
+      setMarketplaceItems((prev) => {
+        const updated = [...prev, ...newItems];
+        console.log('Total items after update:', updated.length);
+        return updated;
+      });
+      const nextOffset = currentOffset + (newItems.length || 0);
+      marketplaceOffsetRef.current = nextOffset;
+      setMarketplaceOffset(nextOffset);
+      setMarketplaceHasMore(false);
+    } catch (e) {
+      console.error('Feed load error', e);
+      setMarketplaceHasMore(false);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  }, []);
+
+  // Функция обновления marketplace данных (для автообновления)
+  const refreshMarketplaceItems = useCallback(async () => {
+    setMarketplaceLoading(true);
+    try {
+      const limit = 12;
+      const res = await fetch(`/api/market/feed?limit=${limit}&offset=0`, { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to refresh feed');
+
+      const newItems = Array.isArray(data.items) ? data.items : [];
+      setMarketplaceItems(newItems);
+      marketplaceOffsetRef.current = newItems.length;
+      setMarketplaceOffset(newItems.length);
+      setMarketplaceHasMore(false);
+    } catch (e) {
+      console.error('Feed refresh error', e);
+    } finally {
+      setMarketplaceLoading(false);
+    }
+  }, []);
+
+  // Загружаем данные при инициализации
+  useEffect(() => {
+    if (!isLoading && marketplaceItems.length === 0 && marketplaceOffsetRef.current === 0 && !marketplaceLoading) {
+      loadMoreMarketplaceItems();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, marketplaceItems.length, marketplaceLoading]);
+
+  // Слушатель для автообновления после добавления лота
+  useEffect(() => {
+    const handleLotAdded = () => {
+      console.log('Lot added, refreshing marketplace...');
+      refreshMarketplaceItems();
+    };
+
+    window.addEventListener('lotAdded', handleLotAdded);
+
+    return () => {
+      window.removeEventListener('lotAdded', handleLotAdded);
+    };
+  }, [refreshMarketplaceItems]);
+
   // Мемоизированный массив баннеров для предотвращения перерендеров
   const bannerList = useMemo(() => ['banner.png', 'banner2.png'], []);
 
@@ -386,21 +489,41 @@ function HomeContent() {
     }
   }
 
+
   return (
     <AdaptiveContainer>
       <div className={`${isDesktopLike ? 'flex justify-center' : ''}`}>
         <div className="w-full max-w-[420px]">
           <div className={`${isDesktopLike ? 'max-h-[900px] overflow-auto' : ''}`}>
             <div
-              className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen relative overflow-hidden bg-gradient-to-b from-white to-gray-50 pt-2 box-border`}
+              className={`w-full ${isDesktopLike ? 'max-w-[520px]' : 'max-w-[480px]'} mx-auto min-h-screen bg-gradient-to-b from-white to-gray-50 pt-2 pb-24 px-4 box-border`}
             >
-              {/* Панель с секциями */}
-              <motion.div
+              {/* Баннер - показывается только в режиме carousel (Рекомендации) */}
+              {viewMode === 'carousel' && (
+                <div className="w-full flex justify-center mb-6">
+                  <RotatingBanner banners={bannerList} interval={5000} screenHeight={screenHeight} />
+                </div>
+              )}
+
+              {/* Feed */}
+              <div className="w-full">
+                <AdaptiveDeviceFeed
+                  items={marketplaceItems}
+                  isLoading={marketplaceLoading}
+                  onLoadMore={loadMoreMarketplaceItems}
+                  hasMore={marketplaceHasMore}
+                  mode="auto"
+                  onViewModeChange={setViewMode}
+                />
+              </div>
+
+              {/* TODO: Uncomment for swipe navigation */}
+              {/* <motion.div
                 className="absolute inset-0"
                 animate={{ x: `${position.x * -100}%`, y: `${position.y * -100}%` }}
                 transition={{
                   duration: 0.5,
-                  ease: [0.25, 0.46, 0.45, 0.94], // Более плавная кривая (iOS-style easing)
+                  ease: [0.25, 0.46, 0.45, 0.94],
                   type: 'tween',
                   stiffness: 100,
                   damping: 20
@@ -410,7 +533,6 @@ function HomeContent() {
                   touchAction: 'pan-x pan-y'
                 }}
               >
-                {/* Центр: Главное меню */}
                 <div className="absolute inset-0 p-4">
                   <div className={`flex flex-col ${adaptiveGap} ${adaptivePadding} w-full h-full`}>
                     <div className="w-full flex justify-center">
@@ -423,18 +545,15 @@ function HomeContent() {
                     )}
                   </div>
                 </div>
-              </motion.div>
-
-              {/* Подсказка */}
-
-              {/* Нижнее меню — в центре */}
-              {(position.x === 0 && (position.y === 0 || position.y === 1)) && (
-                <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
-              )}
+              </motion.div> */}
             </div>
           </div>
-        </div >
+        </div>
       </div>
+
+      {/* Нижнее меню */}
+      {/* TODO: Uncomment condition for swipe navigation: (position.x === 0 && (position.y === 0 || position.y === 1)) && */}
+      <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
     </AdaptiveContainer >
   );
 }

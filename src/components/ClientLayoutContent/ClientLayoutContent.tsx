@@ -14,12 +14,12 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
   useTelegramDisableVerticalSwipes()
 
   return (
-    <NavigationProvider>
-      <NavigationEffects />
-      <div id="app-root">
-        <AdaptiveContainer>{children}</AdaptiveContainer>
-      </div>
-    </NavigationProvider>
+    // <NavigationProvider>
+    //   <NavigationEffects />
+    // </NavigationProvider>
+    <div id="app-root">
+      <AdaptiveContainer>{children}</AdaptiveContainer>
+    </div>
   )
 }
 

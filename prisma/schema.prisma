@@ -6,6 +6,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["public", "auth"]
 }
 
 model Skupka {
@@ -66,6 +67,9 @@ model Skupka {
 
   // связи
   inspections DeviceInspection[]
+  marketplaceLot MarketplaceLot?
+
+  @@schema("public")
 }
 
 model Master {
@@ -80,6 +84,8 @@ model Master {
   inspections      DeviceInspection[]
   point            Point?             @relation(fields: [pointId], references: [id])
   assignedRequests Skupka[]
+
+  @@schema("public")
 }
 
 model Point {
@@ -88,6 +94,8 @@ model Point {
   workingHours String   @default("10:00 - 22:00")
   name         String   @default("Точка приёма")
   masters      Master[]
+
+  @@schema("public")
 }
 
 model DeviceInspection {
@@ -107,6 +115,7 @@ model DeviceInspection {
   @@index([skupkaId])
   @@index([masterUsername])
   @@index([inspectionToken])
+  @@schema("public")
 }
 
 model Device {
@@ -129,6 +138,7 @@ model Device {
   @@index([country])
   @@index([simType])
   @@index([basePrice])
+  @@schema("public")
 }
 
 model MarketPrice {
@@ -152,6 +162,7 @@ model MarketPrice {
   @@index([parsedAt])
   @@index([price])
   @@index([source, deviceId])
+  @@schema("public")
 }
 
 enum SkupkaStatus {
@@ -163,4 +174,87 @@ enum SkupkaStatus {
   completed
   submitted
   inspected
+
+  @@schema("public")
+}
+
+enum MarketplaceLotStatus {
+  draft       // черновик
+  available   // доступен для покупки
+  reserved    // зарезервирован
+  sold        // продан
+  archived    // архивирован
+
+  @@schema("public")
+}
+
+model MarketplaceLot {
+  id           String   @id @default(cuid())
+  skupkaId     String?  @unique // связь с заявкой (опционально)
+  title        String
+  model        String?
+  storage      String?
+  color        String?
+  condition    String?
+  description  String?
+  price        Float
+  photos       String[] // массив URL
+  coverPhoto   String?  // обложка
+  
+  status       MarketplaceLotStatus @default(available)
+  
+  sellerId     String   // telegramId продавца
+  sellerName   String?
+  
+  viewsCount   Int      @default(0)
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  publishedAt  DateTime?
+  soldAt       DateTime?
+  
+  // Связи
+  skupka              Skupka?             @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
+  cartItems           CartItem[]
+  favoriteItems       FavoriteItem[]
+  
+  @@index([sellerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([price])
+  @@schema("public")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String   // telegramId пользователя
+  lotId     String
+  quantity  Int      @default(1)
+  
+  addedAt   DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Связи
+  lot       MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, lotId]) // один лот = одна запись в корзине на пользователя
+  @@index([userId])
+  @@index([lotId])
+  @@schema("public")
+}
+
+model FavoriteItem {
+  id        String   @id @default(cuid())
+  userId    String   // telegramId пользователя
+  lotId     String
+  
+  addedAt   DateTime @default(now())
+  
+  // Связи
+  lot       MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, lotId]) // один лот = одна запись в избранном
+  @@index([userId])
+  @@index([lotId])
+  @@schema("public")
 }
