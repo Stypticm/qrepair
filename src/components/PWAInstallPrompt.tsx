@@ -67,6 +67,7 @@ export const PWAInstallPrompt = () => {
 
   return (
     <>
+      {/* Debug Info Overlay */}
       <div className="fixed bottom-20 left-4 z-50 bg-black/80 text-white p-2 rounded text-xs opacity-50 hover:opacity-100 pointer-events-none">
         <p>iOS: {isIOS ? 'Yes' : 'No'}</p>
         <p>Standalone: {isStandalone ? 'Yes' : 'No'}</p>
@@ -121,7 +122,7 @@ export const PWAInstallPrompt = () => {
                     <span className="flex items-center justify-center w-6 h-6 bg-white rounded-md shadow-sm text-gray-700">
                       <PlusSquare size={14} />
                     </span>
-                    <span>Выберите «На экран "Домой"»</span>
+                    <span>Выберите «На экран &quot;Домой&quot;»</span>
                   </div>
                 </div>
               ) : (
