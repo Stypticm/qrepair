@@ -44,19 +44,61 @@
     height: 100%;
     overflow-x: hidden;
     scroll-behavior: smooth;
+    /* Плавность для свайпов */
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    /* Оптимизация для плавных свайпов */
+    touch-action: pan-y;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-family: -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      Oxygen,
+      Ubuntu,
+      Cantarell,
+      'Fira Sans',
+      'Droid Sans',
+      'Helvetica Neue',
+      sans-serif;
     background-color: #ffffff !important;
     color: var(--foreground);
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Плавные свайпы для каруселей и интерактивных элементов */
+  [data-swipe-container] {
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+    will-change: transform;
+  }
+
+  /* Плавные переходы для свайпов - iOS-style плавность */
+  .swipe-transition {
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+  }
+
+  /* Дополнительная оптимизация для плавных свайпов */
+  [data-swipe-container] * {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Оптимизация для элементов с touch событиями */
+  [onTouchStart],
+  [onTouchMove],
+  [onTouchEnd] {
+    touch-action: manipulation;
   }
 
   /* Утилиты для управления скроллом */
@@ -92,11 +134,9 @@
   } */
 
   /* Скрытие BottomSheet Telegram */
-  .tg-bottom-sheet,
-  .tg-webapp-container {
-    display: none !important;
-    visibility: hidden !important;
-  }
+  .tg-bottom-sheet {
+  display: none !important;
+}
 
   /* Скрываем только основные элементы Telegram UI */
   .tg-bottom-sheet {
@@ -105,9 +145,10 @@
 
   /* ... ваши стили для кнопок, форм, диалогов остаются ... */
 
-  /* Фиксированный размер для ПК */
+  /* Фиксированный размер для ПК - ТОЛЬКО когда НЕ в Telegram WebView */
+  /* Применяем стили только если нет класса telegram-fullscreen */
   @media (min-width: 1024px) {
-    html {
+    html:not(.telegram-fullscreen) {
       height: 100vh;
       display: flex;
       justify-content: center;
@@ -117,13 +158,13 @@
       overflow: visible;
     }
 
-    body {
+    html:not(.telegram-fullscreen) body {
       height: auto;
       max-height: 90vh;
       overflow: visible;
     }
 
-    #__next {
+    html:not(.telegram-fullscreen) #__next {
       width: 100%;
       max-width: 480px;
       min-height: 600px;
@@ -135,9 +176,9 @@
     }
   }
 
-  /* Мобильные */
+  /* Мобильные - ТОЛЬКО когда НЕ в Telegram WebView */
   @media (max-width: 1023px) {
-    #__next {
+    html:not(.telegram-fullscreen) #__next {
       width: 100%;
       max-width: 480px;
       min-height: 600px;
@@ -148,6 +189,55 @@
       overflow: hidden;
       background: #ffffff !important;
     }
+  }
+
+  /* Для Telegram WebView на десктопе - компактный режим (размер телефона) */
+  /* Не расширяем на весь экран, показываем как будто размер телефона */
+  /* Используем только telegram-desktop, БЕЗ telegram-fullscreen */
+  html.telegram-desktop {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f0f0f0;
+    overflow: visible;
+  }
+
+  html.telegram-desktop body {
+    height: auto;
+    max-height: 90vh;
+    overflow: visible;
+  }
+
+  html.telegram-desktop #__next {
+    width: 100%;
+    max-width: 480px;
+    min-height: 600px;
+    max-height: 844px;
+    border-radius: 32px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    background: #ffffff !important;
+  }
+
+  /* Для Telegram WebView на мобильных - fullscreen */
+  html.telegram-fullscreen.telegram-mobile {
+    height: 100vh;
+    width: 100vw;
+  }
+
+  html.telegram-fullscreen.telegram-mobile body {
+    height: 100vh;
+    width: 100vw;
+  }
+
+  html.telegram-fullscreen.telegram-mobile #__next {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   /* iPhone-адаптивные стили для Telegram Mini App */
@@ -254,4 +344,19 @@
       overflow-y: auto;
     }
   }
+}
+
+/* 🔒 Telegram Desktop: ЗАПРЕЩАЕМ fullscreen viewport */
+html.telegram-desktop {
+  height: auto !important;
+}
+
+html.telegram-desktop body {
+  height: auto !important;
+}
+
+html.telegram-desktop #__next {
+  min-height: unset !important;
+  height: auto !important;
+  max-height: 844px;
 }

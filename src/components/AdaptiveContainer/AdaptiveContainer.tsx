@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { mountSwipeBehavior, disableVerticalSwipes } from '@telegram-apps/sdk';
+// Убрали импорт SDK методов для свайпов - используем прямой доступ к Telegram WebApp API
 import Image from 'next/image';
 import { useSafeArea } from '@/hooks/useSafeArea';
 
@@ -34,22 +34,13 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
     checkDevice();
   }, [isMounted, safeArea]);
 
-  // Глобально отключаем вертикальный свайп в Telegram Mini App на уровне контейнера
+  // Управление свайпами в зависимости от платформы
   useEffect(() => {
     if (!isMounted) return;
     if (!safeArea.isTelegram) return;
-    try {
-      if ((mountSwipeBehavior as any)?.isAvailable?.()) {
-        mountSwipeBehavior();
-      }
-      const apply = () => {
-        try { (disableVerticalSwipes as any)?.isAvailable?.() && disableVerticalSwipes(); } catch {}
-      };
-      apply();
-      const t1 = setTimeout(apply, 300);
-      const t2 = setTimeout(apply, 1000);
-      return () => { clearTimeout(t1); clearTimeout(t2); };
-    } catch {}
+    // Важно: управление свайпами централизовано в `useTelegramDisableVerticalSwipes()`.
+    // Дублирующие enable/disable + ретраи на мобильных часто вызывают дерганье скролла/viewport.
+    return;
   }, [isMounted, safeArea.isTelegram]);
 
   if (!isMounted) {
@@ -86,13 +77,20 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
 
     if (isDesktop) {
       return {
-        container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-        main: 'w-[390px] h-[844px] overflow-hidden my-auto-center',
-        wrapper: 'w-[390px] h-[844px] mx-auto p-0',
+        // В Telegram Desktop заполняем весь webview, без внутренних рамок и фоновых полей
+        container: 'w-full h-full flex flex-col items-stretch justify-stretch bg-transparent',
+        main: 'w-full h-full overflow-hidden',
+        wrapper: 'w-full h-full',
       };
     } else {
+      // Для десктопа - НЕ добавляем telegram-fullscreen класс
+      // Проверяем платформу
+      const isDesktop = typeof window !== 'undefined' && 
+        (window as any).Telegram?.WebApp?.platform &&
+        !['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
+      
       return {
-        container: `min-h-dvh w-full flex flex-col bg-white telegram-fullscreen`,
+        container: `min-h-dvh w-full flex flex-col bg-white ${isDesktop ? '' : 'telegram-fullscreen'}`,
         main: 'flex-1 w-full',
         wrapper: 'w-full',
       };

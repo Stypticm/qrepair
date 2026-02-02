@@ -38,6 +38,9 @@ export default function AdditionalConditionPage() {
     } = useAppStore();
     const router = useRouter();
     const { goBack } = useStepNavigation();
+    const isClient =
+        typeof window !== 'undefined' &&
+        typeof document !== 'undefined';
 
     // Устанавливаем текущий шаг при загрузке страницы
     useEffect(() => {
@@ -83,6 +86,8 @@ export default function AdditionalConditionPage() {
     useEffect(() => {
         const loadData = async () => {
             // 1. Попытка восстановить из sessionStorage
+            if (typeof window === 'undefined') return;
+
             const savedInSession = sessionStorage.getItem('deviceConditions');
             if (savedInSession) {
                 try {
@@ -170,6 +175,7 @@ export default function AdditionalConditionPage() {
 
     // Функция расчета цены с учетом дополнительных условий
     const calculatePriceWithAdditionalConditions = useCallback(async () => {
+        if (!isClient) return;
         try {
             // Получаем базовую цену с fallback механизмом
             const basePrice = await getBasePriceWithFallback(modelname);
@@ -234,6 +240,8 @@ export default function AdditionalConditionPage() {
     // Обработчики диалогового окна
     const handleContinue = () => {
         setShowDialog(false);
+        if (!isClient) return;
+        if (typeof document === 'undefined') return;
         // Принудительно закрываем диалог в DOM и убираем backdrop
         setTimeout(() => {
             const dialogs = document.querySelectorAll('[role="dialog"]');
@@ -313,7 +321,11 @@ export default function AdditionalConditionPage() {
         }
 
         // Вибрация при выборе
-        if ('vibrate' in navigator) {
+        if (
+            typeof window !== 'undefined' &&
+            typeof navigator !== 'undefined' &&
+            'vibrate' in navigator
+        ) {
             navigator.vibrate(50);
         }
 
@@ -339,8 +351,6 @@ export default function AdditionalConditionPage() {
 
             // Сразу устанавливаем флаг изменений для мгновенного показа диалога
             setHasChanges(true);
-
-
 
             // Сохраняем в sessionStorage для быстрого восстановления
             if (typeof window !== 'undefined') {

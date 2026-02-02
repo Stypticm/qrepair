@@ -35,7 +35,7 @@ export function DeviceCarousel({ items, isLoading, onLoadMore, hasMore }: Device
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Показываем по 6 карточек за раз (2 ряда по 3)
   const itemsPerPage = 6;
   const totalPages = Math.ceil(items.length / itemsPerPage);
@@ -118,15 +118,14 @@ export function DeviceCarousel({ items, isLoading, onLoadMore, hasMore }: Device
                 <button
                   key={index}
                   onClick={() => goToPage(index)}
-                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                    index === currentIndex ? 'bg-[#2dc2c6]' : 'bg-gray-300'
-                  }`}
+                  className={`w-2 h-2 rounded-full transition-colors duration-200 ${index === currentIndex ? 'bg-[#2dc2c6]' : 'bg-gray-300'
+                    }`}
                 />
               ))}
             </div>
           )}
         </div>
-        
+
         {totalPages > 1 && (
           <div className="flex gap-2">
             <button

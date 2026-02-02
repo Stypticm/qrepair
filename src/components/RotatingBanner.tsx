@@ -16,32 +16,32 @@ interface RotatingBannerProps {
 // iPhone-адаптивные размеры баннеров как у carousel
 const getBannerDimensions = (screenWidth: number, screenHeight: number = 844) => {
   // Принцип 80/20: 20% CSS-подхода дают 80% стабильности как у carousel
-  
+
   // Адаптивность по высоте экрана для компактности
   const heightMultiplier = screenHeight > 900 ? 0.7 : screenHeight > 850 ? 0.8 : 1.0;
-  
+
   // Простая логика высоты как у carousel карточек - только высота, ширина через CSS
   if (screenWidth <= 375) {
-    return { 
+    return {
       containerHeight: Math.round(250 * heightMultiplier)
     };
   } else if (screenWidth <= 390) {
-    return { 
+    return {
       containerHeight: Math.round(270 * heightMultiplier)
     };
   } else if (screenWidth <= 420) {
-    return { 
+    return {
       containerHeight: Math.round(290 * heightMultiplier)
     };
   } else {
-    return { 
+    return {
       containerHeight: Math.round(310 * heightMultiplier)
     };
   }
 };
 
-export function RotatingBanner({ 
-  banners, 
+export function RotatingBanner({
+  banners,
   interval = 4000, // 4 секунды - оптимально для восприятия
   className = '',
   screenHeight = 844
@@ -51,7 +51,7 @@ export function RotatingBanner({
   const [isVisible, setIsVisible] = useState(true);
   const { getImage } = useTelegramCloudImages();
   const { isMobile, isDesktop } = useSafeArea();
-  
+
   // Получаем ширину экрана для iPhone-адаптивности
   const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
 
@@ -63,7 +63,7 @@ export function RotatingBanner({
     if (banners.length <= 1) return;
 
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
+      setCurrentIndex((prevIndex) =>
         prevIndex === banners.length - 1 ? 0 : prevIndex + 1
       );
     }, interval);
@@ -108,7 +108,7 @@ export function RotatingBanner({
 
 
   return (
-    <div 
+    <div
       className={`relative overflow-hidden rounded-2xl w-full max-w-sm mx-auto ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -122,7 +122,7 @@ export function RotatingBanner({
         willChange: 'opacity'
       }}
     >
-      <div 
+      <div
         className="w-full h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
         style={{
           // Только высота фиксированная
@@ -133,17 +133,17 @@ export function RotatingBanner({
           <motion.div
             key={currentIndex}
             initial={{ opacity: 0 }}
-            animate={{ 
+            animate={{
               opacity: 1,
-              transition: { 
-                duration: 0.3, 
+              transition: {
+                duration: 0.3,
                 ease: "easeOut"
               }
             }}
-            exit={{ 
+            exit={{
               opacity: 0,
-              transition: { 
-                duration: 0.2, 
+              transition: {
+                duration: 0.2,
                 ease: "easeIn"
               }
             }}
@@ -155,7 +155,7 @@ export function RotatingBanner({
               width={400}
               height={400}
               className="w-full h-full object-contain object-center"
-              style={{ 
+              style={{
                 imageRendering: 'auto',
                 // Оптимизация для iPhone
                 WebkitTransform: 'translateZ(0)',
@@ -164,7 +164,7 @@ export function RotatingBanner({
               priority={currentIndex === 0} // Приоритет для первого баннера
               quality={85} // Оптимальное качество для мобильных
             />
-            
+
             {/* Индикатор прогресса с iPhone-адаптивным дизайном */}
             {banners.length > 1 && !isHovered && isVisible && (
               <motion.div
@@ -177,10 +177,10 @@ export function RotatingBanner({
                   className="h-full bg-white/60 rounded-full"
                   initial={{ width: "0%" }}
                   animate={{ width: "100%" }}
-                  transition={{ 
-                    duration: interval / 1000, 
+                  transition={{
+                    duration: interval / 1000,
                     ease: "linear",
-                    repeat: Infinity 
+                    repeat: Infinity
                   }}
                 />
               </motion.div>
@@ -192,9 +192,8 @@ export function RotatingBanner({
                 {banners.map((_, index) => (
                   <div
                     key={index}
-                    className={`w-1 h-1 rounded-full transition-all duration-300 ${
-                      index === currentIndex ? 'bg-white/80' : 'bg-white/40'
-                    }`}
+                    className={`w-1 h-1 rounded-full transition-all duration-300 ${index === currentIndex ? 'bg-white/80' : 'bg-white/40'
+                      }`}
                   />
                 ))}
               </div>
@@ -215,7 +214,7 @@ export function useBannerRotation(banners: string[], interval: number = 4000) {
     if (banners.length <= 1 || isPaused) return;
 
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => 
+      setCurrentIndex((prevIndex) =>
         prevIndex === banners.length - 1 ? 0 : prevIndex + 1
       );
     }, interval);
@@ -226,13 +225,13 @@ export function useBannerRotation(banners: string[], interval: number = 4000) {
   const pause = useCallback(() => setIsPaused(true), []);
   const resume = useCallback(() => setIsPaused(false), []);
   const goToNext = useCallback(() => {
-    setCurrentIndex((prevIndex) => 
+    setCurrentIndex((prevIndex) =>
       prevIndex === banners.length - 1 ? 0 : prevIndex + 1
     );
   }, [banners.length]);
 
   const goToPrevious = useCallback(() => {
-    setCurrentIndex((prevIndex) => 
+    setCurrentIndex((prevIndex) =>
       prevIndex === 0 ? banners.length - 1 : prevIndex - 1
     );
   }, [banners.length]);

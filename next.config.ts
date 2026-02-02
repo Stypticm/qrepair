@@ -27,6 +27,16 @@ const nextConfig: NextConfig = {
         hostname: 'sources.imeicheck.net',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'store.storeimages.cdn-apple.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'as-images.apple.com',
+        pathname: '/**',
+      },
     ],
   },
 

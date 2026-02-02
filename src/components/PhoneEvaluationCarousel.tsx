@@ -310,8 +310,15 @@ export function PhoneEvaluationCarousel({
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ 
+              duration: 0.5, // Увеличена длительность для плавности
+              ease: [0.25, 0.46, 0.45, 0.94] // Более плавная кривая (iOS-style easing)
+            }}
             className="absolute inset-0 flex items-center justify-center p-8"
+            style={{
+              touchAction: 'pan-x pan-y',
+              willChange: 'transform, opacity'
+            }}
             onTouchStart={(e) => {
               const touch = e.touches[0];
               const startX = touch.clientX;

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 
 // Версия приложения - автоматически обновляется скриптом update-version.js
 export const appVersion =
-  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.178'
+  process.env.NEXT_PUBLIC_APP_VERSION || '1.4.198'
 
 // Функция для получения версии с автоматическим увеличением
 export const getAutoVersion = () => {
@@ -50,7 +50,7 @@ export function useSafeArea() {
         return
       }
 
-      (webApp as any)._isRequestingFullscreen = true
+      ;(webApp as any)._isRequestingFullscreen = true
 
       console.log(
         'Attempting to request fullscreen at',
@@ -117,10 +117,34 @@ export function useSafeArea() {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
 
-      // Добавляем CSS-класс для корневого элемента
-      document.documentElement.classList.add(
-        'telegram-fullscreen'
-      )
+      // Добавляем класс для определения платформы Telegram
+      const platform = webApp.platform
+      const isMobilePlatform =
+        platform === 'android' || platform === 'ios'
+      const isDesktopPlatform =
+        !isMobilePlatform &&
+        (platform === 'tdesktop' ||
+          platform === 'macos' ||
+          platform === 'web' ||
+          platform === 'weba' ||
+          platform === 'windows' ||
+          platform === 'linux')
+
+      // Добавляем CSS-классы в зависимости от платформы
+      // На мобильных - fullscreen класс (для fullscreen режима)
+      // На десктопе - НЕ добавляем fullscreen класс (компактный режим)
+      if (isMobilePlatform) {
+        document.documentElement.classList.add(
+          'telegram-fullscreen',
+          'telegram-mobile'
+        )
+      } else if (isDesktopPlatform) {
+        // На десктопе - НЕ добавляем telegram-fullscreen, только telegram-desktop
+        // Это позволит CSS стилям ограничить размер окна
+        document.documentElement.classList.add(
+          'telegram-desktop'
+        )
+      }
 
       const setup = async () => {
         try {
@@ -152,73 +176,53 @@ export function useSafeArea() {
             Object.keys(webApp)
           )
 
-          // Способ 1: Множественные вызовы expand
-          console.log(
-            'Calling webApp.expand() multiple times...'
-          )
-          if (isMobilePlatform) webApp.expand()
-
-          // Способ 2: Проверяем fullscreen поддержку
-          const supportsFullscreen =
-            webApp.isVersionAtLeast('8.0')
-          console.log(
-            'Fullscreen support:',
-            supportsFullscreen
-          )
-
-          // Способ 3: Если поддерживается, пробуем fullscreen
-          if (
-            supportsFullscreen &&
-            'requestFullscreen' in webApp
-          ) {
-            console.log('Attempting requestFullscreen...')
-            try {
-              if (isMobilePlatform)
+          // Для мобильных - fullscreen (на весь экран телефона)
+          // Для десктопа - НЕ вызываем expand/requestFullscreen (компактный режим)
+          if (isMobilePlatform) {
+            const supportsFullscreen =
+              webApp.isVersionAtLeast('8.0') && 'requestFullscreen' in webApp
+            
+            console.log('Mobile platform detected, expanding to fullscreen...')
+            
+            // Вызываем expand() и requestFullscreen() сразу (без задержек)
+            webApp.expand()
+            
+            if (supportsFullscreen) {
+              try {
                 webApp.requestFullscreen?.()
-            } catch (error) {
-              console.error(
-                'requestFullscreen failed:',
-                error
-              )
+              } catch (error) {
+                console.error('requestFullscreen failed:', error)
+              }
+            }
+            
+            // Дополнительные ретраи для надежности (как в болванке)
+            const retryDelays = [120, 300, 700]
+            retryDelays.forEach((delay: number) => {
+              setTimeout(() => {
+                webApp.expand()
+                if (supportsFullscreen) {
+                  try {
+                    webApp.requestFullscreen?.()
+                  } catch (error) {
+                    console.error(`requestFullscreen failed at ${delay}ms:`, error)
+                  }
+                }
+              }, delay)
+            })
+          } else {
+            // Для десктопа - компактный режим (не вызываем expand/requestFullscreen)
+            console.log('Desktop platform detected, keeping compact mode')
+            
+            // На десктопе - ВКЛЮЧАЕМ свайпы для работы на тачпаде
+            if (typeof (webApp as any).enableVerticalSwipes === 'function') {
+              try {
+                (webApp as any).enableVerticalSwipes()
+                console.log('Desktop: enableVerticalSwipes applied for touchpad support')
+              } catch (error) {
+                console.error('enableVerticalSwipes failed on desktop:', error)
+              }
             }
           }
-
-          // Способ 4: Принудительно expand каждые 100ms в течение 2 секунд
-          const expandInterval = setInterval(() => {
-            console.log('Forcing expand...')
-            if (isMobilePlatform) webApp.expand()
-          }, 100)
-
-          // Останавливаем интервал через 2 секунды
-          setTimeout(() => {
-            clearInterval(expandInterval)
-            console.log('Stopped forced expand interval')
-          }, 2000)
-
-          // Способ 5: Дополнительные попытки с задержками
-          const delays = [500, 1000, 1500, 2000, 2500, 3000]
-          delays.forEach((delay: number) => {
-            setTimeout(() => {
-              console.log(`Retry expand at ${delay}ms...`)
-              if (isMobilePlatform) webApp.expand()
-
-              // Если поддерживается fullscreen, пробуем снова
-              if (
-                supportsFullscreen &&
-                'requestFullscreen' in webApp
-              ) {
-                try {
-                  if (isMobilePlatform)
-                    webApp.requestFullscreen?.()
-                } catch (error) {
-                  console.error(
-                    `requestFullscreen failed at ${delay}ms:`,
-                    error
-                  )
-                }
-              }
-            }, delay)
-          })
 
           // Устанавливаем цвета
           webApp.headerColor = '#2dc2c6'
@@ -292,7 +296,7 @@ export function useSafeArea() {
 
       // Обработчик изменений viewport
       if (webApp.onViewportChanged) {
-        webApp.onViewportChanged((event) => {
+        webApp.onViewportChanged((event: { is_expanded: boolean }) => {
           console.log(
             'Viewport changed:',
             event,
@@ -301,33 +305,28 @@ export function useSafeArea() {
           )
           setIsFullscreen(event.is_expanded || false)
 
-          // ПРИНУДИТЕЛЬНО expand если viewport не развернут (только мобильные)
+          // Разворачиваем если viewport не развернут (только мобильные)
           if (!event.is_expanded) {
-            console.log(
-              'Viewport not expanded, FORCING expand...'
-            )
             const platform = webApp.platform
             const isMobilePlatform =
               platform === 'android' || platform === 'ios'
-            if (isMobilePlatform) webApp.expand()
-
-            // Если поддерживается fullscreen, пробуем снова
-            if (
-              webApp.isVersionAtLeast('8.0') &&
-              'requestFullscreen' in webApp
-            ) {
-              try {
-                const platform2 = webApp.platform
-                const isMobilePlatform2 =
-                  platform2 === 'android' ||
-                  platform2 === 'ios'
-                if (isMobilePlatform2)
+            
+            if (isMobilePlatform) {
+              console.log('Viewport not expanded, FORCING expansion...')
+              webApp.expand()
+              
+              if (
+                webApp.isVersionAtLeast('8.0') &&
+                'requestFullscreen' in webApp
+              ) {
+                try {
                   webApp.requestFullscreen?.()
-              } catch (error) {
-                console.error(
-                  'requestFullscreen failed in viewport handler:',
-                  error
-                )
+                } catch (error) {
+                  console.error(
+                    'requestFullscreen failed in viewport handler:',
+                    error
+                  )
+                }
               }
             }
           }
@@ -347,26 +346,41 @@ export function useSafeArea() {
           )
           setIsFullscreen(event.isFullscreen)
 
-          // ПРИНУДИТЕЛЬНО expand если не в fullscreen
+          // ПРИНУДИТЕЛЬНО expand если не в fullscreen (только для мобильных)
+          // На десктопе - НЕ разворачиваем, оставляем компактный режим
           if (!event.isFullscreen) {
-            console.log(
-              'Not in fullscreen, FORCING expand...'
+            const platform = webApp.platform
+            const isMobilePlatform =
+              platform === 'android' || platform === 'ios'
+            const isDesktopPlatform = !isMobilePlatform && (
+              platform === 'tdesktop' ||
+              platform === 'macos' ||
+              platform === 'web' ||
+              platform === 'weba' ||
+              platform === 'windows' ||
+              platform === 'linux'
             )
-            webApp.expand()
 
-            // Если поддерживается fullscreen, пробуем снова
-            if (
-              webApp.isVersionAtLeast('8.0') &&
-              'requestFullscreen' in webApp
-            ) {
-              try {
-                webApp.requestFullscreen?.()
-              } catch (error) {
-                console.error(
-                  'requestFullscreen failed in fullscreen handler:',
-                  error
-                )
+            if (isMobilePlatform) {
+              console.log('Not in fullscreen, FORCING expansion...')
+              webApp.expand()
+
+              if (
+                webApp.isVersionAtLeast('8.0') &&
+                'requestFullscreen' in webApp
+              ) {
+                try {
+                  webApp.requestFullscreen?.()
+                } catch (error) {
+                  console.error(
+                    'requestFullscreen failed in fullscreen handler:',
+                    error
+                  )
+                }
               }
+            } else if (isDesktopPlatform) {
+              // На десктопе - НЕ разворачиваем, оставляем компактный режим
+              console.log('Desktop: keeping compact mode, not expanding')
             }
           }
         }
@@ -379,11 +393,29 @@ export function useSafeArea() {
             new Date().toISOString()
           )
 
-          // ПРИНУДИТЕЛЬНО expand если fullscreen не удался
-          console.log(
-            'Fullscreen failed, FORCING expand...'
+          // ПРИНУДИТЕЛЬНО expand если fullscreen не удался (только для мобильных)
+          // На десктопе - НЕ разворачиваем, оставляем компактный режим
+          const platform = webApp.platform
+          const isMobilePlatform =
+            platform === 'android' || platform === 'ios'
+          const isDesktopPlatform = !isMobilePlatform && (
+            platform === 'tdesktop' ||
+            platform === 'macos' ||
+            platform === 'web' ||
+            platform === 'weba' ||
+            platform === 'windows' ||
+            platform === 'linux'
           )
-          webApp.expand()
+
+          if (isMobilePlatform) {
+            console.log(
+              'Fullscreen failed, FORCING expand...'
+            )
+            webApp.expand()
+          } else if (isDesktopPlatform) {
+            // На десктопе - НЕ разворачиваем, оставляем компактный режим
+            console.log('Desktop: fullscreen failed, keeping compact mode')
+          }
         }
 
         webApp.onEvent(
@@ -429,9 +461,11 @@ export function useSafeArea() {
               themeChangedHandler
             )
           }
-          // Удаляем CSS-класс при размонтировании
+          // Удаляем CSS-классы при размонтировании
           document.documentElement.classList.remove(
-            'telegram-fullscreen'
+            'telegram-fullscreen',
+            'telegram-mobile',
+            'telegram-desktop'
           )
         }
       }

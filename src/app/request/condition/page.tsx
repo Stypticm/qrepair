@@ -56,6 +56,7 @@ export default function ConditionPage() {
         price,
     } = useAppStore()
     const router = useRouter()
+    const isClient = typeof window !== 'undefined';
 
     const [hasChanges, setHasChanges] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
@@ -158,15 +159,16 @@ export default function ConditionPage() {
         return null
     }, [basePrice, deviceConditions, price])
 
-    const priceFormatter = useMemo(
-        () =>
-            new Intl.NumberFormat('ru-RU', {
-                style: 'currency',
-                currency: 'RUB',
-                maximumFractionDigits: 0,
-            }),
-        []
-    )
+    const priceFormatter = useMemo(() => {
+        if (typeof window === 'undefined') return null
+
+        return new Intl.NumberFormat('ru-RU', {
+            style: 'currency',
+            currency: 'RUB',
+            maximumFractionDigits: 0,
+        })
+    }, [])
+
 
     const isReadyToContinue = useMemo(
         () => !!deviceConditions.front && !!deviceConditions.back && !!deviceConditions.side,
@@ -196,6 +198,8 @@ export default function ConditionPage() {
 
     // IntersectionObserver to update preview by scroll visibility (virtualized-like behavior)
     useEffect(() => {
+        if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
+
         const root = optionsScrollRef.current
         if (!root) return
 
@@ -407,7 +411,7 @@ export default function ConditionPage() {
     }
 
     const handleConditionSelect = (type: SurfaceKey, conditionId: string) => {
-        if ('vibrate' in navigator) {
+        if (isClient && 'vibrate' in navigator) {
             navigator.vibrate(50)
         }
         setHasUserInteracted(true)
@@ -667,57 +671,57 @@ export default function ConditionPage() {
                                     onScroll={updateScrollHint}
                                     className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:max-h-[460px] lg:overflow-y-auto lg:pr-6"
                                 >
-                                {currentOptions.map((option) => {
-                                    const optionLabel = getConditionText(option.id)
-                                    const isSelected = deviceConditions[activeSurface] === optionLabel
-                                    const penaltyLabel = option.penalty === 0 ? '0%' : `${option.penalty}%`
-                                    const imageSrc = getPictureUrl(`${option.image}.png`)
-                                    return (
-                                        <button
-                                            key={option.id}
-                                            type="button"
-                                            onClick={() => handleConditionSelect(activeSurface, option.id)}
-                                            onMouseEnter={() => setPreviewOptionId(option.id)}
-                                            ref={(el) => {
-                                                optionRefs.current[option.id] = el
-                                            }}
-                                            data-option-id={option.id}
-                                            className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 ${isSelected
-                                                ? 'border-slate-900 bg-slate-900 text-white shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]'
-                                                : 'border-white/70 bg-white text-slate-900 shadow-sm hover:border-slate-200 hover:shadow-md'
-                                                }`}
-                                        >
-                                            <div className="relative flex flex-col items-center gap-3 px-3 py-4">
-                                                <div
-                                                    className={`relative flex h-28 w-full items-center justify-center overflow-hidden rounded-2xl border transition ${isSelected ? 'border-white/30 bg-white/10' : 'border-slate-200 bg-slate-100'
-                                                        }`}
-                                                >
-                                                    <Image
-                                                        src={imageSrc}
-                                                        alt={optionLabel}
-                                                        width={200}
-                                                        height={200}
-                                                        className="h-full w-full object-contain"
-                                                    />
-                                                    <span
-                                                        className={`absolute left-3 top-3 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
+                                    {currentOptions.map((option) => {
+                                        const optionLabel = getConditionText(option.id)
+                                        const isSelected = deviceConditions[activeSurface] === optionLabel
+                                        const penaltyLabel = option.penalty === 0 ? '0%' : `${option.penalty}%`
+                                        const imageSrc = getPictureUrl(`${option.image}.png`)
+                                        return (
+                                            <button
+                                                key={option.id}
+                                                type="button"
+                                                onClick={() => handleConditionSelect(activeSurface, option.id)}
+                                                onMouseEnter={() => setPreviewOptionId(option.id)}
+                                                ref={(el) => {
+                                                    optionRefs.current[option.id] = el
+                                                }}
+                                                data-option-id={option.id}
+                                                className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 ${isSelected
+                                                    ? 'border-slate-900 bg-slate-900 text-white shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]'
+                                                    : 'border-white/70 bg-white text-slate-900 shadow-sm hover:border-slate-200 hover:shadow-md'
+                                                    }`}
+                                            >
+                                                <div className="relative flex flex-col items-center gap-3 px-3 py-4">
+                                                    <div
+                                                        className={`relative flex h-28 w-full items-center justify-center overflow-hidden rounded-2xl border transition ${isSelected ? 'border-white/30 bg-white/10' : 'border-slate-200 bg-slate-100'
                                                             }`}
                                                     >
-                                                        {penaltyLabel}
-                                                    </span>
+                                                        <Image
+                                                            src={imageSrc}
+                                                            alt={optionLabel}
+                                                            width={200}
+                                                            height={200}
+                                                            className="h-full w-full object-contain"
+                                                        />
+                                                        <span
+                                                            className={`absolute left-3 top-3 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
+                                                                }`}
+                                                        >
+                                                            {penaltyLabel}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p
+                                                            className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-900'
+                                                                }`}
+                                                        >
+                                                            {optionLabel}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="text-center">
-                                                    <p
-                                                        className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-900'
-                                                            }`}
-                                                    >
-                                                        {optionLabel}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </button>
-                                    )
-                                })}
+                                            </button>
+                                        )
+                                    })}
                                 </div>
                                 {showScrollHint && (
                                     <div className="pointer-events-none absolute inset-y-6 right-[-10px] hidden lg:flex">
@@ -739,12 +743,16 @@ export default function ConditionPage() {
                                     {totalPenalty > 0 ? `+${totalPenalty}%` : `${totalPenalty}%`}
                                 </span>
                                 {estimatedPrice ? (
-                                    <span className="text-sm text-slate-500">{priceFormatter.format(estimatedPrice)}</span>
+                                    <span className="text-sm text-slate-500">{priceFormatter && estimatedPrice
+                                        ? priceFormatter.format(estimatedPrice)
+                                        : null}</span>
                                 ) : null}
                             </div>
                             {basePrice && estimatedPrice ? (
                                 <p className="mt-2 text-xs text-slate-500">
-                                    ╨С╨░╨╖╨╛╨▓╨░╤П ╤Ж╨╡╨╜╨░: {priceFormatter.format(basePrice)}
+                                    ╨С╨░╨╖╨╛╨▓╨░╤П ╤Ж╨╡╨╜╨░: {priceFormatter && estimatedPrice
+                                        ? priceFormatter.format(estimatedPrice)
+                                        : null}
                                 </p>
                             ) : null}
                         </div>
@@ -787,7 +795,9 @@ export default function ConditionPage() {
                         <div className="mt-3 flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 text-sm">
                             <span className="text-slate-500">╨Ш╤В╨╛╨│╨╛╨▓╨░╤П ╤Ж╨╡╨╜╨░</span>
                             <span className="font-semibold text-slate-900">
-                                {priceFormatter.format(estimatedPrice)}
+                                {priceFormatter && estimatedPrice
+                                    ? priceFormatter.format(estimatedPrice)
+                                    : null}
                             </span>
                         </div>
                     ) : null}

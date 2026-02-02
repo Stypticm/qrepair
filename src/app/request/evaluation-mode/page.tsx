@@ -76,6 +76,8 @@ export default function EvaluationModePage() {
 
   // Перехват системной кнопки браузера "назад" → на главную (секция Выбор)
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const handlePopState = () => {
       window.location.replace('/?section=choice');
     };
@@ -85,6 +87,8 @@ export default function EvaluationModePage() {
 
   // Навигация клавишами (ПК): ArrowDown → к секции Выбор
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || (e as any).isComposing) return;

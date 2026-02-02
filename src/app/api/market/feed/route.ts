@@ -13,77 +13,31 @@ export async function GET(request: NextRequest) {
       0
     )
 
-    // Получаем лоты из таблицы Skupka через Prisma
-    const items = await prisma.skupka.findMany({
+    // Получаем лоты из таблицы MarketplaceLot
+    const items = await prisma.marketplaceLot.findMany({
       where: {
-        status: 'paid', // Только оплаченные заявки
-        NOT: {
-          photoUrls: {
-            isEmpty: true,
-          },
-        },
+        status: 'available', // Только доступные лоты
       },
       orderBy: {
         createdAt: 'desc',
       },
       take: limit,
       skip: offset,
-      select: {
-        id: true,
-        modelname: true,
-        price: true,
-        createdAt: true,
-        photoUrls: true,
-        userEvaluation: true,
-        comment: true,
-      },
     })
 
     const feed = items.map((item) => {
-      // Разбираем modelname на компоненты: "iPhone 15 Pro 256GB Красный"
-      const modelParts = (item.modelname || '').split(' ')
-      let model = ''
-      let storage = ''
-      let color = ''
-
-      if (modelParts.length >= 3) {
-        // Ищем GB в строке для определения storage
-        const gbIndex = modelParts.findIndex((part) =>
-          part.includes('GB')
-        )
-        if (gbIndex > 0) {
-          model = modelParts.slice(0, gbIndex).join(' ')
-          storage = modelParts[gbIndex]
-          color = modelParts.slice(gbIndex + 1).join(' ')
-        } else {
-          // Fallback: берем первые 2 части как модель, остальное как цвет
-          model = modelParts.slice(0, 2).join(' ')
-          color = modelParts.slice(2).join(' ')
-        }
-      } else {
-        model = item.modelname || 'Модель не указана'
-      }
-
       return {
         id: item.id,
-        title: item.modelname || 'Модель не указана',
+        title: item.title,
         price: item.price,
         date: item.createdAt.toISOString(),
-        cover:
-          Array.isArray(item.photoUrls) &&
-          item.photoUrls.length > 0
-            ? item.photoUrls[0]
-            : null,
-        // Все фото для галереи
-        photos: Array.isArray(item.photoUrls)
-          ? item.photoUrls
-          : [],
-        // Разбитые поля для плиток
-        model: model,
-        storage: storage,
-        color: color,
-        condition: item.userEvaluation || 'Отличное', // Получаем из БД
-        description: item.comment,
+        cover: item.coverPhoto,
+        photos: item.photos || [],
+        model: item.model,
+        storage: item.storage,
+        color: item.color,
+        condition: item.condition || 'Отличное',
+        description: item.description,
       }
     })
 

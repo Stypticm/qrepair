@@ -79,7 +79,7 @@ export function useCart() {
               'x-telegram-id': telegramId,
             },
             body: JSON.stringify({
-              requestId: item.id,
+              lotId: item.id,
               action: 'add',
             }),
           })
@@ -113,7 +113,7 @@ export function useCart() {
               'x-telegram-id': telegramId,
             },
             body: JSON.stringify({
-              requestId: itemId,
+              lotId: itemId,
               action: 'remove',
             }),
           })
