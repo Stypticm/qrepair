@@ -313,10 +313,25 @@ function HomeContent() {
         return inTelegram;
       };
 
+      // Проверка на PWA / Standalone режим
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+
       // Первая проверка сразу
       let inTelegram = checkTelegram();
 
-      // Если не определили, ждем немного и проверяем снова (SDK может инициализироваться с задержкой)
+      // Оптимизация: Если это точно PWA или обычный браузер (нет следов Телеграма), не ждем
+      if (!inTelegram && (isStandalone || !(window as any).Telegram)) {
+        setIsInTelegram(false);
+        setIsLoading(false);
+
+        addDebugInfo('Браузерный режим (PWA/Browser) - быстрая загрузка');
+        const testId = testAdminIds[testAdminIndex];
+        setTelegramId(testId);
+        setRole('master', parseInt(testId));
+        return;
+      }
+
+      // Если не определили сразу, ждем немного (только для случаев, когда может быть Телеграм)
       if (!inTelegram) {
         setTimeout(() => {
           inTelegram = checkTelegram();
