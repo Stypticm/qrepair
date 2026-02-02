@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { RotatingBanner } from '@/components/RotatingBanner';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
+import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 
 import { useAppStore, isMaster } from '@/stores/authStore';
 
@@ -474,20 +475,9 @@ function HomeContent() {
   }
 
   // Не редиректим сразу - даем время на инициализацию
-  // Редирект произойдет только если после всех проверок точно не в Telegram
-  if (isInTelegram === false && !isLoading) {
-    // Дополнительная проверка перед редиректом
-    const finalCheck = typeof window !== 'undefined' && (
-      !!(window as any).Telegram?.WebApp ||
-      !!(window as any).TelegramWebviewProxy ||
-      document.cookie.split('; ').some(row => row.startsWith('_initData='))
-    );
+  // Редирект убран для поддержки браузерного режима
+  // if (isInTelegram === false && !isLoading) { ... }
 
-    if (!finalCheck) {
-      router.push('/telegram');
-      return null;
-    }
-  }
 
 
   return (
@@ -554,6 +544,9 @@ function HomeContent() {
       {/* Нижнее меню */}
       {/* TODO: Uncomment condition for swipe navigation: (position.x === 0 && (position.y === 0 || position.y === 1)) && */}
       <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
+
+      {/* PWA Prompt only for mobile browsers */}
+      <PWAInstallPrompt />
     </AdaptiveContainer >
   );
 }
