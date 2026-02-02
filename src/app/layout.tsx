@@ -10,6 +10,8 @@ import 'normalize.css/normalize.css';
 import './globals.css';
 import { TelegramInit } from '@/components/TelegramInit';
 
+import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
+
 const comicNeue = Comic_Neue({
   subsets: ['latin'],
   weight: ['400', '700'],
@@ -44,12 +46,13 @@ export default function RootLayout({
       </head>
       <body style={{ backgroundColor: '#ffffff' }}>
         <TelegramInit />
+        <ServiceWorkerRegister />
 
         <ReactQueryProvider>
           <I18nProvider>
-              <ClientLayoutContent>
-                {children}
-              </ClientLayoutContent>
+            <ClientLayoutContent>
+              {children}
+            </ClientLayoutContent>
           </I18nProvider>
         </ReactQueryProvider>
         <Toaster position="top-center" richColors />
