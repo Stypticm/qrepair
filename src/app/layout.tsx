@@ -12,12 +12,35 @@ import { TelegramInit } from '@/components/TelegramInit';
 
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 
+import { type Metadata, type Viewport } from 'next';
+
 const comicNeue = Comic_Neue({
   subsets: ['latin'],
   weight: ['400', '700'],
   display: 'swap',
   preload: true,
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#ffffff',
+};
+
+export const metadata: Metadata = {
+  title: 'Qoqos',
+  description: 'Qoqos - Выкуп смартфонов',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/submit.png?v=2', // Cache busted
+  },
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'mobile-web-app-capable': 'yes',
+  }
+};
 
 export default function RootLayout({
   children,
@@ -27,22 +50,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="description" content="Qoqos - Выкуп смартфонов" />
-        <meta name="theme-color" content="#ffffff" />
-
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
         />
-
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="apple-touch-icon" href="/submit.png" />
       </head>
       <body style={{ backgroundColor: '#ffffff' }}>
         <TelegramInit />
