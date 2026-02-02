@@ -114,7 +114,7 @@ export const PWAInstallPrompt = () => {
                   <span className="flex items-center justify-center w-6 h-6 bg-white rounded-md shadow-sm text-gray-700">
                     <PlusSquare size={14} />
                   </span>
-                  <span>Выберите «На экран "Домой"»</span>
+                  <span>Выберите «На экран &quot;Домой&quot;»</span>
                 </div>
               </div>
             ) : (
