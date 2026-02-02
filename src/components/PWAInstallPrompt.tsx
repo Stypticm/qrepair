@@ -29,7 +29,7 @@ export const PWAInstallPrompt = () => {
 
     if (isIOSDevice) {
       // For iOS, show prompt after a delay if not already shown this session
-      const hasSeenPrompt = sessionStorage.getItem('pwa_prompt_seen');
+      const hasSeenPrompt = localStorage.getItem('pwa_prompt_seen');
       if (!hasSeenPrompt) {
         const timer = setTimeout(() => setShowPrompt(true), 3000);
         return () => clearTimeout(timer);
@@ -39,7 +39,7 @@ export const PWAInstallPrompt = () => {
       const handleBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
         setDeferredPrompt(e);
-        const hasSeenPrompt = sessionStorage.getItem('pwa_prompt_seen');
+        const hasSeenPrompt = localStorage.getItem('pwa_prompt_seen');
         if (!hasSeenPrompt) {
           setShowPrompt(true);
         }
@@ -63,7 +63,7 @@ export const PWAInstallPrompt = () => {
 
   const handleClose = () => {
     setShowPrompt(false);
-    sessionStorage.setItem('pwa_prompt_seen', 'true');
+    localStorage.setItem('pwa_prompt_seen', 'true');
   };
 
   return (

@@ -29,7 +29,7 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="description" content="Qoqos - Выкуп смартфонов" />
-        <meta name="theme-color" content="#2dc2c6" />
+        <meta name="theme-color" content="#ffffff" />
 
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
@@ -42,7 +42,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="apple-touch-icon" href="/logo2.png" />
+        <link rel="apple-touch-icon" href="/submit.png" />
       </head>
       <body style={{ backgroundColor: '#ffffff' }}>
         <TelegramInit />
