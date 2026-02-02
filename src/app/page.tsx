@@ -545,8 +545,8 @@ function HomeContent() {
       {/* TODO: Uncomment condition for swipe navigation: (position.x === 0 && (position.y === 0 || position.y === 1)) && */}
       <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
 
-      {/* PWA Prompt only for mobile browsers */}
-      <PWAInstallPrompt />
+      {/* PWA Prompt only for mobile browsers (not in Telegram) */}
+      {!isInTelegram && <PWAInstallPrompt />}
     </AdaptiveContainer >
   );
 }
