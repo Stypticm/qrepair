@@ -287,7 +287,9 @@ function HomeContent() {
 
       // Функция проверки Telegram с несколькими способами
       const checkTelegram = () => {
-        const hasTelegramWebApp = !!(window as any).Telegram?.WebApp;
+        const tg = (window as any).Telegram?.WebApp;
+        // Важно: проверяем платформу, так как скрипт загружается везде, но platform='unknown' в браузере
+        const hasTelegramWebApp = !!tg && tg.platform && tg.platform !== 'unknown';
         const hasTelegramWebviewProxy = !!(window as any).TelegramWebviewProxy;
 
         // Дополнительная проверка через initData в cookies (Telegram передает это)
@@ -302,7 +304,7 @@ function HomeContent() {
 
         const inTelegram = hasTelegramWebApp || hasTelegramWebviewProxy || hasInitData || hasTelegramParams;
 
-        addDebugInfo(`hasTelegramWebApp: ${hasTelegramWebApp}`);
+        addDebugInfo(`hasTelegramWebApp: ${hasTelegramWebApp} (platform: ${tg?.platform})`);
         addDebugInfo(`hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`);
         addDebugInfo(`hasInitData: ${hasInitData}`);
         addDebugInfo(`hasTelegramParams: ${hasTelegramParams}`);
