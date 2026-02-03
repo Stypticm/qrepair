@@ -12,6 +12,7 @@ export async function GET(req: Request) {
         }
 
         const webhookUrl = `${BASE_URL}/api/telegram/webhook`;
+        console.log('Webhook URL:', webhookUrl);
         
         // Construct the Telegram API URL
         // Note: drop_pending_updates=true ensures we don't get flooded with old messages if any
