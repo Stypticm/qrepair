@@ -82,10 +82,11 @@ export function getTelegramCloudImage(
   }
 
   // Проверяем доступность Telegram Cloud Storage
-  if (
-    typeof window !== 'undefined' &&
-    (window as any).Telegram?.WebApp?.CloudStorage
-  ) {
+  // CloudStorage introduced in 6.9
+  if (typeof window !== 'undefined') {
+    const webApp = (window as any).Telegram?.WebApp;
+    // Check version
+    if (webApp && webApp.isVersionAtLeast && webApp.isVersionAtLeast('6.9') && webApp.CloudStorage) {
     try {
       // Получаем изображение из Cloud Storage
       const cloudStorage = (window as any).Telegram.WebApp
@@ -108,7 +109,8 @@ export function getTelegramCloudImage(
         error
       )
     }
-  }
+    } // End of version check
+  } // End of window check
 
   // Fallback на локальные файлы
   return getPictureUrl(fileName)
@@ -119,10 +121,9 @@ export async function uploadImageToTelegramCloud(
   fileName: string,
   imageData: string
 ): Promise<boolean> {
-  if (
-    typeof window !== 'undefined' &&
-    (window as any).Telegram?.WebApp?.CloudStorage
-  ) {
+  if (typeof window !== 'undefined') {
+    const webApp = (window as any).Telegram?.WebApp;
+    if (webApp && webApp.isVersionAtLeast && webApp.isVersionAtLeast('6.9') && webApp.CloudStorage) {
     try {
       const cloudStorage = (window as any).Telegram.WebApp
         .CloudStorage
@@ -135,7 +136,8 @@ export async function uploadImageToTelegramCloud(
       )
       return false
     }
-  }
+    } // End of version check
+  } // End of window check
   return false
 }
 

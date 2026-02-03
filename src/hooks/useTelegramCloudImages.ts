@@ -12,10 +12,12 @@ export function useTelegramCloudImages() {
 
   // Проверяем доступность Telegram Cloud Storage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hasCloudStorage =
-        (window as any).Telegram?.WebApp?.CloudStorage !==
-        undefined
+    if (typeof window !== 'undefined') { // Updated check
+      const webApp = (window as any).Telegram?.WebApp;
+      // CloudStorage was introduced in Bot API 6.9
+      const isSupportedVersion = webApp?.isVersionAtLeast ? webApp.isVersionAtLeast('6.9') : false;
+      const hasCloudStorage = isSupportedVersion && webApp?.CloudStorage !== undefined;
+
       setIsCloudAvailable(hasCloudStorage)
 
       if (hasCloudStorage) {

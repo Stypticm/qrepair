@@ -13,7 +13,7 @@ export const LoginQRModal = ({ isOpen, onClose }: LoginQRModalProps) => {
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-sm p-0 bg-white rounded-3xl overflow-hidden aria-describedby={undefined}">
                 <DialogTitle className="sr-only">Вход в Telegram через QR-код</DialogTitle>
-                <TelegramQRLogin />
+                <TelegramQRLogin onSuccess={onClose} />
             </DialogContent>
         </Dialog>
     );

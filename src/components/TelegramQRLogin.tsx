@@ -4,14 +4,25 @@ import { useEffect, useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAppStore } from '@/stores/authStore';
 
-export const TelegramQRLogin = () => {
+export const TelegramQRLogin = ({ onSuccess }: { onSuccess?: () => void }) => {
     const [uuid, setUuid] = useState<string | null>(null);
     const [status, setStatus] = useState<'loading' | 'pending' | 'success' | 'expired' | 'error'>('loading');
     const [botUsername, setBotUsername] = useState<string>('');
     const pollInterval = useRef<NodeJS.Timeout | null>(null);
-    const { initializeTelegram } = useAppStore();
+    const { initializeTelegram, telegramId } = useAppStore(); // Get telegramId to check if already logged in
 
     const [errorDetails, setErrorDetails] = useState<string>('');
+
+    // If we are already logged in via polling or store update
+    useEffect(() => {
+        if (status === 'success' && onSuccess) {
+            const timer = setTimeout(() => {
+                onSuccess();
+            }, 2000); // Close after 2 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [status, onSuccess]);
+
 
     // 1. Initial Auth Request Creation
     useEffect(() => {
