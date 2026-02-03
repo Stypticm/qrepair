@@ -120,16 +120,13 @@ export const DesktopHeader = () => {
                                 </button>
                             </div>
                         ) : (
-                            <div className="hidden md:flex items-center gap-2">
-                                <MemoizedTelegramLoginButton />
-                                <button
-                                    onClick={() => setIsLoginQRModalOpen(true)}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-full transition-all active:scale-95"
-                                    title="Вход по QR-коду"
-                                >
-                                    <QrCode size={20} />
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setIsLoginQRModalOpen(true)}
+                                className="flex items-center gap-2 bg-[#2ba6e1] hover:bg-[#2595ca] text-white px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 group"
+                            >
+                                <QrCode size={20} className="group-hover:scale-110 transition-transform" />
+                                <span className="font-semibold">Войти через QR</span>
+                            </button>
                         )}
 
                         <button

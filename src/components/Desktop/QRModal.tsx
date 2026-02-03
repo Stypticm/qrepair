@@ -1,6 +1,6 @@
 'use client';
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { QRCodeSVG as QRCode } from 'qrcode.react';
 
 interface QRModalProps {
@@ -11,7 +11,8 @@ interface QRModalProps {
 export const QRModal = ({ isOpen, onClose }: QRModalProps) => {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-sm p-8 bg-white rounded-3xl">
+            <DialogContent className="max-w-sm p-8 bg-white rounded-3xl aria-describedby={undefined}">
+                <DialogTitle className="sr-only">Сканируйте QR-код для оценки</DialogTitle>
                 <div className="text-center font-sans">
                     <div className="bg-white p-2 rounded-xl mb-4 mx-auto flex items-center justify-center">
                         <QRCode
