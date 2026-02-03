@@ -65,6 +65,33 @@ fs.writeFileSync(configPath, content)
 console.log(
   `✅ Версия обновлена: ${currentVersion} → ${newVersion} (${updateType})`
 )
+// -----------------------------------------------------------------------------
+// Обновляем public/sw.js
+// -----------------------------------------------------------------------------
+const swPath = path.join(__dirname, '../public/sw.js')
+if (fs.existsSync(swPath)) {
+  let swContent = fs.readFileSync(swPath, 'utf8')
+  
+  // Заменяем const CACHE_NAME = 'qoqos-cache-v...'
+  // Используем новую версию, заменяя точки на дефисы для безопасности
+  const safeVersion = newVersion.replace(/\./g, '-')
+  const newCacheName = `qoqos-cache-v${safeVersion}`
+  
+  const swMatch = swContent.match(/const CACHE_NAME = '([^']+)'/)
+  if (swMatch) {
+    swContent = swContent.replace(
+      /const CACHE_NAME = '[^']+'/,
+      `const CACHE_NAME = '${newCacheName}'`
+    )
+    fs.writeFileSync(swPath, swContent)
+    console.log(`📝 Service Worker обновлен: ${swPath} (Cache: ${newCacheName})`)
+  } else {
+    console.warn('⚠️ Cache name not found in sw.js')
+  }
+} else {
+    console.warn('⚠️ public/sw.js not found')
+}
+
 console.log(`📝 Файл обновлен: ${configPath}`)
 console.log(`\n📋 Использование:`)
 console.log(
