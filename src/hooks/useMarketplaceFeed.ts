@@ -25,7 +25,7 @@ export const useMarketplaceFeed = () => {
             setMarketplaceItems((prev) => {
                 // Determine uniqueness by id to avoid duplicates if any
                 const existingIds = new Set(prev.map(i => i.id));
-                const uniqueNewItems = newItems.filter(i => !existingIds.has(i.id));
+                const uniqueNewItems = newItems.filter((i: DeviceCard) => !existingIds.has(i.id));
                 return [...prev, ...uniqueNewItems];
             });
             const nextOffset = currentOffset + (newItems.length || 0);
