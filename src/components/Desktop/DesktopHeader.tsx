@@ -8,8 +8,16 @@ import { useAppStore } from '@/stores/authStore';
 import { TelegramLoginButton } from '@/components/TelegramLoginButton';
 
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { QRModal } from './QRModal';
+
+// Memoized wrapper for the login button to prevent re-loading script on route changes
+const MemoizedTelegramLoginButton = memo(() => (
+    <div className="hidden md:flex">
+        <TelegramLoginButton />
+    </div>
+));
+MemoizedTelegramLoginButton.displayName = 'MemoizedTelegramLoginButton';
 
 export const DesktopHeader = () => {
     const { username, userPhotoUrl, telegramId } = useAppStore();
@@ -42,9 +50,6 @@ export const DesktopHeader = () => {
                         <span className="font-bold text-2xl tracking-tight text-gray-900 group-hover:opacity-80 transition-opacity">
                             Qoqos
                         </span>
-                        {/* <span className="ml-2 px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider">
-                            Market
-                        </span> */}
                     </Link>
 
                     {/* Navigation */}
@@ -112,9 +117,7 @@ export const DesktopHeader = () => {
                                 </button>
                             </div>
                         ) : (
-                            <div className="hidden md:flex">
-                                <TelegramLoginButton />
-                            </div>
+                            <MemoizedTelegramLoginButton />
                         )}
 
                         <button
