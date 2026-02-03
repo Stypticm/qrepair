@@ -1,0 +1,19 @@
+'use client';
+
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { TelegramQRLogin } from '@/components/TelegramQRLogin';
+
+interface LoginQRModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export const LoginQRModal = ({ isOpen, onClose }: LoginQRModalProps) => {
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-sm p-0 bg-white rounded-3xl overflow-hidden">
+                <TelegramQRLogin />
+            </DialogContent>
+        </Dialog>
+    );
+};

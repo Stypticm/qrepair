@@ -300,6 +300,47 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true })
     }
 
+    // --- QR Login Logic ---
+    // Handle /start auth_{uuid}
+    if (text.startsWith('/start auth_')) {
+      const authUuid = text.split('auth_')[1]?.trim();
+      
+      if (authUuid) {
+        // Import supabase dynamically or use the global one if available in scope? 
+        // We need to import it at the top level or here if we want to avoid circular deps?
+        // Actually imports should be fine.
+        // We'll use the imported supabase client.
+        const { supabase } = await import('@/core/lib/supabase'); // Dynamic import to ensure it's loaded
+
+        // Update the auth request
+        const { error } = await supabase
+          .from('auth_requests')
+          .update({
+             status: 'success',
+             telegram_id: telegramId,
+             telegram_username: message.from?.username || '',
+             telegram_data: message.from // Store full user data JSON
+          })
+          .eq('id', authUuid)
+          .eq('status', 'pending'); // Only update if still pending
+
+        if (!error) {
+            await sendTelegramMessage(
+                telegramId,
+                '✅ Вы успешно авторизовались на сайте Qoqos!',
+                { parse_mode: 'Markdown' }
+            );
+        } else {
+             await sendTelegramMessage(
+                telegramId,
+                '❌ Ошибка или срок действия кода истек. Попробуйте обновить страницу на сайте.',
+                { parse_mode: 'Markdown' }
+            );
+        }
+      }
+    }
+    // --- End QR Login Logic ---
+
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Webhook error:', error)

@@ -10,6 +10,8 @@ import { TelegramLoginButton } from '@/components/TelegramLoginButton';
 import { usePathname } from 'next/navigation';
 import { useState, memo } from 'react';
 import { QRModal } from './QRModal';
+import { LoginQRModal } from './LoginQRModal';
+import { QrCode } from 'lucide-react';
 
 // Memoized wrapper for the login button to prevent re-loading script on route changes
 const MemoizedTelegramLoginButton = memo(() => (
@@ -22,6 +24,7 @@ MemoizedTelegramLoginButton.displayName = 'MemoizedTelegramLoginButton';
 export const DesktopHeader = () => {
     const { username, userPhotoUrl, telegramId } = useAppStore();
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+    const [isLoginQRModalOpen, setIsLoginQRModalOpen] = useState(false);
     const pathname = usePathname();
 
     const isActive = (path: string) => pathname === path;
@@ -117,7 +120,16 @@ export const DesktopHeader = () => {
                                 </button>
                             </div>
                         ) : (
-                            <MemoizedTelegramLoginButton />
+                            <div className="hidden md:flex items-center gap-2">
+                                <MemoizedTelegramLoginButton />
+                                <button
+                                    onClick={() => setIsLoginQRModalOpen(true)}
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-full transition-all active:scale-95"
+                                    title="Вход по QR-коду"
+                                >
+                                    <QrCode size={20} />
+                                </button>
+                            </div>
                         )}
 
                         <button
@@ -131,6 +143,7 @@ export const DesktopHeader = () => {
             </header>
 
             <QRModal isOpen={isQRModalOpen} onClose={() => setIsQRModalOpen(false)} />
+            <LoginQRModal isOpen={isLoginQRModalOpen} onClose={() => setIsLoginQRModalOpen(false)} />
         </>
     );
 };
