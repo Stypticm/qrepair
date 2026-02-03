@@ -35,8 +35,8 @@ export const DesktopHeader = () => {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <header className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+                <div className="w-full max-w-7xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-lg shadow-black/5 rounded-2xl h-20 flex items-center justify-between px-6 pointer-events-auto transition-all duration-300">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group mr-8">
                         <div className="w-9 h-9 relative overflow-hidden rounded-xl shadow-sm">
