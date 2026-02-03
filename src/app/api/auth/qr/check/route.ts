@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/core/lib/supabase';
+import { supabaseAdmin } from '@/core/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     }
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('auth_requests')
             .select('status, telegram_id, telegram_username, telegram_data')
             .eq('id', uuid)

@@ -1,23 +1,23 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/core/lib/supabase';
+import { supabaseAdmin } from '@/core/lib/supabase-admin';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST() {
     // Debug: Check env vars
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        console.error('Missing Supabase Environment Variables');
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.error('Missing Supabase Environment Variables (Service Role)');
         return NextResponse.json({ 
-            error: 'Configuration Error: Missing Supabase URL or Key',
+            error: 'Configuration Error: Missing Supabase URL or Service Key',
             details: {
                 hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-                hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+                hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
             }
         }, { status: 500 });
     }
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from('auth_requests')
             .insert({}) // ID and created_at are default
             .select('id')

@@ -310,10 +310,10 @@ export async function POST(req: Request) {
         // We need to import it at the top level or here if we want to avoid circular deps?
         // Actually imports should be fine.
         // We'll use the imported supabase client.
-        const { supabase } = await import('@/core/lib/supabase'); // Dynamic import to ensure it's loaded
+        const { supabaseAdmin } = await import('@/core/lib/supabase-admin'); // Dynamic import
 
         // Update the auth request
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('auth_requests')
           .update({
              status: 'success',
