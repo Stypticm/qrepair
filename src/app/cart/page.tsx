@@ -6,6 +6,7 @@ import { useCart } from '@/hooks/useCart'
 import { ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
+import { DesktopHeader } from '@/components/Desktop/DesktopHeader'
 
 export default function CartPage() {
   const router = useRouter()
@@ -17,7 +18,7 @@ export default function CartPage() {
   }
 
   const handleCheckout = () => {
-    console.log('Checkout clicked, items:', cartItems.length)
+    // console.log('Checkout clicked, items:', cartItems.length)
     if (cartItems.length > 0) {
       router.push('/cart/checkout')
     }
@@ -26,7 +27,8 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <Page back={true}>
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="hidden md:block"><DesktopHeader /></div>
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center md:pt-20">
           <div className="text-center">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <ShoppingCart className="w-12 h-12 text-gray-400" />
@@ -59,8 +61,10 @@ export default function CartPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto pt-16 px-4 pb-32">
+      <div className="hidden md:block"><DesktopHeader /></div>
+      <div className="min-h-screen bg-gray-50 md:pt-2">
+        {/* md:pt-2 because Header is fixed and takes ~80px space. */}
+        <div className="mx-auto pt-16 md:pt-24 px-4 pb-32">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Корзина</h1>
             <p className="text-gray-600">

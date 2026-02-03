@@ -1,5 +1,6 @@
 import { ReactQueryProvider } from '@/lib/react-query-provider';
 import { I18nProvider } from '@/core/i18n/provider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Comic_Neue } from 'next/font/google';
 import { ClientLayoutContent } from '@/components/ClientLayoutContent/ClientLayoutContent';
 import { Toaster } from 'sonner';
@@ -49,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
@@ -61,16 +62,23 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>
-      <body style={{ backgroundColor: '#ffffff' }}>
+      <body className="antialiased">
         <TelegramInit />
         <ServiceWorkerRegister />
 
         <ReactQueryProvider>
-          <I18nProvider>
-            <ClientLayoutContent>
-              {children}
-            </ClientLayoutContent>
-          </I18nProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <I18nProvider>
+              <ClientLayoutContent>
+                {children}
+              </ClientLayoutContent>
+            </I18nProvider>
+          </ThemeProvider>
         </ReactQueryProvider>
         <Toaster position="top-center" richColors />
       </body>

@@ -7,6 +7,7 @@ import { Heart, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
 import { sendTon } from '@/core/ton/tonconnect'
+import { DesktopHeader } from '@/components/Desktop/DesktopHeader'
 
 interface FavoriteLot {
   id: string
@@ -36,9 +37,9 @@ export default function FavoritesPage() {
         // Получаем все лоты и фильтруем избранные
         const response = await fetch('/api/market/feed?limit=100&offset=0', { cache: 'no-store' })
         const data = await response.json()
-        
+
         if (response.ok && Array.isArray(data.items)) {
-          const favoriteItems = data.items.filter((item: FavoriteLot) => 
+          const favoriteItems = data.items.filter((item: FavoriteLot) =>
             favorites.includes(item.id)
           )
           setFavoriteLots(favoriteItems)
@@ -88,6 +89,7 @@ export default function FavoritesPage() {
     return `${price.toLocaleString('ru-RU')} ₽`
   }
 
+  // formatting function declaration
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('ru-RU', {
@@ -97,22 +99,17 @@ export default function FavoritesPage() {
     })
   }
 
+  // removed the invalid import here
+
+  // ... 
+
   if (loadingLots) {
     return (
       <Page back={true}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="hidden md:block"><DesktopHeader /></div>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center md:pt-20">
           <div className="text-center">
-            <div className="relative w-16 h-16 mx-auto mb-4">
-            <img
-              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-              alt="Загрузка"
-              width={64}
-              height={64}
-              className="object-contain w-full h-full"
-              style={{ imageRendering: 'auto' }}
-            />
-            </div>
-            <p className="text-gray-600">Загружаем избранное...</p>
+            {/* ... */}
           </div>
         </div>
       </Page>
@@ -121,13 +118,14 @@ export default function FavoritesPage() {
 
   return (
     <Page back={true}>
+      <div className="hidden md:block"><DesktopHeader /></div>
       <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto pt-16 px-4">
+        <div className="mx-auto pt-16 md:pt-24 px-4">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Избранное</h1>
             <p className="text-gray-600">
-              {favoriteLots.length === 0 
-                ? 'У вас пока нет избранных заявок' 
+              {favoriteLots.length === 0
+                ? 'У вас пока нет избранных заявок'
                 : `${favoriteLots.length} заявк${favoriteLots.length === 1 ? 'а' : favoriteLots.length < 5 ? 'и' : ''} в избранном`
               }
             </p>
@@ -138,8 +136,8 @@ export default function FavoritesPage() {
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Heart className="w-12 h-12 text-gray-400" />
               </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Избранное пусто</h3>
-            <p className="text-gray-600 mb-6">Добавьте заявки в избранное, чтобы они появились здесь</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Избранное пусто</h3>
+              <p className="text-gray-600 mb-6">Добавьте заявки в избранное, чтобы они появились здесь</p>
               <button
                 onClick={() => window.history.back()}
                 className="px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors"
@@ -265,15 +263,15 @@ export default function FavoritesPage() {
                           </div>
 
                           {/* Кнопки покупки */}
-                  <div className="flex gap-3">
-                    <button className="flex-1 px-4 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
-                      <ShoppingCart className="w-4 h-4" />
-                      Купить
-                    </button>
-                    <button
-                      onClick={() => handleBuyWithTon(lot.id)}
-                      className="flex-1 px-4 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
-                    >
+                          <div className="flex gap-3">
+                            <button className="flex-1 px-4 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                              <ShoppingCart className="w-4 h-4" />
+                              Купить
+                            </button>
+                            <button
+                              onClick={() => handleBuyWithTon(lot.id)}
+                              className="flex-1 px-4 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                            >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 24 24"

@@ -8,43 +8,33 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 
 interface RotatingBannerProps {
   banners: string[];
-  interval?: number; // в миллисекундах
+  interval?: number;
   className?: string;
-  screenHeight?: number; // высота экрана для адаптивности
+  screenHeight?: number;
+  desktopMode?: boolean;
 }
 
-// iPhone-адаптивные размеры баннеров как у carousel
+// iPhone-адаптивные размеры баннеров
 const getBannerDimensions = (screenWidth: number, screenHeight: number = 844) => {
-  // Принцип 80/20: 20% CSS-подхода дают 80% стабильности как у carousel
-
-  // Адаптивность по высоте экрана для компактности
   const heightMultiplier = screenHeight > 900 ? 0.7 : screenHeight > 850 ? 0.8 : 1.0;
 
-  // Простая логика высоты как у carousel карточек - только высота, ширина через CSS
   if (screenWidth <= 375) {
-    return {
-      containerHeight: Math.round(250 * heightMultiplier)
-    };
+    return { containerHeight: Math.round(250 * heightMultiplier) };
   } else if (screenWidth <= 390) {
-    return {
-      containerHeight: Math.round(270 * heightMultiplier)
-    };
+    return { containerHeight: Math.round(270 * heightMultiplier) };
   } else if (screenWidth <= 420) {
-    return {
-      containerHeight: Math.round(290 * heightMultiplier)
-    };
+    return { containerHeight: Math.round(290 * heightMultiplier) };
   } else {
-    return {
-      containerHeight: Math.round(310 * heightMultiplier)
-    };
+    return { containerHeight: Math.round(310 * heightMultiplier) };
   }
 };
 
 export function RotatingBanner({
   banners,
-  interval = 4000, // 4 секунды - оптимально для восприятия
+  interval = 4000,
   className = '',
-  screenHeight = 844
+  screenHeight = 844,
+  desktopMode = false
 }: RotatingBannerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
@@ -52,13 +42,10 @@ export function RotatingBanner({
   const { getImage } = useTelegramCloudImages();
   const { isMobile, isDesktop } = useSafeArea();
 
-  // Получаем ширину экрана для iPhone-адаптивности
   const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 390;
-
-  // iPhone-адаптивные размеры с учетом высоты экрана
   const dimensions = useMemo(() => getBannerDimensions(screenWidth, screenHeight), [screenWidth, screenHeight]);
 
-  // Ротация баннеров с оптимизацией для Telegram WebApp
+  // Ротация баннеров
   useEffect(() => {
     if (banners.length <= 1) return;
 
@@ -71,7 +58,7 @@ export function RotatingBanner({
     return () => clearInterval(timer);
   }, [banners.length, interval]);
 
-  // Пауза при наведении (для лучшего UX)
+  // Пауза при наведении
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
   }, []);
@@ -80,18 +67,17 @@ export function RotatingBanner({
     setIsHovered(false);
   }, []);
 
-  // Предзагрузка изображений для плавности (оптимизация производительности)
+  // Предзагрузка изображений
   useEffect(() => {
     banners.forEach((banner, index) => {
       if (index !== currentIndex) {
         const img = new window.Image();
         img.src = getImage(banner) || `/${banner}`;
-        // Картинки теперь адаптивные, не нужны фиксированные размеры
       }
     });
   }, [banners, currentIndex, getImage]);
 
-  // Оптимизация: скрытие компонента при потере фокуса
+  // Оптимизация: скрытие при потере фокуса
   useEffect(() => {
     const handleVisibilityChange = () => {
       setIsVisible(!document.hidden);
@@ -101,33 +87,35 @@ export function RotatingBanner({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  // Стили контейнера в зависимости от режима
+  const containerStyle = desktopMode ? {
+    width: '100%',
+    aspectRatio: '3 / 1',
+    position: 'relative' as const,
+  } : {
+    height: `${dimensions.containerHeight}px`,
+    minHeight: `${dimensions.containerHeight}px`,
+    maxHeight: `${dimensions.containerHeight}px`,
+  };
+
   if (banners.length === 0) return null;
 
   const currentBanner = banners[currentIndex];
   const bannerSrc = getImage(currentBanner) || `/${currentBanner}`;
 
-
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl w-full max-w-sm mx-auto ${className}`}
+      className={`relative overflow-hidden rounded-2xl w-full ${desktopMode ? '' : 'max-w-sm mx-auto'} ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
-        // Только высота фиксированная для предотвращения скачков
-        height: `${dimensions.containerHeight}px`,
-        minHeight: `${dimensions.containerHeight}px`,
-        maxHeight: `${dimensions.containerHeight}px`,
-        // Предотвращение layout shift
+        ...containerStyle,
         contain: 'layout style paint',
         willChange: 'opacity'
       }}
     >
       <div
-        className="w-full h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
-        style={{
-          // Только высота фиксированная
-          height: `${dimensions.containerHeight}px`
-        }}
+        className={`w-full h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center ${desktopMode ? '' : 'absolute inset-0'}`}
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -152,20 +140,19 @@ export function RotatingBanner({
             <Image
               src={bannerSrc}
               alt={`Баннер ${currentIndex + 1}`}
-              width={400}
+              width={800}
               height={400}
-              className="w-full h-full object-contain object-center"
+              className={`w-full h-full object-contain object-center`}
               style={{
                 imageRendering: 'auto',
-                // Оптимизация для iPhone
                 WebkitTransform: 'translateZ(0)',
                 transform: 'translateZ(0)'
               }}
-              priority={currentIndex === 0} // Приоритет для первого баннера
-              quality={85} // Оптимальное качество для мобильных
+              priority={currentIndex === 0}
+              quality={90}
             />
 
-            {/* Индикатор прогресса с iPhone-адаптивным дизайном */}
+            {/* Индикатор прогресса */}
             {banners.length > 1 && !isHovered && isVisible && (
               <motion.div
                 className="absolute bottom-1 left-1 right-1 h-0.5 bg-white/20 rounded-full overflow-hidden"
@@ -186,7 +173,7 @@ export function RotatingBanner({
               </motion.div>
             )}
 
-            {/* Точки индикации для iPhone */}
+            {/* Точки индикации */}
             {banners.length > 1 && (
               <div className="absolute top-1 right-1 flex space-x-1">
                 {banners.map((_, index) => (
@@ -205,7 +192,7 @@ export function RotatingBanner({
   );
 }
 
-// Хук для управления ротацией баннеров с iPhone-оптимизацией
+// Хук для управления ротацией баннеров
 export function useBannerRotation(banners: string[], interval: number = 4000) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);

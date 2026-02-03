@@ -59,11 +59,31 @@ export function Page({ children, back = true }: PropsWithChildren<{
   }, [router, goToPreviousStep, back]);
 
   const outerClass = isDesktop ? 'w-full h-full flex justify-center items-center' : 'w-full h-full flex justify-center items-start';
-  const innerClass = isDesktop ? 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto' : 'w-full h-full';
+  const innerClass = isDesktop
+    // If we're on desktop, check if we want full width (custom prop? or layout). 
+    // For now, let's keep default behavior but allow override via props if we added them.
+    // Actually, let's just make it full width if it's NOT a modal-like page.
+    // But Page is used everywhere.
+    // Let's modify Page to accept a prop 'isDesktopFullWidth'.
+    ? 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto'
+    : 'w-full h-full';
+
+  // Quick fix: Check pathname. If cart or favorites, use full width on desktop.
+  const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/buyback') || pathname?.includes('/repair');
+
+  const desktopClass = isWidePage
+    ? 'w-full max-w-7xl mx-auto bg-transparent shadow-none overflow-visible'
+    : 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto';
+
+  const finalInnerClass = isDesktop ? desktopClass : 'w-full h-full';
+
+  const finalOuterClass = (isDesktop && !isWidePage)
+    ? 'w-full h-full flex justify-center items-center bg-gray-100/50'
+    : 'w-full h-full';
 
   return (
-    <div className={outerClass}>
-      <div className={innerClass}>{children}</div>
+    <div className={finalOuterClass}>
+      <div className={finalInnerClass}>{children}</div>
     </div>
   );
 }

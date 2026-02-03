@@ -46,6 +46,7 @@ interface AppState {
   role: 'master' | 'client'
   userId: number | null
   modalOpen: boolean
+  isManualLogout: boolean
 
   // Form data
   formData: FormData
@@ -119,6 +120,9 @@ interface AppState {
   // Clear session storage
   clearSessionStorage: () => void
 
+  // Logout
+  logout: () => void
+
   // Debug functions
   addDebugInfo: (message: string) => void
   clearDebugInfo: () => void
@@ -146,33 +150,17 @@ const stepOrder = [
   'final',
 ]
 
-// Создаем кастомное хранилище для sessionStorage
-const sessionStorage = {
-  getItem: (name: string) => {
-    if (typeof window === 'undefined') return null
-    try {
-      return window.sessionStorage.getItem(name)
-    } catch {
-      return null
-    }
-  },
-  setItem: (name: string, value: string) => {
-    if (typeof window === 'undefined') return
-    try {
-      window.sessionStorage.setItem(name, value)
-    } catch {
-      // Игнорируем ошибки
-    }
-  },
-  removeItem: (name: string) => {
-    if (typeof window === 'undefined') return
-    try {
-      window.sessionStorage.removeItem(name)
-    } catch {
-      // Игнорируем ошибки
-    }
-  },
-}
+// Создаем кастомное хранилище на базе localStorage для надежности в PWA
+const storage = createJSONStorage(() => {
+  if (typeof window !== 'undefined') {
+    return localStorage;
+  }
+  return {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+  };
+});
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -181,6 +169,7 @@ export const useAppStore = create<AppState>()(
       role: 'client',
       userId: null,
       modalOpen: false,
+      isManualLogout: false,
 
       // Form data
       formData: {
@@ -250,17 +239,7 @@ export const useAppStore = create<AppState>()(
       // User actions
       setUsername: (username) => set({ username }),
       setTelegramId: (telegramId) => {
-        set({ telegramId })
-        // В Telegram WebApp сохраняем в sessionStorage, в браузере/PWA — в localStorage
-        if (typeof window !== 'undefined' && telegramId) {
-          if (window.Telegram?.WebApp) {
-            sessionStorage.setItem('telegramId', telegramId)
-          } else {
-            try {
-              localStorage.setItem('telegramId', telegramId)
-            } catch {}
-          }
-        }
+        set({ telegramId, isManualLogout: false })
       },
       setUserPhotoUrl: (userPhotoUrl) =>
         set({ userPhotoUrl }),
@@ -331,9 +310,6 @@ export const useAppStore = create<AppState>()(
       // Navigation actions
       setCurrentStep: (currentStep) => {
         set({ currentStep })
-        if (typeof window !== 'undefined' && currentStep) {
-          sessionStorage.setItem('currentStep', currentStep)
-        }
       },
       goToPreviousStep: (router?: any) => {
         const { currentStep } = get()
@@ -441,9 +417,6 @@ export const useAppStore = create<AppState>()(
       },
       clearCurrentStep: () => {
         set({ currentStep: null })
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('currentStep')
-        }
       },
 
       // Reset
@@ -481,25 +454,53 @@ export const useAppStore = create<AppState>()(
           },
         })
 
-        // Очищаем sessionStorage
-        if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('phoneSelection')
-          sessionStorage.removeItem('deviceConditions')
-          sessionStorage.removeItem('additionalConditions')
-          sessionStorage.removeItem('basePrice')
-          sessionStorage.removeItem('price')
-          sessionStorage.removeItem('userEvaluation')
-          sessionStorage.removeItem('damagePercent')
-          sessionStorage.removeItem('currentStep')
-        }
+        // Очищаем debug info если нужно, но не стор, так как это resetAllStates (обычно внутри сессии)
       },
 
-      // Clear session storage
+      // Clear session storage - deprecated, handled by persist/logout
       clearSessionStorage: () => {
+        // no-op, use logout
+      },
+
+      // Logout
+      // Logout
+      logout: () => {
+        console.log('🚪 Logging out...');
+        
+        // 1. Сбрасываем стейт Zustand + ставим флаг ручного выхода
+        set({
+          telegramId: null,
+          username: null,
+          userPhotoUrl: null,
+          role: 'client',
+          userId: null,
+          currentStep: null,
+          isManualLogout: true, // ВАЖНО: предотвращает авто-логин при следующем заходе
+          formData: {
+            sn: '',
+            model: '',
+            pointId: 1,
+            requestId: '',
+          }
+        });
+        
+        // 2. Очищаем персистентное хранилище
         if (typeof window !== 'undefined') {
-          sessionStorage.removeItem('telegramId')
-          sessionStorage.removeItem('telegramUsername')
-          sessionStorage.removeItem('currentStep')
+          try {
+            // Удаляем точечные ключи
+            localStorage.removeItem('telegramId');
+            localStorage.removeItem('telegramUsername');
+            sessionStorage.clear();
+            
+            // Мы НЕ удаляем весь app-store, чтобы сохранить флаг isManualLogout
+            // Persist middleware сохранит новое состояние (где telegramId=null и isManualLogout=true)
+            
+            console.log('✅ Auth storage cleared (preserved manual logout flag)');
+          } catch (e) {
+            console.error('❌ Error clearing storage:', e);
+          }
+          
+          // УБРАЛИ window.location.reload() - это вызывало перезапуск приложения и повторный авто-логин
         }
       },
 
@@ -519,241 +520,78 @@ export const useAppStore = create<AppState>()(
         set({ debugInfo: [] })
       },
 
-      // Telegram initialization
+      // Инициализация Telegram: только из TWA или уже восстановленного persist стейта
       initializeTelegram: (initDataState?: any) => {
-        const { addDebugInfo } = get()
+        const { addDebugInfo, telegramId } = get()
 
-        addDebugInfo('Инициализация Telegram WebApp')
+        addDebugInfo('Инициализация Telegram Auth...')
 
-        if (typeof window === 'undefined') {
-          addDebugInfo('❌ window не доступен')
-          return
+        // 1. Если у нас уже есть telegramId (восстановлен через persist), проверяем валидность
+        if (telegramId) {
+            addDebugInfo(`✅ Восстановлена сессия для ID: ${telegramId}`);
+            return;
         }
 
-        // Сначала пытаемся восстановить данные из sessionStorage/localStorage
-        const savedTelegramId =
-          sessionStorage.getItem('telegramId') ||
-          (typeof window !== 'undefined'
-            ? localStorage.getItem('telegramId')
-            : null)
-        const savedUsername =
-          sessionStorage.getItem('telegramUsername') ||
-          (typeof window !== 'undefined'
-            ? localStorage.getItem('telegramUsername')
-            : null)
-
-        if (savedTelegramId && !get().telegramId) {
-          addDebugInfo(
-            `🔄 Восстановление из sessionStorage: telegramId=${savedTelegramId}, username=${savedUsername}`
-          )
-          set({
-            telegramId: savedTelegramId,
-            username: savedUsername,
-            role: ADMIN_IDS.includes(
-              parseInt(savedTelegramId)
-            )
-              ? 'master'
-              : 'client',
-            userId: parseInt(savedTelegramId),
-          })
+        // Проверяем, был ли ручной выход. Если да, то НЕ логиним автоматически
+        const { isManualLogout } = get();
+        if (isManualLogout) {
+             addDebugInfo('🚫 Был ручной выход. Авторизация пропущена.');
+             return;
         }
 
-        const hasTelegramWebApp = !!(window as any).Telegram
-          ?.WebApp
-        const hasTelegramWebviewProxy = !!(window as any)
-          .TelegramWebviewProxy
-
-        addDebugInfo(
-          `hasTelegramWebApp: ${hasTelegramWebApp}`
-        )
-        addDebugInfo(
-          `hasTelegramWebviewProxy: ${hasTelegramWebviewProxy}`
-        )
-        addDebugInfo(
-          `initDataState?.user: ${
-            initDataState?.user ? 'ЕСТЬ' : 'НЕТ'
-          }`
-        )
-
-        // Сначала пробуем получить данные из initDataState (как в StartFormContext)
+        // 2. Если мы в TWA (Telegram Mini App), берем данные оттуда
         if (initDataState?.user) {
-          addDebugInfo(
-            '✅ Получены данные из initDataState'
-          )
-          addDebugInfo(
-            `Username: ${
-              initDataState.user.first_name || 'НЕТ'
-            }`
-          )
-          addDebugInfo(
-            `ID: ${initDataState.user.id || 'НЕТ'}`
-          )
-
-          const tgId = initDataState.user.id.toString()
-          const tgUsername =
-            initDataState.user.username || null
-
-          addDebugInfo(`✅ Получен telegramId: ${tgId}`)
-          addDebugInfo(
-            `✅ Получен username: ${tgUsername || 'НЕТ'}`
-          )
-          addDebugInfo(
-            `🔍 initDataState.user.username: ${initDataState.user.username}`
-          )
-          addDebugInfo(
-            `🔍 initDataState.user.first_name: ${initDataState.user.first_name}`
-          )
-          addDebugInfo(
-            `🔍 initDataState.user.last_name: ${initDataState.user.last_name}`
-          )
-
+          addDebugInfo('✅ TWA: Получены данные из initData');
+          const user = initDataState.user;
+          const tgId = user.id.toString();
+          
           set({
             telegramId: tgId,
-            username: tgUsername,
-            userPhotoUrl:
-              initDataState.user.photo_url || null,
-          })
-
-          // Проверяем, является ли пользователь мастером
-          const isMasterUser = ADMIN_IDS.includes(
-            parseInt(tgId)
-          )
-          if (isMasterUser) {
-            set({ role: 'master', userId: parseInt(tgId) })
-          } else {
-            set({ role: 'client', userId: parseInt(tgId) })
-          }
-
-          // Сохраняем в sessionStorage и продублируем в localStorage для PWA
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem('telegramId', tgId)
-            try {
-              localStorage.setItem('telegramId', tgId)
-            } catch {}
-            if (tgUsername) {
-              sessionStorage.setItem(
-                'telegramUsername',
-                tgUsername
-              )
-              try {
-                localStorage.setItem(
-                  'telegramUsername',
-                  tgUsername
-                )
-              } catch {}
-              addDebugInfo(
-                `💾 Сохранен username: ${tgUsername}`
-              )
-            } else {
-              addDebugInfo(`⚠️ Username не сохранен (null)`)
-            }
-          }
-        } else if (hasTelegramWebApp) {
-          // Fallback: пытаемся получить данные напрямую из window.Telegram.WebApp
-          addDebugInfo(
-            'Fallback - получаем данные из window.Telegram.WebApp'
-          )
-          const webApp = (window as any).Telegram.WebApp
-          const userData = webApp.initDataUnsafe?.user
-
-          addDebugInfo(
-            `initDataUnsafe.user: ${JSON.stringify(
-              userData
-            )}`
-          )
-
-          if (userData?.id) {
-            const tgId = userData.id.toString()
-            const tgUsername = userData.username || null
-
-            addDebugInfo(
-              `✅ Fallback - Получен telegramId: ${tgId}`
-            )
-            addDebugInfo(
-              `✅ Fallback - Получен username: ${
-                tgUsername || 'НЕТ'
-              }`
-            )
-            addDebugInfo(
-              `🔍 Fallback - userData.username: ${userData.username}`
-            )
-            addDebugInfo(
-              `🔍 Fallback - userData.first_name: ${userData.first_name}`
-            )
-            addDebugInfo(
-              `🔍 Fallback - userData.last_name: ${userData.last_name}`
-            )
-
-            set({
-              telegramId: tgId,
-              username: tgUsername,
-              userPhotoUrl: userData.photo_url || null,
-            })
-
-            // Проверяем, является ли пользователь мастером
-            const isMasterUser = ADMIN_IDS.includes(
-              parseInt(tgId)
-            )
-            if (isMasterUser) {
-              set({
-                role: 'master',
-                userId: parseInt(tgId),
-              })
-            } else {
-              set({
-                role: 'client',
-                userId: parseInt(tgId),
-              })
-            }
-
-            // Сохраняем в sessionStorage и localStorage (для PWA повторных запусков)
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem('telegramId', tgId)
-              try {
-                localStorage.setItem('telegramId', tgId)
-              } catch {}
-              if (tgUsername) {
-                sessionStorage.setItem(
-                  'telegramUsername',
-                  tgUsername
-                )
-                try {
-                  localStorage.setItem(
-                    'telegramUsername',
-                    tgUsername
-                  )
-                } catch {}
-                addDebugInfo(
-                  `💾 Fallback - Сохранен username: ${tgUsername}`
-                )
-              } else {
-                addDebugInfo(
-                  `⚠️ Fallback - Username не сохранен (null)`
-                )
-              }
-            }
-          } else {
-            addDebugInfo('❌ Нет user.id в initDataUnsafe')
-          }
+            username: user.username || null,
+            userPhotoUrl: user.photo_url || null,
+            role: ADMIN_IDS.includes(user.id) ? 'master' : 'client',
+            userId: user.id,
+            isManualLogout: false // Сбрасываем флаг, если мы явно получили данные (хотя тут спорно, если TWA всегда дает данные)
+          });
+          return;
+        } 
+        
+        // 3. Fallback для TWA (старая версия API)
+        const webApp = (window as any).Telegram?.WebApp;
+        const unsafeUser = webApp?.initDataUnsafe?.user;
+        
+        if (unsafeUser?.id) {
+           addDebugInfo('✅ TWA (Unsafe): Получены данные');
+           const tgId = unsafeUser.id.toString();
+           
+           set({
+            telegramId: tgId,
+            username: unsafeUser.username || null,
+            userPhotoUrl: unsafeUser.photo_url || null,
+            role: ADMIN_IDS.includes(unsafeUser.id) ? 'master' : 'client',
+            userId: unsafeUser.id
+          });
         } else {
-          addDebugInfo('❌ Telegram WebApp не доступен')
+            addDebugInfo('ℹ️ Нет данных TWA, ожидание виджета входа...');
         }
       },
     }),
     {
       name: 'app-store',
-      storage: createJSONStorage(() => sessionStorage),
+      // Используем наше localStorage-based хранилище
+      storage: storage, 
       partialize: (state) => ({
-        // Сохраняем только критически важные данные
         telegramId: state.telegramId,
         username: state.username,
         userPhotoUrl: state.userPhotoUrl,
         role: state.role,
         userId: state.userId,
-        modelname: state.modelname,
-        deviceConditions: state.deviceConditions,
-        price: state.price,
+        // Сохраняем черновик формы
+        formData: state.formData,
+        // Сохраняем состояние ui
         currentStep: state.currentStep,
+        // Сохраняем флаг ручного выхода
+        isManualLogout: state.isManualLogout,
       }),
     }
   )

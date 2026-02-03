@@ -46,14 +46,14 @@ const StartFormContext = createContext<FormState | null>(null);
 export function StartFormProvider({ children }: { children: ReactNode }) {
     // Всегда вызываем хук - это требование React
     const initDataState = useSignal(_initDataState);
-    
+
     // Получаем данные из Zustand store для синхронизации
     const { telegramId: storeTelegramId, username: storeUsername, setTelegramId: setStoreTelegramId, setUsername: setStoreUsername } = useAppStore();
 
     const [username, setUsername] = useState<string | null>(null);
     const [telegramId, setTelegramId] = useState<string | null>(null);
     const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null);
-    
+
     // Состояние для отладочной информации
     const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
@@ -71,7 +71,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
     const [showQuestionsSuccess, setShowQuestionsSuccess] = useState(false);
     const [price, setPrice] = useState<number | null>(null);
     const [onNext, setOnNext] = useState<(() => Promise<void>) | undefined>(undefined);
-    
+
     // Состояния устройства
     const [deviceConditions, setDeviceConditions] = useState<{
         front: string | null;
@@ -109,7 +109,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             backCamera: null,
             battery: null
         });
-        
+
         // Очищаем sessionStorage при сбросе состояний
         if (typeof window !== 'undefined') {
             sessionStorage.removeItem('phoneSelection');
@@ -120,21 +120,21 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             sessionStorage.removeItem('price');
             sessionStorage.removeItem('hasSeenWelcome'); // Сбрасываем флаг приветствия
         }
-        
+
     };
 
     useEffect(() => {
         addDebugInfo('StartFormContext: initDataState changed');
         addDebugInfo(`initDataState?.user: ${initDataState?.user ? 'ЕСТЬ' : 'НЕТ'}`);
         addDebugInfo(`window.Telegram?.WebApp: ${typeof window !== 'undefined' && window.Telegram?.WebApp ? 'ЕСТЬ' : 'НЕТ'}`);
-        
+
         if (initDataState?.user) {
             addDebugInfo('StartFormContext: Получены данные из initDataState');
             addDebugInfo(`Username: ${initDataState.user.first_name || 'НЕТ'}`);
             addDebugInfo(`ID: ${initDataState.user.id || 'НЕТ'}`);
-            
+
             setUsername(initDataState.user.first_name ?? null);
-            
+
             // Устанавливаем telegramId только если он еще не установлен
             if (!telegramId) {
                 addDebugInfo(`Устанавливаем telegramId: ${initDataState.user.id}`);
@@ -142,40 +142,40 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             } else {
                 addDebugInfo(`telegramId уже установлен: ${telegramId}`);
             }
-            
+
             setUserPhotoUrl(initDataState.user.photo_url ?? null);
         } else if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user) {
             // Fallback: пытаемся получить данные напрямую из window.Telegram.WebApp
             addDebugInfo('StartFormContext: Fallback - получаем данные из window.Telegram.WebApp');
             const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
             addDebugInfo(`Fallback user data: ${JSON.stringify(tgUser)}`);
-            
+
             if (tgUser.id) {
                 addDebugInfo(`Fallback - Setting telegramId: ${tgUser.id}`);
                 setTelegramId(String(tgUser.id));
             }
-            
+
             if (tgUser.first_name) {
                 addDebugInfo(`Fallback - Setting username: ${tgUser.first_name}`);
                 setUsername(tgUser.first_name);
             }
-            
+
             if ((tgUser as any).photo_url) {
                 setUserPhotoUrl((tgUser as any).photo_url);
             }
-            
+
             // Сохраняем username из Telegram для использования на финальной страницы
             if (tgUser.username) {
                 addDebugInfo(`Saving telegram username from fallback: ${tgUser.username}`);
                 sessionStorage.setItem('telegramUsername', tgUser.username);
             } else {
                 addDebugInfo('No username found in Telegram user data');
-                
+
                 // Fallback для тестирования в браузере
-                if (process.env.NODE_ENV === 'development') {
-                    addDebugInfo('Using fallback username for development in StartFormContext');
-                    sessionStorage.setItem('telegramUsername', 'qoqos_app');
-                }
+                // if (process.env.NODE_ENV === 'development') {
+                //     addDebugInfo('Using fallback username for development in StartFormContext');
+                //     sessionStorage.setItem('telegramUsername', 'qoqos_app');
+                // }
             }
         }
     }, [initDataState]);
@@ -194,7 +194,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
             if (response.ok) {
                 const data = await response.json();
                 if (data) {
-                    
+
                     // Восстанавливаем данные из БД
                     if (data.modelname) {
                         setModel(data.modelname);
@@ -204,7 +204,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                     if (data.sn) setSerialNumber(data.sn);
                     if (data.deviceConditions) setDeviceConditions(data.deviceConditions);
                     // additionalConditions устарело
-                    
+
                     // Восстанавливаем текущий шаг из БД
                     if (data.currentStep) {
                         // Сохраняем в sessionStorage для NavigationContext
@@ -212,7 +212,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                             sessionStorage.setItem('currentStep', data.currentStep);
                         }
                     }
-                    
+
                 }
             }
         } catch (error) {

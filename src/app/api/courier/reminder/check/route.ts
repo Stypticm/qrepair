@@ -67,39 +67,40 @@ export async function GET(req: Request) {
     }
 
     let sentCount = 0
-    for (const app of toRemind) {
-      const c = ((app as any).courier || {}) as any
-      const hhmm =
-        c.timeSlot ||
-        (c.scheduledAt
-          ? new Date(c.scheduledAt)
-              .toISOString()
-              .substring(11, 16)
-          : '')
-      const msg =
-        (process.env.NODE_ENV !== 'production'
-          ? `⏰ DEV: Напоминание: через ~1 минут визит мастера.\n`
-          : `⏰ Напоминание: через ~1 час визит мастера.\n`) +
-        `Заявка: ${app.id}\n` +
-        `Модель: ${app.modelname || '—'}\n` +
-        `Время: ${hhmm || '—'}\n` +
-        `Мастер TG: ${c.telegramId || '—'}\n` +
-        `Свяжитесь с мастером и подтвердите выезд к клиенту.`
-      for (const adminId of adminIds) {
-        try {
-          await sendTelegramMessage(adminId, msg, {
-            parse_mode: 'Markdown',
-          })
-          sentCount++
-        } catch (e) {
-          // continue other admins
-        }
-      }
-      await prisma.skupka.update({
-        where: { id: app.id },
-        data: { courierReminderSent: true } as any,
-      })
-    }
+    // TEMPORARILY DISABLED on User Request
+    // for (const app of toRemind) {
+    //   const c = ((app as any).courier || {}) as any
+    //   const hhmm =
+    //     c.timeSlot ||
+    //     (c.scheduledAt
+    //       ? new Date(c.scheduledAt)
+    //           .toISOString()
+    //           .substring(11, 16)
+    //       : '')
+    //   const msg =
+    //     (process.env.NODE_ENV !== 'production'
+    //       ? `⏰ DEV: Напоминание: через ~1 минут визит мастера.\n`
+    //       : `⏰ Напоминание: через ~1 час визит мастера.\n`) +
+    //     `Заявка: ${app.id}\n` +
+    //     `Модель: ${app.modelname || '—'}\n` +
+    //     `Время: ${hhmm || '—'}\n` +
+    //     `Мастер TG: ${c.telegramId || '—'}\n` +
+    //     `Свяжитесь с мастером и подтвердите выезд к клиенту.`
+    //   for (const adminId of adminIds) {
+    //     try {
+    //       await sendTelegramMessage(adminId, msg, {
+    //         parse_mode: 'Markdown',
+    //       })
+    //       sentCount++
+    //     } catch (e) {
+    //       // continue other admins
+    //     }
+    //   }
+    //   await prisma.skupka.update({
+    //     where: { id: app.id },
+    //     data: { courierReminderSent: true } as any,
+    //   })
+    // }
 
     return NextResponse.json({
       success: true,
