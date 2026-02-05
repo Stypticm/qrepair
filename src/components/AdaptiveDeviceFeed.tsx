@@ -227,17 +227,7 @@ export function AdaptiveDeviceFeed({
               </div>
             )}
 
-            {/* Поиск (чуть выше по высоте) */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Поиск устройств..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2dc2c6] focus:border-transparent"
-              />
-            </div>
+
 
             {/* Фильтр (сортировка) */}
             <div className="flex gap-2">
