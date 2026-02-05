@@ -1,7 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { DesktopHeader } from './DesktopHeader';
+import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
+import { ReviewsCarousel } from '@/components/features/reviews/ReviewsCarousel';
+import { BlogGrid } from '@/components/features/blog/BlogGrid';
 import { RotatingBanner } from '@/components/RotatingBanner';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 import { useMarketplaceFeed } from '@/hooks/useMarketplaceFeed';
@@ -28,37 +31,21 @@ export const DesktopHome = () => {
 
     return (
         <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-100 selection:text-blue-900 font-sans">
-            <DesktopHeader />
+            <Header />
 
-            <main className="pt-24 pb-12">
+            <main className="pt-0 pb-12">
                 {/* Intro / Filter Header */}
-                <div className="max-w-7xl mx-auto px-6 mb-12">
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-center max-w-3xl mx-auto"
-                    >
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-gray-900">
-                            Qoqos маркетплейс
-                        </h1>
-                        <p className="text-lg md:text-xl text-gray-500 leading-relaxed mb-8">
-                            Проверенные устройства с гарантией и доставкой.
-                            <br className="hidden md:block" />
-                            Мы проверяем каждый гаджет по необходимым параметрам.
-                        </p>
-
-                        <div className="mt-8 mb-12 max-w-2xl mx-auto">
-                            <RotatingBanner
-                                banners={banners}
-                                className=""
-                                screenHeight={800} // Force decent height for desktop
-                                interval={5000}
-                                desktopMode={true}
-                            />
-                        </div>
-
-                    </motion.div>
+                <div className="max-w-7xl mx-auto px-6 mb-12 pt-12">
+                    {/* Banners */}
+                    <div className="mt-8 mb-12 max-w-2xl mx-auto">
+                        <RotatingBanner
+                            banners={banners}
+                            className=""
+                            screenHeight={800} // Force decent height for desktop
+                            interval={5000}
+                            desktopMode={true}
+                        />
+                    </div>
                 </div>
 
                 {/* Marketplace Feed Section */}
@@ -74,13 +61,12 @@ export const DesktopHome = () => {
                         />
                     </div>
                 </section>
+
+                <ReviewsCarousel />
+                <BlogGrid />
             </main>
 
-            <footer className="py-12 border-t border-gray-100">
-                <div className="max-w-7xl mx-auto px-6 text-center text-gray-400 text-sm">
-                    <p>&copy; 2025 Qoqos.</p>
-                </div>
-            </footer>
+            <Footer />
         </div>
     );
 };

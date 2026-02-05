@@ -7,7 +7,7 @@ import { Heart, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
 import { sendTon } from '@/core/ton/tonconnect'
-import { DesktopHeader } from '@/components/Desktop/DesktopHeader'
+import { Header } from '@/components/layout/Header'
 
 interface FavoriteLot {
   id: string
@@ -106,7 +106,7 @@ export default function FavoritesPage() {
   if (loadingLots) {
     return (
       <Page back={true}>
-        <div className="hidden md:block"><DesktopHeader /></div>
+        <div className="hidden md:block"><Header /></div>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center md:pt-20">
           <div className="text-center">
             {/* ... */}
@@ -118,17 +118,15 @@ export default function FavoritesPage() {
 
   return (
     <Page back={true}>
-      <div className="hidden md:block"><DesktopHeader /></div>
+      <div className="hidden md:block"><Header /></div>
       <div className="min-h-screen bg-gray-50">
         <div className="mx-auto pt-16 md:pt-24 px-4">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Избранное</h1>
-            <p className="text-gray-600">
-              {favoriteLots.length === 0
-                ? 'У вас пока нет избранных заявок'
-                : `${favoriteLots.length} заявк${favoriteLots.length === 1 ? 'а' : favoriteLots.length < 5 ? 'и' : ''} в избранном`
-              }
-            </p>
+            {favoriteLots.length > 0 && (
+              <p className="text-gray-600">
+                {`${favoriteLots.length} заявк${favoriteLots.length === 1 ? 'а' : favoriteLots.length < 5 ? 'и' : ''} в избранном`}
+              </p>
+            )}
           </div>
 
           {favoriteLots.length === 0 ? (
@@ -137,10 +135,10 @@ export default function FavoritesPage() {
                 <Heart className="w-12 h-12 text-gray-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Избранное пусто</h3>
-              <p className="text-gray-600 mb-6">Добавьте заявки в избранное, чтобы они появились здесь</p>
+              <p className="text-gray-600 mb-6 md:mb-0">Добавьте товары в избранное, чтобы они появились здесь</p>
               <button
                 onClick={() => window.history.back()}
-                className="px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors"
+                className="md:hidden px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors"
               >
                 Вернуться к заявкам
               </button>

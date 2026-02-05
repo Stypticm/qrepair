@@ -6,7 +6,7 @@ import { useCart } from '@/hooks/useCart'
 import { ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
-import { DesktopHeader } from '@/components/Desktop/DesktopHeader'
+import { Header } from '@/components/layout/Header'
 
 export default function CartPage() {
   const router = useRouter()
@@ -27,18 +27,18 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <Page back={true}>
-        <div className="hidden md:block"><DesktopHeader /></div>
+        <div className="hidden md:block"><Header /></div>
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center md:pt-20">
           <div className="text-center">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <ShoppingCart className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
-            <p className="text-gray-600 mb-6">Добавьте товары в корзину, <br />чтобы они появились здесь</p>
+            <p className="text-gray-600 mb-6 md:mb-0">Добавьте товары в корзину, <br />чтобы они появились здесь</p>
           </div>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors font-semibold flex items-center justify-center gap-2 mx-auto"
+            className="md:hidden px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors font-semibold flex items-center justify-center gap-2 mx-auto"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +61,7 @@ export default function CartPage() {
 
   return (
     <Page back={true}>
-      <div className="hidden md:block"><DesktopHeader /></div>
+      <div className="hidden md:block"><Header /></div>
       <div className="min-h-screen bg-gray-50 md:pt-2">
         {/* md:pt-2 because Header is fixed and takes ~80px space. */}
         <div className="mx-auto pt-16 md:pt-24 px-4 pb-32">
@@ -136,8 +136,8 @@ export default function CartPage() {
             ))}
           </div>
 
-          {/* Итого и кнопки */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-bottom">
+          {/* Bottom Checkout Section - Mobile only */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-bottom md:hidden">
             <div className="max-w-md mx-auto">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-lg font-semibold text-gray-900">Итого:</span>
