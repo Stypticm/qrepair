@@ -79,19 +79,18 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       return {
         // В Telegram Desktop заполняем весь webview, без внутренних рамок и фоновых полей
         container: 'w-full h-full flex flex-col items-stretch justify-stretch bg-transparent',
-        main: 'w-full h-full overflow-hidden',
+        main: 'w-full h-full overflow-y-auto', // Разрешаем скролл
         wrapper: 'w-full h-full',
       };
     } else {
-      // Для десктопа - НЕ добавляем telegram-fullscreen класс
-      // Проверяем платформу
-      const isDesktop = typeof window !== 'undefined' && 
+      // Проверяем платформу для мобильных устройств
+      const isTGWorkerMobile = typeof window !== 'undefined' && 
         (window as any).Telegram?.WebApp?.platform &&
-        !['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
+        ['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
       
       return {
-        container: `min-h-dvh w-full flex flex-col bg-white ${isDesktop ? '' : 'telegram-fullscreen'}`,
-        main: 'flex-1 w-full',
+        container: `min-h-dvh w-full flex flex-col bg-white ${isTGWorkerMobile ? 'telegram-fullscreen' : ''}`,
+        main: 'flex-1 w-full overflow-y-auto overflow-x-hidden', // Гарантируем скролл и предотвращаем горизонтальный сдвиг
         wrapper: 'w-full',
       };
     }

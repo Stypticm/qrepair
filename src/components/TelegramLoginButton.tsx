@@ -19,9 +19,70 @@ export const TelegramLoginButton = ({
     const [widgetState, setWidgetState] = useState<'loading' | 'loaded' | 'error' | 'domain_error'>('loading');
     const { setTelegramId, setUsername, setUserPhotoUrl, addDebugInfo } = useAppStore();
 
+    const [isMobile, setIsMobile] = useState(false);
+    const [isPolling, setIsPolling] = useState(false);
+    const [authUuid, setAuthUuid] = useState<string | null>(null);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+            const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+            setIsMobile(mobile);
+        };
+        checkMobile();
+    }, []);
+
+    // Polling logic for PWA success
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isPolling && authUuid) {
+            interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/auth/qr/check?uuid=${authUuid}`);
+                    const data = await res.json();
+                    if (data.status === 'success' && data.telegram_id) {
+                        console.log('✅ PWA Auth Success via Polling:', data);
+                        setTelegramId(data.telegram_id);
+                        if (data.telegram_username) setUsername(data.telegram_username);
+                        if (data.telegram_data?.photo_url) setUserPhotoUrl(data.telegram_data.photo_url);
+                        if (onAuth) onAuth(data.telegram_data);
+                        setWidgetState('loaded');
+                        setIsPolling(false);
+                        clearInterval(interval);
+                    }
+                } catch (e) {
+                    console.error('Polling error:', e);
+                }
+            }, 2000);
+        }
+        return () => clearInterval(interval);
+    }, [isPolling, authUuid, setTelegramId, setUsername, setUserPhotoUrl, onAuth]);
+
+    const handleMobileAuth = async () => {
+        try {
+            setWidgetState('loading');
+            const res = await fetch('/api/auth/qr/create', { method: 'POST' });
+            const data = await res.json();
+            if (data.uuid) {
+                setAuthUuid(data.uuid);
+                setIsPolling(true);
+                // Open Telegram Deep Link
+                const botUser = botName;
+                window.open(`https://t.me/${botUser}?start=auth_${data.uuid}`, '_blank');
+            }
+        } catch (e) {
+            console.error('Failed to start mobile auth:', e);
+            setWidgetState('error');
+        }
+    };
+
     useEffect(() => {
         // Prevent double loading
         if (scriptLoadedRef.current) return;
+        if (isMobile) {
+            setWidgetState('loaded'); // Mark as loaded to show our mobile button
+            return;
+        }
 
         // Check if we're on localhost - show warning
         const isLocalhost = typeof window !== 'undefined' &&
@@ -98,11 +159,24 @@ export const TelegramLoginButton = ({
                 clearTimeout(timeout);
             };
         }
-    }, [botName, onAuth, setTelegramId, setUsername, setUserPhotoUrl, addDebugInfo]);
+    }, [botName, onAuth, setTelegramId, setUsername, setUserPhotoUrl, addDebugInfo, isMobile]);
 
     return (
         <div className={`telegram-login-wrapper ${className}`}>
-            <div ref={containerRef} className="telegram-login-container min-h-[40px]" />
+            {!isMobile && <div ref={containerRef} className="telegram-login-container min-h-[40px]" />}
+
+            {isMobile && widgetState !== 'domain_error' && (
+                <button
+                    onClick={handleMobileAuth}
+                    disabled={isPolling}
+                    className="w-full h-12 bg-[#54A9EB] hover:bg-[#4ea2e1] text-white font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.86 14.12 15.54 15.84C15.41 16.56 15.14 16.81 14.88 16.83C14.32 16.89 13.89 16.47 13.35 16.11C12.5 15.55 12.02 15.2 11.2 14.66C10.25 14.04 10.86 13.7 11.41 13.13C11.55 12.98 14.05 10.71 14.1 10.51C14.11 10.48 14.11 10.38 14.05 10.33C14 10.28 13.92 10.3 13.86 10.31C13.77 10.34 11.66 11.73 10.61 12.44C10.45 12.55 10.31 12.6 10.18 12.6C10.04 12.6 9.77 12.52 9.56 12.45C9.31 12.37 9.11 12.32 9.13 12.19C9.14 12.12 9.24 12.04 9.43 11.95C10.61 11.44 14.47 9.84 15.4 9.45C16.63 8.94 16.8 8.8 17.07 8.8C17.13 8.8 17.27 8.82 17.36 8.89C17.44 8.95 17.46 9.04 17.46 9.11C17.46 9.18 17.45 9.25 17.43 9.32L16.64 8.8Z" fill="white" />
+                    </svg>
+                    <span>{isPolling ? 'Ожидание входа...' : 'Войти через Telegram'}</span>
+                </button>
+            )}
 
             {widgetState === 'loading' && (
                 <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
@@ -110,6 +184,7 @@ export const TelegramLoginButton = ({
                     <span>Загрузка...</span>
                 </div>
             )}
+
 
             {widgetState === 'domain_error' && (
                 <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm">

@@ -289,7 +289,7 @@ export function AdaptiveDeviceFeed({
           </motion.div>
         ) : (
           /* Сетка */
-          <div className="space-y-2">
+          <div className="space-y-4 overflow-y-auto max-h-[80vh] pb-20 scrollbar-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {sortedItems.map((item, index) => (
                 <motion.div

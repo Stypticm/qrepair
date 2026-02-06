@@ -51,6 +51,27 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
     }).format(price);
   };
 
+  // Управление системной кнопкой "Назад" в Telegram
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const tg = (window as any).Telegram?.WebApp;
+    if (!tg?.BackButton) return;
+
+    if (active) {
+      tg.BackButton.show();
+      const handleBack = () => {
+        setActive(null);
+      };
+      tg.BackButton.onClick(handleBack);
+      return () => {
+        tg.BackButton.offClick(handleBack);
+        tg.BackButton.hide();
+      };
+    } else {
+      tg.BackButton.hide();
+    }
+  }, [active]);
+
   // Обработчик события закрытия карточки после успешной оплаты
   useEffect(() => {
     const handleCloseDeviceCard = () => {
