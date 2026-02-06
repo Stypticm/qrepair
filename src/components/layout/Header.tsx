@@ -1,14 +1,17 @@
 'use client';
 
-import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X } from 'lucide-react';
+import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { MegaMenu } from '@/components/layout/MegaMenu';
+import { TelegramLoginButton } from '@/components/TelegramLoginButton';
+import { useAppStore } from '@/stores/authStore';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useCart } from '@/hooks/useCart';
+import Image from 'next/image';
 
 const CATEGORIES = [
   { name: 'Смартфоны', slug: 'smartphones', active: true },
@@ -22,8 +25,10 @@ const CATEGORIES = [
 
 export const Header = () => {
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const { favorites } = useFavorites();
   const { getTotalItems } = useCart();
+  const { username, userPhotoUrl, telegramId, logout } = useAppStore();
 
   return (
     <header className="w-full bg-white z-50 sticky top-0 shadow-sm">
@@ -88,8 +93,47 @@ export const Header = () => {
             <SearchBar />
           </div>
 
+          {/* Auth */}
+          <div className="hidden lg:flex items-center mr-4">
+            {telegramId ? (
+              <div className="flex items-center gap-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200">
+                {userPhotoUrl ? (
+                  <Image
+                    src={userPhotoUrl}
+                    alt={username || 'User'}
+                    width={24}
+                    height={24}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <div className="w-6 h-6 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-xs font-bold">
+                    {(username?.[0] || 'U').toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-gray-900">
+                  {username || 'Пользователь'}
+                </span>
+                <button
+                  onClick={logout}
+                  className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                  title="Выйти"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(!showAuthModal)}
+                className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-all text-sm font-medium"
+              >
+                <User className="w-4 h-4" />
+                <span>Войти</span>
+              </button>
+            )}
+          </div>
+
           {/* Actions */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto lg:ml-0">
             <ActionButton icon={Scale} label="Сравнить" count={0} disabled tooltip="Скоро" />
             <ActionButton icon={Heart} label="Избранное" count={favorites.length} href="/favorites" />
             <ActionButton icon={ShoppingCart} label="Корзина" count={getTotalItems()} href="/cart" badge />
@@ -143,6 +187,21 @@ export const Header = () => {
       >
         <MegaMenu isOpen={isCatalogOpen} onClose={() => setIsCatalogOpen(false)} />
       </div>
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowAuthModal(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Вход через Telegram</h3>
+              <button onClick={() => setShowAuthModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <TelegramLoginButton onAuth={() => setShowAuthModal(false)} />
+          </div>
+        </div>
+      )}
     </header>
   );
 };

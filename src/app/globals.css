@@ -43,6 +43,8 @@
   html {
     height: 100%;
     overflow-x: hidden;
+    /* Всегда показываем вертикальный scrollbar, чтобы избежать сдвига контента */
+    overflow-y: scroll;
     scroll-behavior: smooth;
     /* Плавность для свайпов */
     -webkit-overflow-scrolling: touch;
@@ -135,8 +137,8 @@
 
   /* Скрытие BottomSheet Telegram */
   .tg-bottom-sheet {
-  display: none !important;
-}
+    display: none !important;
+  }
 
   /* Скрываем только основные элементы Telegram UI */
   .tg-bottom-sheet {
@@ -145,16 +147,15 @@
 
   /* ... ваши стили для кнопок, форм, диалогов остаются ... */
 
-  /* Фиксированный размер для ПК - ТОЛЬКО когда НЕ в Telegram WebView */
-  /* Применяем стили только если нет класса telegram-fullscreen */
-  @media (min-width: 1024px) {
+  /* Фиксированный размер для ПК - ТОЛЬКО для Telegram Desktop */
+  /* Для обычного веб-браузера на десктопе используем полную ширину */
+  /* @media (min-width: 1024px) {
     html:not(.telegram-fullscreen) {
       height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       background: #f0f0f0;
-      /* Фон вокруг приложения */
       overflow: visible;
     }
 
@@ -174,10 +175,11 @@
       overflow: hidden;
       background: #ffffff !important;
     }
-  }
+  } */
 
-  /* Мобильные - ТОЛЬКО когда НЕ в Telegram WebView */
-  @media (max-width: 1023px) {
+  /* Мобильные - ТОЛЬКО для PWA/Telegram */
+  /* Для обычного веб-браузера на мобильных используем полную ширину */
+  /* @media (max-width: 1023px) {
     html:not(.telegram-fullscreen) #__next {
       width: 100%;
       max-width: 480px;
@@ -189,7 +191,7 @@
       overflow: hidden;
       background: #ffffff !important;
     }
-  }
+  } */
 
   /* Для Telegram WebView на десктопе - компактный режим (размер телефона) */
   /* Не расширяем на весь экран, показываем как будто размер телефона */

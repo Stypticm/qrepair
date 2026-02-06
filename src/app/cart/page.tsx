@@ -29,33 +29,35 @@ export default function CartPage() {
       <Page back={true}>
         <div className="hidden md:block"><Header /></div>
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center md:pt-20">
-          <div className="text-center">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShoppingCart className="w-12 h-12 text-gray-400" />
+          <div className="max-w-7xl w-full mx-auto px-6">
+            <div className="text-center">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShoppingCart className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
+              <p className="text-gray-600 mb-6 md:mb-0">Добавьте товары в корзину, <br />чтобы они появились здесь</p>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
-            <p className="text-gray-600 mb-6 md:mb-0">Добавьте товары в корзину, <br />чтобы они появились здесь</p>
-          </div>
-          <button
-            onClick={() => router.push('/')}
-            className="md:hidden px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors font-semibold flex items-center justify-center gap-2 mx-auto"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            <button
+              onClick={() => router.push('/')}
+              className="md:hidden px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors font-semibold flex items-center justify-center gap-2 mx-auto"
             >
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-            На главную
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+              На главную
+            </button>
+          </div>
         </div>
-      </Page>
+      </Page >
     )
   }
 
@@ -64,7 +66,7 @@ export default function CartPage() {
       <div className="hidden md:block"><Header /></div>
       <div className="min-h-screen bg-gray-50 md:pt-2">
         {/* md:pt-2 because Header is fixed and takes ~80px space. */}
-        <div className="mx-auto pt-16 md:pt-24 px-4 pb-32">
+        <div className="max-w-7xl mx-auto pt-16 md:pt-24 px-6 pb-32">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Корзина</h1>
             <p className="text-gray-600">

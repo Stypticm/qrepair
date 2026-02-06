@@ -120,7 +120,7 @@ export default function FavoritesPage() {
     <Page back={true}>
       <div className="hidden md:block"><Header /></div>
       <div className="min-h-screen bg-gray-50">
-        <div className="mx-auto pt-16 md:pt-24 px-4">
+        <div className="max-w-7xl mx-auto pt-16 md:pt-24 px-6">
           <div className="mb-8">
             {favoriteLots.length > 0 && (
               <p className="text-gray-600">
