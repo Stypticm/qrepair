@@ -50,6 +50,13 @@ export const PWAInstallPrompt = () => {
     }
   }, []);
 
+  // Manual trigger listener
+  useEffect(() => {
+    const handleShowPrompt = () => setShowPrompt(true);
+    window.addEventListener('showPwaPrompt', handleShowPrompt);
+    return () => window.removeEventListener('showPwaPrompt', handleShowPrompt);
+  }, []);
+
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();

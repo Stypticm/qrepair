@@ -92,6 +92,17 @@ if (fs.existsSync(swPath)) {
     console.warn('⚠️ public/sw.js not found')
 }
 
+// -----------------------------------------------------------------------------
+// Обновляем public/version.json
+// -----------------------------------------------------------------------------
+const versionJsonPath = path.join(__dirname, '../public/version.json')
+const versionData = {
+  version: newVersion,
+  buildTime: Date.now()
+}
+fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2))
+console.log(`📝 version.json обновлен: ${versionJsonPath} (Version: ${newVersion})`)
+
 console.log(`📝 Файл обновлен: ${configPath}`)
 console.log(`\n📋 Использование:`)
 console.log(
