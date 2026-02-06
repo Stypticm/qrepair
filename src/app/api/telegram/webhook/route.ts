@@ -331,24 +331,10 @@ export async function POST(req: Request) {
           .eq('status', 'pending'); // Only update if still pending
 
         if (!error) {
-            const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://qrepair.vercel.app';
-            
             await sendTelegramMessage(
                 telegramId,
                 '✅ Вы успешно авторизовались на сайте Qoqos!',
-                { 
-                    parse_mode: 'Markdown',
-                    reply_markup: {
-                        inline_keyboard: [
-                            [
-                                {
-                                    text: '🚀 Вернуться в приложение',
-                                    url: BASE_URL
-                                }
-                            ]
-                        ]
-                    }
-                }
+                { parse_mode: 'Markdown' }
             );
         } else {
              await sendTelegramMessage(
