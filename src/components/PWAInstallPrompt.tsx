@@ -81,7 +81,7 @@ export const PWAInstallPrompt = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -100, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed top-4 left-4 right-4 z-[9999] md:hidden"
+          className="fixed top-4 left-4 right-4 z-[9999] md:hidden pointer-events-auto"
         >
           <div className="bg-white/80 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-3xl p-4 flex flex-col gap-3 max-w-sm mx-auto overflow-hidden relative">
             {/* Glossy overlay */}

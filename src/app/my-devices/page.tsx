@@ -11,7 +11,7 @@ import { SkupkaRequest } from '@/core/lib/interfaces';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QRCodeGenerator } from '@/components/QRCodeGenerator';
-import { ChevronDown, ChevronUp, Smartphone, Calendar, ShoppingBag, Package } from 'lucide-react';
+import { ChevronDown, ChevronUp, Smartphone, Calendar, ShoppingBag, Package, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
@@ -149,16 +149,26 @@ const MyDevices = () => {
       <div className="w-full h-full flex flex-col mx-auto bg-white">
         <div className="h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent bg-white">
           <div className="w-full max-w-md mx-auto px-2 bg-white">
-            <div className="text-center mb-6 mt-20">
-              <h1 className="text-3xl font-semibold text-gray-900 mb-4">Мои устройства</h1>
+            <div className="mb-6 mt-16 px-2">
+              <div className="flex items-center gap-4 mb-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/')}
+                  className="p-2 hover:bg-gray-100 rounded-full h-10 w-10 flex-shrink-0"
+                >
+                  <ArrowLeft className="w-6 h-6 text-gray-700" />
+                </Button>
+                <h1 className="text-2xl font-bold text-gray-900">Мои устройства</h1>
+              </div>
 
               {/* Вкладки */}
               <div className="flex gap-2 justify-center mb-4">
                 <button
                   onClick={() => setActiveTab('selling')}
                   className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'selling'
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                 >
                   <Package className="w-5 h-5" />
@@ -167,8 +177,8 @@ const MyDevices = () => {
                 <button
                   onClick={() => setActiveTab('bought')}
                   className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'bought'
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                 >
                   <ShoppingBag className="w-5 h-5" />
