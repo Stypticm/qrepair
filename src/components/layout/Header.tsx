@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { MegaMenu } from '@/components/layout/MegaMenu';
-import { TelegramLoginButton } from '@/components/TelegramLoginButton';
+import { TelegramQRLogin } from '@/components/TelegramQRLogin';
 import { useAppStore } from '@/stores/authStore';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -192,13 +192,15 @@ export const Header = () => {
       {showAuthModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowAuthModal(false)}>
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">Вход через Telegram</h3>
-              <button onClick={() => setShowAuthModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-bold text-gray-900"></h3>
+              <button onClick={() => setShowAuthModal(false)} className="p-1 hover:bg-gray-100 rounded-lg z-10 relative">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <TelegramLoginButton onAuth={() => setShowAuthModal(false)} />
+            <div className="-mt-10">
+              <TelegramQRLogin onSuccess={() => setShowAuthModal(false)} />
+            </div>
           </div>
         </div>
       )}
