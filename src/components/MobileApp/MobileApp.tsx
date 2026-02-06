@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer';
 import { PWAInstallPrompt } from '@/components/PWAInstallPrompt';
 import MenuComponent from '@/components/Menu/MenuComponent';
-import { VersionCheck } from '@/components/VersionCheck/VersionCheck';
 
 import { useMobileAppInit } from './useMobileAppInit';
 import { AuthModal } from './AuthModal';
@@ -42,8 +41,6 @@ export const MobileApp = () => {
 
     return (
         <AdaptiveContainer>
-            <VersionCheck />
-
             <MainFeed
                 isDesktopLike={isDesktopLike}
                 viewMode={viewMode}

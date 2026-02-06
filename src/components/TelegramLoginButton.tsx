@@ -66,15 +66,32 @@ export const TelegramLoginButton = ({
             if (data.uuid) {
                 setAuthUuid(data.uuid);
                 setIsPolling(true);
-                // Open Telegram Deep Link
+
+                // В режиме PWA / Mobile лучше использовать прямой переход, 
+                // так как window.open может блокироваться или открывать новое окно браузера
                 const botUser = botName;
-                window.open(`https://t.me/${botUser}?start=auth_${data.uuid}`, '_blank');
+                const url = `https://t.me/${botUser}?start=auth_${data.uuid}`;
+
+                console.log('🔗 Redirecting to Telegram:', url);
+                window.location.assign(url);
             }
         } catch (e) {
             console.error('Failed to start mobile auth:', e);
             setWidgetState('error');
         }
     };
+
+    // Возобновление опроса при возврате в приложение (важно для PWA)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && authUuid) {
+                console.log('📱 App visible, ensuring polling is active...');
+                setIsPolling(true);
+            }
+        };
+        window.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => window.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [authUuid]);
 
     useEffect(() => {
         // Prevent double loading
