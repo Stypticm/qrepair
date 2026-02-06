@@ -1,16 +1,29 @@
 'use client'
 
-import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, LogIn, RefreshCw } from 'lucide-react';
+import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, LogIn, RefreshCw, PlusSquare } from 'lucide-react';
 import { isMaster, useAppStore } from '@/stores/authStore';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: any, isLoading: boolean }) => {
     const { telegramId, logout } = useAppStore();
     const { needsUpdate, performUpdate } = useVersionCheck();
+    const [isStandalone, setIsStandalone] = useState(false);
+
+    useEffect(() => {
+        // Проверяем, запущено ли приложение в режиме PWA
+        const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+        setIsStandalone(standalone);
+    }, []);
 
     const handleLoginClick = () => {
         const event = new CustomEvent('openLoginModal');
+        window.dispatchEvent(event);
+    };
+
+    const handlePwaInstallClick = () => {
+        const event = new CustomEvent('showPwaPrompt');
         window.dispatchEvent(event);
     };
 
@@ -20,12 +33,12 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
     };
 
     return (
-        <div className="fixed left-4 right-4 z-[9999]"
+        <div className="fixed left-4 right-4 z-[9999] pointer-events-none"
             style={{
                 bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
                 transform: "translateZ(0)",
                 WebkitTransform: "translateZ(0)",
-                isolation: 'isolate' // Создает новый контекст наложения для гарантии видимости
+                isolation: 'isolate'
             }}
         >
             <AnimatePresence mode="wait">
@@ -36,7 +49,7 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 20, opacity: 0 }}
                         onClick={performUpdate}
-                        className="w-full relative h-[60px] bg-gradient-to-r from-blue-600 to-blue-500 rounded-full flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all group overflow-hidden border border-white/20"
+                        className="w-full relative h-[60px] bg-gradient-to-r from-blue-600 to-blue-500 rounded-full flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all group overflow-hidden border border-white/20 pointer-events-auto"
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"></div>
                         <RefreshCw className="w-5 h-5 text-white animate-spin-slow group-hover:rotate-180 transition-transform duration-700" />
@@ -47,11 +60,10 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                     <motion.div
                         key="menu-content"
                         initial={{ y: 0, opacity: 1 }}
-                        className="relative"
+                        className="relative pointer-events-auto"
                         style={{
                             background: "rgba(255, 255, 255, 0.02)",
                             border: "1px solid rgba(255, 255, 255, 0.22)",
-                            pointerEvents: "auto",
                         }}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-white/10 rounded-full blur-xl"></div>
@@ -62,6 +74,18 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                             <div className={`relative max-w-md mx-auto flex ${!isLoading && isMaster(userId) ? 'justify-around' : 'justify-evenly'} items-center gap-2`}>
                                 {!telegramId ? (
                                     <>
+                                        {/* Кнопка установки PWA (только если не в PWA) */}
+                                        {!isStandalone && (
+                                            <button
+                                                onClick={handlePwaInstallClick}
+                                                className="relative w-12 h-12 rounded-full bg-gradient-to-br from-teal-500/40 to-teal-600/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-teal-500/50 hover:to-teal-600/30 shadow-lg"
+                                                aria-label="Установить приложение"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
+                                                <PlusSquare className="relative w-6 h-6 text-teal-600 drop-shadow-sm" />
+                                            </button>
+                                        )}
+
                                         <button
                                             onClick={handleLoginClick}
                                             className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#54A9EB]/40 to-[#54A9EB]/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-[#54A9EB]/50 hover:to-[#54A9EB]/30 shadow-lg"

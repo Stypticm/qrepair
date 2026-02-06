@@ -40,7 +40,20 @@ export const MobileApp = () => {
     }
 
     return (
-        <AdaptiveContainer>
+        <AdaptiveContainer
+            fixedContent={
+                <>
+                    <AuthModal
+                        isOpen={isLoginModalOpen}
+                        onClose={() => setIsLoginModalOpen(false)}
+                    />
+
+                    <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
+
+                    {!isInTelegram && <PWAInstallPrompt />}
+                </>
+            }
+        >
             <MainFeed
                 isDesktopLike={isDesktopLike}
                 viewMode={viewMode}
@@ -51,15 +64,6 @@ export const MobileApp = () => {
                 setViewMode={setViewMode}
                 screenHeight={screenHeight}
             />
-
-            <AuthModal
-                isOpen={isLoginModalOpen}
-                onClose={() => setIsLoginModalOpen(false)}
-            />
-
-            <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
-
-            {!isInTelegram && <PWAInstallPrompt />}
         </AdaptiveContainer >
     );
 };
