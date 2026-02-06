@@ -345,20 +345,26 @@
       height: -webkit-fill-available;
       overflow-y: auto;
     }
+
+    /* Подавление оверскролла для предотвращения визуальных багов с наложением FIXED элементов */
+    .suppress-overscroll {
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: touch;
+    }
   }
-}
 
-/* 🔒 Telegram Desktop: ЗАПРЕЩАЕМ fullscreen viewport */
-html.telegram-desktop {
-  height: auto !important;
-}
+  /* 🔒 Telegram Desktop: ЗАПРЕЩАЕМ fullscreen viewport */
+  html.telegram-desktop {
+    height: auto !important;
+  }
 
-html.telegram-desktop body {
-  height: auto !important;
-}
+  html.telegram-desktop body {
+    height: auto !important;
+  }
 
-html.telegram-desktop #__next {
-  min-height: unset !important;
-  height: auto !important;
-  max-height: 844px;
+  html.telegram-desktop #__next {
+    min-height: unset !important;
+    height: auto !important;
+    max-height: 844px;
+  }
 }

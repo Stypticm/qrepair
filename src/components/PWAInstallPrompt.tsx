@@ -77,64 +77,55 @@ export const PWAInstallPrompt = () => {
     <AnimatePresence>
       {isStandalone || !showPrompt ? null : (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="fixed bottom-4 left-4 right-4 z-50 md:hidden"
+          exit={{ y: -100, opacity: 0 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="fixed top-4 left-4 right-4 z-[9999] md:hidden"
         >
-          <div className="bg-white/90 backdrop-blur-xl border border-gray-200 shadow-2xl rounded-2xl p-4 flex flex-col gap-4 max-w-sm mx-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden border border-gray-100">
+          <div className="bg-white/80 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-3xl p-4 flex flex-col gap-3 max-w-sm mx-auto overflow-hidden relative">
+            {/* Glossy overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+
+            <div className="flex items-center justify-between relative group">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white shadow-sm flex-shrink-0 overflow-hidden border border-gray-100 p-1">
                   <Image
                     src={getPictureUrl('submit.png')}
                     alt="App Icon"
-                    width={48}
-                    height={48}
-                    className="object-cover"
+                    width={40}
+                    height={40}
+                    className="object-cover rounded-xl"
                   />
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="font-semibold text-gray-900 text-sm">Установить Qoqos</h3>
-                  <p className="text-gray-500 text-xs mt-0.5">
-                    {isIOS
-                      ? 'Добавьте на главный экран для быстрого доступа'
-                      : 'Установите приложение для лучшего опыта'
-                    }
-                  </p>
+                  <h3 className="font-bold text-gray-900 text-[13px] leading-tight">Qoqos App</h3>
+                  <p className="text-gray-500 text-[11px] font-medium leading-tight">Доступно обновление интерфейса</p>
                 </div>
               </div>
               <button
                 onClick={handleClose}
-                className="text-gray-400 hover:text-gray-600 p-1 -mt-1 -mr-1"
+                className="w-7 h-7 bg-gray-100/50 hover:bg-gray-200/50 rounded-full flex items-center justify-center text-gray-400 active:scale-90 transition-all"
               >
-                <X size={20} />
+                <X size={14} />
               </button>
             </div>
 
-            {isIOS ? (
-              <div className="flex flex-col gap-2 text-sm text-gray-600 bg-gray-50/50 rounded-xl p-3">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center justify-center w-6 h-6 bg-white rounded-md shadow-sm text-blue-500">
-                    <Share size={14} />
-                  </span>
-                  <span>Нажмите «Поделиться»</span>
-                </div>
-                <div className="w-px h-3 bg-gray-200 ml-3" />
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center justify-center w-6 h-6 bg-white rounded-md shadow-sm text-gray-700">
-                    <PlusSquare size={14} />
-                  </span>
-                  <span>Выберите «На экран &quot;Домой&quot;»</span>
-                </div>
-              </div>
-            ) : (
+            <div className="relative">
+              <p className="text-[13px] text-gray-700 leading-relaxed px-1">
+                {isIOS
+                  ? 'Чтобы установить, нажмите «Поделиться», затем «На экран "Домой"»'
+                  : 'Установите приложение для мгновенного доступа и лучших функций.'
+                }
+              </p>
+            </div>
+
+            {!isIOS && (
               <button
                 onClick={handleInstallClick}
-                className="w-full py-2.5 bg-black text-white text-sm font-medium rounded-xl active:scale-95 transition-transform"
+                className="w-full py-2.5 bg-[#2dc2c6] text-white text-[13px] font-bold rounded-2xl active:scale-95 transition-all shadow-[0_4px_12px_rgba(45,194,198,0.2)] hover:bg-[#28b1b5]"
               >
-                Установить
+                Установить сейчас
               </button>
             )}
           </div>

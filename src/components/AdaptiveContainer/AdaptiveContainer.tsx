@@ -84,13 +84,13 @@ export function AdaptiveContainer({ children, className = '' }: AdaptiveContaine
       };
     } else {
       // Проверяем платформу для мобильных устройств
-      const isTGWorkerMobile = typeof window !== 'undefined' && 
+      const isTGWorkerMobile = typeof window !== 'undefined' &&
         (window as any).Telegram?.WebApp?.platform &&
         ['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
-      
+
       return {
         container: `min-h-dvh w-full flex flex-col bg-white ${isTGWorkerMobile ? 'telegram-fullscreen' : ''}`,
-        main: 'flex-1 w-full overflow-y-auto overflow-x-hidden', // Гарантируем скролл и предотвращаем горизонтальный сдвиг
+        main: 'flex-1 w-full overflow-y-auto overflow-x-hidden suppress-overscroll', // Добавили класс для подавления оверскролла
         wrapper: 'w-full',
       };
     }
