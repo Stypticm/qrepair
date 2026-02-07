@@ -6,9 +6,11 @@ import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
 import { useAppStore } from '@/stores/authStore';
 import { TelegramLoginButton } from '@/components/TelegramLoginButton';
+import { isAdminTelegramId } from '@/core/lib/admin';
 
 import { usePathname } from 'next/navigation';
-import { useState, memo } from 'react';
+import { useState, memo, useEffect } from 'react';
+import { useSafeArea } from '@/hooks/useSafeArea';
 import { QRModal } from './QRModal';
 import { LoginQRModal } from './LoginQRModal';
 import { QrCode } from 'lucide-react';
@@ -22,10 +24,20 @@ const MemoizedTelegramLoginButton = memo(() => (
 MemoizedTelegramLoginButton.displayName = 'MemoizedTelegramLoginButton';
 
 export const DesktopHeader = () => {
-    const { username, userPhotoUrl, telegramId } = useAppStore();
+    const username = useAppStore(state => state.username);
+    const userPhotoUrl = useAppStore(state => state.userPhotoUrl);
+    const telegramId = useAppStore(state => state.telegramId);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isLoginQRModalOpen, setIsLoginQRModalOpen] = useState(false);
     const pathname = usePathname();
+    const { isDesktop } = useSafeArea();
+
+    // Force check for LH admin if store seems empty but we are on LH
+    useEffect(() => {
+        if (typeof window !== 'undefined' && !telegramId && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            useAppStore.getState().initializeTelegram();
+        }
+    }, [telegramId]);
 
     const isActive = (path: string) => pathname === path;
 
@@ -71,13 +83,23 @@ export const DesktopHeader = () => {
 
                         <div className="w-px h-6 bg-gray-200 mx-2"></div>
 
-                        <Link href="/favorites" className={navLinkClass('/favorites')}>
-                            Избранное
-                        </Link>
+                        {!isAdminTelegramId(telegramId) && (
+                            <>
+                                <Link href="/favorites" className={navLinkClass('/favorites')}>
+                                    Избранное
+                                </Link>
 
-                        <Link href="/cart" className={navLinkClass('/cart')}>
-                            Корзина
-                        </Link>
+                                <Link href="/cart" className={navLinkClass('/cart')}>
+                                    Корзина
+                                </Link>
+                            </>
+                        )}
+
+                        {isAdminTelegramId(telegramId) && (
+                            <Link href="/admin" className={navLinkClass('/admin')}>
+                                Админ
+                            </Link>
+                        )}
 
                         <span
                             className="px-4 py-2 rounded-xl text-base font-medium text-gray-300 cursor-not-allowed select-none transition-all duration-200"

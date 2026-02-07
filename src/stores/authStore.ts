@@ -15,6 +15,7 @@ import {
   useSignal,
   initDataState as _initDataState,
 } from '@telegram-apps/sdk-react'
+import { isAdminTelegramId } from '@/core/lib/admin'
 
 interface FormData {
   sn: string
@@ -55,6 +56,7 @@ interface AppState {
   username: string | null
   telegramId: string | null
   userPhotoUrl: string | null
+  guestId: string | null
 
   // Debug info
   debugInfo: string[]
@@ -131,9 +133,6 @@ interface AppState {
   initializeTelegram: (initDataState?: any) => void
 }
 
-// ID админов из кода
-const ADMIN_IDS = [1, 296925626, 531360988] // Реальные ID админов
-
 // Порядок шагов (клиентская воронка)
 const stepOrder = [
   'evaluation-mode',
@@ -170,6 +169,7 @@ export const useAppStore = create<AppState>()(
       userId: null,
       modalOpen: false,
       isManualLogout: false,
+      guestId: null,
 
       // Form data
       formData: {
@@ -481,7 +481,8 @@ export const useAppStore = create<AppState>()(
             model: '',
             pointId: 1,
             requestId: '',
-          }
+          },
+          guestId: null
         });
         
         // 2. Очищаем персистентное хранилище
@@ -490,17 +491,13 @@ export const useAppStore = create<AppState>()(
             // Удаляем точечные ключи
             localStorage.removeItem('telegramId');
             localStorage.removeItem('telegramUsername');
+            localStorage.removeItem('app-store'); // ПОЛНАЯ ОЧИСТКА для уверенности
             sessionStorage.clear();
             
-            // Мы НЕ удаляем весь app-store, чтобы сохранить флаг isManualLogout
-            // Persist middleware сохранит новое состояние (где telegramId=null и isManualLogout=true)
-            
-            console.log('✅ Auth storage cleared (preserved manual logout flag)');
+            console.log('✅ Auth storage cleared fully');
           } catch (e) {
             console.error('❌ Error clearing storage:', e);
           }
-          
-          // УБРАЛИ window.location.reload() - это вызывало перезапуск приложения и повторный авто-логин
         }
       },
 
@@ -532,14 +529,31 @@ export const useAppStore = create<AppState>()(
             return;
         }
 
-        // Проверяем, был ли ручной выход. Если да, то НЕ логиним автоматически
+        // 2. Если мы на localhost, можем авто-залогиниться под дев-юзером
         const { isManualLogout } = get();
-        if (isManualLogout) {
-             addDebugInfo('🚫 Был ручной выход. Авторизация пропущена.');
-             return;
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            const devId = process.env.NEXT_PUBLIC_DEV_TELEGRAM_ID || '531360988';
+            
+            // Если мы разлогинились вручную, не авто-логинимся до следующего явного действия
+            if (isManualLogout) {
+                addDebugInfo('ℹ️ Localhost: Пропуск авто-логина (был ручной выход)');
+                return;
+            }
+
+            if (!telegramId || !isAdminTelegramId(telegramId)) {
+                 addDebugInfo(`🔧 Dev Mode: Авто-логин для localhost (${devId})`);
+                 set({ 
+                    telegramId: devId,
+                    username: process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME || 'qoqos_app',
+                    role: isAdminTelegramId(devId) ? 'master' : 'client',
+                    userId: parseInt(devId),
+                    isManualLogout: false
+                 });
+                 return;
+            }
         }
 
-        // 2. Если мы в TWA (Telegram Mini App), берем данные оттуда
+        // 3. Если мы в TWA (Telegram Mini App), берем данные оттуда
         if (initDataState?.user) {
           addDebugInfo('✅ TWA: Получены данные из initData');
           const user = initDataState.user;
@@ -549,7 +563,7 @@ export const useAppStore = create<AppState>()(
             telegramId: tgId,
             username: user.username || null,
             userPhotoUrl: user.photo_url || null,
-            role: ADMIN_IDS.includes(user.id) ? 'master' : 'client',
+            role: isAdminTelegramId(user.id) ? 'master' : 'client',
             userId: user.id,
             isManualLogout: false // Сбрасываем флаг, если мы явно получили данные (хотя тут спорно, если TWA всегда дает данные)
           });
@@ -568,7 +582,7 @@ export const useAppStore = create<AppState>()(
             telegramId: tgId,
             username: unsafeUser.username || null,
             userPhotoUrl: unsafeUser.photo_url || null,
-            role: ADMIN_IDS.includes(unsafeUser.id) ? 'master' : 'client',
+            role: isAdminTelegramId(unsafeUser.id) ? 'master' : 'client',
             userId: unsafeUser.id
           });
         } else {
@@ -592,6 +606,8 @@ export const useAppStore = create<AppState>()(
         currentStep: state.currentStep,
         // Сохраняем флаг ручного выхода
         isManualLogout: state.isManualLogout,
+        // Сохраняем гостевой ID
+        guestId: state.guestId,
       }),
     }
   )
@@ -602,7 +618,7 @@ export const isMaster = (
   userId: number | null
 ): boolean => {
   if (!userId) return false
-  return ADMIN_IDS.includes(userId)
+  return isAdminTelegramId(userId)
 }
 
 // Простые селекторы без shallow для избежания проблем

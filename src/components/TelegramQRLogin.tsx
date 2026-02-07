@@ -178,32 +178,6 @@ export const TelegramQRLogin = ({ onSuccess }: { onSuccess?: () => void }) => {
                     3. Нажмите <b>Start</b> в боте
                 </p>
 
-                {/* Dev Mode: Direct Login for localhost */}
-                {typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                        <p className="text-[10px] text-gray-400 mb-2 uppercase tracking-wider font-semibold">Dev Mode</p>
-                        <button
-                            onClick={() => {
-                                const devUser = {
-                                    id: process.env.NEXT_PUBLIC_DEV_TELEGRAM_ID || '0',
-                                    username: process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME || 'DevUser',
-                                    photo_url: null
-                                };
-                                console.log('🔧 Dev Mode QR Login:', devUser);
-                                useAppStore.setState({
-                                    telegramId: devUser.id,
-                                    username: devUser.username,
-                                    userPhotoUrl: devUser.photo_url,
-                                    isManualLogout: false
-                                });
-                                if (onSuccess) onSuccess();
-                            }}
-                            className="w-full px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl text-xs font-medium transition-all border border-gray-200"
-                        >
-                            Войти как Dev User
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );

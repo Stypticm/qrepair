@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User } from 'lucide-react';
+import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
@@ -11,7 +11,9 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useCart } from '@/hooks/useCart';
+import { isAdminTelegramId } from '@/core/lib/admin';
 import Image from 'next/image';
+import { useEffect } from 'react';
 
 const CATEGORIES = [
   { name: 'Смартфоны', slug: 'smartphones', active: true },
@@ -29,6 +31,13 @@ export const Header = () => {
   const { favorites } = useFavorites();
   const { getTotalItems } = useCart();
   const { username, userPhotoUrl, telegramId, logout } = useAppStore();
+
+  // Force check for LH admin if store seems empty but we are on LH
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !telegramId && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      useAppStore.getState().initializeTelegram();
+    }
+  }, [telegramId]);
 
   return (
     <header className="w-full bg-white z-50 sticky top-0 shadow-sm">
@@ -134,9 +143,15 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 ml-auto lg:ml-0">
-            <ActionButton icon={Scale} label="Сравнить" count={0} disabled tooltip="Скоро" />
-            <ActionButton icon={Heart} label="Избранное" count={favorites.length} href="/favorites" />
-            <ActionButton icon={ShoppingCart} label="Корзина" count={getTotalItems()} href="/cart" badge />
+            {!isAdminTelegramId(telegramId) ? (
+              <>
+                <ActionButton icon={Scale} label="Сравнить" count={0} disabled tooltip="Скоро" />
+                <ActionButton icon={Heart} label="Избранное" count={favorites.length} href="/favorites" />
+                <ActionButton icon={ShoppingCart} label="Корзина" count={getTotalItems()} href="/cart" badge />
+              </>
+            ) : (
+              <ActionButton icon={Settings} label="Админ" href="/admin" />
+            )}
           </div>
         </div>
       </div>

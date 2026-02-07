@@ -3,6 +3,7 @@
 import type { PropsWithChildren } from 'react'
 import { AdaptiveContainer } from '../AdaptiveContainer'
 import { useRequestSync } from '@/hooks/useRequestSync'
+import { ChatWidget } from '../Desktop/ChatWidget'
 import { useTelegramDisableVerticalSwipes } from '@/app/telegram/telegram-web-view/useTelegramDisableVerticalSwipes'
 
 import { NavigationProvider } from '@/app/navigation/NavigationProvider'
@@ -19,6 +20,7 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
     // </NavigationProvider>
     <div id="app-root">
       <AdaptiveContainer>{children}</AdaptiveContainer>
+      <ChatWidget />
     </div>
   )
 }

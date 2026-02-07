@@ -1,7 +1,8 @@
 'use client'
 
 import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, LogIn, RefreshCw, PlusSquare } from 'lucide-react';
-import { isMaster, useAppStore } from '@/stores/authStore';
+import { useAppStore } from '@/stores/authStore';
+import { isAdminTelegramId } from '@/core/lib/admin';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -71,7 +72,7 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                         <div className="relative bg-gradient-to-r from-white/8 via-white/12 to-white/8 backdrop-blur-3xl border border-white/20 rounded-full px-6 py-4 shadow-2xl">
                             <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent rounded-full"></div>
 
-                            <div className={`relative max-w-md mx-auto flex ${!isLoading && isMaster(userId) ? 'justify-around' : 'justify-evenly'} items-center gap-2`}>
+                            <div className={`relative max-w-md mx-auto flex ${!isLoading && isAdminTelegramId(telegramId) ? 'justify-around' : 'justify-evenly'} items-center gap-2`}>
                                 {!telegramId ? (
                                     <>
                                         {/* Кнопка установки PWA (только если не в PWA) */}
@@ -128,7 +129,7 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                                         </button>
 
                                         {/* Выход (только для клиентов) */}
-                                        {!isMaster(userId) && (
+                                        {!isAdminTelegramId(telegramId) && (
                                             <button
                                                 onClick={handleLogoutClick}
                                                 className="relative w-12 h-12 rounded-full bg-gradient-to-br from-red-500/30 to-red-600/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-red-500/40 hover:to-red-600/30 shadow-lg"
@@ -142,7 +143,7 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                                 )}
 
                                 {/* Системная кнопка для админов */}
-                                {!isLoading && isMaster(userId) && (
+                                {!isLoading && isAdminTelegramId(telegramId) && (
                                     <button
                                         onClick={() => router.push('/internal')}
                                         className="relative w-12 h-12 rounded-full bg-gradient-to-br from-purple-600/90 to-purple-700/80 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-purple-500/90 hover:to-purple-600/80 shadow-lg"

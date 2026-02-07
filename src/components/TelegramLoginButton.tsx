@@ -217,31 +217,6 @@ export const TelegramLoginButton = ({
                         <p className="mt-2 text-xs text-red-600">После настройки перезагрузите страницу</p>
                     </div>
 
-                    {/* Dev Mode: Manual Login */}
-                    {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
-                        <div className="mt-3 pt-3 border-t border-red-200">
-                            <p className="text-xs text-gray-600 mb-2">🔧 Режим разработки:</p>
-                            <button
-                                onClick={() => {
-                                    const devUser = {
-                                        id: parseInt(process.env.NEXT_PUBLIC_DEV_TELEGRAM_ID || '0'),
-                                        username: process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME || 'DevUser',
-                                        first_name: 'Dev',
-                                        last_name: 'User',
-                                        photo_url: ''
-                                    };
-                                    console.log('🔧 Dev Mode Login:', devUser);
-                                    setTelegramId(devUser.id.toString());
-                                    setUsername(devUser.username);
-                                    if (onAuth) onAuth(devUser);
-                                    setWidgetState('loaded');
-                                }}
-                                className="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                Войти как Dev User (localhost)
-                            </button>
-                        </div>
-                    )}
                 </div>
             )}
 

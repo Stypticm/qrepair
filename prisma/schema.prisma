@@ -6,7 +6,7 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas   = ["public", "auth"]
+  schemas   = ["public"]
 }
 
 model Skupka {
@@ -326,5 +326,49 @@ model OrderItem {
 
   @@index([orderId])
   @@index([lotId])
+  @@schema("public")
+}
+
+model OperatorChat {
+  id             String            @id @default(cuid())
+  userTelegramId String            @unique
+  userNickname   String?
+  messages       OperatorMessage[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([userTelegramId])
+  @@schema("public")
+}
+
+model OperatorMessage {
+  id         String       @id @default(cuid())
+  chatId     String
+  chat       OperatorChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId   String // telegramId отправителя
+  senderType SenderType
+  text       String
+  createdAt  DateTime     @default(now())
+
+  @@index([chatId])
+  @@schema("public")
+}
+
+model AuthRequest {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status           String   @default("pending")
+  telegramId       String?  @map("telegram_id")
+  telegramUsername String?  @map("telegram_username")
+  telegramData     Json?    @map("telegram_data")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("auth_requests")
+  @@schema("public")
+}
+
+enum SenderType {
+  user
+  admin
+
   @@schema("public")
 }

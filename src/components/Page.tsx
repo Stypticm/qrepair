@@ -68,16 +68,18 @@ export function Page({ children, back = true }: PropsWithChildren<{
     ? 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto'
     : 'w-full h-full';
 
-  // Quick fix: Check pathname. If cart or favorites, use full width on desktop.
   const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/buyback') || pathname?.includes('/repair');
+  const isAdminPath = pathname?.startsWith('/admin');
 
-  const desktopClass = isWidePage
-    ? 'w-full max-w-7xl mx-auto bg-transparent shadow-none overflow-visible'
-    : 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto';
+  const desktopClass = isAdminPath
+    ? 'w-full bg-transparent shadow-none overflow-visible'
+    : isWidePage
+      ? 'w-full max-w-7xl mx-auto bg-transparent shadow-none overflow-visible'
+      : 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto';
 
   const finalInnerClass = isDesktop ? desktopClass : 'w-full h-full';
 
-  const finalOuterClass = (isDesktop && !isWidePage)
+  const finalOuterClass = (isDesktop && !isWidePage && !isAdminPath)
     ? 'w-full h-full flex justify-center items-center bg-gray-100/50'
     : 'w-full h-full';
 

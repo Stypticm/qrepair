@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BarChart3, Plus, ShoppingBag } from 'lucide-react';
+import { Users, BarChart3, Plus, ShoppingBag, MessageCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 
@@ -97,6 +98,13 @@ export function AdminPageClient() {
       icon: Plus,
       color: 'bg-green-500',
     },
+    {
+      id: 'chats',
+      title: 'Чаты',
+      description: 'Общение с клиентами в реальном времени',
+      icon: MessageCircle,
+      color: 'bg-orange-500',
+    },
   ];
 
   const handleSectionClick = (sectionId: string) => {
@@ -108,69 +116,95 @@ export function AdminPageClient() {
       router.push('/admin/orders');
     } else if (sectionId === 'add-lot') {
       router.push('/admin/add-lot');
+    } else if (sectionId === 'chats') {
+      router.push('/admin/chats');
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Заголовок */}
-      <div className="bg-white shadow-sm border-b pt-12">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex flex-col items-center justify-center text-center">
-            <h1 className="text-2xl font-bold text-gray-900 font-sf-pro">
-              Админ-панель
-            </h1>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Левая боковая панель для десктопа (опционально, но сделаем пока сетку) */}
+      <div className="flex-1 flex flex-col">
+        {/* Заголовок */}
+        <header className="bg-white border-b sticky top-0 z-10 px-8 py-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                Панель управления
+              </h1>
+              <p className="text-gray-500 mt-1">
+                Добро пожаловать в админ-панель Qoqos
+              </p>
+            </div>
+            <button
+              onClick={() => router.push('/')}
+              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border rounded-xl hover:bg-gray-50 transition-all"
+            >
+              На сайт
+            </button>
           </div>
-        </div>
-      </div>
+        </header>
 
-      {/* Основной контент */}
-      <div className="max-w-4xl mx-auto p-6 pt-8">
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Управление системой
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Основной контент */}
+        <main className="flex-1 p-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {adminSections.map((section) => {
                 const IconComponent = section.icon;
                 return (
-                  <Card
+                  <motion.div
                     key={section.id}
-                    className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+                    whileHover={{ scale: 1.02, y: -4 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleSectionClick(section.id)}
+                    className="group"
                   >
-                    <CardHeader className="pb-4">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={`p-3 rounded-xl ${section.color} text-white shadow-lg`}
-                        >
-                          <IconComponent className="w-6 h-6" />
+                    <Card className="h-full cursor-pointer border-none shadow-sm hover:shadow-xl transition-all duration-300 bg-white overflow-hidden rounded-3xl group">
+                      <div className={`h-2 w-full ${section.color}`} />
+                      <CardHeader className="pt-8 px-8">
+                        <div className="flex items-start justify-between">
+                          <div
+                            className={`p-4 rounded-2xl ${section.color} text-white shadow-lg transform group-hover:rotate-6 transition-transform duration-300`}
+                          >
+                            <IconComponent className="w-8 h-8" />
+                          </div>
+                          <div className="text-gray-300 group-hover:text-gray-400 transition-colors">
+                            <Plus className="w-6 h-6 rotate-45" />
+                          </div>
                         </div>
-                        <div>
-                          <CardTitle className="text-xl font-bold text-gray-900">
+                        <div className="mt-8">
+                          <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
                             {section.title}
                           </CardTitle>
-                          <p className="text-gray-600 text-sm mt-1">
+                          <p className="text-gray-500 leading-relaxed text-sm">
                             {section.description}
                           </p>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">
-                          Нажмите для перехода
-                        </span>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardHeader>
+                      <CardContent className="px-8 pb-8 pt-4">
+                        <div className="flex items-center text-sm font-semibold text-gray-400 group-hover:text-gray-900 transition-colors">
+                          <span>Управление</span>
+                          <svg
+                            className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                          </svg>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 );
               })}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

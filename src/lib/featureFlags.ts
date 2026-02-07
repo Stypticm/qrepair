@@ -1,3 +1,5 @@
+import { ADMIN_TELEGRAM_IDS } from '@/core/lib/admin';
+
 // Система управления флагами функций
 export type FeatureFlag =
   | 'NEW_UI'
@@ -17,17 +19,17 @@ export const FEATURE_FLAGS: Record<
 > = {
   NEW_UI: {
     enabled: true,
-    users: ['1', '296925626', '531360988'],
+    users: ADMIN_TELEGRAM_IDS,
     description: 'Новый интерфейс пользователя',
   },
   BETA_FEATURES: {
     enabled: true,
-    users: ['1', '296925626', '531360988'],
+    users: ADMIN_TELEGRAM_IDS,
     description: 'Бета-функции для тестирования',
   },
   DEBUG_MODE: {
     enabled: true,
-    users: ['1', '296925626', '531360988'],
+    users: ADMIN_TELEGRAM_IDS,
     description:
       'Режим отладки с дополнительной информацией',
   },

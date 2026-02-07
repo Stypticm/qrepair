@@ -1,0 +1,247 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { useAppStore } from '@/stores/authStore';
+import { isAdminTelegramId } from '@/core/lib/admin';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Send, User, MessageCircle, ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+
+interface Message {
+  id: string;
+  senderId: string;
+  senderType: 'user' | 'admin';
+  text: string;
+  createdAt: string;
+}
+
+interface Chat {
+  id: string;
+  userTelegramId: string;
+  userNickname: string | null;
+  updatedAt: string;
+  messages: Message[];
+}
+
+export default function AdminChatsPage() {
+  const { telegramId } = useAppStore();
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchChats();
+    const interval = setInterval(fetchChats, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (selectedChat) {
+      fetchChatMessages(selectedChat.id);
+      const interval = setInterval(() => fetchChatMessages(selectedChat.id), 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedChat]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const fetchChats = async () => {
+    try {
+      const res = await fetch('/api/admin/chats', {
+        headers: { 'x-telegram-id': telegramId || '' }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setChats(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch chats:', error);
+    }
+  };
+
+  const fetchChatMessages = async (chatId: string) => {
+    try {
+      const res = await fetch(`/api/admin/chats/${chatId}`, {
+        headers: { 'x-telegram-id': telegramId || '' }
+      });
+      const data = await res.json();
+      if (data.messages) {
+        setMessages(data.messages);
+      }
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!input.trim() || !selectedChat || !telegramId || isLoading) return;
+
+    setIsLoading(true);
+    const text = input.trim();
+    setInput('');
+
+    try {
+      const res = await fetch(`/api/admin/chats/${selectedChat.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-telegram-id': telegramId
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (res.ok) {
+        fetchChatMessages(selectedChat.id);
+        fetchChats();
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isAdminTelegramId(telegramId)) {
+    return <div className="p-8 text-center">Доступ запрещен</div>;
+  }
+
+  return (
+    <div className="flex h-screen bg-gray-50 pt-20">
+      {/* Sidebar */}
+      <div className="w-80 bg-white border-r flex flex-col">
+        <div className="p-4 border-b flex items-center justify-between">
+          <h2 className="font-bold text-lg">Чаты</h2>
+          <Link href="/admin">
+            <Button variant="ghost" size="sm" className="h-8 px-2">
+              <ArrowLeft size={16} className="mr-1" /> Админ
+            </Button>
+          </Link>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {chats.length === 0 ? (
+            <div className="p-8 text-center text-gray-500 text-sm">Нет активных чатов</div>
+          ) : (
+            chats.map((chat) => (
+              <button
+                key={chat.id}
+                onClick={() => setSelectedChat(chat)}
+                className={cn(
+                  "w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors border-b",
+                  selectedChat?.id === chat.id && "bg-blue-50 hover:bg-blue-50 border-r-4 border-r-blue-600"
+                )}
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                  <User size={20} className="text-gray-400" />
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-semibold text-sm truncate">
+                      {chat.userNickname || `ID: ${chat.userTelegramId}`}
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 truncate">
+                    {chat.messages?.[0]?.text || 'Нет сообщений'}
+                  </p>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {selectedChat ? (
+          <>
+            {/* Header */}
+            <div className="p-4 bg-white border-b flex items-center justify-between shadow-sm z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <User size={20} className="text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">
+                    {selectedChat.userNickname || 'Пользователь'}
+                  </h3>
+                  <p className="text-[11px] text-gray-500">Telegram ID: {selectedChat.userTelegramId}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f0f2f5]">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "flex flex-col max-w-[70%]",
+                    msg.senderType === 'admin' ? "ml-auto items-end" : "mr-auto items-start"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "px-4 py-2 rounded-2xl text-sm shadow-sm",
+                      msg.senderType === 'admin'
+                        ? "bg-blue-600 text-white rounded-tr-none"
+                        : "bg-white text-gray-900 rounded-tl-none"
+                    )}
+                  >
+                    {msg.text}
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-1 px-1">
+                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input */}
+            <div className="p-4 bg-white border-t">
+              <div className="flex items-center gap-3 max-w-4xl mx-auto">
+                <div className="flex-1 relative">
+                  <input
+                    type="text"
+                    placeholder="Напишите ответ..."
+                    className="w-full bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                  />
+                </div>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || isLoading}
+                  className="rounded-xl bg-blue-600 hover:bg-blue-700 h-11 px-6 shadow-lg shadow-blue-500/20 transition-all"
+                >
+                  <Send size={18} className="mr-2" />
+                  Отправить
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400 p-8">
+            <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-sm">
+              <MessageCircle size={40} className="text-gray-200" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Выберите чат</h3>
+            <p className="max-w-xs text-sm">
+              Выберите пользователя из списка слева, чтобы начать переписку.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

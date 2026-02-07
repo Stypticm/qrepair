@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 // Убрали импорт SDK методов для свайпов - используем прямой доступ к Telegram WebApp API
 import Image from 'next/image';
 import { useSafeArea } from '@/hooks/useSafeArea';
+import { usePathname } from 'next/navigation';
 
 interface AdaptiveContainerProps {
   children: React.ReactNode;
@@ -15,6 +16,8 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
   const safeArea = useSafeArea();
   const { isTelegram, isReady, safeAreaInsets, isFullscreen } = safeArea;
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+  const isAdminPath = pathname?.startsWith('/admin');
 
   useEffect(() => {
     setIsMounted(true);
@@ -62,6 +65,14 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
     const { isMobile, isDesktop } = safeArea;
     if (!isTelegram) {
       if (isDesktop) {
+        if (isAdminPath) {
+          return {
+            container: 'min-h-dvh w-full flex flex-col bg-gray-50',
+            main: 'w-full flex-1 overflow-x-hidden overflow-y-auto relative',
+            wrapper: 'w-full flex-1 relative',
+            fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
+          };
+        }
         return {
           container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
           main: 'w-[390px] h-[844px] overflow-x-hidden overflow-y-auto relative',

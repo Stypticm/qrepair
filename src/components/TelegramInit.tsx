@@ -5,13 +5,12 @@ import { useAppStore } from '@/stores/authStore';
 
 export function TelegramInit() {
   useEffect(() => {
+    // Initialize store from WebApp data or session
+    useAppStore.getState().initializeTelegram();
+
     if (!window.Telegram?.WebApp) return;
 
     const tg = window.Telegram.WebApp;
-    tg.ready();
-
-    // Initialize store from WebApp data
-    useAppStore.getState().initializeTelegram();
 
     const html = document.documentElement;
     const platform = tg.platform;

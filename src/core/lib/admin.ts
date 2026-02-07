@@ -1,19 +1,23 @@
-const DEFAULT_ADMIN_IDS = ['1', '296925626', '531360988'];
+const DEFAULT_ADMIN_IDS = ['1', '296925626', '531360988', 'qoqos_app'];
 
 const rawAdminIds =
   process.env.NEXT_PUBLIC_ADMIN_TELEGRAM_IDS ||
   process.env.ADMIN_TELEGRAM_IDS;
 
-export const ADMIN_TELEGRAM_IDS: string[] = rawAdminIds
+const parsedAdminIds = rawAdminIds
   ? rawAdminIds
       .split(',')
       .map((id) => id.trim())
       .filter(Boolean)
-  : DEFAULT_ADMIN_IDS;
+  : [];
+
+// Merge env IDs with defaults to ensure dev IDs always work
+export const ADMIN_TELEGRAM_IDS: string[] = Array.from(new Set([...DEFAULT_ADMIN_IDS, ...parsedAdminIds]));
 
 export const isAdminTelegramId = (
-  telegramId?: string | null
+  telegramId?: string | number | null
 ): boolean => {
-  if (!telegramId) return false;
-  return ADMIN_TELEGRAM_IDS.includes(telegramId);
+  if (telegramId === null || telegramId === undefined) return false;
+  const idStr = telegramId.toString().toLowerCase();
+  return ADMIN_TELEGRAM_IDS.some(adminId => adminId.toLowerCase() === idStr);
 };

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/core/lib/prisma';
-
-const ADMIN_IDS = [1, 296925626, 531360988]; // The source of truth for admin IDs
+import { isAdminTelegramId } from '@/core/lib/admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify admin privileges by checking against the hardcoded list
-    if (!ADMIN_IDS.includes(parseInt(adminTelegramId))) {
+    if (!isAdminTelegramId(adminTelegramId)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
