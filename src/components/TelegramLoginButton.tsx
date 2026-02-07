@@ -12,7 +12,7 @@ interface TelegramLoginButtonProps {
 }
 
 export const TelegramLoginButton = ({
-    botName = process.env.NEXT_PUBLIC_BOT_USERNAME || 'qoqos_bot',
+    botName = process.env.NEXT_PUBLIC_BOT_USERNAME || 'QoqosAppBot',
     onAuth,
     className = ''
 }: TelegramLoginButtonProps) => {
@@ -195,17 +195,33 @@ export const TelegramLoginButton = ({
             {(!isMobilePlatform && !isTelegram) && <div ref={containerRef} className="telegram-login-container min-h-[40px]" />}
 
             {(isMobilePlatform || isTelegram) && widgetState !== 'domain_error' && (
-                <button
-                    onClick={isTelegram ? handleTwaAuth : handleMobileAuth}
-                    disabled={isPolling}
-                    className={buttonStyle}
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-sm">
-                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.86 14.12 15.54 15.84C15.41 16.56 15.14 16.81 14.88 16.83C14.32 16.89 13.89 16.47 13.35 16.11C12.5 15.55 12.02 15.2 11.2 14.66C10.25 14.04 10.86 13.7 11.41 13.13C11.55 12.98 14.05 10.71 14.1 10.51C14.11 10.48 14.11 10.38 14.05 10.33C14 10.28 13.92 10.3 13.86 10.31C13.77 10.34 11.66 11.73 10.61 12.44C10.45 12.55 10.31 12.6 10.18 12.6C10.04 12.6 9.77 12.52 9.56 12.45C9.31 12.37 9.11 12.32 9.13 12.19C9.14 12.12 9.24 12.04 9.43 11.95C10.61 11.44 14.47 9.84 15.4 9.45C16.63 8.94 16.8 8.8 17.07 8.8C17.13 8.8 17.27 8.82 17.36 8.89C17.44 8.95 17.46 9.04 17.46 9.11C17.46 9.18 17.45 9.25 17.43 9.32L16.64 8.8Z" fill="white" />
-                    </svg>
-                    <span className="relative">{isPolling ? 'Ожидание входа...' : 'Войти через Telegram'}</span>
-                </button>
+                <div className="space-y-3">
+                    <button
+                        onClick={isTelegram ? handleTwaAuth : handleMobileAuth}
+                        disabled={isPolling && !authUuid}
+                        className={buttonStyle}
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-sm">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.86 14.12 15.54 15.84C15.41 16.56 15.14 16.81 14.88 16.83C14.32 16.89 13.89 16.47 13.35 16.11C12.5 15.55 12.02 15.2 11.2 14.66C10.25 14.04 10.86 13.7 11.41 13.13C11.55 12.98 14.05 10.71 14.1 10.51C14.11 10.48 14.11 10.38 14.05 10.33C14 10.28 13.92 10.3 13.86 10.31C13.77 10.34 11.66 11.73 10.61 12.44C10.45 12.55 10.31 12.6 10.18 12.6C10.04 12.6 9.77 12.52 9.56 12.45C9.31 12.37 9.11 12.32 9.13 12.19C9.14 12.12 9.24 12.04 9.43 11.95C10.61 11.44 14.47 9.84 15.4 9.45C16.63 8.94 16.8 8.8 17.07 8.8C17.13 8.8 17.27 8.82 17.36 8.89C17.44 8.95 17.46 9.04 17.46 9.11C17.46 9.18 17.45 9.25 17.43 9.32L16.64 8.8Z" fill="white" />
+                        </svg>
+                        <span className="relative">{isPolling ? 'Ожидание входа...' : 'Войти через Telegram'}</span>
+                    </button>
+
+                    {isPolling && authUuid && (
+                        <div className="text-center animate-in fade-in slide-in-from-top-1 duration-300">
+                            <a
+                                href={`https://t.me/${botName}?start=auth_${authUuid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-500 font-medium hover:underline flex items-center justify-center gap-1.5 p-2 bg-blue-50 rounded-xl"
+                            >
+                                <span>Не перебросило? Нажмите здесь</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            </a>
+                        </div>
+                    )}
+                </div>
             )}
 
             {widgetState === 'loading' && (

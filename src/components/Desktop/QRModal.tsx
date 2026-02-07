@@ -16,7 +16,7 @@ export const QRModal = ({ isOpen, onClose }: QRModalProps) => {
                 <div className="text-center font-sans">
                     <div className="bg-white p-2 rounded-xl mb-4 mx-auto flex items-center justify-center">
                         <QRCode
-                            value={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME || 'qoqos_bot'}/app?startapp=fullscreen`}
+                            value={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME || 'QoqosAppBot'}/app?startapp=fullscreen`}
                             size={200}
                             level="M"
                             bgColor="#ffffff"
