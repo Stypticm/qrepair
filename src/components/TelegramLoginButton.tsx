@@ -88,7 +88,20 @@ export const TelegramLoginButton = ({
                 headers: { 'Content-Type': 'application/json' }
             });
 
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) {
+                let errorMsg = `HTTP ${res.status}`;
+                try {
+                    const errorData = await res.json();
+                    errorMsg = errorData.message || errorData.error || errorMsg;
+                    if (errorData.details) {
+                        const details = typeof errorData.details === 'string'
+                            ? errorData.details
+                            : JSON.stringify(errorData.details);
+                        errorMsg += ` (${details})`;
+                    }
+                } catch (e) { }
+                throw new Error(errorMsg);
+            }
 
             const data = await res.json();
             if (data.uuid) {
