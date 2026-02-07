@@ -4,10 +4,10 @@ import { isAdminTelegramId } from '@/core/lib/admin';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const telegramId = req.headers.get('x-telegram-id');
-  const chatId = params.id;
+  const { id: chatId } = await params;
 
   if (!isAdminTelegramId(telegramId)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,10 +36,10 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const adminTelegramId = req.headers.get('x-telegram-id');
-  const chatId = params.id;
+  const { id: chatId } = await params;
 
   if (!isAdminTelegramId(adminTelegramId)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
