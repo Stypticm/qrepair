@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/core/lib/supabase-admin';
+import { prisma } from '@/core/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,20 +12,23 @@ export async function GET(req: Request) {
     }
 
     try {
-        const { data, error } = await supabaseAdmin
-            .from('auth_requests')
-            .select('status, telegram_id, telegram_username, telegram_data')
-            .eq('id', uuid)
-            .single();
+        const data = await prisma.authRequest.findUnique({
+            where: { id: uuid }
+        });
 
-        if (error) {
-            // If row not found (e.g. invalid UUID)
+        if (!data) {
             return NextResponse.json({ status: 'not_found' });
         }
 
-        return NextResponse.json(data);
-    } catch (error) {
-        console.error('Error checking auth status:', error);
-        return NextResponse.json({ error: 'Failed' }, { status: 500 });
+        // Map Prisma model field names to expected JSON response
+        return NextResponse.json({
+            status: data.status,
+            telegram_id: data.telegramId,
+            telegram_username: data.telegramUsername,
+            telegram_data: data.telegramData
+        });
+    } catch (error: any) {
+        console.error('[AUTH_QR] Check Error:', error);
+        return NextResponse.json({ error: 'Failed to check status', message: error.message }, { status: 500 });
     }
 }

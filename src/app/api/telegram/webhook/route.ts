@@ -309,37 +309,43 @@ export async function POST(req: Request) {
       const authUuid = text.split('auth_')[1]?.trim();
       
       if (authUuid) {
-        // Import supabase dynamically or use the global one if available in scope? 
-        // We need to import it at the top level or here if we want to avoid circular deps?
-        // Actually imports should be fine.
-        // We'll use the imported supabase client.
-        // Use imported supabaseAdmin
-        const { supabaseAdmin } = await import('@/core/lib/supabase-admin'); 
+        console.log(`[BOT] Processing QR Auth for UUID: ${authUuid}`);
 
-        console.log('Webhook: Processing QR Auth', authUuid);
+        try {
+            // Check if request exists and is still pending
+            const existing = await prisma.authRequest.findUnique({
+                where: { id: authUuid }
+            });
 
-        // Update the auth request
-        const { error, data: updatedData } = await supabaseAdmin
-          .from('auth_requests')
-          .update({
-             status: 'success',
-             telegram_id: telegramId,
-             telegram_username: message.from?.username || '',
-             telegram_data: message.from // Store full user data JSON
-          })
-          .eq('id', authUuid)
-          .eq('status', 'pending'); // Only update if still pending
+            if (existing && existing.status === 'pending') {
+                await prisma.authRequest.update({
+                    where: { id: authUuid },
+                    data: {
+                        status: 'success',
+                        telegramId: telegramId,
+                        telegramUsername: message.from?.username || '',
+                        telegramData: message.from as any
+                    }
+                });
 
-        if (!error) {
+                await sendTelegramMessage(
+                    telegramId,
+                    '✅ Вы успешно авторизовались на сайте Qoqos!',
+                    { parse_mode: 'Markdown' }
+                );
+            } else {
+                console.warn(`[BOT] Auth request ${authUuid} not found or not pending:`, existing?.status);
+                 await sendTelegramMessage(
+                    telegramId,
+                    '❌ Ошибка или срок действия кода истек. Попробуйте обновить страницу на сайте.',
+                    { parse_mode: 'Markdown' }
+                );
+            }
+        } catch (error) {
+            console.error('[BOT] Error during QR Auth update:', error);
             await sendTelegramMessage(
                 telegramId,
-                '✅ Вы успешно авторизовались на сайте Qoqos!',
-                { parse_mode: 'Markdown' }
-            );
-        } else {
-             await sendTelegramMessage(
-                telegramId,
-                '❌ Ошибка или срок действия кода истек. Попробуйте обновить страницу на сайте.',
+                '❌ Произошла техническая ошибка при авторизации. Попробуйте позже.',
                 { parse_mode: 'Markdown' }
             );
         }
