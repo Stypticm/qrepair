@@ -127,7 +127,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                                     <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 max-h-32 overflow-y-auto">
                                         <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Отладка:</p>
                                         <div className="space-y-1">
-                                            {useAppStore.getState().debugInfo.map((info, i) => (
+                                            {useAppStore.getState().debugInfo.map((info: string, i: number) => (
                                                 <p key={i} className="text-[9px] font-mono text-gray-500 break-all leading-tight">{info}</p>
                                             ))}
                                         </div>
