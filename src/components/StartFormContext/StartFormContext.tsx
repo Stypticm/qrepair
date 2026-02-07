@@ -174,7 +174,7 @@ export function StartFormProvider({ children }: { children: ReactNode }) {
                 // Fallback для тестирования в браузере
                 // if (process.env.NODE_ENV === 'development') {
                 //     addDebugInfo('Using fallback username for development in StartFormContext');
-                //     sessionStorage.setItem('telegramUsername', 'qoqos_app');
+                //     sessionStorage.setItem('telegramUsername', 'qoqos_support');
                 // }
             }
         }

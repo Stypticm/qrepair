@@ -80,6 +80,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        onClick={(e) => e.stopPropagation()}
                         className="relative w-full max-w-[500px] bg-white rounded-t-[32px] shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,20px)] pointer-events-auto"
                     >
                         {/* Apple-style handle */}

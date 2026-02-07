@@ -116,7 +116,7 @@ export function ChatWidget() {
 
     // For Telegram, we prefer opening a direct link to the support bot/manager
     const handleTelegramSupport = useCallback(() => {
-        const supportLink = 'https://t.me/qoqos_app';
+        const supportLink = 'https://t.me/qoqos_support';
         if (typeof window !== 'undefined') {
             window.open(supportLink, '_blank');
         }

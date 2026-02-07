@@ -79,8 +79,8 @@ const FinalPage = () => {
                 } else {
                     // Fallback для тестирования в браузере
                     if (process.env.NODE_ENV === 'development') {
-                        setUserTelegramId('@qoqos_app');
-                        setTelegramUsername('qoqos_app');
+                        setUserTelegramId('@qoqos_support');
+                        setTelegramUsername('qoqos_support');
                         console.log('Set development fallback');
                     }
                 }
@@ -101,7 +101,7 @@ const FinalPage = () => {
                         const parsed = JSON.parse(savedDeliveryData);
                         setDeliveryData(parsed);
                         return;
-                    } catch {}
+                    } catch { }
                 }
                 // Fallback на старые ключи (обратная совместимость)
                 const deliveryOptionsData = sessionStorage.getItem('deliveryOptionsData');
@@ -110,7 +110,7 @@ const FinalPage = () => {
                     try {
                         const parsed = JSON.parse(deliveryOptionsData);
                         deliveryMethod = parsed.selectedOption || 'pickup';
-                    } catch {}
+                    } catch { }
                 }
                 if (deliveryMethod === 'courier') {
                     const savedCourierData = sessionStorage.getItem('courierData');
@@ -126,7 +126,7 @@ const FinalPage = () => {
                                 },
                             });
                             return;
-                        } catch {}
+                        } catch { }
                     }
                 } else {
                     const savedPickupData = sessionStorage.getItem('pickupData');
@@ -138,7 +138,7 @@ const FinalPage = () => {
                                 pickupPoint: parsed.selectedPoint || 'Адрес не указан',
                             });
                             return;
-                        } catch {}
+                        } catch { }
                     }
                     // Fallback: пытаемся получить из БД
                     try {

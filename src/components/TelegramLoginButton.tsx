@@ -53,13 +53,22 @@ export const TelegramLoginButton = ({
     }, [isPolling, authUuid, setTelegramId, setUsername, setUserPhotoUrl, onAuth]);
 
     // For TWA, we use the SDK's initData
-    const handleTwaAuth = () => {
+    const handleTwaAuth = (e?: React.MouseEvent) => {
+        e?.stopPropagation();
         addDebugInfo('🚀 TWA Auth triggered via button');
         initializeTelegram(initDataState);
-        if (onAuth) onAuth({});
+
+        // Only close if we now have a telegramId
+        const currentId = useAppStore.getState().telegramId;
+        if (currentId && onAuth) {
+            onAuth({ id: currentId });
+        } else if (!currentId) {
+            addDebugInfo('⚠️ TWA Auth: ID не получен после инициализации');
+        }
     };
 
-    const handleMobileAuth = async () => {
+    const handleMobileAuth = async (e?: React.MouseEvent) => {
+        e?.stopPropagation();
         try {
             setWidgetState('loading');
             const res = await fetch('/api/auth/qr/create', { method: 'POST' });
@@ -68,12 +77,12 @@ export const TelegramLoginButton = ({
                 setAuthUuid(data.uuid);
                 setIsPolling(true);
 
-                // В режиме PWA / Mobile лучше использовать прямой переход, 
-                // так как window.open может блокироваться или открывать новое окно браузера
                 const botUser = botName;
                 const url = `https://t.me/${botUser}?start=auth_${data.uuid}`;
 
                 console.log('🔗 Redirecting to Telegram:', url);
+
+                // На мобильных устройствах сразу переходим
                 window.location.assign(url);
             }
         } catch (e) {

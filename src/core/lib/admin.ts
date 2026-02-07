@@ -1,4 +1,4 @@
-const DEFAULT_ADMIN_IDS = ['1', '296925626', '531360988', 'qoqos_app'];
+const DEFAULT_ADMIN_IDS = ['1', '296925626', '531360988', 'qoqos_support'];
 
 const rawAdminIds =
   process.env.NEXT_PUBLIC_ADMIN_TELEGRAM_IDS ||
