@@ -3,6 +3,7 @@ import { TelegramLoginButton } from '@/components/TelegramLoginButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { X } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -11,6 +12,17 @@ interface AuthModalProps {
 
 export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     const { isDesktop } = useSafeArea();
+
+    // Body scroll locking when modal is open
+    useEffect(() => {
+        if (isOpen && !isDesktop) {
+            const originalOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = originalOverflow;
+            };
+        }
+    }, [isOpen, isDesktop]);
 
     // On Desktop we use the standard dialog
     if (isDesktop) {
@@ -59,7 +71,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-auto"
                     />
 
                     {/* Bottom Sheet */}
@@ -68,7 +80,7 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="relative w-full max-w-[500px] bg-white rounded-t-[32px] shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,20px)]"
+                        className="relative w-full max-w-[500px] bg-white rounded-t-[32px] shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,20px)] pointer-events-auto"
                     >
                         {/* Apple-style handle */}
                         <div className="w-full flex justify-center pt-3 pb-1">
