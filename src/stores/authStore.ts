@@ -575,16 +575,15 @@ export const useAppStore = create<AppState>()(
         const unsafeUser = webApp?.initDataUnsafe?.user;
         
         if (unsafeUser?.id) {
-           addDebugInfo('✅ TWA (Unsafe): Получены данные');
            const tgId = unsafeUser.id.toString();
-           
            set({
-            telegramId: tgId,
-            username: unsafeUser.username || null,
-            userPhotoUrl: unsafeUser.photo_url || null,
-            role: isAdminTelegramId(unsafeUser.id) ? 'master' : 'client',
-            userId: unsafeUser.id
-          });
+             telegramId: tgId,
+             username: unsafeUser.username || null,
+             userPhotoUrl: unsafeUser.photo_url || null,
+             role: isAdminTelegramId(unsafeUser.id) ? 'master' : 'client',
+             userId: unsafeUser.id,
+             isManualLogout: false
+           });
         } else {
             addDebugInfo('ℹ️ Нет данных TWA, ожидание виджета входа...');
         }
