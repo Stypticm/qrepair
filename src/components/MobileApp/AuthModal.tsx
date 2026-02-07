@@ -3,8 +3,7 @@ import { TelegramLoginButton } from '@/components/TelegramLoginButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { X } from 'lucide-react';
-import { useAppStore } from '@/stores/authStore';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -121,19 +120,6 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                                 />
                             </div>
 
-                            {/* Debug Log for troubleshooting */}
-                            {useAppStore.getState().debugInfo.length > 0 && (
-                                <div className="w-full px-4 pb-4">
-                                    <div className="bg-gray-50 rounded-2xl p-3 border border-gray-100 max-h-32 overflow-y-auto">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Отладка:</p>
-                                        <div className="space-y-1">
-                                            {useAppStore.getState().debugInfo.map((info: string, i: number) => (
-                                                <p key={i} className="text-[9px] font-mono text-gray-500 break-all leading-tight">{info}</p>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </motion.div>
                 </div>

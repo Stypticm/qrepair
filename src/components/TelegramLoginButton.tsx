@@ -19,7 +19,7 @@ export const TelegramLoginButton = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const scriptLoadedRef = useRef(false);
     const [widgetState, setWidgetState] = useState<'loading' | 'loaded' | 'error' | 'domain_error'>('loading');
-    const { setTelegramId, setUsername, setUserPhotoUrl, addDebugInfo, initializeTelegram } = useAppStore();
+    const { setTelegramId, setUsername, setUserPhotoUrl, initializeTelegram } = useAppStore();
     const { isTelegram, isMobile: isMobilePlatform } = useSafeArea();
     const initDataState = useSignal(_initDataState);
 
@@ -57,19 +57,13 @@ export const TelegramLoginButton = ({
         e?.preventDefault();
         e?.stopPropagation();
 
-        const hasSDK = typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp;
-        addDebugInfo(`🚀 Клик: Вход через TWA (SDK: ${hasSDK})`);
-        addDebugInfo(`📱 Платформа: TG=${isTelegram}, Mob=${isMobilePlatform}`);
-
         // Попытка инициализации TWA
         initializeTelegram(initDataState);
 
         const currentId = useAppStore.getState().telegramId;
         if (currentId) {
-            addDebugInfo(`✅ TWA ID получен: ${currentId}`);
             if (onAuth) onAuth({ id: currentId });
         } else {
-            addDebugInfo('⚠️ TWA данные не найдены, переключение на Bot-авторизацию...');
             await handleMobileAuth(e);
         }
     };
@@ -77,11 +71,9 @@ export const TelegramLoginButton = ({
     const handleMobileAuth = async (e?: React.MouseEvent) => {
         e?.preventDefault();
         e?.stopPropagation();
-        addDebugInfo('📱 Запуск процесса Bot-авторизации...');
 
         try {
             setWidgetState('loading');
-            addDebugInfo('📡 Запрос UUID...');
 
             const res = await fetch('/api/auth/qr/create', {
                 method: 'POST',
@@ -105,23 +97,18 @@ export const TelegramLoginButton = ({
 
             const data = await res.json();
             if (data.uuid) {
-                addDebugInfo(`✅ UUID получен: ${data.uuid}`);
                 setAuthUuid(data.uuid);
                 setIsPolling(true);
 
                 const botUser = botName;
                 const url = `https://t.me/${botUser}?start=auth_${data.uuid}`;
 
-                addDebugInfo(`🔗 Переход к @${botUser}...`);
-
                 // Пробуем автоматический переход
                 window.location.href = url;
             } else {
-                addDebugInfo('❌ Ошибка: UUID не получен');
                 setWidgetState('error');
             }
         } catch (e: any) {
-            addDebugInfo(`❌ Ошибка: ${e.message}`);
             setWidgetState('error');
         }
     };
@@ -130,7 +117,6 @@ export const TelegramLoginButton = ({
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && authUuid) {
-                addDebugInfo('📱 Приложение активно, проверка статуса авторизации...');
                 setIsPolling(true);
             }
         };
@@ -157,7 +143,6 @@ export const TelegramLoginButton = ({
         // Define the global callback function BEFORE loading the script
         (window as any).onTelegramAuth = (user: any) => {
             console.log('✅ Telegram Auth Success:', user);
-            addDebugInfo(`Telegram Auth: ${user.id} (@${user.username || 'no username'})`);
 
             if (user?.id) {
                 setTelegramId(user.id.toString());
@@ -221,7 +206,7 @@ export const TelegramLoginButton = ({
                 clearTimeout(timeout);
             };
         }
-    }, [botName, onAuth, setTelegramId, setUsername, setUserPhotoUrl, addDebugInfo, isMobilePlatform, isTelegram]);
+    }, [botName, onAuth, setTelegramId, setUsername, setUserPhotoUrl, isMobilePlatform, isTelegram]);
 
     const buttonStyle = "w-full h-14 bg-gradient-to-r from-[#54A9EB] to-[#4397d7] hover:from-[#499cdc] hover:to-[#3b85bf] text-white font-bold rounded-2xl shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98] relative overflow-hidden group";
 
