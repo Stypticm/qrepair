@@ -54,39 +54,70 @@ export const TelegramLoginButton = ({
 
     // For TWA, we use the SDK's initData
     const handleTwaAuth = (e?: React.MouseEvent) => {
+        e?.preventDefault();
         e?.stopPropagation();
-        addDebugInfo('🚀 TWA Auth triggered via button');
+        addDebugInfo('🚀 Клик: Вход через TWA');
         initializeTelegram(initDataState);
 
-        // Only close if we now have a telegramId
         const currentId = useAppStore.getState().telegramId;
-        if (currentId && onAuth) {
-            onAuth({ id: currentId });
-        } else if (!currentId) {
-            addDebugInfo('⚠️ TWA Auth: ID не получен после инициализации');
+        if (currentId) {
+            addDebugInfo(`✅ TWA ID получен: ${currentId}`);
+            if (onAuth) onAuth({ id: currentId });
+        } else {
+            addDebugInfo('⚠️ TWA: данные пользователя не найдены в SDK');
         }
     };
 
     const handleMobileAuth = async (e?: React.MouseEvent) => {
+        e?.preventDefault();
         e?.stopPropagation();
+        addDebugInfo('📱 Клик: Вход через Мобильный/PWA');
+
         try {
             setWidgetState('loading');
-            const res = await fetch('/api/auth/qr/create', { method: 'POST' });
+            addDebugInfo('📡 Запрос UUID для авторизации...');
+
+            const res = await fetch('/api/auth/qr/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!res.ok) {
+                const errorText = await res.text();
+                throw new Error(`Server error: ${res.status} ${errorText}`);
+            }
+
             const data = await res.json();
             if (data.uuid) {
+                addDebugInfo(`✅ UUID получен: ${data.uuid}`);
                 setAuthUuid(data.uuid);
                 setIsPolling(true);
 
                 const botUser = botName;
                 const url = `https://t.me/${botUser}?start=auth_${data.uuid}`;
+                const tgUrl = `tg://resolve?domain=${botUser}&start=auth_${data.uuid}`;
 
+                addDebugInfo(`🔗 Переход к боту @${botUser}...`);
                 console.log('🔗 Redirecting to Telegram:', url);
 
-                // На мобильных устройствах сразу переходим
-                window.location.assign(url);
+                // На мобильных пробуем сразу перенаправить
+                //window.location.assign(url); // can be blocked
+                window.location.href = url;
+
+                // Добавляем проверку через таймаут (если страница всё еще видна, значит переход мог не сработать)
+                setTimeout(() => {
+                    if (document.visibilityState === 'visible') {
+                        addDebugInfo('⚠️ Авто-переход мог быть заблокирован браузером');
+                        setWidgetState('loaded');
+                    }
+                }, 2000);
+            } else {
+                addDebugInfo('❌ Ошибка: сервер не вернул UUID');
+                setWidgetState('error');
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error('Failed to start mobile auth:', e);
+            addDebugInfo(`❌ Ошибка инициализации: ${e.message}`);
             setWidgetState('error');
         }
     };
@@ -95,7 +126,7 @@ export const TelegramLoginButton = ({
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && authUuid) {
-                console.log('📱 App visible, ensuring polling is active...');
+                addDebugInfo('📱 Приложение активно, проверка статуса авторизации...');
                 setIsPolling(true);
             }
         };
