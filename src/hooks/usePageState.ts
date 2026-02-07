@@ -121,7 +121,7 @@ export function usePageState<T extends PageState>(
       )
       sessionStorage.removeItem(config.storageKey)
     }
-  }, [config.storageKey, config.restoreOnMount])
+  }, [config.storageKey, config.restoreOnMount, config.step])
 
   // Автоматическое сохранение при изменении состояния
   useEffect(() => {
@@ -142,7 +142,7 @@ export function usePageState<T extends PageState>(
         error
       )
     }
-  }, [state, config.storageKey])
+  }, [state, config.storageKey, config.step])
 
   // Сохранение в БД через API
   const saveToDatabase = useCallback(

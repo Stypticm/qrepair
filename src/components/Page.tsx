@@ -1,7 +1,7 @@
 'use client';
 
 import { backButton } from '@telegram-apps/sdk-react';
-import { PropsWithChildren, useEffect } from 'react';
+import { PropsWithChildren, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore } from '@/stores/authStore';
@@ -14,7 +14,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
   const { safeAreaInsets, cssVars, isTelegram, isDesktop } = useSafeArea();
   const { goToPreviousStep } = useAppStore();
 
-  const onBack = () => {
+  const onBack = useCallback(() => {
     if (!back) return;
     if (typeof back === 'function') {
       back();
@@ -26,7 +26,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
     } else {
       goToPreviousStep(router);
     }
-  };
+  }, [back, router, goToPreviousStep]);
 
   useEffect(() => {
     try {
@@ -56,7 +56,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
         console.log('Error unbinding back button:', error);
       }
     };
-  }, [router, goToPreviousStep, back]);
+  }, [onBack]);
 
   const outerClass = isDesktop ? 'w-full h-full flex justify-center items-center' : 'w-full h-full flex justify-center items-start';
   const innerClass = isDesktop
@@ -77,11 +77,10 @@ export function Page({ children, back = true }: PropsWithChildren<{
       ? 'w-full max-w-7xl mx-auto bg-transparent shadow-none overflow-visible'
       : 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto';
 
-  const finalInnerClass = isDesktop ? desktopClass : 'w-full h-full';
-
+  const finalInnerClass = isDesktop ? desktopClass : 'w-full min-h-full flex flex-col';
   const finalOuterClass = (isDesktop && !isWidePage && !isAdminPath)
     ? 'w-full h-full flex justify-center items-center bg-gray-100/50'
-    : 'w-full h-full';
+    : 'w-full min-h-full flex flex-col';
 
   return (
     <div className={finalOuterClass}>

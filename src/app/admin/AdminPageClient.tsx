@@ -122,7 +122,7 @@ export function AdminPageClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-full bg-gray-50 flex">
       {/* Левая боковая панель для десктопа (опционально, но сделаем пока сетку) */}
       <div className="flex-1 flex flex-col">
         {/* Заголовок */}

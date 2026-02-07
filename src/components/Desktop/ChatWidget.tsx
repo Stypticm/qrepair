@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageCircle, X, Send, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
@@ -26,6 +26,7 @@ export function ChatWidget() {
     const username = useAppStore(state => state.username);
     const guestId = useAppStore(state => state.guestId);
     const { isTelegram, isDesktop } = useSafeArea();
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // If no telegramId and no guestId, generate one when opening
     useEffect(() => {
@@ -56,25 +57,11 @@ export function ChatWidget() {
         return () => window.removeEventListener('beforeunload', handleUnload);
     }, [guestId]);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    const scrollToBottom = () => {
+    const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
+    }, []);
 
-    useEffect(() => {
-        if (isOpen && activeId) {
-            fetchChat();
-            const interval = setInterval(fetchChat, 5000); // Polling every 5 seconds
-            return () => clearInterval(interval);
-        }
-    }, [isOpen, activeId]);
-
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
-
-    const fetchChat = async () => {
+    const fetchChat = useCallback(async () => {
         if (!activeId) return;
         try {
             const res = await fetch(`/api/chats?telegramId=${activeId}`);
@@ -85,7 +72,19 @@ export function ChatWidget() {
         } catch (error) {
             console.error('Failed to fetch chat:', error);
         }
-    };
+    }, [activeId]);
+
+    useEffect(() => {
+        if (isOpen && activeId) {
+            fetchChat();
+            const interval = setInterval(fetchChat, 5000); // Polling every 5 seconds
+            return () => clearInterval(interval);
+        }
+    }, [isOpen, activeId, fetchChat]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
 
     const handleSendMessage = async () => {
         if (!input.trim() || !activeId || isLoading) return;
@@ -115,30 +114,132 @@ export function ChatWidget() {
         }
     };
 
-    // Hide the chat widget for admin Telegram IDs
-    if (isAdminTelegramId(telegramId)) return null;
-
     // For Telegram, we prefer opening a direct link to the support bot/manager
-    const handleTelegramSupport = () => {
-        const supportLink = 'https://t.me/qoqos_support'; // TODO: Replace with real bot link
+    const handleTelegramSupport = useCallback(() => {
+        const supportLink = 'https://t.me/qoqos_app';
         if (typeof window !== 'undefined') {
             window.open(supportLink, '_blank');
         }
-    };
+    }, []);
 
-    if (isTelegram && !isDesktop) {
-        return (
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={handleTelegramSupport}
-                className="fixed bottom-24 right-4 h-14 w-14 rounded-full bg-[#2ba6e1] text-white flex items-center justify-center shadow-xl z-[100]"
-                aria-label="Support in Telegram"
-            >
-                <MessageCircle size={28} />
-            </motion.button>
-        );
-    }
+    // Listen for custom events to open the chat
+    useEffect(() => {
+        const handleToggleChat = () => {
+            if (isTelegram && !isDesktop) {
+                handleTelegramSupport();
+            } else {
+                setIsOpen(prev => !prev);
+            }
+        };
+        window.addEventListener('toggleChat', handleToggleChat);
+        return () => window.removeEventListener('toggleChat', handleToggleChat);
+    }, [isTelegram, isDesktop, handleTelegramSupport]);
+
+    // Hide the chat widget for admin Telegram IDs
+    // CRITICAL: Hooks must be called before this return
+    if (isAdminTelegramId(telegramId)) return null;
+
+    // On mobile (non-desktop), we don't show floating buttons anymore as they are in the menu
+    if (!isDesktop) return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[10000] flex items-end justify-center pointer-events-none p-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        className="pointer-events-auto w-full max-w-md h-[80vh] bg-white/80 backdrop-blur-2xl border border-white/40 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
+                    >
+                        {/* Header */}
+                        <div className="p-4 bg-gray-900 text-white flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                    <MessageCircle size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-sm">Поддержка Qoqos</h3>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                        <span className="text-[10px] text-gray-400 capitalize">Оператор онлайн</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                                aria-label="Minimze chat"
+                            >
+                                <Minus size={20} />
+                            </button>
+                        </div>
+
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
+                            {messages.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-center px-6">
+                                    <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-4">
+                                        <MessageCircle size={32} className="text-gray-300" />
+                                    </div>
+                                    <h4 className="font-medium text-gray-900 mb-1">Задайте нам вопрос</h4>
+                                    <p className="text-sm text-gray-500">
+                                        Опишите вашу проблему или задайте интересующий вопрос, и наш оператор ответит вам в ближайшее время.
+                                    </p>
+                                </div>
+                            ) : (
+                                messages.map((msg) => (
+                                    <div
+                                        key={msg.id}
+                                        className={cn(
+                                            "flex flex-col max-w-[80%]",
+                                            msg.senderType === 'user' ? "ml-auto items-end" : "mr-auto items-start"
+                                        )}
+                                    >
+                                        <div
+                                            className={cn(
+                                                "px-4 py-2.5 rounded-2xl text-sm shadow-sm",
+                                                msg.senderType === 'user'
+                                                    ? "bg-blue-600 text-white rounded-tr-none"
+                                                    : "bg-gray-100 text-gray-900 rounded-tl-none"
+                                            )}
+                                        >
+                                            {msg.text}
+                                        </div>
+                                        <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                ))
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Input */}
+                        <div className="p-4 bg-white/50 border-t border-gray-100">
+                            <div className="relative flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    placeholder="Напишите сообщение..."
+                                    className="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                />
+                                <Button
+                                    onClick={handleSendMessage}
+                                    disabled={!input.trim() || isLoading}
+                                    size="icon"
+                                    className="rounded-xl bg-blue-600 hover:bg-blue-700 h-11 w-11 shrink-0 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                                    aria-label="Send message"
+                                >
+                                    <Send size={18} />
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
 
     return (
         <div className="fixed bottom-6 right-6 z-[100]">

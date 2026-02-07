@@ -238,8 +238,8 @@ const RequestById = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
+            <div className="w-full min-h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+                <div className="flex-1 p-6 admin-masters-scroll" style={{ paddingTop: 'env(--safe-area-top, 60px)' }}>
                     <div className="max-w-4xl mx-auto">
                         <div className="text-center mb-8 mt-12">
                             <h1 className="text-3xl font-semibold text-gray-900 mb-2">📋 Заявка {id}</h1>
@@ -253,21 +253,20 @@ const RequestById = () => {
                                 <CardDescription className="text-gray-600">
                                     <p className="text-gray-900 font-medium">Модель телефона: {application?.modelname}</p>
                                     <p className="text-gray-900 font-medium">Предварительная цена: {application?.price ?? '—'} ₽</p>
-                                    
+
                                     {/* Отображение согласия с ценой и feedback */}
                                     {(application as any)?.priceAgreed !== undefined && (
                                         <div className="mt-3 p-3 rounded-xl border">
                                             <p className="text-gray-900 font-medium mb-2">
-                                                Согласие с ценой: 
-                                                <span className={`ml-2 px-2 py-1 rounded-full text-sm font-medium ${
-                                                    (application as any)?.priceAgreed 
-                                                        ? 'bg-green-100 text-green-800' 
+                                                Согласие с ценой:
+                                                <span className={`ml-2 px-2 py-1 rounded-full text-sm font-medium ${(application as any)?.priceAgreed
+                                                        ? 'bg-green-100 text-green-800'
                                                         : 'bg-red-100 text-red-800'
-                                                }`}>
+                                                    }`}>
                                                     {(application as any)?.priceAgreed ? 'Согласен' : 'Не согласен'}
                                                 </span>
                                             </p>
-                                            
+
                                             {(application as any)?.feedback && (
                                                 <div className="mt-2">
                                                     <p className="text-gray-700 font-medium mb-1">💬 Отзыв пользователя:</p>
@@ -282,97 +281,97 @@ const RequestById = () => {
                                         {(() => {
                                             const isEditable = application?.status === 'accepted';
                                             return (
-                                                                                             <input
-                                                 className={`rounded-lg px-3 py-2 text-gray-900 bg-white border border-gray-300 focus:border-[#2dc2c6] focus:ring-2 focus:ring-[#2dc2c6]/20 transition-all duration-200 ${!isEditable ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
-                                                 type="number"
-                                                 placeholder="Итоговая цена"
-                                                 value={priceInput}
-                                                 onChange={(e) => { setPriceDirty(true); setPriceInput(e.target.value); }}
-                                                 disabled={!isEditable}
-                                             />
+                                                <input
+                                                    className={`rounded-lg px-3 py-2 text-gray-900 bg-white border border-gray-300 focus:border-[#2dc2c6] focus:ring-2 focus:ring-[#2dc2c6]/20 transition-all duration-200 ${!isEditable ? 'opacity-60 cursor-not-allowed bg-gray-100' : ''}`}
+                                                    type="number"
+                                                    placeholder="Итоговая цена"
+                                                    value={priceInput}
+                                                    onChange={(e) => { setPriceDirty(true); setPriceInput(e.target.value); }}
+                                                    disabled={!isEditable}
+                                                />
                                             );
                                         })()}
                                     </div>
-                                                                             {application?.status !== 'accepted' && (
-                                             <p className="text-gray-500 text-sm mt-1">Цена уже отправлена клиенту и недоступна для изменения.</p>
-                                         )}
+                                    {application?.status !== 'accepted' && (
+                                        <p className="text-gray-500 text-sm mt-1">Цена уже отправлена клиенту и недоступна для изменения.</p>
+                                    )}
 
-                                                                             {/* Форма для загрузки фото мастером - доступна только когда мастер назначен */}
-                                         {(application as any)?.courierTelegramId && (
-                                             <div className="mt-4 p-4 border border-gray-200 rounded-2xl bg-gray-50">
-                                             <h4 className="text-gray-900 font-semibold mb-2 text-lg">📸 Добавить фото устройства</h4>
-                                             <p className="text-gray-600 text-sm mb-3">Загрузите основные ракурсы для точной оценки</p>
+                                    {/* Форма для загрузки фото мастером - доступна только когда мастер назначен */}
+                                    {(application as any)?.courierTelegramId && (
+                                        <div className="mt-4 p-4 border border-gray-200 rounded-2xl bg-gray-50">
+                                            <h4 className="text-gray-900 font-semibold mb-2 text-lg">📸 Добавить фото устройства</h4>
+                                            <p className="text-gray-600 text-sm mb-3">Загрузите основные ракурсы для точной оценки</p>
                                             <div className="flex flex-col gap-4">
                                                 {/* Лицевая часть */}
-                                                                                                 <div className="flex flex-col gap-2">
-                                                     <label className="text-gray-700 text-sm font-medium">📱 Лицевая часть устройства</label>
-                                                     <input
-                                                         type="file"
-                                                         accept="image/*"
-                                                         onChange={(e) => setPhotoFiles(prev => ({ ...prev, front: e.target.files?.[0] || null }))}
-                                                         className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
-                                                     />
-                                                     <p className="text-gray-500 text-xs">
-                                                         {photoFiles.front ? photoFiles.front.name : 'Файл не выбран'}
-                                                     </p>
-                                                 </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-gray-700 text-sm font-medium">📱 Лицевая часть устройства</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, front: e.target.files?.[0] || null }))}
+                                                        className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
+                                                    />
+                                                    <p className="text-gray-500 text-xs">
+                                                        {photoFiles.front ? photoFiles.front.name : 'Файл не выбран'}
+                                                    </p>
+                                                </div>
 
-                                                                                                 {/* Боковая часть */}
-                                                 <div className="flex flex-col gap-2">
-                                                     <label className="text-gray-700 text-sm font-medium">📐 Боковая часть устройства</label>
-                                                     <input
-                                                         type="file"
-                                                         accept="image/*"
-                                                         onChange={(e) => setPhotoFiles(prev => ({ ...prev, side: e.target.files?.[0] || null }))}
-                                                         className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
-                                                     />
-                                                     <p className="text-gray-500 text-xs">
-                                                         {photoFiles.side ? photoFiles.side.name : 'Файл не выбран'}
-                                                     </p>
-                                                 </div>
+                                                {/* Боковая часть */}
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-gray-700 text-sm font-medium">📐 Боковая часть устройства</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, side: e.target.files?.[0] || null }))}
+                                                        className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
+                                                    />
+                                                    <p className="text-gray-500 text-xs">
+                                                        {photoFiles.side ? photoFiles.side.name : 'Файл не выбран'}
+                                                    </p>
+                                                </div>
 
-                                                                                                 {/* Задняя часть */}
-                                                 <div className="flex flex-col gap-2">
-                                                     <label className="text-gray-700 text-sm font-medium">📷 Задняя часть устройства</label>
-                                                     <input
-                                                         type="file"
-                                                         accept="image/*"
-                                                         onChange={(e) => setPhotoFiles(prev => ({ ...prev, back: e.target.files?.[0] || null }))}
-                                                         className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
-                                                     />
-                                                     <p className="text-gray-500 text-xs">
-                                                         {photoFiles.back ? photoFiles.back.name : 'Файл не выбран'}
-                                                     </p>
-                                                 </div>
+                                                {/* Задняя часть */}
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-gray-700 text-sm font-medium">📷 Задняя часть устройства</label>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={(e) => setPhotoFiles(prev => ({ ...prev, back: e.target.files?.[0] || null }))}
+                                                        className="text-gray-700 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#2dc2c6] file:text-white hover:file:bg-[#25a8ac] transition-all duration-200"
+                                                    />
+                                                    <p className="text-gray-500 text-xs">
+                                                        {photoFiles.back ? photoFiles.back.name : 'Файл не выбран'}
+                                                    </p>
+                                                </div>
 
-                                                                                                 <div className="border-t border-gray-200 pt-4">
-                                                                                                         <Button 
-                                                         onClick={handlePhotoUpload}
-                                                         disabled={!photoFiles.front && !photoFiles.side && !photoFiles.back}
-                                                         className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white text-sm shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 font-semibold"
-                                                     >
-                                                         📤 Загрузить выбранные фото
-                                                     </Button>
-                                                     <p className="text-gray-500 text-xs text-center mt-2">
-                                                         Можно загрузить от 1 до 3 фото одновременно
-                                                     </p>
+                                                <div className="border-t border-gray-200 pt-4">
+                                                    <Button
+                                                        onClick={handlePhotoUpload}
+                                                        disabled={!photoFiles.front && !photoFiles.side && !photoFiles.back}
+                                                        className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white text-sm shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 font-semibold"
+                                                    >
+                                                        📤 Загрузить выбранные фото
+                                                    </Button>
+                                                    <p className="text-gray-500 text-xs text-center mt-2">
+                                                        Можно загрузить от 1 до 3 фото одновременно
+                                                    </p>
                                                 </div>
                                             </div>
 
-                                                                                         {/* Разделитель */}
-                                             <div className="border-t border-gray-200 my-4"></div>
+                                            {/* Разделитель */}
+                                            <div className="border-t border-gray-200 my-4"></div>
 
                                             {/* Отображение загруженных фото мастера */}
                                             {masterPhotos.length > 0 && (
-                                                                                                 <div className="mt-4">
-                                                     <h5 className="text-gray-900 font-semibold mb-3 text-lg">
-                                                         📱 Загруженные фото: {masterPhotos.length}/3
-                                                     </h5>
-                                                     <div className="text-gray-600 text-sm mb-3">
-                                                         {masterPhotos.length === 1 && "1️⃣ Лицевая часть"}
-                                                         {masterPhotos.length === 2 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть"}
-                                                         {masterPhotos.length === 3 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть • 3️⃣ Задняя часть"}
-                                                     </div>
+                                                <div className="mt-4">
+                                                    <h5 className="text-gray-900 font-semibold mb-3 text-lg">
+                                                        📱 Загруженные фото: {masterPhotos.length}/3
+                                                    </h5>
+                                                    <div className="text-gray-600 text-sm mb-3">
+                                                        {masterPhotos.length === 1 && "1️⃣ Лицевая часть"}
+                                                        {masterPhotos.length === 2 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть"}
+                                                        {masterPhotos.length === 3 && "1️⃣ Лицевая часть • 2️⃣ Боковая часть • 3️⃣ Задняя часть"}
+                                                    </div>
                                                     <div className="grid grid-cols-3 gap-2">
                                                         {masterPhotos.map((url, idx) => (
                                                             <div key={idx} className="relative">
@@ -417,65 +416,65 @@ const RequestById = () => {
                                                 </div>
                                             )}
 
-                                                                                         {masterPhotos.length === 0 && (
-                                                 <div className="text-center py-4">
-                                                     <p className="text-gray-500 text-sm">
-                                                         📸 Загрузите фото устройства для оценки
-                                                     </p>
-                                                     <p className="text-gray-400 text-xs mt-1">
-                                                         Рекомендуется: лицевая, боковая, задняя части
-                                                     </p>
-                                                 </div>
-                                             )}
+                                            {masterPhotos.length === 0 && (
+                                                <div className="text-center py-4">
+                                                    <p className="text-gray-500 text-sm">
+                                                        📸 Загрузите фото устройства для оценки
+                                                    </p>
+                                                    <p className="text-gray-400 text-xs mt-1">
+                                                        Рекомендуется: лицевая, боковая, задняя части
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
-                                                                         <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                                         <p className="text-gray-900 font-medium mb-2">Статус заявки:</p>
-                                         <div className="flex flex-wrap gap-2">
-                                             <Badge className="bg-[#2dc2c6] text-white px-3 py-1 rounded-full text-sm font-medium">
-                                                 {application?.status === 'draft'
-                                                     ? 'Черновик'
-                                                     : application?.status === 'accepted'
-                                                         ? 'Принята'
-                                                         : application?.status === 'in_progress'
-                                                             ? 'На проверке'
-                                                             : application?.status === 'on_the_way'
-                                                                 ? 'В пути'
-                                                                 : application?.status === 'paid'
-                                                                     ? 'Оплачено'
-                                                                     : application?.status === 'completed' && 'Выполнена'}
-                                             </Badge>
+                                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                                        <p className="text-gray-900 font-medium mb-2">Статус заявки:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Badge className="bg-[#2dc2c6] text-white px-3 py-1 rounded-full text-sm font-medium">
+                                                {application?.status === 'draft'
+                                                    ? 'Черновик'
+                                                    : application?.status === 'accepted'
+                                                        ? 'Принята'
+                                                        : application?.status === 'in_progress'
+                                                            ? 'На проверке'
+                                                            : application?.status === 'on_the_way'
+                                                                ? 'В пути'
+                                                                : application?.status === 'paid'
+                                                                    ? 'Оплачено'
+                                                                    : application?.status === 'completed' && 'Выполнена'}
+                                            </Badge>
                                             {(application?.status === 'in_progress' || application?.status === 'on_the_way') && (
                                                 <Badge className={`${(application as any)?.priceConfirmed ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} px-3 py-1 rounded-full text-sm font-medium`}>
                                                     {(application as any)?.priceConfirmed ? 'Цена подтверждена' : 'Цена не подтверждена'}
                                                 </Badge>
                                             )}
-                                         </div>
-                                     </div>
+                                        </div>
+                                    </div>
                                 </CardDescription>
-                                                                 {(application as any)?.courierTelegramId && (
-                                     <div className="mt-4 p-4 rounded-2xl border border-gray-200 bg-blue-50">
-                                         <p className="font-semibold text-blue-900 mb-2">👨‍🔧 Детали выезда мастера</p>
-                                         <div className="space-y-2 text-blue-800">
-                                             <p><span className="font-medium">Мастер:</span> @{(application as any).courierTelegramId}</p>
-                                             {(application as any).courierTimeSlot && <p><span className="font-medium">Выбранное время:</span> {(application as any).courierTimeSlot}</p>}
-                                             {(application as any).courierScheduledAt && (
-                                                 <p>
-                                                     <span className="font-medium">Назначено на:</span>{' '}
-                                                     {(() => {
-                                                         try {
-                                                             const d = new Date((application as any).courierScheduledAt);
-                                                             return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
-                                                         } catch {
-                                                             return String((application as any).courierScheduledAt);
-                                                         }
-                                                     })()}
-                                                 </p>
-                                             )}
-                                             <p><span className="font-medium">Подтверждение клиента:</span> {(application as any).courierUserConfirmed ? '✅ Да' : '❌ Нет'}</p>
-                                         </div>
-                                     </div>
-                                 )}
+                                {(application as any)?.courierTelegramId && (
+                                    <div className="mt-4 p-4 rounded-2xl border border-gray-200 bg-blue-50">
+                                        <p className="font-semibold text-blue-900 mb-2">👨‍🔧 Детали выезда мастера</p>
+                                        <div className="space-y-2 text-blue-800">
+                                            <p><span className="font-medium">Мастер:</span> @{(application as any).courierTelegramId}</p>
+                                            {(application as any).courierTimeSlot && <p><span className="font-medium">Выбранное время:</span> {(application as any).courierTimeSlot}</p>}
+                                            {(application as any).courierScheduledAt && (
+                                                <p>
+                                                    <span className="font-medium">Назначено на:</span>{' '}
+                                                    {(() => {
+                                                        try {
+                                                            const d = new Date((application as any).courierScheduledAt);
+                                                            return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+                                                        } catch {
+                                                            return String((application as any).courierScheduledAt);
+                                                        }
+                                                    })()}
+                                                </p>
+                                            )}
+                                            <p><span className="font-medium">Подтверждение клиента:</span> {(application as any).courierUserConfirmed ? '✅ Да' : '❌ Нет'}</p>
+                                        </div>
+                                    </div>
+                                )}
                                 <CardAction className="self-center pt-2 w-full">
                                     <div className="flex flex-wrap justify-center gap-2 w-full">
                                         {application?.status === 'accepted' && (
@@ -577,13 +576,13 @@ const RequestById = () => {
                                             </div>
                                         )}
 
-                                                                                 {/* Кнопка копирования ID заявки */}
-                                         <Button 
-                                             className="min-w-[200px] bg-gray-600 hover:bg-gray-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold"
-                                             onClick={() => copyToClipboard(application?.id || '')}
-                                         >
-                                             ID: {application?.id}
-                                         </Button>
+                                        {/* Кнопка копирования ID заявки */}
+                                        <Button
+                                            className="min-w-[200px] bg-gray-600 hover:bg-gray-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold"
+                                            onClick={() => copyToClipboard(application?.id || '')}
+                                        >
+                                            ID: {application?.id}
+                                        </Button>
                                         {application?.status === 'paid' && (
                                             <Button className="min-w-[200px] bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg rounded-2xl transition-all duration-200 hover:shadow-xl h-12 text-lg font-semibold" onClick={handleMarkPaid}>
                                                 Оплачено
@@ -599,7 +598,7 @@ const RequestById = () => {
 
 
 
-                                
+
                             </CardContent>
                         </Card>
                     </div>

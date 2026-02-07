@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -34,25 +34,7 @@ export default function AdminChatsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    fetchChats();
-    const interval = setInterval(fetchChats, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (selectedChat) {
-      fetchChatMessages(selectedChat.id);
-      const interval = setInterval(() => fetchChatMessages(selectedChat.id), 5000);
-      return () => clearInterval(interval);
-    }
-  }, [selectedChat]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const fetchChats = async () => {
+  const fetchChats = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/chats', {
         headers: { 'x-telegram-id': telegramId || '' }
@@ -64,9 +46,9 @@ export default function AdminChatsPage() {
     } catch (error) {
       console.error('Failed to fetch chats:', error);
     }
-  };
+  }, [telegramId]);
 
-  const fetchChatMessages = async (chatId: string) => {
+  const fetchChatMessages = useCallback(async (chatId: string) => {
     try {
       const res = await fetch(`/api/admin/chats/${chatId}`, {
         headers: { 'x-telegram-id': telegramId || '' }
@@ -78,7 +60,21 @@ export default function AdminChatsPage() {
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     }
-  };
+  }, [telegramId]);
+
+  useEffect(() => {
+    fetchChats();
+    const interval = setInterval(fetchChats, 10000);
+    return () => clearInterval(interval);
+  }, [fetchChats]);
+
+  useEffect(() => {
+    if (selectedChat) {
+      fetchChatMessages(selectedChat.id);
+      const interval = setInterval(() => fetchChatMessages(selectedChat.id), 5000);
+      return () => clearInterval(interval);
+    }
+  }, [selectedChat, fetchChatMessages]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || !selectedChat || !telegramId || isLoading) return;

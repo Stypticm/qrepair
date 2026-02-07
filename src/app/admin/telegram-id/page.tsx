@@ -6,14 +6,14 @@ import { Page } from '@/components/Page'
 export default function TelegramIdPage() {
   return (
     <Page back={true}>
-      <div className="w-full min-h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col">
-        <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto custom-scrollbar admin-masters-scroll" style={{ height: 'calc(100vh - 120px)', overflowY: 'scroll', paddingTop: 'env(--safe-area-top, 60px)' }}>
+      <div className="w-full min-h-full bg-gradient-to-b from-white to-gray-50 flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-6 admin-masters-scroll" style={{ paddingTop: 'env(--safe-area-top, 60px)' }}>
           <div className="w-full max-w-md">
             <div className="text-center mb-6 mt-12">
               <h1 className="text-3xl font-semibold text-gray-900 mb-2">🔍 Telegram ID</h1>
               <p className="text-gray-600">Инструкция по получению идентификатора</p>
             </div>
-            
+
             <Card className="bg-white border border-gray-200 rounded-2xl shadow-lg">
               <CardHeader className="text-center">
                 <CardTitle className="text-gray-900">Как получить Telegram ID</CardTitle>

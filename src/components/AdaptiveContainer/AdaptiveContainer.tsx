@@ -83,7 +83,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
         return {
           container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
           main: 'flex-1 h-full w-full max-w-md mx-auto bg-white overflow-y-auto overflow-x-hidden relative',
-          wrapper: 'w-full h-full max-w-md mx-auto relative',
+          wrapper: 'w-full h-full max-w-md mx-auto relative flex flex-col',
           fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
         };
       }
@@ -106,7 +106,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
       return {
         container: `min-h-dvh w-full flex flex-col bg-white ${isTGWorkerMobile ? 'telegram-fullscreen' : ''}`,
         main: 'flex-1 w-full overflow-y-auto overflow-x-hidden suppress-overscroll relative', // Добавили класс для подавления оверскролла
-        wrapper: 'w-full h-full relative',
+        wrapper: 'w-full h-full flex flex-col relative',
         fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
       };
     }

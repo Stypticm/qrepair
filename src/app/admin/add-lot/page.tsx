@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Page } from '@/components/Page';
 import { useAppStore } from '@/stores/authStore';
 import { Camera, Upload, X, Plus } from 'lucide-react';
+import { isAdminTelegramId } from '@/core/lib/admin';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -48,13 +49,12 @@ export default function AddLotPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Проверка прав доступа
-  const adminIds = ['1', '296925626', '531360988'];
-  const isAdmin = adminIds.includes(telegramId || '');
+  const isAdmin = isAdminTelegramId(telegramId);
 
   if (!isAdmin) {
     return (
       <Page back={true}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-full bg-gray-50 flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -165,18 +165,18 @@ export default function AddLotPage() {
 
       const result = await response.json();
 
-        if (response.ok) {
-          toast.success('Лот успешно создан!');
-          
-          // Отправляем событие для обновления главной страницы
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('lotAdded'));
-          }
-          
-          router.push('/admin');
-        } else {
-          toast.error(result.error || 'Ошибка при создании лота');
+      if (response.ok) {
+        toast.success('Лот успешно создан!');
+
+        // Отправляем событие для обновления главной страницы
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('lotAdded'));
         }
+
+        router.push('/admin');
+      } else {
+        toast.error(result.error || 'Ошибка при создании лота');
+      }
     } catch (error) {
       console.error('Error creating lot:', error);
       toast.error('Ошибка при создании лота');
@@ -187,7 +187,7 @@ export default function AddLotPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-full bg-gray-50">
         {/* Apple-style Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
