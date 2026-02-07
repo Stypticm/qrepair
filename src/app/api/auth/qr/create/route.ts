@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/core/lib/supabase-admin';
-import { v4 as uuidv4 } from 'uuid';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,35 +14,43 @@ export async function POST() {
     }
 
     try {
-        const requestId = uuidv4();
-        console.log(`Creating auth request with ID: ${requestId}`);
+        // Use native crypto.randomUUID() for reliability
+        const requestId = crypto.randomUUID();
+        console.log(`[AUTH_QR] Attempting insertion with ID: ${requestId}`);
 
-        const { data, error } = await supabaseAdmin
+        const { error } = await supabaseAdmin
             .from('auth_requests')
             .insert({
                 id: requestId,
                 status: 'pending'
-            })
-            .select('id')
-            .single();
+            });
 
         if (error) {
-            console.error('Supabase Insertion Error:');
+            console.error('[AUTH_QR] Database Insertion Error:');
             console.dir(error, { depth: null });
+            
+            // Log specific error codes for debugging
+            if (error.code === '42P01') console.error('[AUTH_QR] TABLE NOT FOUND! Check if "auth_requests" exists in "public" schema.');
+            if (error.code === '23505') console.error('[AUTH_QR] Duplicate ID? (Highly unlikely with UUID)');
+            if (error.code === '42703') console.error('[AUTH_QR] Column mismatch! Check "id" or "status" column names.');
+
             return NextResponse.json({ 
                 error: 'Database Insertion Error', 
                 message: error.message,
-                details: error
+                code: error.code,
+                hint: error.hint,
+                details: error.details
             }, { status: 500 });
         }
 
+        console.log(`[AUTH_QR] Success! Request created: ${requestId}`);
         return NextResponse.json({ uuid: requestId });
     } catch (error: any) {
-        console.error('Unexpected Error in Auth QR Create:', error);
+        console.error('[AUTH_QR] Unexpected Server Error:', error);
         return NextResponse.json({ 
             error: 'Unexpected Server Error', 
             message: error.message || 'Unknown error',
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            name: error.name
         }, { status: 500 });
     }
 }

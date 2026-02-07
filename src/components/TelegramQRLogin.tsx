@@ -35,15 +35,14 @@ export const TelegramQRLogin = ({ onSuccess }: { onSuccess?: () => void }) => {
                 const res = await fetch('/api/auth/qr/create', { method: 'POST' });
 
                 if (!res.ok) {
-                    // Try to parse error details
                     try {
                         const errData = await res.json();
-                        const msg = errData.error && errData.details
-                            ? `${errData.error} ${JSON.stringify(errData.details)}`
-                            : errData.message || errData.error || res.statusText;
+                        let msg = errData.message || errData.error || res.statusText;
+                        if (errData.code) msg += ` [${errData.code}]`;
+                        if (errData.hint) msg += ` - ${errData.hint}`;
                         setErrorDetails(msg);
                     } catch (e) {
-                        setErrorDetails(`HTTP Error: ${res.status} ${res.statusText}`);
+                        setErrorDetails(`HTTP ${res.status}: ${res.statusText}`);
                     }
                     setStatus('error');
                     return;
