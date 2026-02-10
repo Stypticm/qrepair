@@ -142,6 +142,9 @@ export function useSafeArea() {
         userAgent.includes('Linux'))
     setIsMobile(mobile)
     setIsDesktop(desktop)
+    
+    // Силовое логирование для дебага
+    console.log('useSafeArea debug:', { mobile, desktop, userAgent })
 
     const isInTelegram = !!(
       window.Telegram?.WebApp ||
@@ -174,8 +177,10 @@ export function useSafeArea() {
             }
           }
 
-          webApp.headerColor = '#2dc2c6'
-          webApp.backgroundColor = '#ffffff'
+          if (webApp.isVersionAtLeast?.('6.1')) {
+            webApp.headerColor = '#2dc2c6'
+            webApp.backgroundColor = '#ffffff'
+          }
 
           if (webApp.MainButton) {
             webApp.MainButton.color = '#2dc2c6'

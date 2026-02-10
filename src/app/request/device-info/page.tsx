@@ -26,10 +26,10 @@ export default function DeviceInfoPage() {
         setModel,
     } = useAppStore();
     const router = useRouter();
-    
+
     // iPhone-адаптивные размеры
     const { adaptiveSizes, isTelegramWebApp, telegramUtils } = useIPhoneAdaptive();
-    
+
     const [manualSerialNumber, setManualSerialNumber] = useState('');
     const [isValid, setIsValid] = useState(false);
     const [error, setError] = useState('');
@@ -49,7 +49,7 @@ export default function DeviceInfoPage() {
     // Навигация стрелкой вверх (ПК) → к секции Выбор
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        
+
         const onKey = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement)?.tagName;
             if (tag === 'INPUT' || tag === 'TEXTAREA' || (e as any).isComposing) return;
@@ -94,7 +94,7 @@ export default function DeviceInfoPage() {
             // Добавляем флаг, что пользователь активно работает на этой странице
             sessionStorage.setItem('activeOnDeviceInfo', 'true');
         }
-        
+
         // Очищаем флаг при размонтировании компонента
         return () => {
             if (typeof window !== 'undefined') {
@@ -109,17 +109,17 @@ export default function DeviceInfoPage() {
         if (sn.length !== 10 && sn.length !== 12) {
             return false;
         }
-        
+
         // Проверяем, что содержит только буквы и цифры
         if (!/^[A-Z0-9]+$/.test(sn)) {
             return false;
         }
-        
+
         // Проверяем, что не содержит только цифры или только буквы
         if (/^[0-9]+$/.test(sn) || /^[A-Z]+$/.test(sn)) {
             return false;
         }
-        
+
         return true;
     };
 
@@ -182,7 +182,7 @@ export default function DeviceInfoPage() {
         if (isDumbSerialNumber(manualSerialNumber)) {
             setErrorMessage('Серийный номер выглядит некорректно. Переходим к ручному выбору устройства.');
             setShowErrorDialog(true);
-            
+
             // Сохраняем SN и переходим к форме без API запроса
             setTimeout(() => {
                 setSerialNumber(manualSerialNumber);
@@ -199,21 +199,21 @@ export default function DeviceInfoPage() {
         setShowDialog(false);
         setChecking(true);
         setError('');
-        
+
         try {
             setSerialNumber(manualSerialNumber);
-            
+
             // Получаем данные через единый API
             console.log('🔍 Вызываем единый API для проверки:', manualSerialNumber);
             const result = await createIMEICheck(manualSerialNumber);
             console.log('🔍 Результат единого API:', result);
-            
+
             if (!result || result.status !== 'completed') {
                 throw new Error('Не удалось получить данные устройства');
             }
 
             console.log('✅ Получены данные от imeicheck:', result.data);
-            
+
             // Парсим данные устройства
             console.log('🔍 Вызываем parseIMEIDeviceData с result:', result);
             let parsedData = null;
@@ -223,11 +223,11 @@ export default function DeviceInfoPage() {
             } catch (parseError) {
                 console.error('❌ Ошибка парсинга:', parseError);
             }
-            
+
             if (parsedData) {
                 // Сохраняем данные в БД
                 await saveDeviceDataToDB(telegramId || '', manualSerialNumber, result.data, username || undefined);
-                
+
                 // Показываем диалог с данными
                 setCheckResult(parsedData);
                 setShowCheckDialog(true);
@@ -235,10 +235,10 @@ export default function DeviceInfoPage() {
                 console.log('❌ Failed to parse device data');
                 throw new Error('Не удалось распарсить данные устройства');
             }
-            
+
         } catch (apiError) {
             console.error('❌ Ошибка API imeicheck:', apiError);
-            
+
             // Если API недоступен, переходим на форму для ручного ввода
             setError('Сервис недоступен. Введите данные вручную.');
             setTimeout(() => {
@@ -251,7 +251,7 @@ export default function DeviceInfoPage() {
     };
 
     const mapColorToCode = (label: string) => {
-        const map: Record<string,string> = { 'GOLD':'G', 'RED':'R', 'BLUE':'Bl', 'WHITE':'Wh', 'BLACK':'Bl', 'PURPLE':'Pu', 'GREEN':'Gr', 'SILVER':'St' };
+        const map: Record<string, string> = { 'GOLD': 'G', 'RED': 'R', 'BLUE': 'Bl', 'WHITE': 'Wh', 'BLACK': 'Bl', 'PURPLE': 'Pu', 'GREEN': 'Gr', 'SILVER': 'St' };
         return map[label.toUpperCase?.() || label] || '';
     }
 
@@ -260,7 +260,7 @@ export default function DeviceInfoPage() {
     };
 
     return (
-        <Page back={() => router.push('/') }>
+        <Page back={() => router.push('/')}>
             <div className='flex justify-center items-center fixed top-5 right-1/2 left-1/2'>
                 <Button
                     variant="ghost"
@@ -271,7 +271,7 @@ export default function DeviceInfoPage() {
                     <ArrowLeft className="w-10 h-10" />
                 </Button>
             </div>
-            <div 
+            <div
                 className={`w-full bg-gradient-to-b from-white to-gray-50 flex flex-col h-full justify-center items-center min-h-screen ${telegramUtils.telegramClasses.container}`}
                 data-checking={checking}
                 data-transitioning={isTransitioning}
@@ -282,7 +282,7 @@ export default function DeviceInfoPage() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
-                <div className="w-full max-w-md mx-auto px-4">
+                <div className="w-full max-w-3xl mx-auto px-6 md:px-12 py-12 md:py-20 flex flex-col items-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -304,7 +304,7 @@ export default function DeviceInfoPage() {
                         <p className={`${adaptiveSizes.bodySize} text-gray-600 mb-4`}>
                             Найдем информацию о вашем устройстве
                         </p>
-                        
+
                         {/* Анимация с инструкцией */}
                         <div className="mb-6">
                             <Image
@@ -387,7 +387,7 @@ export default function DeviceInfoPage() {
                         <p className="text-xs text-gray-600 mb-3">
                             Нажмите &quot;Продолжить&quot; для перехода
                         </p>
-                        
+
                         {/* Кнопка подтверждения */}
                         <div className="mt-4 flex gap-2 justify-center">
                             <Button
@@ -431,27 +431,27 @@ export default function DeviceInfoPage() {
                                     setIsTransitioning(true);
                                     // 1) Сохраняем префилл для совместимости
                                     const prefill = {
-                                        model: checkResult.model === 'X' && checkResult.variant === 'R' ? 'XR' : 
-                                               checkResult.model === 'X' && checkResult.variant === 'S' ? 'XS' :
-                                               checkResult.model === 'SE' ? 'SE' :
-                                               checkResult.model === 'Модель не указана' ? 'Модель не указана' :
-                                               checkResult.model || '',
+                                        model: checkResult.model === 'X' && checkResult.variant === 'R' ? 'XR' :
+                                            checkResult.model === 'X' && checkResult.variant === 'S' ? 'XS' :
+                                                checkResult.model === 'SE' ? 'SE' :
+                                                    checkResult.model === 'Модель не указана' ? 'Модель не указана' :
+                                                        checkResult.model || '',
                                         variant: checkResult.variant || '',
                                         storage: checkResult.storage || '',
                                         color: mapColorToCode(checkResult.color || ''),
                                     };
-                                    
-        // Сохраняем modelname в store
-        const fullModelName = checkResult.model === 'Модель не указана' 
-            ? 'Модель не указана'
-            : `iPhone ${checkResult.model} ${checkResult.storage} ${checkResult.color}`;
-        setModel(fullModelName);
+
+                                    // Сохраняем modelname в store
+                                    const fullModelName = checkResult.model === 'Модель не указана'
+                                        ? 'Модель не указана'
+                                        : `iPhone ${checkResult.model} ${checkResult.storage} ${checkResult.color}`;
+                                    setModel(fullModelName);
                                     console.log('🔍 prefill:', prefill);
                                     try {
                                         sessionStorage.setItem('prefillSelection', JSON.stringify(prefill));
                                         // Также сохраняем как phoneSelection, чтобы страница submit корректно вывела цвет/память без прохождения form
                                         sessionStorage.setItem('phoneSelection', JSON.stringify(prefill));
-                                    } catch {}
+                                    } catch { }
 
                                     // 2) Отправляем данные на сервер
                                     try {
@@ -462,12 +462,12 @@ export default function DeviceInfoPage() {
                                                 telegramId,
                                                 username: username || 'Unknown',
                                                 currentStep: 'evaluation',
-                                                modelname: checkResult.model === 'Модель не указана' 
+                                                modelname: checkResult.model === 'Модель не указана'
                                                     ? 'Модель не указана'
                                                     : `Apple iPhone ${prefill.model} ${prefill.storage} ${prefill.color}`.trim()
                                             }),
                                         });
-                                    } catch {}
+                                    } catch { }
 
                                     // 3) Переходим на следующую страницу
                                     try {
@@ -478,17 +478,17 @@ export default function DeviceInfoPage() {
                                                 telegramId,
                                                 username: username || 'Unknown',
                                                 currentStep: 'evaluation',
-                                                modelname: checkResult.model === 'Модель не указана' 
+                                                modelname: checkResult.model === 'Модель не указана'
                                                     ? 'Модель не указана'
                                                     : `Apple iPhone ${prefill.model} ${prefill.storage} ${prefill.color}`.trim()
                                             }),
                                         });
-                                    } catch {}
+                                    } catch { }
 
-                                    try { sessionStorage.setItem('previousStepPath', '/request/device-info'); } catch {}
+                                    try { sessionStorage.setItem('previousStepPath', '/request/device-info'); } catch { }
                                     // Небольшая задержка, чтобы пользователь видел, что идёт переход
                                     setTimeout(() => {
-                                      router.push('/request/form');
+                                        router.push('/request/form');
                                     }, 50);
                                 }}
                             >

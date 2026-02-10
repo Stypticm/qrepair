@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BarChart3, Plus, ShoppingBag, MessageCircle } from 'lucide-react';
+import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
@@ -105,6 +105,20 @@ export function AdminPageClient() {
       icon: MessageCircle,
       color: 'bg-orange-500',
     },
+    {
+      id: 'leads',
+      title: 'Быстрые заявки',
+      description: 'Заявки «в 1 клик» и контакты клиентов',
+      icon: ShoppingBag,
+      color: 'bg-pink-500',
+    },
+    {
+      id: 'trade-in',
+      title: 'Trade-in Оценки',
+      description: 'Просмотр и расчет стоимости сдаваемых устройств',
+      icon: Smartphone,
+      color: 'bg-blue-600',
+    },
   ];
 
   const handleSectionClick = (sectionId: string) => {
@@ -118,11 +132,15 @@ export function AdminPageClient() {
       router.push('/admin/add-lot');
     } else if (sectionId === 'chats') {
       router.push('/admin/chats');
+    } else if (sectionId === 'leads') {
+      router.push('/admin/leads');
+    } else if (sectionId === 'trade-in') {
+      router.push('/admin/trade-in');
     }
   };
 
   return (
-    <div className="min-h-full bg-gray-50 flex">
+    <div className="min-h-full bg-gray-50 flex overflow-x-hidden">
       {/* Левая боковая панель для десктопа (опционально, но сделаем пока сетку) */}
       <div className="flex-1 flex flex-col">
         {/* Заголовок */}

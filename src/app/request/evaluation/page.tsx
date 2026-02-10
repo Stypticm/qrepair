@@ -56,7 +56,7 @@ const getImageSize = (screenWidth: number): number => {
 // Константы для условий
 const CONDITION_LABELS = {
   PERFECT: 'Идеальное',
-  GOOD: 'Хорошее', 
+  GOOD: 'Хорошее',
   FAIR: 'Удовлетворительное',
   POOR: 'Плохое'
 } as const;
@@ -113,12 +113,12 @@ interface WearSliderProps {
   imageSize: number;
 }
 
-const WearSlider = memo(function WearSlider({ 
-  category, 
-  images, 
-  value, 
-  onValueChange, 
-  imageSize 
+const WearSlider = memo(function WearSlider({
+  category,
+  images,
+  value,
+  onValueChange,
+  imageSize
 }: WearSliderProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDraggingRef = useRef(false);
@@ -142,7 +142,7 @@ const WearSlider = memo(function WearSlider({
 
   const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = true;
-    try { (e.target as Element).setPointerCapture?.(e.pointerId); } catch {}
+    try { (e.target as Element).setPointerCapture?.(e.pointerId); } catch { }
     setValueFromPointer(e.clientY);
   }, [setValueFromPointer]);
 
@@ -153,12 +153,12 @@ const WearSlider = memo(function WearSlider({
 
   const handlePointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
-    try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch {}
+    try { (e.target as Element).releasePointerCapture?.(e.pointerId); } catch { }
   }, []);
 
   const categoryLabels = {
     display_front: 'Передняя панель',
-    display_back: 'Задняя панель', 
+    display_back: 'Задняя панель',
     back_camera: 'Задняя камера',
     battery: 'Износ батареи'
   };
@@ -256,14 +256,14 @@ interface EvaluationSlidersProps {
   modelName: string;
 }
 
-const EvaluationSliders = memo(function EvaluationSliders({ 
-  wearValues, 
-  setWearValues, 
-  setCurrentEvaluation, 
-  setPriceRange, 
-  setPrice, 
-  basePrice, 
-  modelName 
+const EvaluationSliders = memo(function EvaluationSliders({
+  wearValues,
+  setWearValues,
+  setCurrentEvaluation,
+  setPriceRange,
+  setPrice,
+  basePrice,
+  modelName
 }: EvaluationSlidersProps) {
   const screenWidth = typeof window !== 'undefined' ? window.innerWidth : IPHONE_BREAKPOINTS.STANDARD;
   const imageSize = getImageSize(screenWidth);
@@ -279,10 +279,10 @@ const EvaluationSliders = memo(function EvaluationSliders({
     const nextWear = { ...wearValues, [categoryId]: val };
     setWearValues(nextWear);
 
-    setCurrentEvaluation({ 
-      category: categoryId, 
-      condition: getWearLabel(val), 
-      penalty: val 
+    setCurrentEvaluation({
+      category: categoryId,
+      condition: getWearLabel(val),
+      penalty: val
     });
 
     const range = calculatePriceRange(
@@ -302,7 +302,7 @@ const EvaluationSliders = memo(function EvaluationSliders({
   }, [wearValues, setWearValues, setCurrentEvaluation, setPriceRange, setPrice, basePrice, modelName]);
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
       {categories.map((c) => (
         <WearSlider
           key={c.id}
@@ -321,17 +321,17 @@ const EvaluationSliders = memo(function EvaluationSliders({
 export default function EvaluationPage() {
   const router = useRouter();
   const { goBack } = useStepNavigation();
-  const { 
-    telegramId, 
-    modelname, 
-    setUserEvaluation, 
-    setDamagePercent, 
-    setPrice, 
-    setCurrentStep 
+  const {
+    telegramId,
+    modelname,
+    setUserEvaluation,
+    setDamagePercent,
+    setPrice,
+    setCurrentStep
   } = useAppStore();
-  
+
   const { wearValues, priceRange, saveToDatabase } = useFormData();
-  
+
   const [basePrice, setBasePrice] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [currentEvaluation, setCurrentEvaluation] = useState<EvaluationState | null>(null);
@@ -352,7 +352,7 @@ export default function EvaluationPage() {
   // Отключение вертикальных свайпов для Telegram
   useEffect(() => {
     let destroy: (() => void) | undefined;
-    
+
     try {
       if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
         init();
@@ -367,36 +367,36 @@ export default function EvaluationPage() {
           const platform = wa?.platform;
           const isMobilePlatform = platform === 'android' || platform === 'ios';
           if (isMobilePlatform) {
-            try { wa.expand(); } catch {}
+            try { wa.expand(); } catch { }
           }
-          try { wa.enableClosingConfirmation(); } catch {}
+          try { wa.enableClosingConfirmation(); } catch { }
           destroy = () => {
             // Восстанавливаем свайп вниз при размонтировании (опционально)
             try {
               if (typeof wa?.enableVerticalSwipes === 'function') {
                 wa.enableVerticalSwipes();
               }
-            } catch {}
+            } catch { }
           }
-        } catch {}
+        } catch { }
       }
-    } catch {}
-    
+    } catch { }
+
     // УБРАЛИ блокировку всех свайпов - теперь свайпы работают внутри приложения
     // Оставляем только базовые стили для Telegram WebApp
     if (typeof document === 'undefined') {
       return () => {
-        try { destroy?.(); } catch {}
+        try { destroy?.(); } catch { }
       };
     }
-    
+
     const prevOverflow = document.body.style.overflow;
     const prevHeight = document.body.style.height;
     document.body.style.overflow = 'auto';
     document.body.style.height = '100dvh';
-    
+
     return () => {
-      try { destroy?.(); } catch {}
+      try { destroy?.(); } catch { }
       document.body.style.overflow = prevOverflow;
       document.body.style.height = prevHeight;
     };
@@ -410,14 +410,14 @@ export default function EvaluationPage() {
   // Загрузка базовой цены с fallback механизмом
   useEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     const loadBasePrice = async () => {
       const basePrice = await getBasePriceWithFallback(modelname);
       if (basePrice) {
         setBasePrice(basePrice);
       }
     };
-    
+
     loadBasePrice();
   }, [modelname]);
 
@@ -435,7 +435,7 @@ export default function EvaluationPage() {
       const timeoutId = setTimeout(() => {
         saveToDatabase();
       }, 2000);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [wearValues.state, saveToDatabase]);
@@ -469,21 +469,21 @@ export default function EvaluationPage() {
 
     setSubmitting(true);
     setIsNavigating(true);
-    
+
     // Используем данные из currentEvaluation или создаем дефолтные
     const evaluation = currentEvaluation || {
       category: 'general',
       condition: 'Хорошее',
       penalty: 20
     };
-    
+
     setUserEvaluation(evaluation.condition);
     setDamagePercent(evaluation.penalty);
 
     try {
       // Сохраняем данные в БД через useFormData
       await saveToDatabase();
-      
+
       // Сохраняем оценку через API
       const response = await fetch("/api/request/save-evaluation", {
         method: "POST",
@@ -519,13 +519,14 @@ export default function EvaluationPage() {
 
   return (
     <Page back={goBack}>
-      <div className="min-h-screen overflow-hidden">
-        <div className="max-w-md mx-auto p-2">
-          <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Оценка <br />состояния</h1>
+      <div className="min-h-screen overflow-hidden bg-gray-50/30">
+        <div className="max-w-5xl mx-auto p-4 md:p-8 lg:p-12">
+          <div className="text-center md:text-left mb-8 md:mb-12">
+            <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">Оценка состояния</h1>
+            <p className="text-gray-500 text-lg">Настройте уровень износа для каждой детали вашего устройства.</p>
           </div>
 
-          <EvaluationSliders 
+          <EvaluationSliders
             wearValues={wearValues.state}
             setWearValues={wearValues.setState}
             setCurrentEvaluation={setCurrentEvaluation}
@@ -541,18 +542,18 @@ export default function EvaluationPage() {
         {isNavigating && (
           <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
             <div className="flex flex-col items-center">
-              <Image 
-                src={getPictureUrl('animation_running.gif') || '/animation_running.gif'} 
-                alt="Загрузка" 
-                width={192} 
-                height={192} 
-                className="object-contain rounded-2xl" 
+              <Image
+                src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+                alt="Загрузка"
+                width={192}
+                height={192}
+                className="object-contain rounded-2xl"
               />
               <p className="mt-4 text-lg font-semibold text-gray-700">Переходим для проверки функций…</p>
             </div>
           </div>
         )}
-        
+
         {/* Кнопка продолжения */}
         <div className="fixed bottom-4 left-4 right-4 z-50">
           <motion.div
@@ -569,7 +570,7 @@ export default function EvaluationPage() {
                   currentEvaluation,
                   wearValues: wearValues.state
                 });
-                
+
                 // Если нет priceRange, но есть wearValues, создаем базовый диапазон
                 if (!priceRange.state && wearValues.state && basePrice) {
                   const defaultRange = {
@@ -580,7 +581,7 @@ export default function EvaluationPage() {
                   priceRange.setState(defaultRange);
                   console.log('🔧 Created default price range:', defaultRange);
                 }
-                
+
                 // Сохраняем данные и переходим
                 await handleContinue();
               }}

@@ -59,7 +59,7 @@ export function usePersistentState<T>({
         const webApp = (window as any).Telegram?.WebApp
         const cloudStorage = webApp?.CloudStorage
 
-        if (cloudStorage?.setItem && telegramId) {
+        if (cloudStorage?.setItem && telegramId && webApp.isVersionAtLeast?.('6.9')) {
           cloudStorage.setItem(
             key,
             JSON.stringify(value),
@@ -119,7 +119,7 @@ export function usePersistentState<T>({
           const webApp = (window as any).Telegram?.WebApp
           const cloudStorage = webApp?.CloudStorage
 
-          if (!cloudStorage?.getItem || !telegramId) {
+          if (!cloudStorage?.getItem || !telegramId || !webApp.isVersionAtLeast?.('6.9')) {
             resolve(null)
             return
           }

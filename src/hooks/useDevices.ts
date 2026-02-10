@@ -277,6 +277,10 @@ export const useDevices = () => {
     color: null,
   })
 
+  useEffect(() => {
+    console.log('useDevices: selectedOptions changed', selectedOptions);
+  }, [selectedOptions]);
+
   // Восстанавливаем данные из sessionStorage при инициализации
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -573,7 +577,9 @@ export const useDevices = () => {
     type: keyof typeof selectedOptions,
     value: string | null
   ) => {
+    console.log('useDevices: Starting option selection', { type, value });
     setSelectedOptions((prev) => {
+      console.log('useDevices: Prev state', prev);
       const newOptions = { ...prev, [type]: value }
 
       // Reset dependent options только если они действительно изменились

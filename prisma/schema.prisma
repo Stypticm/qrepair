@@ -372,3 +372,50 @@ enum SenderType {
 
   @@schema("public")
 }
+model QuickLead {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String
+  productId    String?
+  productTitle String?
+  price        Float?
+  telegramId   String?
+  status       String   @default("new") // new, contacted, closed
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@schema("public")
+}
+model TradeInEvaluation {
+  id               String   @id @default(cuid())
+  userId           String   // telegramId
+  category         String   @default("iPhone")
+  model            String
+  variant          String?
+  storage          String
+  color            String
+  isOriginal       Boolean  @default(true)
+  isReset          Boolean  @default(true)
+  screenCondition  String   // perfect, good, worn, bad
+  bodyCondition    String   // perfect, good, worn, bad
+  isRostest        Boolean  @default(true)
+  batteryHealth    String   // e.g. "100%", "80-99%", etc
+  hasFullSet       Boolean  @default(true)
+  wasRepaired      Boolean  @default(false)
+  hasReceipt       Boolean  @default(false)
+  
+  // New functional checks
+  isFunctional     Boolean  @default(true) // Включается и заряжается
+  isBatterySafe    Boolean  @default(true) // Не вздутый
+  isHardwareOk     Boolean  @default(true) // FaceID, WiFi, Sim и т.д.
+  isClean          Boolean  @default(true) // Без ржавчины/окисления
+  
+  calculatedPrice  Float
+  status           String   @default("draft")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@schema("public")
+}

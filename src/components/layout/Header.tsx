@@ -14,6 +14,7 @@ import { useCart } from '@/hooks/useCart';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import Image from 'next/image';
 import { useEffect } from 'react';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 
 const CATEGORIES = [
   { name: 'Смартфоны', slug: 'smartphones', active: true },
@@ -31,6 +32,7 @@ export const Header = () => {
   const { favorites } = useFavorites();
   const { getTotalItems } = useCart();
   const { username, userPhotoUrl, telegramId, logout } = useAppStore();
+  const { count: adminNotifs } = useAdminNotifications();
 
   // Force check for LH admin if store seems empty but we are on LH
   useEffect(() => {
@@ -150,7 +152,7 @@ export const Header = () => {
                 <ActionButton icon={ShoppingCart} label="Корзина" count={getTotalItems()} href="/cart" badge />
               </>
             ) : (
-              <ActionButton icon={Settings} label="Админ" href="/admin" />
+              <ActionButton icon={Settings} label="Админ" href="/admin" count={adminNotifs} badge />
             )}
           </div>
         </div>

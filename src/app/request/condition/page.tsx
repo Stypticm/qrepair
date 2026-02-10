@@ -10,7 +10,7 @@ import Image from 'next/image'
 import { ArrowDown } from 'lucide-react'
 import { ConditionOption, frontConditions, backConditions, sideConditions } from '@/core/lib/condition'
 import { getPictureUrl } from '@/core/lib/assets'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ProgressBar } from '@/components/ui/progress-bar'
 import { ImagePreloader } from '@/components/ImagePreloader/ImagePreloader'
 import { getConditionImages } from '@/core/lib/imageUtils'
@@ -20,18 +20,18 @@ type SurfaceKey = typeof SURFACE_ORDER[number]
 
 const SURFACE_META: Record<SurfaceKey, { title: string; subtitle: string; accent: string }> = {
     front: {
-        title: '╨Ы╨╕╤Ж╨╡╨▓╨░╤П ╤Б╤В╨╛╤А╨╛╨╜╨░',
-        subtitle: '╨н╨║╤А╨░╨╜ ╨╕ ╤А╨░╨╝╨║╨░ ╨┤╨╕╤Б╨┐╨╗╨╡╤П',
+        title: 'Лицевая сторона',
+        subtitle: 'Экран и рамка дисплея',
         accent: 'Front',
     },
     back: {
-        title: '╨Ч╨░╨┤╨╜╤П╤П ╤З╨░╤Б╤В╤М',
-        subtitle: '╨б╨┐╨╕╨╜╨║╨░ ╨╕ ╨▒╨╗╨╛╨║ ╨║╨░╨╝╨╡╤А',
+        title: 'Задняя часть',
+        subtitle: 'Спинка и блок камер',
         accent: 'Back',
     },
     side: {
-        title: '╨У╤А╨░╨╜╨╕ ╨╕ ╨║╨╜╨╛╨┐╨║╨╕',
-        subtitle: '╨С╨╛╨║╨╛╨▓╤Л╨╡ ╨┐╨╛╨▓╨╡╤А╤Е╨╜╨╛╤Б╤В╨╕',
+        title: 'Грани и кнопки',
+        subtitle: 'Боковые поверхности',
         accent: 'Sides',
     },
 }
@@ -444,33 +444,33 @@ export default function ConditionPage() {
     }
 
     const getConditionText = (conditionId: string): string => {
-        if (conditionId.includes('_new')) return '╨Э╨╛╨▓╤Л╨╣'
-        if (conditionId.includes('_have_scratches')) return '╨Ч╨░╨╝╨╡╤В╨╜╤Л╨╡ ╤Ж╨░╤А╨░╨┐╨╕╨╜╤Л'
-        if (conditionId.includes('_scratches')) return '╨в╤А╨╡╤Й╨╕╨╜╤Л'
+        if (conditionId.includes('_new')) return 'Новый'
+        if (conditionId.includes('_have_scratches')) return 'Заметные царапины'
+        if (conditionId.includes('_scratches')) return 'Трещины'
         if (conditionId.includes('display_front') || conditionId.includes('display_back') || conditionId.includes('display_side'))
-            return '╨Ю╤З╨╡╨╜╤М ╤Е╨╛╤А╨╛╤И╨╡╨╡'
+            return 'Очень хорошее'
         return conditionId // Fallback
     }
 
     function calculateTotalPenalty(conditions: DeviceConditions): number {
         let totalPenalty = 0
         if (conditions.front) {
-            if (conditions.front === '╨Э╨╛╨▓╤Л╨╣') totalPenalty += 0
-            else if (conditions.front === '╨Ю╤З╨╡╨╜╤М ╤Е╨╛╤А╨╛╤И╨╡╨╡') totalPenalty += -3
-            else if (conditions.front === '╨Ч╨░╨╝╨╡╤В╨╜╤Л╨╡ ╤Ж╨░╤А╨░╨┐╨╕╨╜╤Л') totalPenalty += -8
-            else if (conditions.front === '╨в╤А╨╡╤Й╨╕╨╜╤Л') totalPenalty += -15
+            if (conditions.front === 'Новый') totalPenalty += 0
+            else if (conditions.front === 'Очень хорошее') totalPenalty += -3
+            else if (conditions.front === 'Заметные царапины') totalPenalty += -8
+            else if (conditions.front === 'Трещины') totalPenalty += -15
         }
         if (conditions.back) {
-            if (conditions.back === '╨Э╨╛╨▓╤Л╨╣') totalPenalty += 0
-            else if (conditions.back === '╨Ю╤З╨╡╨╜╤М ╤Е╨╛╤А╨╛╤И╨╡╨╡') totalPenalty += -3
-            else if (conditions.back === '╨Ч╨░╨╝╨╡╤В╨╜╤Л╨╡ ╤Ж╨░╤А╨░╨┐╨╕╨╜╤Л') totalPenalty += -8
-            else if (conditions.back === '╨в╤А╨╡╤Й╨╕╨╜╤Л') totalPenalty += -15
+            if (conditions.back === 'Новый') totalPenalty += 0
+            else if (conditions.back === 'Очень хорошее') totalPenalty += -3
+            else if (conditions.back === 'Заметные царапины') totalPenalty += -8
+            else if (conditions.back === 'Трещины') totalPenalty += -15
         }
         if (conditions.side) {
-            if (conditions.side === '╨Э╨╛╨▓╤Л╨╣') totalPenalty += 0
-            else if (conditions.side === '╨Ю╤З╨╡╨╜╤М ╤Е╨╛╤А╨╛╤И╨╡╨╡') totalPenalty += -3
-            else if (conditions.side === '╨Ч╨░╨╝╨╡╤В╨╜╤Л╨╡ ╤Ж╨░╤А╨░╨┐╨╕╨╜╤Л') totalPenalty += -8
-            else if (conditions.side === '╨в╤А╨╡╤Й╨╕╨╜╤Л') totalPenalty += -15
+            if (conditions.side === 'Новый') totalPenalty += 0
+            else if (conditions.side === 'Очень хорошее') totalPenalty += -3
+            else if (conditions.side === 'Заметные царапины') totalPenalty += -8
+            else if (conditions.side === 'Трещины') totalPenalty += -15
         }
         return totalPenalty
     }
@@ -483,7 +483,7 @@ export default function ConditionPage() {
         return Math.max(finalPrice, minPrice)
     }
 
-    const steps = ['IMEI ╨╕ S/N', '╨Т╤Л╨▒╨╛╤А ╨╝╨╛╨┤╨╡╨╗╨╕', '╨б╨╛╤Б╤В╨╛╤П╨╜╨╕╨╡ ╤Г╤Б╤В╤А╨╛╨╣╤Б╤В╨▓╨░', '╨Ф╨╛╨┐╨╛╨╗╨╜╨╕╤В╨╡╨╗╤М╨╜╤Л╨╡ ╤Д╤Г╨╜╨║╤Ж╨╕╨╕', '╨Я╨╛╨┤╤В╨▓╨╡╤А╨╢╨┤╨╡╨╜╨╕╨╡']
+    const steps = ['IMEI и S/N', 'Выбор модели', 'Состояние устройства', 'Дополнительные функции', 'Подтверждение']
     const getCurrentStep = () => 3 // Step 3 for condition page
     const preloadImages = getConditionImages()
 
@@ -528,17 +528,18 @@ export default function ConditionPage() {
                         transition={{ duration: 0.35 }}
                         className="mb-8 space-y-3 text-center md:text-left"
                     >
-                        <span className="text-xs uppercase tracking-[0.3em] text-slate-400">╨Ю╤Ж╨╡╨╜╨║╨░ ╤Б╨╛╤Б╤В╨╛╤П╨╜╨╕╤П</span>
+                        <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Оценка состояния</span>
                         <h1 className="text-3xl font-semibold text-slate-900 md:text-4xl">
-                            ╨Ъ╨░╨║ ╨▓╤Л╨│╨╗╤П╨┤╨╕╤В ╨▓╨░╤И iPhone ╤Б╨╡╨│╨╛╨┤╨╜╤П
+                            Как выглядит ваш iPhone сегодня
                         </h1>
                         <p className="text-sm text-slate-500 md:text-base">
-                            ╨Ю╤Ж╨╡╨╜╨╕╤В╨╡ ╤Б╨╛╤Б╤В╨╛╤П╨╜╨╕╨╡ ╤Г╤Б╤В╤А╨╛╨╣╤Б╤В╨▓╨░, ╤З╤В╨╛╨▒╤Л ╨┐╨╛╨╗╤Г╤З╨╕╤В╤М ╤В╨╛╤З╨╜╤Г╤О ╤Б╤В╨╛╨╕╨╝╨╛╤Б╤В╤М
+                            Оцените состояние устройства, чтобы получить точную стоимость
                         </p>
                     </motion.div>
 
-                    <div className="flex flex-1 flex-col gap-6 lg:flex-row">
-                        <div className="grid grid-cols-1 gap-4 lg:w-[280px]">
+                    <div className="flex flex-1 flex-col gap-8 xl:flex-row">
+                        {/* Column 1: Navigation Sidebar (Left) */}
+                        <div className="hidden flex-col gap-4 xl:flex xl:w-[240px]">
                             {SURFACE_ORDER.map((surface) => {
                                 const option = getOptionByLabel(surface, deviceConditions[surface])
                                 const isActive = activeSurface === surface
@@ -548,128 +549,56 @@ export default function ConditionPage() {
                                         key={surface}
                                         type="button"
                                         onClick={() => handleSurfaceChange(surface)}
-                                        className={`group rounded-2xl border px-4 py-4 text-left transition-all duration-200 ${isActive
-                                            ? 'border-slate-900 bg-slate-900 text-white shadow-[0_24px_60px_-30px_rgba(15,23,42,0.6)]'
-                                            : 'border-white/70 bg-white/70 text-slate-900 shadow-sm hover:border-slate-200 hover:shadow-md'
+                                        className={`group rounded-[24px] border px-5 py-5 text-left transition-all duration-300 ${isActive
+                                            ? 'border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-900/20'
+                                            : 'border-white bg-white/50 text-slate-900 shadow-sm hover:border-slate-200 hover:bg-white'
                                             }`}
                                     >
                                         <div className="flex items-center justify-between gap-3">
                                             <div>
-                                                <span
-                                                    className={`text-[10px] uppercase tracking-[0.25em] ${isActive ? 'text-white/70' : 'text-slate-400'
-                                                        }`}
-                                                >
+                                                <span className={`text-[9px] font-bold uppercase tracking-[0.2em] ${isActive ? 'text-white/60' : 'text-slate-400'}`}>
                                                     {SURFACE_META[surface].accent}
                                                 </span>
-                                                <p className="mt-1 text-sm font-medium">{SURFACE_META[surface].title}</p>
+                                                <p className="mt-1 text-sm font-bold">{SURFACE_META[surface].title}</p>
                                             </div>
-                                            <span
-                                                className={`ml-2 flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold ${isComplete
-                                                    ? isActive
-                                                        ? 'border-white/40 bg-white/20 text-white'
-                                                        : 'border-slate-200 bg-white text-slate-700'
-                                                    : 'border-amber-200 bg-amber-50 text-amber-600'
-                                                    }`}
-                                            >
-                                                {isComplete ? 'OK' : '!'}
+                                            <span className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold ${isComplete
+                                                ? isActive ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600'
+                                                : 'bg-amber-50 text-amber-600'
+                                                }`}>
+                                                {isComplete ? '✓' : '!'}
                                             </span>
                                         </div>
-                                        <p
-                                            className={`mt-3 text-xs leading-5 ${isActive ? 'text-white/80' : 'text-slate-500'
-                                                }`}
-                                        >
-                                            {option ? getConditionText(option.id) : '╨Э╨╡ ╨▓╤Л╨▒╤А╨░╨╜╨╛'}
-                                        </p>
                                     </button>
                                 )
                             })}
                         </div>
 
+                        {/* Column 2: Main Content (Middle) */}
                         <div className="flex-1 space-y-6">
-                            <motion.div
-                                key={activeSurface}
-                                initial={{ opacity: 0, y: 16 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_40px_90px_-50px_rgba(15,23,42,0.45)] backdrop-blur"
-                            >
-                                <div className="flex flex-wrap items-start justify-between gap-4">
-                                    <div>
-                                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">
-                                            {SURFACE_META[activeSurface].accent}
-                                        </span>
-                                        <h2 className="mt-2 text-2xl font-semibold text-slate-900 md:text-3xl">
-                                            {SURFACE_META[activeSurface].title}
-                                        </h2>
-                                        <p className="mt-2 text-sm text-slate-500">{SURFACE_META[activeSurface].subtitle}</p>
-                                    </div>
-                                    <div className="flex items-center gap-2 rounded-full border border-white/80 bg-white/80 p-1 shadow-sm">
-                                        {SURFACE_ORDER.map((surface) => {
-                                            const isActiveTab = activeSurface === surface
-                                            const completed = Boolean(deviceConditions[surface])
-                                            return (
-                                                <button
-                                                    key={`${surface}-tab`}
-                                                    type="button"
-                                                    onClick={() => handleSurfaceChange(surface)}
-                                                    className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${isActiveTab
-                                                        ? 'bg-slate-900 text-white shadow-[0_18px_36px_-24px_rgba(15,23,42,0.55)]'
-                                                        : 'text-slate-500 hover:text-slate-900'
-                                                        }`}
-                                                >
-                                                    <span>{SURFACE_META[surface].accent}</span>
-                                                    <span
-                                                        className={`h-2 w-2 rounded-full ${completed
-                                                            ? isActiveTab
-                                                                ? 'bg-emerald-300'
-                                                                : 'bg-emerald-500/70'
-                                                            : 'bg-amber-400'
-                                                            }`}
-                                                    />
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
-
-                                <div className="mt-6 flex flex-col items-center gap-6 md:flex-row md:items-end">
-                                    <div className="relative flex w-full justify-center md:w-1/2">
-                                        {previewImage ? (
-                                            <div className="relative aspect-[9/16] w-full max-w-[260px] overflow-hidden rounded-[32px] border border-white/70 bg-gradient-to-b from-white via-slate-100 to-slate-200 shadow-inner">
-                                                <Image
-                                                    src={previewImage}
-                                                    alt={currentSelection ? getConditionText(currentSelection.id) : '╨б╨╛╤Б╤В╨╛╤П╨╜╨╕╨╡ ╤Г╤Б╤В╤А╨╛╨╣╤Б╤В╨▓╨░'}
-                                                    width={320}
-                                                    height={560}
-                                                    priority={activeSurface === 'front'}
-                                                    className="h-full w-full object-contain"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="aspect-[9/16] w-full max-w-[260px] rounded-[32px] border border-dashed border-slate-300 bg-white/60" />
-                                        )}
-                                    </div>
-                                    <div className="w-full md:w-1/2">
-                                        <div className="rounded-2xl border border-white/80 bg-white/70 p-4 shadow-inner backdrop-blur">
-                                            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">╨б╨╛╤Б╤В╨╛╤П╨╜╨╕╨╡</p>
-                                            <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                                                {currentSelection ? getConditionText(currentSelection.id) : '╨Э╨╡ ╨▓╤Л╨▒╤А╨░╨╜╨╛'}
-                                            </h3>
-                                            <p className="mt-3 text-sm text-slate-500">
-                                                {currentSelection?.penalty === 0
-                                                    ? '╨С╨╡╨╖ ╨╕╨╖╨╝╨╡╨╜╨╡╨╜╨╕╨╣ ╨▓ ╤Ж╨╡╨╜╨╡'
-                                                    : `╨б╨╜╨╕╨╢╨╡╨╜╨╕╨╡ ╤Ж╨╡╨╜╤Л: ${currentSelection?.penalty}%`}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
+                            <div className="xl:hidden flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                {SURFACE_ORDER.map((surface) => {
+                                    const isActiveTab = activeSurface === surface
+                                    const completed = Boolean(deviceConditions[surface])
+                                    return (
+                                        <button
+                                            key={`${surface}-mobile-tab`}
+                                            onClick={() => handleSurfaceChange(surface)}
+                                            className={`flex-none rounded-full px-5 py-2.5 text-xs font-bold transition-all ${isActiveTab
+                                                ? 'bg-slate-900 text-white shadow-lg'
+                                                : 'bg-white/70 text-slate-500'
+                                                }`}
+                                        >
+                                            {SURFACE_META[surface].accent}
+                                        </button>
+                                    )
+                                })}
+                            </div>
 
                             <div className="relative">
                                 <div
                                     ref={optionsScrollRef}
                                     onScroll={updateScrollHint}
-                                    className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:max-h-[460px] lg:overflow-y-auto lg:pr-6"
+                                    className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:max-h-[70vh] lg:overflow-y-auto lg:pr-4 scrollbar-hide"
                                 >
                                     {currentOptions.map((option) => {
                                         const optionLabel = getConditionText(option.id)
@@ -682,39 +611,27 @@ export default function ConditionPage() {
                                                 type="button"
                                                 onClick={() => handleConditionSelect(activeSurface, option.id)}
                                                 onMouseEnter={() => setPreviewOptionId(option.id)}
-                                                ref={(el) => {
-                                                    optionRefs.current[option.id] = el
-                                                }}
+                                                ref={(el) => { optionRefs.current[option.id] = el }}
                                                 data-option-id={option.id}
-                                                className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 ${isSelected
-                                                    ? 'border-slate-900 bg-slate-900 text-white shadow-[0_20px_45px_-25px_rgba(15,23,42,0.55)]'
-                                                    : 'border-white/70 bg-white text-slate-900 shadow-sm hover:border-slate-200 hover:shadow-md'
+                                                className={`group relative overflow-hidden rounded-[32px] border-2 transition-all duration-300 ${isSelected
+                                                    ? 'border-slate-900 bg-white shadow-2xl shadow-slate-900/10'
+                                                    : 'border-transparent bg-white/60 hover:border-slate-200 hover:bg-white shadow-sm'
                                                     }`}
                                             >
-                                                <div className="relative flex flex-col items-center gap-3 px-3 py-4">
-                                                    <div
-                                                        className={`relative flex h-28 w-full items-center justify-center overflow-hidden rounded-2xl border transition ${isSelected ? 'border-white/30 bg-white/10' : 'border-slate-200 bg-slate-100'
-                                                            }`}
-                                                    >
+                                                <div className="flex flex-col p-6">
+                                                    <div className="relative aspect-square w-full mb-4 overflow-hidden rounded-2xl bg-slate-50">
                                                         <Image
                                                             src={imageSrc}
                                                             alt={optionLabel}
-                                                            width={200}
-                                                            height={200}
-                                                            className="h-full w-full object-contain"
+                                                            fill
+                                                            className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
                                                         />
-                                                        <span
-                                                            className={`absolute left-3 top-3 rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-500'
-                                                                }`}
-                                                        >
+                                                        <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-[10px] font-bold ${isSelected ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 shadow-sm'}`}>
                                                             {penaltyLabel}
                                                         </span>
                                                     </div>
-                                                    <div className="text-center">
-                                                        <p
-                                                            className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-900'
-                                                                }`}
-                                                        >
+                                                    <div className="text-left">
+                                                        <p className={`text-lg font-bold ${isSelected ? 'text-slate-900' : 'text-slate-600'}`}>
                                                             {optionLabel}
                                                         </p>
                                                     </div>
@@ -723,14 +640,62 @@ export default function ConditionPage() {
                                         )
                                     })}
                                 </div>
-                                {showScrollHint && (
-                                    <div className="pointer-events-none absolute inset-y-6 right-[-10px] hidden lg:flex">
-                                        <div className="flex flex-col items-center gap-2 rounded-2xl border border-white/80 bg-white/90 px-3 py-4 shadow-lg backdrop-blur">
-                                            <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400">скролл</span>
-                                            <ArrowDown className="h-4 w-4 text-slate-400 animate-bounce" />
+                            </div>
+                        </div>
+
+                        {/* Column 3: Preview & Summary (Right - Sticky) */}
+                        <div className="hidden xl:block xl:w-[320px]">
+                            <div className="sticky top-8 space-y-6">
+                                <div className="rounded-[40px] border border-white bg-white/80 p-8 shadow-2xl shadow-slate-200/50 backdrop-blur-xl">
+                                    <div className="relative aspect-[9/16] w-full mx-auto overflow-hidden rounded-[32px] bg-gradient-to-b from-slate-50 to-slate-200 border border-white shadow-inner">
+                                        <AnimatePresence mode="wait">
+                                            <motion.div
+                                                key={previewImage}
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 1.1 }}
+                                                className="h-full w-full"
+                                            >
+                                                <Image
+                                                    src={previewImage}
+                                                    alt="Preview"
+                                                    fill
+                                                    className="object-contain p-6"
+                                                />
+                                            </motion.div>
+                                        </AnimatePresence>
+                                    </div>
+
+                                    <div className="mt-8 space-y-4">
+                                        <div className="rounded-2xl bg-slate-50 p-4">
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ваш выбор</p>
+                                            <h3 className="mt-1 text-lg font-bold text-slate-900">
+                                                {currentSelection ? getConditionText(currentSelection.id) : 'Не выбрано'}
+                                            </h3>
+                                        </div>
+
+                                        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Итоговая оценка</p>
+                                                <p className="text-2xl font-black text-slate-900">{totalPenalty > 0 ? `+${totalPenalty}%` : `${totalPenalty}%`}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Цена</p>
+                                                <p className="text-xl font-bold text-teal-600">
+                                                    {priceFormatter && estimatedPrice ? priceFormatter.format(estimatedPrice) : '---'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
-                                )}
+                                </div>
+
+                                <Button
+                                    onClick={() => setShowDialog(true)}
+                                    disabled={!isReadyToContinue}
+                                    className="w-full h-16 rounded-3xl bg-slate-900 hover:bg-slate-800 text-white font-black text-lg shadow-xl shadow-slate-900/10 transition-all active:scale-[0.98]"
+                                >
+                                    Продолжить
+                                </Button>
                             </div>
                         </div>
                     </div>

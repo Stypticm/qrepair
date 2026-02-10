@@ -134,7 +134,7 @@ export const ProductGrid = ({ products = MOCK_PRODUCTS, isLoading }: ProductGrid
                 return (
                     <Link
                         key={product.id}
-                        href={`/product/${product.id}`}
+                        href={`/market/${product.id}`}
                         className="group bg-white border border-gray-100 rounded-apple-lg overflow-hidden hover:shadow-lg transition-all duration-300 hover:border-teal-200"
                     >
                         {/* Image */}

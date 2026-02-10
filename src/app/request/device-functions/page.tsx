@@ -6,12 +6,12 @@ import { Page } from '@/components/Page';
 import { useStepNavigation } from '@/hooks/useStepNavigation';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { 
-  Power, 
-  Wrench, 
-  Monitor, 
-  User, 
-  Fingerprint, 
+import {
+  Power,
+  Wrench,
+  Monitor,
+  User,
+  Fingerprint,
   Camera,
   CheckCircle,
   XCircle,
@@ -19,11 +19,11 @@ import {
 } from 'lucide-react';
 import { useFormData } from '@/hooks/usePersistentState';
 import { useAppStore } from '@/stores/authStore';
-import { 
-  DEVICE_FUNCTIONS, 
-  DeviceFunctionState, 
+import {
+  DEVICE_FUNCTIONS,
+  DeviceFunctionState,
   calculateFunctionDiscount,
-  type DeviceFunction 
+  type DeviceFunction
 } from '@/core/lib/deviceFunctions';
 import { calculatePriceRange, type DeviceConditions, type AdditionalConditions } from '@/core/lib/priceCalculation';
 import { usePageState } from '@/hooks/usePageState';
@@ -48,7 +48,7 @@ interface FunctionCardProps {
 
 function FunctionCard({ func, state, onStateChange }: FunctionCardProps) {
   const IconComponent = ICON_MAP[func.icon as keyof typeof ICON_MAP] || Power;
-  
+
   const getStateIcon = (state: string) => {
     switch (state) {
       case 'working': return <CheckCircle className="w-4 h-4 text-gray-600" />;
@@ -59,7 +59,7 @@ function FunctionCard({ func, state, onStateChange }: FunctionCardProps) {
 
   // Определяем, какие функции должны показывать "Да/Нет/Не знаю"
   const isYesNoQuestion = func.key === 'device_power' || func.key === 'repair_history';
-  
+
   const getButtonText = (buttonState: string) => {
     if (isYesNoQuestion) {
       switch (buttonState) {
@@ -91,16 +91,15 @@ function FunctionCard({ func, state, onStateChange }: FunctionCardProps) {
         </div>
         {getStateIcon(state)}
       </div>
-      
+
       <div className="flex space-x-1">
         <Button
           size="sm"
           variant={state === 'working' ? 'default' : 'outline'}
-          className={`flex-1 h-7 text-xs ${
-            state === 'working' 
-              ? 'bg-gray-800 hover:bg-gray-900 text-white' 
-              : 'text-gray-600 border-gray-300 hover:bg-gray-50'
-          }`}
+          className={`flex-1 h-7 text-xs ${state === 'working'
+            ? 'bg-gray-800 hover:bg-gray-900 text-white'
+            : 'text-gray-600 border-gray-300 hover:bg-gray-50'
+            }`}
           onClick={() => onStateChange(func.key, 'working')}
         >
           {getButtonText('working')}
@@ -108,11 +107,10 @@ function FunctionCard({ func, state, onStateChange }: FunctionCardProps) {
         <Button
           size="sm"
           variant={state === 'not_working' ? 'default' : 'outline'}
-          className={`flex-1 h-7 text-xs ${
-            state === 'not_working' 
-              ? 'bg-gray-800 hover:bg-gray-900 text-white' 
-              : 'text-gray-600 border-gray-300 hover:bg-gray-50'
-          }`}
+          className={`flex-1 h-7 text-xs ${state === 'not_working'
+            ? 'bg-gray-800 hover:bg-gray-900 text-white'
+            : 'text-gray-600 border-gray-300 hover:bg-gray-50'
+            }`}
           onClick={() => onStateChange(func.key, 'not_working')}
         >
           {getButtonText('not_working')}
@@ -120,11 +118,10 @@ function FunctionCard({ func, state, onStateChange }: FunctionCardProps) {
         <Button
           size="sm"
           variant={state === 'unknown' ? 'default' : 'outline'}
-          className={`flex-1 h-7 text-xs ${
-            state === 'unknown' 
-              ? 'bg-gray-800 hover:bg-gray-900 text-white' 
-              : 'text-gray-600 border-gray-300 hover:bg-gray-50'
-          }`}
+          className={`flex-1 h-7 text-xs ${state === 'unknown'
+            ? 'bg-gray-800 hover:bg-gray-900 text-white'
+            : 'text-gray-600 border-gray-300 hover:bg-gray-50'
+            }`}
           onClick={() => onStateChange(func.key, 'unknown')}
         >
           {getButtonText('unknown')}
@@ -137,16 +134,16 @@ function FunctionCard({ func, state, onStateChange }: FunctionCardProps) {
 export default function DeviceFunctionsPage() {
   const router = useRouter();
   const { goBack } = useStepNavigation();
-  const { 
-    setCurrentStep, 
-    setPrice, 
+  const {
+    setCurrentStep,
+    setPrice,
     modelname,
     deviceConditions,
-    additionalConditions 
+    additionalConditions
   } = useAppStore();
-  
+
   const { saveToDatabase } = useFormData();
-  
+
   // Используем новую систему управления состоянием
   const {
     state: pageState,
@@ -162,7 +159,7 @@ export default function DeviceFunctionsPage() {
     restoreOnMount: true
   }, {
     functionStates: {} as DeviceFunctionState,
-    priceRange: undefined as {min: number, max: number, midpoint: number} | undefined
+    priceRange: undefined as { min: number, max: number, midpoint: number } | undefined
   });
 
   const { functionStates, priceRange } = pageState;
@@ -196,7 +193,7 @@ export default function DeviceFunctionsPage() {
         console.error('Ошибка загрузки данных оценки:', error);
       }
     };
-    
+
     loadEvaluationData();
   }, [setPageState]);
 
@@ -215,7 +212,7 @@ export default function DeviceFunctionsPage() {
       const timeoutId = setTimeout(() => {
         saveToDatabase();
       }, 2000);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [functionStates, saveToDatabase]);
@@ -224,13 +221,13 @@ export default function DeviceFunctionsPage() {
     console.log('🔍 handleShowDialog вызвана');
     console.log('📱 functionStates:', functionStates);
     console.log('💰 savedBasePrice:', sessionStorage.getItem('basePrice'));
-    
+
     setNavigationState(prev => ({ ...prev, isLoading: true }));
-    
+
     try {
       // Рассчитываем скидку от функций
       const functionDiscount = calculateFunctionDiscount(functionStates, DEVICE_FUNCTIONS);
-      
+
       // Получаем базовую цену с fallback механизмом
       const basePrice = await getBasePriceWithFallback(modelname);
       if (!basePrice) {
@@ -238,7 +235,7 @@ export default function DeviceFunctionsPage() {
         setNavigationState(prev => ({ ...prev, isLoading: false }));
         return;
       }
-      
+
       // Получаем существующие условия
       const deviceConditionsData: DeviceConditions = {
         front: deviceConditions?.front || undefined,
@@ -251,7 +248,7 @@ export default function DeviceFunctionsPage() {
         backCamera: additionalConditions?.backCamera || undefined,
         battery: additionalConditions?.battery || undefined,
       };
-      
+
       // Рассчитываем новый диапазон цен с учётом функций
       const calculatedPriceRange = calculatePriceRange(
         basePrice,
@@ -260,18 +257,18 @@ export default function DeviceFunctionsPage() {
         additionalConditionsData,
         functionDiscount
       );
-      
+
       // Сохраняем рассчитанный диапазон цен
       setPageState({ priceRange: calculatedPriceRange });
-      
+
       // Сохраняем диапазон цен в sessionStorage для передачи на другие страницы
       sessionStorage.setItem('priceRange', JSON.stringify(calculatedPriceRange));
-      
+
       // Открываем диалог
       setNavigationState(prev => ({ ...prev, isDialogOpen: true }));
-      
+
       console.log('✅ Диалог открыт успешно');
-      
+
     } catch (error) {
       console.error('Ошибка при расчёте цены:', error);
     } finally {
@@ -288,51 +285,105 @@ export default function DeviceFunctionsPage() {
   }, [functionStates, priceRange, handleDialogContinue]);
 
   const hasAnySelection = Object.values(functionStates).some(state => state !== 'unknown');
-  
+
   // Логика блокировки: если телефон не включается, показываем только первые две функции
   const devicePowerState = functionStates['device_power'];
   const shouldShowAllFunctions = devicePowerState === 'working' || devicePowerState === 'unknown';
-  
-  const visibleFunctions = shouldShowAllFunctions 
-    ? DEVICE_FUNCTIONS 
+
+  const visibleFunctions = shouldShowAllFunctions
+    ? DEVICE_FUNCTIONS
     : DEVICE_FUNCTIONS.slice(0, 2); // Показываем только "Включается ли телефон" и "Был ли ремонт"
 
   return (
     <Page back={goBack}>
-      <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
-        <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-          <div className="w-full max-w-md mx-auto flex flex-col gap-3 pb-4 items-center text-center">
+      <div className="w-full h-full bg-gray-50/30 flex flex-col pt-4 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 p-4 md:p-8 lg:p-12">
+          <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 items-center">
             {/* Заголовок */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="text-center"
+              className="text-center md:text-left w-full mb-8"
             >
+              <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">Проверка функций</h1>
+              <p className="text-gray-500 text-lg">Укажите исправность основных компонентов устройства.</p>
             </motion.div>
 
-            {/* Список функций */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-              className="w-full space-y-2"
-            >
-              {visibleFunctions.map((func, index) => (
+            <div className="w-full flex flex-col xl:flex-row gap-8 items-start">
+              {/* Левая часть: Грид функций */}
+              <div className="flex-1">
                 <motion.div
-                  key={func.key}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="w-full grid grid-cols-1 md:grid-cols-2 gap-4"
                 >
-                  <FunctionCard
-                    func={func}
-                    state={functionStates[func.key] || 'unknown'}
-                    onStateChange={handleStateChange}
-                  />
+                  {visibleFunctions.map((func, index) => (
+                    <motion.div
+                      key={func.key}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
+                    >
+                      <FunctionCard
+                        func={func}
+                        state={functionStates[func.key] || 'unknown'}
+                        onStateChange={handleStateChange}
+                      />
+                    </motion.div>
+                  ))}
                 </motion.div>
-              ))}
-            </motion.div>
+              </div>
+
+              {/* Правая часть: Sticky Summary (Desktop) */}
+              <div className="hidden xl:block w-[340px] sticky top-8">
+                <div className="rounded-[40px] border border-white bg-white/80 p-8 shadow-2xl shadow-slate-200/50 backdrop-blur-xl space-y-6">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Текущая оценка</p>
+                    <div className="mt-2 space-y-1">
+                      {priceRange ? (
+                        <>
+                          <p className="text-3xl font-black text-emerald-600">
+                            ~{priceRange.midpoint.toLocaleString('ru-RU')} ₽
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            Диапазон: {priceRange.min.toLocaleString('ru-RU')} — {priceRange.max.toLocaleString('ru-RU')} ₽
+                          </p>
+                        </>
+                      ) : (
+                        <p className="text-xl font-bold text-slate-400 italic">Расчет...</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-slate-100">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-4">Статус проверки</p>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {visibleFunctions.map(f => {
+                        const st = functionStates[f.key] || 'unknown';
+                        return (
+                          <div key={f.key} className={`h-1 rounded-full ${st === 'working' ? 'bg-emerald-500' :
+                              st === 'not_working' ? 'bg-rose-500' : 'bg-slate-200'
+                            }`} />
+                        )
+                      })}
+                    </div>
+                    <p className="mt-3 text-[11px] text-slate-500 font-medium font-inter">
+                      Выбрано: {Object.keys(functionStates).length} из {visibleFunctions.length} параметров
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleShowDialog}
+                    disabled={!hasAnySelection || isLoading}
+                    className="w-full h-16 rounded-3xl bg-slate-900 hover:bg-slate-800 text-white font-black text-lg shadow-xl shadow-slate-900/10 transition-all active:scale-[0.98]"
+                  >
+                    {isLoading ? 'Загрузка...' : 'Продолжить'}
+                  </Button>
+                </div>
+              </div>
+            </div>
 
             {/* Информационное сообщение, когда телефон не включается */}
             {!shouldShowAllFunctions && (
@@ -363,7 +414,7 @@ export default function DeviceFunctionsPage() {
       </div>
 
       {/* Кнопка продолжения */}
-      <div className="fixed bottom-4 left-4 right-4 z-50">
+      <div className="fixed bottom-4 left-4 right-4 z-50 xl:hidden">
         <DeviceFunctionsContinueButton
           onClick={handleShowDialog}
           disabled={!hasAnySelection}

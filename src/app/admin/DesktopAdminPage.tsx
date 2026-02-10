@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight } from 'lucide-react';
+import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight, Smartphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
@@ -96,10 +96,24 @@ export function DesktopAdminPage() {
             icon: MessageCircle,
             color: 'bg-sky-500',
         },
+        {
+            id: 'leads',
+            title: 'Быстрые заявки',
+            description: 'Лиды «в 1 клик» и горячие контакты',
+            icon: ShoppingBag,
+            color: 'bg-pink-500',
+        },
+        {
+            id: 'trade-in',
+            title: 'Trade-in Оценки',
+            description: 'Просмотр и расчет стоимости сдаваемых устройств',
+            icon: Smartphone,
+            color: 'bg-blue-600',
+        },
     ];
 
     return (
-        <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-24 pb-12">
+        <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-24 pb-12 overflow-x-hidden">
             <div className="max-w-[1600px] mx-auto px-12 w-full">
                 {/* Header Section */}
                 <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">

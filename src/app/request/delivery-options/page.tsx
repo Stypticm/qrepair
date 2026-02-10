@@ -10,23 +10,23 @@ import { getPictureUrl } from '@/core/lib/assets';
 
 // iPhone-специфичные размеры экранов
 const IPHONE_BREAKPOINTS = {
-  mini: { width: 375, height: 812 }, // iPhone 12/13 mini
-  standard: { width: 390, height: 844 }, // iPhone 12/13/14
-  plus: { width: 428, height: 926 }, // iPhone 12/13/14 Pro Max
-  pro: { width: 393, height: 852 }, // iPhone 14 Pro
+    mini: { width: 375, height: 812 }, // iPhone 12/13 mini
+    standard: { width: 390, height: 844 }, // iPhone 12/13/14
+    plus: { width: 428, height: 926 }, // iPhone 12/13/14 Pro Max
+    pro: { width: 393, height: 852 }, // iPhone 14 Pro
 } as const;
 
 // Функция для определения размера экрана iPhone
 const getIPhoneScreenSize = () => {
-  if (typeof window === 'undefined') return 'standard';
-  
-  const { innerWidth, innerHeight } = window;
-  
-  // Определяем по ширине экрана
-  if (innerWidth <= 375) return 'mini';
-  if (innerWidth <= 390) return 'standard';
-  if (innerWidth <= 393) return 'pro';
-  return 'plus';
+    if (typeof window === 'undefined') return 'standard';
+
+    const { innerWidth, innerHeight } = window;
+
+    // Определяем по ширине экрана
+    if (innerWidth <= 375) return 'mini';
+    if (innerWidth <= 390) return 'standard';
+    if (innerWidth <= 393) return 'pro';
+    return 'plus';
 };
 
 const DeliveryOptionsPage = () => {
@@ -40,11 +40,11 @@ const DeliveryOptionsPage = () => {
     // Определяем размер экрана iPhone
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        
+
         const updateScreenSize = () => {
             setScreenSize(getIPhoneScreenSize());
         };
-        
+
         updateScreenSize();
         window.addEventListener('resize', updateScreenSize);
         return () => window.removeEventListener('resize', updateScreenSize);
@@ -201,11 +201,11 @@ const DeliveryOptionsPage = () => {
 
     return (
         <Page back={true}>
-            <div className="w-full h-screen bg-gradient-to-b from-white to-gray-50 flex flex-col pt-4 overflow-hidden">
-                <div className="flex-1 p-3 pt-2 flex items-center justify-center">
-                    <div className="w-full max-w-md mx-auto flex flex-col gap-6 pb-4 items-center text-center">
+            <div className="w-full h-full bg-gray-50/30 flex flex-col pt-8 overflow-y-auto">
+                <div className="flex-1 p-4 md:p-8 lg:p-12">
+                    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 items-center text-center">
                         {/* Заголовок */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3 }}
@@ -220,7 +220,7 @@ const DeliveryOptionsPage = () => {
                         </motion.div>
 
                         {/* Краткая информация о заявке */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.1 }}
@@ -239,11 +239,11 @@ const DeliveryOptionsPage = () => {
                         </motion.div>
 
                         {/* Кнопки выбора способа доставки - iPhone-адаптивные */}
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: 0.2 }}
-                            className={`w-full flex flex-col ${adaptiveStyles.gap}`}
+                            className={`w-full grid grid-cols-1 md:grid-cols-2 ${adaptiveStyles.gap}`}
                         >
                             {/* Курьер - Unified Apple Button */}
                             <motion.div
@@ -257,7 +257,7 @@ const DeliveryOptionsPage = () => {
                                 >
                                     {/* Apple-style inner shadow effect */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-transparent rounded-3xl" />
-                                    
+
                                     <div className={`flex items-center justify-center ${adaptiveStyles.spacing} relative z-10`}>
                                         <div className={`${adaptiveStyles.iconSize} bg-gray-100 rounded-2xl flex items-center justify-center mr-1`}>
                                             <span className={`${screenSize === 'plus' ? 'text-3xl' : screenSize === 'mini' ? 'text-xl' : 'text-2xl'}`}>🚚</span>
@@ -267,7 +267,7 @@ const DeliveryOptionsPage = () => {
                                             <div className={`${adaptiveStyles.subTextSize} opacity-70 font-medium`}>Курьер заберет устройство</div>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Apple-style shine effect */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/20 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 </Button>
@@ -285,7 +285,7 @@ const DeliveryOptionsPage = () => {
                                 >
                                     {/* Apple-style inner shadow effect */}
                                     <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-transparent rounded-3xl" />
-                                    
+
                                     <div className={`flex items-center justify-center ${adaptiveStyles.spacing} relative z-10`}>
                                         <div className={`${adaptiveStyles.iconSize} bg-gray-100 rounded-2xl flex items-center justify-center mr-1`}>
                                             <span className={`${screenSize === 'plus' ? 'text-3xl' : screenSize === 'mini' ? 'text-xl' : 'text-2xl'}`}>🏪</span>
@@ -295,7 +295,7 @@ const DeliveryOptionsPage = () => {
                                             <div className={`${adaptiveStyles.subTextSize} opacity-70 font-medium`}>Сам привезу на точку</div>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Apple-style shine effect */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/20 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 </Button>

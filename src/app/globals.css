@@ -68,7 +68,7 @@
       'Droid Sans',
       'Helvetica Neue',
       sans-serif;
-    background-color: #ffffff !important;
+    background-color: #ffffff;
     color: var(--foreground);
     overflow-x: hidden;
     display: flex;
@@ -366,5 +366,21 @@
     min-height: unset !important;
     height: auto !important;
     max-height: 844px;
+  }
+
+  /* 🔓 Telegram Wide: Разрешаем широкий режим для специфических страниц */
+  html.telegram-desktop.telegram-wide #__next {
+    max-width: none !important;
+    max-height: none !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  html.telegram-desktop.telegram-wide body {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
   }
 }

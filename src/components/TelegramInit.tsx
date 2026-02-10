@@ -15,10 +15,13 @@ export function TelegramInit() {
     const html = document.documentElement;
     const platform = tg.platform;
 
+    // Очищаем старые классы перед добавлением новых
+    html.classList.remove('telegram-desktop', 'telegram-mobile', 'telegram-fullscreen');
+
     if (platform === 'android' || platform === 'ios') {
-      html.dataset.env = 'tg-mobile';
+      html.classList.add('telegram-mobile');
     } else {
-      html.dataset.env = 'tg-desktop';
+      html.classList.add('telegram-desktop');
     }
   }, []);
 

@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, ShoppingBag, RefreshCcw } from "lucide-react";
 import { PaymentButton } from "./PaymentButton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useCart } from "@/hooks/useCart";
 import { useRouter } from "next/navigation";
 import { DeviceCard } from "./AdaptiveDeviceFeed";
+import { OneClickBuyModal } from "./Market/OneClickBuyModal";
+import OptimizedPhoneSelector from "./OptimizedPhoneSelector";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +30,8 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
   const { addToCart, isInCart, loading: cartLoading } = useCart();
+  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+  const [isTradeInModalOpen, setIsTradeInModalOpen] = useState(false);
   const router = useRouter();
 
   const goToNextPhoto = () => {
@@ -84,7 +89,6 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
 
   return (
     <>
-      {/* Простое модальное окно с shadcn/ui Dialog */}
       <Dialog open={!!active} onOpenChange={() => setActive(null)}>
         <DialogContent
           className="max-w-sm h-[90vh] p-0 overflow-hidden"
@@ -93,7 +97,6 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
           onTouchMove={(e) => e.stopPropagation()}
         >
           <DialogHeader>
-            {/* Изображение */}
             <div
               className="w-full h-[35vh] bg-gradient-to-b flex items-center justify-center relative overflow-hidden rounded-2xl"
               onTouchStart={(e) => {
@@ -127,7 +130,6 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                 className="object-contain p-10"
               />
 
-              {/* Индикаторы фото */}
               {active?.photos && active.photos.length > 1 && (
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1 z-10">
                   {active.photos.map((_, index) => (
@@ -142,8 +144,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
             </div>
           </DialogHeader>
 
-          {/* Контент */}
-          <div className="flex-1 flex flex-col p-3">
+          <div className="flex-1 flex flex-col p-3 overflow-y-auto">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <DialogTitle className="font-semibold text-lg text-gray-900 mb-1">
@@ -160,7 +161,6 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
               </div>
             </div>
 
-            {/* Характеристики */}
             <div className="grid grid-cols-2 gap-2 mb-4">
               <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
                 <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Модель</div>
@@ -180,27 +180,24 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
               </div>
             </div>
 
-            {/* Кнопки */}
-            <div className="flex flex-col gap-2 mt-2">
+            <div className="flex flex-col gap-2 mt-auto">
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={async () => {
                     if (active && isInCart(active.id)) {
-                      // Если уже в корзине - переходим
                       router.push('/cart')
-                    } else {
-                      // Просто добавляем в корзину
+                    } else if (active) {
                       await addToCart({
-                        id: active!.id,
-                        title: active!.title,
-                        price: active!.price,
-                        cover: active!.cover,
-                        photos: active!.photos,
-                        model: active!.model,
-                        storage: active!.storage,
-                        color: active!.color,
-                        condition: active!.condition,
-                        description: active!.description,
+                        id: active.id,
+                        title: active.title,
+                        price: active.price,
+                        cover: active.cover,
+                        photos: active.photos,
+                        model: active.model,
+                        storage: active.storage,
+                        color: active.color,
+                        condition: active.condition,
+                        description: active.description,
                         date: new Date().toISOString(),
                       });
                     }
@@ -208,17 +205,8 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                   disabled={cartLoading}
                   className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
-                  {active && isInCart(active.id) ? (
-                    <>
-                      <ShoppingCart className="w-5 h-5" />
-                      <span>В корзине</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="w-5 h-5" />
-                      <span>Добавить</span>
-                    </>
-                  )}
+                  <ShoppingCart className="w-5 h-5" />
+                  <span>{active && isInCart(active.id) ? 'В корзине' : 'Добавить'}</span>
                 </button>
 
                 <button
@@ -226,35 +214,25 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                   disabled={favoritesLoading}
                   className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
-                  {active && isFavorite(active.id) ? (
-                    <Heart className="w-5 h-5 text-red-500 fill-current" />
-                  ) : (
-                    <Heart className="w-5 h-5" />
-                  )}
+                  <Heart className={active && isFavorite(active.id) ? "w-5 h-5 text-red-500 fill-current" : "w-5 h-5"} />
                   <span>Избранное</span>
                 </button>
               </div>
 
-              {/* Кнопка "Все устройства" в Apple-стиле */}
               <button
-                onClick={() => {
-                  setActive(null); // Закрываем модальное окно
-                  const event = new CustomEvent('switchToGrid');
-                  window.dispatchEvent(event);
-                }}
-                className="w-full h-12 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-medium rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] mb-3 border border-gray-200"
+                onClick={() => setIsBuyModalOpen(true)}
+                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
-                >
-                  <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
-                </svg>
-                Все устройства
+                <ShoppingBag className="w-5 h-5" />
+                <span>Купить в 1 клик</span>
+              </button>
+
+              <button
+                onClick={() => setIsTradeInModalOpen(true)}
+                className="w-full h-12 border-2 border-gray-100 hover:border-teal-100 text-gray-700 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                <RefreshCcw className="w-5 h-5 text-teal-600" />
+                <span>Trade-in оценка</span>
               </button>
 
               <PaymentButton
@@ -263,69 +241,70 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                 productId={active?.id || ''}
                 className="w-full h-12 bg-gradient-to-r from-[#007AFF] to-[#00C6FF] hover:from-[#005BBF] hover:to-[#0099CC] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
               >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
-                >
-                  <path
-                    d="M12 2c5.523 0 10 2.477 10 5.533 0 1.42-.88 3.29-2.34 5.384-1.37 1.97-3.24 4.13-5.2 6.11-1.4 1.41-2.79 2.62-3.78 3.34a.99.99 0 0 1-1.36-.2c-.99-.72-2.38-1.93-3.78-3.34-1.96-1.98-3.83-4.14-5.2-6.11C.88 10.823 0 8.953 0 7.533 0 4.477 4.477 2 10 2h2Zm0 2h-2C6.06 4 2 5.57 2 7.533c0 .86.68 2.36 2.02 4.29 1.27 1.82 3.06 3.9 4.96 5.83 1.07 1.06 2.08 1.96 3.02 2.67.94-.71 1.95-1.61 3.02-2.67 1.9-1.93 3.69-4.01 4.96-5.83 1.34-1.93 2.02-3.43 2.02-4.29C22 5.57 17.94 4 14 4h-2Zm0 2L4 6h-3v6h-2v-6H8l4-6Z"
-                  />
-                </svg>
                 Оплатить заказ
               </PaymentButton>
+
+              <button
+                onClick={() => {
+                  setActive(null);
+                  const event = new CustomEvent('switchToGrid');
+                  window.dispatchEvent(event);
+                }}
+                className="w-full h-10 bg-gray-50 text-gray-500 text-xs font-medium rounded-xl hover:bg-gray-100 transition-colors"
+              >
+                Все устройства
+              </button>
             </div>
           </div>
         </DialogContent>
-      </Dialog >
+      </Dialog>
+
+      <OneClickBuyModal
+        isOpen={isBuyModalOpen}
+        onClose={() => setIsBuyModalOpen(false)}
+        productTitle={active?.title || ''}
+        productPrice={active?.price || null}
+        productId={active?.id}
+      />
+
+      <OptimizedPhoneSelector
+        open={isTradeInModalOpen}
+        onOpenChange={setIsTradeInModalOpen}
+      />
 
       {/* Превью карточки */}
-      < div className={isSingle ? "grid grid-cols-1 place-items-center" : "grid grid-cols-1"} >
-        {
-          cards.map((card) => (
-            <div
-              key={`card-${card.id}`}
-              onClick={() => setActive(card)}
-              className={`${isSingle
-                ? "h-[380px] w-full max-w-sm"
-                : "h-[280px]"
-                } bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
-            >
-              <div>
-                <div
-                  className={`${isSingle ? 'h-78' : 'h-48'
-                    } bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden`}
-                >
-                  <Image
-                    width={400}
-                    height={400}
-                    src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
-                    alt={card.title}
-                    className={`${isSingle ? 'h-[380%] -mb-[160%]' : 'h-[380%] -mb-[120%]'
-                      } w-full object-cover object-center`}
-                  />
-                </div>
-              </div>
+      <div className={isSingle ? "grid grid-cols-1 place-items-center" : "grid grid-cols-1"}>
+        {cards.map((card) => (
+          <div
+            key={`card-${card.id}`}
+            onClick={() => setActive(card)}
+            className={`${isSingle ? "h-[380px] w-full max-w-sm" : "h-[280px]"} bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
+          >
+            <div className={`${isSingle ? 'h-78' : 'h-48'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden`}>
+              <Image
+                width={400}
+                height={400}
+                src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
+                alt={card.title}
+                className={`${isSingle ? 'h-[380%] -mb-[160%]' : 'h-[380%] -mb-[120%]'} w-full object-cover object-center`}
+              />
+            </div>
 
-              <div className="p-4 flex flex-col h-full">
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
-                    {card.title}
-                  </h3>
-                  {card.price && (
-                    <p className="text-lg font-bold text-gray-900 mt-auto">
-                      {formatPrice(card.price)}
-                    </p>
-                  )}
-                </div>
+            <div className="p-4 flex flex-col h-full">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
+                  {card.title}
+                </h3>
+                {card.price && (
+                  <p className="text-lg font-bold text-gray-900 mt-auto">
+                    {formatPrice(card.price)}
+                  </p>
+                )}
               </div>
             </div>
-          ))
-        }
-      </div >
+          </div>
+        ))}
+      </div>
     </>
   );
 }

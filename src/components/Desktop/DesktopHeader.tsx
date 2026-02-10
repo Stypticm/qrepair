@@ -7,10 +7,12 @@ import { getPictureUrl } from '@/core/lib/assets';
 import { useAppStore } from '@/stores/authStore';
 import { TelegramLoginButton } from '@/components/TelegramLoginButton';
 import { isAdminTelegramId } from '@/core/lib/admin';
+import { cn } from '@/lib/utils';
 
 import { usePathname } from 'next/navigation';
 import { useState, memo, useEffect } from 'react';
 import { useSafeArea } from '@/hooks/useSafeArea';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { QRModal } from './QRModal';
 import { LoginQRModal } from './LoginQRModal';
 import { QrCode } from 'lucide-react';
@@ -31,6 +33,7 @@ export const DesktopHeader = () => {
     const [isLoginQRModalOpen, setIsLoginQRModalOpen] = useState(false);
     const pathname = usePathname();
     const { isDesktop } = useSafeArea();
+    const { count: adminNotifs } = useAdminNotifications();
 
     // Force check for LH admin if store seems empty but we are on LH
     useEffect(() => {
@@ -96,8 +99,13 @@ export const DesktopHeader = () => {
                         )}
 
                         {isAdminTelegramId(telegramId) && (
-                            <Link href="/admin" className={navLinkClass('/admin')}>
+                            <Link href="/admin" className={cn(navLinkClass('/admin'), "relative")}>
                                 Админ
+                                {adminNotifs > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                                        {adminNotifs}
+                                    </span>
+                                )}
                             </Link>
                         )}
 
