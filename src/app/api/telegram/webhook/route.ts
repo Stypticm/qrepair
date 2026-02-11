@@ -293,7 +293,7 @@ export async function POST(req: Request) {
         )
       }
 
-      return NextResponse.json({ ok: true })
+      // return NextResponse.json({ ok: true }) // <-- REMOVED: Blocked bot.handleUpdate
     }
 
     const telegramId = message?.chat?.id?.toString()
