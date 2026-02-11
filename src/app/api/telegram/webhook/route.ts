@@ -304,20 +304,33 @@ export async function POST(req: Request) {
     }
 
     // --- QR Login Logic ---
-    // Handle /start auth_{uuid}
-    if (text.startsWith('/start auth_')) {
-      const authUuid = text.split('auth_')[1]?.trim();
+    // --- QR Login Logic ---
+    // Handle /start auth_{uuid} or just auth_{uuid}
+    if (text.startsWith('/start auth_') || text.startsWith('auth_')) {
+      const authUuid = text.replace('/start ', '').replace('auth_', '').trim();
       
       if (authUuid) {
         console.log(`[BOT] Processing QR Auth for UUID: ${authUuid}`);
 
         try {
-            // Check if request exists and is still pending
+            // Check if request exists
             const existing = await prisma.authRequest.findUnique({
                 where: { id: authUuid }
             });
 
-            if (existing && existing.status === 'pending') {
+            if (!existing) {
+                 await sendTelegramMessage(
+                    telegramId,
+                    '❌ Ссылка устарела или недействительна.',
+                    { parse_mode: 'Markdown' }
+                );
+            } else if (existing.status === 'success') {
+                 await sendTelegramMessage(
+                    telegramId,
+                    '✅ Вы уже авторизованы.',
+                    { parse_mode: 'Markdown' }
+                );
+            } else if (existing.status === 'pending') {
                 await prisma.authRequest.update({
                     where: { id: authUuid },
                     data: {
@@ -330,14 +343,7 @@ export async function POST(req: Request) {
 
                 await sendTelegramMessage(
                     telegramId,
-                    '✅ Вы успешно авторизовались на сайте Qoqos!',
-                    { parse_mode: 'Markdown' }
-                );
-            } else {
-                console.warn(`[BOT] Auth request ${authUuid} not found or not pending:`, existing?.status);
-                 await sendTelegramMessage(
-                    telegramId,
-                    '❌ Ошибка или срок действия кода истек. Попробуйте обновить страницу на сайте.',
+                    '✅ Вы успешно авторизовались на сайте Qoqos! Можете возвращаться в приложение.',
                     { parse_mode: 'Markdown' }
                 );
             }
