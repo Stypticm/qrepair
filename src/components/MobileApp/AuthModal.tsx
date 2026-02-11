@@ -1,28 +1,218 @@
+'use client';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { TelegramLoginButton } from '@/components/TelegramLoginButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSafeArea } from '@/hooks/useSafeArea';
-import { X } from 'lucide-react';
-import { useEffect } from 'react';
+import { X, LogIn, UserPlus } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onSuccess?: (user: any) => void;
 }
 
-export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
+export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     const { isDesktop } = useSafeArea();
+    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [login, setLogin] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    // Reset state when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setMode('login');
+            setLogin('');
+            setPassword('');
+            setConfirmPassword('');
+            setError('');
+        }
+    }, [isOpen]);
 
     // Body scroll locking when modal is open
     useEffect(() => {
-        if (isOpen && !isDesktop) {
+        if (isOpen && isDesktop) {
+            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
             const originalOverflow = document.body.style.overflow;
+            const originalPaddingRight = document.body.style.paddingRight;
+
             document.body.style.overflow = 'hidden';
+            document.body.style.paddingRight = `${scrollbarWidth}px`;
+
             return () => {
                 document.body.style.overflow = originalOverflow;
+                document.body.style.paddingRight = originalPaddingRight;
             };
         }
     }, [isOpen, isDesktop]);
+
+    const handleSubmit = async () => {
+        if (!login || !password) {
+            setError('Заполните все поля');
+            return;
+        }
+
+        if (mode === 'register') {
+            if (password !== confirmPassword) {
+                setError('Пароли не совпадают');
+                return;
+            }
+            if (password.length < 6) {
+                setError('Пароль должен быть не менее 6 символов');
+                return;
+            }
+        }
+
+        setLoading(true);
+        setError('');
+
+        const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+
+        try {
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login, password }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || 'Ошибка');
+                return;
+            }
+
+            // Сохраняем токен
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Вызываем callback
+            onSuccess?.(data.user);
+            onClose();
+        } catch (err: any) {
+            setError('Ошибка сервера');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formContent = (
+        <div className="space-y-4">
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                <button
+                    onClick={() => setMode('login')}
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${mode === 'login'
+                        ? 'bg-white text-[#54A9EB] shadow-sm'
+                        : 'text-gray-600'
+                        }`}
+                >
+                    Вход
+                </button>
+                <button
+                    onClick={() => setMode('register')}
+                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${mode === 'register'
+                        ? 'bg-white text-[#54A9EB] shadow-sm'
+                        : 'text-gray-600'
+                        }`}
+                >
+                    Регистрация
+                </button>
+            </div>
+
+            {mode === 'login' ? (
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Логин
+                        </label>
+                        <input
+                            type="text"
+                            value={login}
+                            onChange={(e) => setLogin(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#54A9EB] focus:ring-2 focus:ring-[#54A9EB]/20 outline-none transition-all"
+                            placeholder="Введите логин"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Пароль
+                        </label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#54A9EB] focus:ring-2 focus:ring-[#54A9EB]/20 outline-none transition-all"
+                            placeholder="Введите пароль"
+                        />
+                    </div>
+
+                    {error && (
+                        <div className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">
+                            {error}
+                        </div>
+                    )}
+
+                    <button
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="w-full bg-[#54A9EB] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        {loading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <>
+                                {mode === 'login' ? <LogIn size={20} /> : <UserPlus size={20} />}
+                                <span>{mode === 'login' ? 'Войти' : 'Зарегистрироваться'}</span>
+                            </>
+                        )}
+                    </button>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Логин
+                        </label>
+                        <input
+                            type="text"
+                            value={login}
+                            onChange={(e) => setLogin(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#54A9EB] focus:border-transparent transition-all"
+                            placeholder="Введите логин"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Пароль (минимум 6 символов)
+                        </label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#54A9EB] focus:border-transparent transition-all"
+                            placeholder="Введите пароль"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Подтвердите пароль
+                        </label>
+                        <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#54A9EB] focus:border-transparent transition-all"
+                            placeholder="Повторите пароль"
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 
     // On Desktop we use the standard dialog
     if (isDesktop) {
@@ -32,97 +222,60 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     <div className="bg-gradient-to-b from-[#54A9EB]/10 to-transparent p-6 pb-2">
                         <DialogHeader>
                             <DialogTitle className="text-center text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#54A9EB] to-[#4397d7]">
-                                Авторизация
+                                {mode === 'login' ? 'Вход в аккаунт' : 'Регистрация'}
                             </DialogTitle>
                         </DialogHeader>
                     </div>
 
-                    <div className="p-6 pt-2 flex flex-col items-center gap-6">
-                        <div className="w-20 h-20 bg-gradient-to-br from-[#54A9EB] to-[#4397d7] rounded-3xl flex items-center justify-center shadow-lg transform rotate-3">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.86 14.12 15.54 15.84C15.41 16.56 15.14 16.81 14.88 16.83C14.32 16.89 13.89 16.47 13.35 16.11C12.5 15.55 12.02 15.2 11.2 14.66C10.25 14.04 10.86 13.7 11.41 13.13C11.55 12.98 14.05 10.71 14.1 10.51C14.11 10.48 14.11 10.38 14.05 10.33C14 10.28 13.92 10.3 13.86 10.31C13.77 10.34 11.66 11.73 10.61 12.44C10.45 12.55 10.31 12.6 10.18 12.6C10.04 12.6 9.77 12.52 9.56 12.45C9.31 12.37 9.11 12.32 9.13 12.19C9.14 12.12 9.24 12.04 9.43 11.95C10.61 11.44 14.47 9.84 15.4 9.45C16.63 8.94 16.8 8.8 17.07 8.8C17.13 8.8 17.27 8.82 17.36 8.89C17.44 8.95 17.46 9.04 17.46 9.11C17.46 9.18 17.45 9.25 17.43 9.32L16.64 8.8Z" fill="white" />
-                            </svg>
-                        </div>
-
-                        <p className="text-center text-gray-600 font-medium px-4">
-                            Войдите через Telegram, чтобы получить доступ к своим устройствам, избранному и корзине.
-                        </p>
-
-                        <div className="w-full px-4 mb-2">
-                            <TelegramLoginButton
-                                onAuth={onClose}
-                                className="w-full"
-                            />
-                        </div>
+                    <div className="p-6 pt-2">
+                        {formContent}
                     </div>
                 </DialogContent>
             </Dialog>
         );
     }
 
-    // On Mobile/TWA we use a custom bottom sheet
+    // On Mobile we use a custom full-screen modal
     return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[10000] flex items-end justify-center">
+                <>
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-[2px] pointer-events-auto"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
                     />
 
-                    {/* Bottom Sheet */}
+                    {/* Modal */}
                     <motion.div
-                        initial={{ y: "100%" }}
+                        initial={{ y: '100%' }}
                         animate={{ y: 0 }}
-                        exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="relative w-full max-w-[500px] bg-white rounded-t-[32px] shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,20px)] pointer-events-auto"
+                        exit={{ y: '100%' }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                        className="fixed inset-x-0 bottom-0 z-[9999] bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
                     >
-                        {/* Apple-style handle */}
-                        <div className="w-full flex justify-center pt-3 pb-1">
-                            <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
-                        </div>
-
-                        {/* Close button */}
-                        <button
-                            onClick={onClose}
-                            className="absolute top-4 right-4 p-2 bg-gray-100/80 rounded-full active:scale-95 transition-all"
-                        >
-                            <X size={20} className="text-gray-500" />
-                        </button>
-
-                        <div className="bg-gradient-to-b from-[#54A9EB]/10 to-transparent p-6 pb-2">
-                            <h2 className="text-center text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#54A9EB] to-[#4397d7]">
+                        {/* Header */}
+                        <div className="sticky top-0 bg-gradient-to-b from-[#54A9EB]/10 to-transparent p-6 pb-4 flex items-center justify-between border-b border-gray-100">
+                            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#54A9EB] to-[#4397d7]">
                                 Авторизация
                             </h2>
+                            <button
+                                onClick={onClose}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <X size={24} className="text-gray-600" />
+                            </button>
                         </div>
 
-                        <div className="p-6 pt-2 flex flex-col items-center gap-6">
-                            <div className="w-20 h-20 bg-gradient-to-br from-[#54A9EB] to-[#4397d7] rounded-3xl flex items-center justify-center shadow-lg transform rotate-3">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM16.64 8.8C16.49 10.38 15.86 14.12 15.54 15.84C15.41 16.56 15.14 16.81 14.88 16.83C14.32 16.89 13.89 16.47 13.35 16.11C12.5 15.55 12.02 15.2 11.2 14.66C10.25 14.04 10.86 13.7 11.41 13.13C11.55 12.98 14.05 10.71 14.1 10.51C14.11 10.48 14.11 10.38 14.05 10.33C14 10.28 13.92 10.3 13.86 10.31C13.77 10.34 11.66 11.73 10.61 12.44C10.45 12.55 10.31 12.6 10.18 12.6C10.04 12.6 9.77 12.52 9.56 12.45C9.31 12.37 9.11 12.32 9.13 12.19C9.14 12.12 9.24 12.04 9.43 11.95C10.61 11.44 14.47 9.84 15.4 9.45C16.63 8.94 16.8 8.8 17.07 8.8C17.13 8.8 17.27 8.82 17.36 8.89C17.44 8.95 17.46 9.04 17.46 9.11C17.46 9.18 17.45 9.25 17.43 9.32L16.64 8.8Z" fill="white" />
-                                </svg>
-                            </div>
-
-                            <p className="text-center text-gray-600 font-medium px-4">
-                                Войдите через Telegram, чтобы получить доступ к своим устройствам, избранному и корзине.
-                            </p>
-
-                            <div className="w-full px-4 mb-4">
-                                <TelegramLoginButton
-                                    onAuth={onClose}
-                                    className="w-full"
-                                />
-                            </div>
-
+                        {/* Content */}
+                        <div className="p-6">
+                            {formContent}
                         </div>
                     </motion.div>
-                </div>
+                </>
             )}
         </AnimatePresence>
     );

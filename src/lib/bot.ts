@@ -1,102 +1,204 @@
 import { Bot } from 'grammy'
-
-// Simple config for bot
-const config = {
-  getTelegramWebAppUrl: () => {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || 'https://qrepair.vercel.app'
-    return `${baseUrl}`
-  },
-}
+import { prisma } from '@/core/lib/prisma'
+import { generatePassword, hashPassword } from '@/lib/auth/password'
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
-// Deep linking - обработка start параметров
-bot.command('start', async (ctx) => {
-  const startParam = ctx.message?.text?.split(' ')[1] || ''
+// Обработка текстовых сообщений (Telegram ID)
+bot.on('message:text', async (ctx) => {
+  const text = ctx.message.text.trim()
 
-  if (startParam.startsWith('auth_')) {
-    // Обработка авторизации через PWA
-    const uuid = startParam.replace('auth_', '');
-    const user = ctx.from;
+  // Игнорируем команды
+  if (text.startsWith('/')) return
+
+  // Проверяем, что это похоже на Telegram ID (только цифры)
+  if (!/^\d+$/.test(text)) {
+    return ctx.reply('❌ Введите корректный Telegram ID (только цифры)')
+  }
+
+  const telegramId = text
+
+  try {
+    // Ищем пользователя
+    const user = await prisma.user.findUnique({
+      where: { telegramId },
+    })
 
     if (!user) {
-        await ctx.reply('❌ Не удалось получить данные пользователя.');
-        return;
+      // Новый пользователь - предлагаем выбрать роль
+      return ctx.reply('👤 Пользователь не найден. Выберите роль:', {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '👑 Admin', callback_data: `create:${telegramId}:ADMIN` },
+              { text: '🔧 Master', callback_data: `create:${telegramId}:MASTER` },
+            ],
+            [
+              { text: '📊 Manager', callback_data: `create:${telegramId}:MANAGER` },
+              { text: '👤 User', callback_data: `create:${telegramId}:USER` },
+            ],
+          ],
+        },
+      })
+    } else {
+      // Существующий пользователь - предлагаем действия
+      return ctx.reply(
+        `✅ Найден аккаунт:\n` +
+          `📱 Telegram ID: ${user.telegramId}\n` +
+          `👤 Роль: ${user.role}\n\n` +
+          `Что сделать?`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '🔑 Сменить пароль',
+                  callback_data: `reset:${telegramId}`,
+                },
+              ],
+              [
+                {
+                  text: '🔄 Сменить роль',
+                  callback_data: `role:${telegramId}`,
+                },
+              ],
+            ],
+          },
+        }
+      )
+    }
+  } catch (error) {
+    console.error('[BOT] Error processing telegram ID:', error)
+    return ctx.reply('❌ Произошла ошибка. Попробуйте позже.')
+  }
+})
+
+// Обработка callback кнопок
+bot.on('callback_query', async (ctx) => {
+  const data = ctx.callbackQuery.data
+
+  if (!data) return
+
+  try {
+    // Создание нового пользователя
+    if (data.startsWith('create:')) {
+      const [_, telegramId, role] = data.split(':')
+      const password = generatePassword()
+      const passwordHash = await hashPassword(password)
+
+      await prisma.user.create({
+        data: {
+          telegramId,
+          passwordHash,
+          role: role as any,
+        },
+      })
+
+      await ctx.answerCallbackQuery('✅ Аккаунт создан!')
+      await ctx.editMessageText(
+        `✅ Аккаунт успешно создан!\n\n` +
+          `📱 Логин: ${telegramId}\n` +
+          `🔑 Пароль: ${password}\n` +
+          `👤 Роль: ${role}\n\n` +
+          `⚠️ Сохраните эти данные! Пароль больше не будет показан.`
+      )
     }
 
-    try {
-        const { prisma } = await import('@/core/lib/prisma');
+    // Сброс пароля
+    else if (data.startsWith('reset:')) {
+      const telegramId = data.split(':')[1]
+      const password = generatePassword()
+      const passwordHash = await hashPassword(password)
 
-        const authRequest = await prisma.authRequest.findUnique({
-            where: { id: uuid }
-        });
+      await prisma.user.update({
+        where: { telegramId },
+        data: { passwordHash },
+      })
 
-        if (!authRequest) {
-            await ctx.reply('❌ Ссылка устарела или недействительна.');
-            return;
-        }
-
-        if (authRequest.status === 'success') {
-             await ctx.reply('✅ Вы уже авторизованы.');
-             return;
-        }
-
-        // Обновляем запись в БД
-        await prisma.authRequest.update({
-            where: { id: uuid },
-            data: {
-                status: 'success',
-                telegramId: user.id.toString(),
-                telegramUsername: user.username,
-                telegramData: user as any
-            }
-        });
-
-        await ctx.reply('✅ Вы успешно авторизовались! Можете возвращаться в приложение.');
-
-    } catch (error) {
-        console.error('Auth error:', error);
-        await ctx.reply('❌ Произошла ошибка при авторизации.');
+      await ctx.answerCallbackQuery('✅ Пароль изменен!')
+      await ctx.editMessageText(
+        `✅ Пароль успешно изменен!\n\n` +
+          `📱 Логин: ${telegramId}\n` +
+          `🔑 Новый пароль: ${password}\n\n` +
+          `⚠️ Сохраните новый пароль!`
+      )
     }
 
-  } else {
-    // Обычное приветствие - для админов/пользователей, кто просто зашел в бота
-    await ctx.reply(
-      '� Привет! Это бот для авторизации в приложении Qoqos.\n\nЕсли вы здесь для входа, пожалуйста, используйте кнопку "Войти через Telegram" в самом приложении.',
-      {
+    // Смена роли
+    else if (data.startsWith('role:')) {
+      const telegramId = data.split(':')[1]
+
+      await ctx.answerCallbackQuery()
+      await ctx.editMessageText('🔄 Выберите новую роль:', {
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: '🚀 Открыть приложение',
-                web_app: {
-                  url: config.getTelegramWebAppUrl(),
-                },
+                text: '👑 Admin',
+                callback_data: `changerole:${telegramId}:ADMIN`,
+              },
+              {
+                text: '🔧 Master',
+                callback_data: `changerole:${telegramId}:MASTER`,
+              },
+            ],
+            [
+              {
+                text: '📊 Manager',
+                callback_data: `changerole:${telegramId}:MANAGER`,
+              },
+              {
+                text: '👤 User',
+                callback_data: `changerole:${telegramId}:USER`,
               },
             ],
           ],
         },
-      }
-    )
+      })
+    }
+
+    // Применение новой роли
+    else if (data.startsWith('changerole:')) {
+      const [_, telegramId, newRole] = data.split(':')
+
+      await prisma.user.update({
+        where: { telegramId },
+        data: { role: newRole as any },
+      })
+
+      await ctx.answerCallbackQuery('✅ Роль изменена!')
+      await ctx.editMessageText(
+        `✅ Роль успешно изменена!\n\n` +
+          `📱 Telegram ID: ${telegramId}\n` +
+          `👤 Новая роль: ${newRole}`
+      )
+    }
+  } catch (error) {
+    console.error('[BOT] Callback error:', error)
+    await ctx.answerCallbackQuery('❌ Ошибка')
+    await ctx.reply('❌ Произошла ошибка. Попробуйте позже.')
   }
 })
 
-// Инициализация бота при запуске
+// Команда /start
+bot.command('start', async (ctx) => {
+  await ctx.reply(
+    '🤖 Бот для управления учетными записями Qoqos\n\n' +
+      'Отправьте Telegram ID пользователя для создания или управления аккаунтом.'
+  )
+})
+
+// Инициализация бота
 export const initializeBot = async () => {
   try {
-    // Убираем лишние команды, оставляем только start (она системная)
-    await bot.api.deleteMyCommands();
-    
-    // Можно установить одну команду для порядка
     await bot.api.setMyCommands([
       {
         command: 'start',
         description: '♻️ Перезапустить бота',
-      }
+      },
     ])
 
-    console.log('✅ Бот инициализирован: команды обновлены');
+    console.log('✅ Бот инициализирован')
   } catch (error) {
     console.error('❌ Ошибка инициализации бота:', error)
   }

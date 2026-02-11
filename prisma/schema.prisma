@@ -366,6 +366,28 @@ model AuthRequest {
   @@schema("public")
 }
 
+model User {
+  id           String   @id @default(cuid())
+  telegramId   String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([telegramId])
+  @@index([role])
+  @@schema("public")
+}
+
+enum Role {
+  USER
+  ADMIN
+  MASTER
+  MANAGER
+
+  @@schema("public")
+}
+
 enum SenderType {
   user
   admin

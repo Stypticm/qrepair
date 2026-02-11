@@ -1,9 +1,5 @@
 import { create } from 'zustand'
-import { shallow } from 'zustand/shallow'
-import {
-  persist,
-  createJSONStorage,
-} from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import {
   hasFeature,
   isTester,
@@ -11,10 +7,6 @@ import {
   getActiveFeatures,
   type FeatureFlag,
 } from '@/lib/featureFlags'
-import {
-  useSignal,
-  initDataState as _initDataState,
-} from '@telegram-apps/sdk-react'
 import { isAdminTelegramId } from '@/core/lib/admin'
 
 interface FormData {
@@ -28,7 +20,6 @@ interface DeviceConditions {
   front: string | null
   back: string | null
   side: string | null
-  // Unified: moved from additionalConditions
   faceId?: string | null
   touchId?: string | null
   backCamera?: string | null
@@ -42,8 +33,16 @@ interface AdditionalConditions {
   battery: string | null
 }
 
+interface User {
+  id: string
+  telegramId: string
+  role: string
+}
+
 interface AppState {
   // Auth
+  user: User | null
+  authToken: string | null
   role: 'master' | 'client'
   userId: number | null
   modalOpen: boolean
@@ -52,7 +51,7 @@ interface AppState {
   // Form data
   formData: FormData
 
-  // User data
+  // User data (legacy, kept for compatibility)
   username: string | null
   telegramId: string | null
   userPhotoUrl: string | null
@@ -78,21 +77,20 @@ interface AppState {
   // Navigation
   currentStep: string | null
 
-  // Actions
-  setRole: (
-    role: 'master' | 'client',
-    userId: number
-  ) => void
+  // Auth Actions
+  login: (login: string, password: string) => Promise<boolean>
+  logout: () => void
+  checkAuth: () => Promise<void>
+  setUser: (user: User | null) => void
+
+  // Legacy Actions
+  setRole: (role: 'master' | 'client', userId: number) => void
   setModalOpen: (open: boolean) => void
   setFormData: (data: Partial<FormData>) => void
   generateRequestId: () => string
-
-  // User actions
   setUsername: (username: string | null) => void
   setTelegramId: (telegramId: string | null) => void
   setUserPhotoUrl: (url: string | null) => void
-
-  // Device actions
   setModel: (model: string) => void
   setComment: (comment: string) => void
   setImei: (imei: string | null) => void
@@ -100,40 +98,20 @@ interface AppState {
   setPrice: (price: number | null) => void
   setUserEvaluation: (evaluation: string | null) => void
   setDamagePercent: (percent: number) => void
-
-  // Conditions actions
-  setDeviceConditions: (
-    conditions: Partial<DeviceConditions>
-  ) => void
-  setAdditionalConditions: (
-    conditions: Partial<AdditionalConditions>
-  ) => void
+  setDeviceConditions: (conditions: Partial<DeviceConditions>) => void
+  setAdditionalConditions: (conditions: Partial<AdditionalConditions>) => void
   setShowQuestionsSuccess: (show: boolean) => void
-
-  // Navigation actions
   setCurrentStep: (step: string | null) => void
   goToPreviousStep: (router?: any) => void
   goToNextStep: () => void
   clearCurrentStep: () => void
-
-  // Reset
   resetAllStates: () => void
-
-  // Clear session storage
   clearSessionStorage: () => void
-
-  // Logout
-  logout: () => void
-
-  // Debug functions
   addDebugInfo: (message: string) => void
   clearDebugInfo: () => void
-
-  // Telegram initialization
   initializeTelegram: (initDataState?: any) => void
 }
 
-// Порядок шагов (клиентская воронка)
 const stepOrder = [
   'evaluation-mode',
   'device-info',
@@ -149,22 +127,23 @@ const stepOrder = [
   'final',
 ]
 
-// Создаем кастомное хранилище на базе localStorage для надежности в PWA
 const storage = createJSONStorage(() => {
   if (typeof window !== 'undefined') {
-    return localStorage;
+    return localStorage
   }
   return {
     getItem: () => null,
     setItem: () => {},
     removeItem: () => {},
-  };
-});
+  }
+})
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       // Auth
+      user: null,
+      authToken: null,
       role: 'client',
       userId: null,
       modalOpen: false,
@@ -217,104 +196,170 @@ export const useAppStore = create<AppState>()(
       // Navigation
       currentStep: null,
 
-      // Auth actions
+      // Auth Actions
+      login: async (login: string, password: string) => {
+        try {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, password }),
+          })
+
+          if (!res.ok) {
+            return false
+          }
+
+          const data = await res.json()
+
+          set({
+            user: data.user,
+            authToken: data.token,
+            telegramId: data.user.telegramId,
+            role: data.user.role === 'ADMIN' || data.user.role === 'MASTER' ? 'master' : 'client',
+            userId: parseInt(data.user.telegramId),
+            isManualLogout: false,
+          })
+
+          return true
+        } catch (error) {
+          console.error('Login error:', error)
+          return false
+        }
+      },
+
+      logout: () => {
+        console.log('🚪 Logging out...')
+
+        set({
+          user: null,
+          authToken: null,
+          telegramId: null,
+          username: null,
+          userPhotoUrl: null,
+          role: 'client',
+          userId: null,
+          currentStep: null,
+          isManualLogout: true,
+          formData: {
+            sn: '',
+            model: '',
+            pointId: 1,
+            requestId: '',
+          },
+          guestId: null,
+        })
+
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('auth_token')
+            localStorage.removeItem('user')
+            localStorage.removeItem('telegramId')
+            localStorage.removeItem('telegramUsername')
+            sessionStorage.clear()
+            console.log('✅ Auth storage cleared')
+          } catch (e) {
+            console.error('❌ Error clearing storage:', e)
+          }
+        }
+      },
+
+      checkAuth: async () => {
+        const { authToken } = get()
+
+        if (!authToken) {
+          return
+        }
+
+        try {
+          const res = await fetch('/api/auth/me', {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          })
+
+          if (!res.ok) {
+            // Token invalid, logout
+            get().logout()
+            return
+          }
+
+          const data = await res.json()
+
+          set({
+            user: data.user,
+            telegramId: data.user.telegramId,
+            role: data.user.role === 'ADMIN' || data.user.role === 'MASTER' ? 'master' : 'client',
+            userId: parseInt(data.user.telegramId),
+          })
+        } catch (error) {
+          console.error('Check auth error:', error)
+          get().logout()
+        }
+      },
+
+      setUser: (user: User | null) => set({ user }),
+
+      // Legacy actions (kept for compatibility)
       setRole: (role, userId) => set({ role, userId }),
       setModalOpen: (open) => set({ modalOpen: open }),
-
-      // Form actions
       setFormData: (data) =>
         set((state) => ({
           formData: { ...state.formData, ...data },
         })),
       generateRequestId: () => {
-        const id = `#${
-          Math.floor(Math.random() * 9000) + 1000
-        }`
+        const id = `#${Math.floor(Math.random() * 9000) + 1000}`
         set((state) => ({
           formData: { ...state.formData, requestId: id },
         }))
         return id
       },
-
-      // User actions
       setUsername: (username) => set({ username }),
       setTelegramId: (telegramId) => {
         set({ telegramId, isManualLogout: false })
       },
-      setUserPhotoUrl: (userPhotoUrl) =>
-        set({ userPhotoUrl }),
-
-      // Device actions
+      setUserPhotoUrl: (userPhotoUrl) => set({ userPhotoUrl }),
       setModel: (modelname) => set({ modelname }),
       setComment: (comment) => set({ comment }),
       setImei: (imei) => set({ imei }),
-      setSerialNumber: (serialNumber) =>
-        set({ serialNumber }),
+      setSerialNumber: (serialNumber) => set({ serialNumber }),
       setPrice: (price) => set({ price }),
-      setUserEvaluation: (userEvaluation) =>
-        set({ userEvaluation }),
-      setDamagePercent: (damagePercent) =>
-        set({ damagePercent }),
-
-      // Conditions actions
+      setUserEvaluation: (userEvaluation) => set({ userEvaluation }),
+      setDamagePercent: (damagePercent) => set({ damagePercent }),
       setDeviceConditions: (conditions) =>
         set((state) => ({
           deviceConditions: {
             ...state.deviceConditions,
             ...conditions,
           },
-          // keep backward compatibility mirror
           additionalConditions: {
             ...state.additionalConditions,
-            ...(conditions.faceId !== undefined
-              ? { faceId: conditions.faceId }
-              : {}),
-            ...(conditions.touchId !== undefined
-              ? { touchId: conditions.touchId }
-              : {}),
-            ...(conditions.backCamera !== undefined
-              ? { backCamera: conditions.backCamera }
-              : {}),
-            ...(conditions.battery !== undefined
-              ? { battery: conditions.battery }
-              : {}),
+            ...(conditions.faceId !== undefined ? { faceId: conditions.faceId } : {}),
+            ...(conditions.touchId !== undefined ? { touchId: conditions.touchId } : {}),
+            ...(conditions.backCamera !== undefined ? { backCamera: conditions.backCamera } : {}),
+            ...(conditions.battery !== undefined ? { battery: conditions.battery } : {}),
           },
         })),
       setAdditionalConditions: (conditions) =>
         set((state) => ({
-          // write-through into unified deviceConditions
           deviceConditions: {
             ...state.deviceConditions,
-            ...(conditions.faceId !== undefined
-              ? { faceId: conditions.faceId }
-              : {}),
-            ...(conditions.touchId !== undefined
-              ? { touchId: conditions.touchId }
-              : {}),
-            ...(conditions.backCamera !== undefined
-              ? { backCamera: conditions.backCamera }
-              : {}),
-            ...(conditions.battery !== undefined
-              ? { battery: conditions.battery }
-              : {}),
+            ...(conditions.faceId !== undefined ? { faceId: conditions.faceId } : {}),
+            ...(conditions.touchId !== undefined ? { touchId: conditions.touchId } : {}),
+            ...(conditions.backCamera !== undefined ? { backCamera: conditions.backCamera } : {}),
+            ...(conditions.battery !== undefined ? { battery: conditions.battery } : {}),
           },
-          // keep legacy state for components still reading it
           additionalConditions: {
             ...state.additionalConditions,
             ...conditions,
           },
         })),
-      setShowQuestionsSuccess: (showQuestionsSuccess) =>
-        set({ showQuestionsSuccess }),
-
-      // Navigation actions
+      setShowQuestionsSuccess: (showQuestionsSuccess) => set({ showQuestionsSuccess }),
       setCurrentStep: (currentStep) => {
         set({ currentStep })
       },
       goToPreviousStep: (router?: any) => {
         const { currentStep } = get()
         if (!currentStep) {
-          // Если нет текущего шага, идем на главную
           if (typeof window !== 'undefined') {
             if (router) {
               router.push('/')
@@ -325,8 +370,6 @@ export const useAppStore = create<AppState>()(
           return
         }
 
-        // Специальная логика для разветвлений
-        // Не позволяем попадать в тестовую линию (evaluation-mode) из ручной оценки
         if (currentStep === 'device-info') {
           if (typeof window !== 'undefined') {
             if (router) {
@@ -340,36 +383,26 @@ export const useAppStore = create<AppState>()(
         }
 
         if (currentStep === 'courier-booking') {
-          // Из courier-booking идем обратно к delivery-options
           set({ currentStep: 'delivery-options' })
           if (typeof window !== 'undefined') {
-            sessionStorage.setItem(
-              'currentStep',
-              'delivery-options'
-            )
+            sessionStorage.setItem('currentStep', 'delivery-options')
             if (router) {
               router.push('/request/delivery-options')
             } else {
-              window.location.href =
-                '/request/delivery-options'
+              window.location.href = '/request/delivery-options'
             }
           }
           return
         }
 
         if (currentStep === 'pickup-points') {
-          // Из pickup-points идем обратно к delivery-options
           set({ currentStep: 'delivery-options' })
           if (typeof window !== 'undefined') {
-            sessionStorage.setItem(
-              'currentStep',
-              'delivery-options'
-            )
+            sessionStorage.setItem('currentStep', 'delivery-options')
             if (router) {
               router.push('/request/delivery-options')
             } else {
-              window.location.href =
-                '/request/delivery-options'
+              window.location.href = '/request/delivery-options'
             }
           }
           return
@@ -380,11 +413,7 @@ export const useAppStore = create<AppState>()(
           const previousStep = stepOrder[currentIndex - 1]
           set({ currentStep: previousStep })
           if (typeof window !== 'undefined') {
-            sessionStorage.setItem(
-              'currentStep',
-              previousStep
-            )
-            // Используем переданный router или window.location как fallback
+            sessionStorage.setItem('currentStep', previousStep)
             if (router) {
               router.push(`/request/${previousStep}`)
             } else {
@@ -392,7 +421,6 @@ export const useAppStore = create<AppState>()(
             }
           }
         } else {
-          // Если мы на первом шаге, идем на главную
           if (typeof window !== 'undefined') {
             if (router) {
               router.push('/')
@@ -418,8 +446,6 @@ export const useAppStore = create<AppState>()(
       clearCurrentStep: () => {
         set({ currentStep: null })
       },
-
-      // Reset
       resetAllStates: () => {
         set({
           modelname: '',
@@ -453,196 +479,65 @@ export const useAppStore = create<AppState>()(
             requestId: '',
           },
         })
-
-        // Очищаем debug info если нужно, но не стор, так как это resetAllStates (обычно внутри сессии)
       },
-
-      // Clear session storage - deprecated, handled by persist/logout
       clearSessionStorage: () => {
         // no-op, use logout
       },
-
-      // Logout
-      // Logout
-      logout: () => {
-        console.log('🚪 Logging out...');
-        
-        // 1. Сбрасываем стейт Zustand + ставим флаг ручного выхода
-        set({
-          telegramId: null,
-          username: null,
-          userPhotoUrl: null,
-          role: 'client',
-          userId: null,
-          currentStep: null,
-          isManualLogout: true, // ВАЖНО: предотвращает авто-логин при следующем заходе
-          formData: {
-            sn: '',
-            model: '',
-            pointId: 1,
-            requestId: '',
-          },
-          guestId: null
-        });
-        
-        // 2. Очищаем персистентное хранилище
-        if (typeof window !== 'undefined') {
-          try {
-            // Удаляем точечные ключи
-            localStorage.removeItem('telegramId');
-            localStorage.removeItem('telegramUsername');
-            localStorage.removeItem('app-store'); // ПОЛНАЯ ОЧИСТКА для уверенности
-            sessionStorage.clear();
-            
-            console.log('✅ Auth storage cleared fully');
-          } catch (e) {
-            console.error('❌ Error clearing storage:', e);
-          }
-        }
-      },
-
-      // Debug functions
       addDebugInfo: (message: string) => {
         const timestamp = new Date().toLocaleTimeString()
         const debugMessage = `[${timestamp}] ${message}`
         set((state) => ({
-          debugInfo: [
-            ...state.debugInfo.slice(-9),
-            debugMessage,
-          ], // Показываем последние 10 сообщений
+          debugInfo: [...state.debugInfo.slice(-9), debugMessage],
         }))
       },
-
       clearDebugInfo: () => {
         set({ debugInfo: [] })
       },
-
-      // Инициализация Telegram: только из TWA или уже восстановленного persist стейта
       initializeTelegram: (initDataState?: any) => {
-        const { addDebugInfo, telegramId } = get()
-
-        addDebugInfo('Инициализация Telegram Auth...')
-
-        // 1. Если у нас уже есть telegramId (восстановлен через persist), проверяем валидность
-        if (telegramId) {
-            addDebugInfo(`✅ Восстановлена сессия для ID: ${telegramId}`);
-            return;
-        }
-
-        // 2. Если мы на localhost, можем авто-залогиниться под дев-юзером
-        const { isManualLogout } = get();
-        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-            const devId = process.env.NEXT_PUBLIC_DEV_TELEGRAM_ID || '531360988';
-            
-            // Если мы разлогинились вручную, не авто-логинимся до следующего явного действия
-            if (isManualLogout) {
-                addDebugInfo('ℹ️ Localhost: Пропуск авто-логина (был ручной выход)');
-                return;
-            }
-
-            if (!telegramId || !isAdminTelegramId(telegramId)) {
-                 addDebugInfo(`🔧 Dev Mode: Авто-логин для localhost (${devId})`);
-                 set({ 
-                    telegramId: devId,
-                    username: process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME || 'QoqosAppBot',
-                    role: isAdminTelegramId(devId) ? 'master' : 'client',
-                    userId: parseInt(devId),
-                    isManualLogout: false
-                 });
-                 return;
-            }
-        }
-
-        // 3. Если мы в TWA (Telegram Mini App), берем данные оттуда
-        if (initDataState?.user) {
-          addDebugInfo('✅ TWA: Получены данные из initData');
-          const user = initDataState.user;
-          const tgId = user.id.toString();
-          
-          set({
-            telegramId: tgId,
-            username: user.username || null,
-            userPhotoUrl: user.photo_url || null,
-            role: isAdminTelegramId(user.id) ? 'master' : 'client',
-            userId: user.id,
-            isManualLogout: false // Сбрасываем флаг, если мы явно получили данные (хотя тут спорно, если TWA всегда дает данные)
-          });
-          return;
-        } 
-        
-        // 3. Fallback для TWA (старая версия API)
-        const webApp = (window as any).Telegram?.WebApp;
-        const unsafeUser = webApp?.initDataUnsafe?.user;
-        
-        if (unsafeUser?.id) {
-           const tgId = unsafeUser.id.toString();
-           set({
-             telegramId: tgId,
-             username: unsafeUser.username || null,
-             userPhotoUrl: unsafeUser.photo_url || null,
-             role: isAdminTelegramId(unsafeUser.id) ? 'master' : 'client',
-             userId: unsafeUser.id,
-             isManualLogout: false
-           });
-        } else {
-            addDebugInfo('ℹ️ Нет данных TWA, ожидание виджета входа...');
-        }
+        // Deprecated - kept for compatibility
+        // Auth now handled via login() method
+        console.log('initializeTelegram is deprecated, use login() instead')
       },
     }),
     {
       name: 'app-store',
-      // Используем наше localStorage-based хранилище
-      storage: storage, 
+      storage: storage,
       partialize: (state) => ({
+        user: state.user,
+        authToken: state.authToken,
         telegramId: state.telegramId,
         username: state.username,
         userPhotoUrl: state.userPhotoUrl,
         role: state.role,
         userId: state.userId,
-        // Сохраняем черновик формы
         formData: state.formData,
-        // Сохраняем состояние ui
         currentStep: state.currentStep,
-        // Сохраняем флаг ручного выхода
         isManualLogout: state.isManualLogout,
-        // Сохраняем гостевой ID
         guestId: state.guestId,
       }),
     }
   )
 )
 
-// Функция для проверки роли мастера
-export const isMaster = (
-  userId: number | null
-): boolean => {
+export const isMaster = (userId: number | null): boolean => {
   if (!userId) return false
   return isAdminTelegramId(userId)
 }
 
-// Простые селекторы без shallow для избежания проблем
-export const useUserData = () =>
-  useAppStore((state) => state.telegramId)
-export const useDeviceData = () =>
-  useAppStore((state) => state.modelname)
-export const useConditions = () =>
-  useAppStore((state) => state.deviceConditions)
-export const useNavigation = () =>
-  useAppStore((state) => state.currentStep)
+export const useUserData = () => useAppStore((state) => state.telegramId)
+export const useDeviceData = () => useAppStore((state) => state.modelname)
+export const useConditions = () => useAppStore((state) => state.deviceConditions)
+export const useNavigation = () => useAppStore((state) => state.currentStep)
 
-// Feature Flags функции
 export const useFeatureFlags = () => {
   const { telegramId } = useAppStore()
 
   return {
-    hasFeature: (feature: FeatureFlag) =>
-      hasFeature(feature, telegramId || ''),
+    hasFeature: (feature: FeatureFlag) => hasFeature(feature, telegramId || ''),
     isTester: () => isTester(telegramId || ''),
     isAdmin: () => isAdmin(telegramId || ''),
-    getActiveFeatures: () =>
-      getActiveFeatures(telegramId || ''),
+    getActiveFeatures: () => getActiveFeatures(telegramId || ''),
   }
 }
 
-// Обратная совместимость
 export const useAuthStore = useAppStore

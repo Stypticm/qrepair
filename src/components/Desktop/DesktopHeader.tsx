@@ -5,7 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
 import { useAppStore } from '@/stores/authStore';
-import { TelegramLoginButton } from '@/components/TelegramLoginButton';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { cn } from '@/lib/utils';
 
@@ -15,23 +14,15 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { QRModal } from './QRModal';
-import { LoginQRModal } from './LoginQRModal';
-import { QrCode } from 'lucide-react';
-
-// Memoized wrapper for the login button to prevent re-loading script on route changes
-const MemoizedTelegramLoginButton = memo(() => (
-    <div className="hidden md:flex">
-        <TelegramLoginButton />
-    </div>
-));
-MemoizedTelegramLoginButton.displayName = 'MemoizedTelegramLoginButton';
+import { AuthModal } from '@/components/MobileApp/AuthModal';
+import { LogIn } from 'lucide-react';
 
 export const DesktopHeader = () => {
     const username = useAppStore(state => state.username);
     const userPhotoUrl = useAppStore(state => state.userPhotoUrl);
     const telegramId = useAppStore(state => state.telegramId);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-    const [isLoginQRModalOpen, setIsLoginQRModalOpen] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const pathname = usePathname();
     const { isDesktop } = useSafeArea();
     const { count: adminNotifs } = useAdminNotifications();
@@ -153,11 +144,11 @@ export const DesktopHeader = () => {
                             </div>
                         ) : (
                             <button
-                                onClick={() => setIsLoginQRModalOpen(true)}
+                                onClick={() => setIsAuthModalOpen(true)}
                                 className="flex items-center gap-2 bg-[#2ba6e1] hover:bg-[#2595ca] text-white px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 group"
                             >
-                                <QrCode size={20} className="group-hover:scale-110 transition-transform" />
-                                <span className="font-semibold">Войти через QR</span>
+                                <LogIn size={20} className="group-hover:scale-110 transition-transform" />
+                                <span className="font-semibold">Войти</span>
                             </button>
                         )}
 
@@ -185,7 +176,7 @@ export const DesktopHeader = () => {
             </header>
 
             <QRModal isOpen={isQRModalOpen} onClose={() => setIsQRModalOpen(false)} />
-            <LoginQRModal isOpen={isLoginQRModalOpen} onClose={() => setIsLoginQRModalOpen(false)} />
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         </>
     );
 };

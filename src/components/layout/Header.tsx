@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { MegaMenu } from '@/components/layout/MegaMenu';
-import { TelegramQRLogin } from '@/components/TelegramQRLogin';
+import { AuthModal } from '@/components/MobileApp/AuthModal';
 import { useAppStore } from '@/stores/authStore';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -131,7 +131,15 @@ export const Header = () => {
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <button
+                onClick={() => setShowAuthModal(true)}
+                className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-full transition-all shadow-sm active:scale-95"
+              >
+                <User size={18} />
+                <span className="font-medium">Войти</span>
+              </button>
+            )}
           </div>
 
           {/* Actions */}
@@ -197,21 +205,7 @@ export const Header = () => {
       </div>
 
       {/* Auth Modal */}
-      {showAuthModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowAuthModal(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold text-gray-900"></h3>
-              <button onClick={() => setShowAuthModal(false)} className="p-1 hover:bg-gray-100 rounded-lg z-10 relative">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="-mt-10">
-              <TelegramQRLogin onSuccess={() => setShowAuthModal(false)} />
-            </div>
-          </div>
-        </div>
-      )}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </header>
   );
 };

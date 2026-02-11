@@ -5,6 +5,7 @@ import {
   editTelegramReplyMarkup,
   answerCallbackQuery,
 } from '@/core/lib/sendTelegramMessage'
+import { bot } from '@/lib/bot'
 
 export async function POST(req: Request) {
   try {
@@ -303,61 +304,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true })
     }
 
-    // --- QR Login Logic ---
-    // --- QR Login Logic ---
-    // Handle /start auth_{uuid} or just auth_{uuid}
-    if (text.startsWith('/start auth_') || text.startsWith('auth_')) {
-      const authUuid = text.replace('/start ', '').replace('auth_', '').trim();
-      
-      if (authUuid) {
-        console.log(`[BOT] Processing QR Auth for UUID: ${authUuid}`);
-
-        try {
-            // Check if request exists
-            const existing = await prisma.authRequest.findUnique({
-                where: { id: authUuid }
-            });
-
-            if (!existing) {
-                 await sendTelegramMessage(
-                    telegramId,
-                    '❌ Ссылка устарела или недействительна.',
-                    { parse_mode: 'Markdown' }
-                );
-            } else if (existing.status === 'success') {
-                 await sendTelegramMessage(
-                    telegramId,
-                    '✅ Вы уже авторизованы.',
-                    { parse_mode: 'Markdown' }
-                );
-            } else if (existing.status === 'pending') {
-                await prisma.authRequest.update({
-                    where: { id: authUuid },
-                    data: {
-                        status: 'success',
-                        telegramId: telegramId,
-                        telegramUsername: message.from?.username || '',
-                        telegramData: message.from as any
-                    }
-                });
-
-                await sendTelegramMessage(
-                    telegramId,
-                    '✅ Вы успешно авторизовались на сайте Qoqos! Можете возвращаться в приложение.',
-                    { parse_mode: 'Markdown' }
-                );
-            }
-        } catch (error) {
-            console.error('[BOT] Error during QR Auth update:', error);
-            await sendTelegramMessage(
-                telegramId,
-                '❌ Произошла техническая ошибка при авторизации. Попробуйте позже.',
-                { parse_mode: 'Markdown' }
-            );
-        }
+    // Обработка сообщений через Grammy (bot.ts)
+    // Это оживит админские команды (сброс пароля и создание юзеров)
+    if (update) {
+      try {
+        await bot.handleUpdate(update)
+      } catch (e) {
+        console.error('Error in bot.handleUpdate:', e)
       }
     }
-    // --- End QR Login Logic ---
+
 
     return NextResponse.json({ success: true })
   } catch (error) {
