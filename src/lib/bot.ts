@@ -67,7 +67,8 @@ bot.use(async (ctx, next) => {
 bot.command('start', async (ctx) => {
   await ctx.reply(
     '🤖 Бот для управления учетными записями Qoqos\n\n' +
-      'Отправьте Telegram ID пользователя для создания или управления аккаунтом.'
+    '🤖 Бот для управления учетными записями Qoqos\n\n' +
+      'Отправьте Telegram ID (для сотрудников) или Логин (для клиентов) чтобы управлять аккаунтом.'
   )
 })
 
@@ -78,9 +79,10 @@ bot.on('message:text', async (ctx) => {
   // Игнорируем команды
   if (text.startsWith('/')) return
 
-  // Проверяем, что это похоже на Telegram ID (только цифры)
-  if (!/^\d+$/.test(text)) {
-    return ctx.reply('❌ Введите корректный Telegram ID (только цифры)')
+  // Проверяем, что это не команда (на всякий случай, хотя выше есть проверка)
+  // Разрешаем любые строки (цифры для сотрудников, буквы для клиентов)
+  if (text.length < 3) {
+    return ctx.reply('❌ Логин должен быть длиннее 2 символов')
   }
 
   const telegramId = text
@@ -164,7 +166,7 @@ bot.on('callback_query', async (ctx) => {
       await ctx.answerCallbackQuery('✅ Аккаунт создан!')
       await ctx.editMessageText(
         `✅ Аккаунт успешно создан!\n\n` +
-          `📱 Логин: ${telegramId}\n` +
+          `📱 Логин/ID: ${telegramId}\n` +
           `🔑 Пароль: ${password}\n` +
           `👤 Роль: ${role}\n\n` +
           `⚠️ Сохраните эти данные! Пароль больше не будет показан.`
