@@ -15,6 +15,7 @@ import { isAdminTelegramId } from '@/core/lib/admin';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
 
 const CATEGORIES = [
   { name: 'Смартфоны', slug: 'smartphones', active: true },
@@ -31,8 +32,9 @@ export const Header = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { favorites } = useFavorites();
   const { getTotalItems } = useCart();
-  const { username, userPhotoUrl, telegramId, logout } = useAppStore();
+  const { username, userPhotoUrl, telegramId, logout, role } = useAppStore();
   const { count: adminNotifs } = useAdminNotifications();
+  const { needsUpdate, performUpdate } = useVersionCheck();
 
   // Force check for LH admin if store seems empty but we are on LH
   useEffect(() => {
@@ -144,7 +146,15 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 ml-auto lg:ml-0">
-            {!isAdminTelegramId(telegramId) ? (
+            {needsUpdate && (
+              <button
+                onClick={performUpdate}
+                className="flex items-center gap-2 px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600 transition-all shadow-md animate-pulse mr-2"
+              >
+                <span>Обновить</span>
+              </button>
+            )}
+            {(!isAdminTelegramId(telegramId) && role !== 'master') ? (
               <>
                 <ActionButton icon={Scale} label="Сравнить" count={0} disabled tooltip="Скоро" />
                 <ActionButton icon={Heart} label="Избранное" count={favorites.length} href="/favorites" />

@@ -13,22 +13,6 @@ export async function POST(req: Request) {
     const message = update.message
     const callbackQuery = update.callback_query
 
-    /*
-    const secretToken = req.headers.get(
-      'X-Telegram-Bot-Api-Secret-Token'
-    )
-    if (
-      secretToken &&
-      secretToken !== process.env.TELEGRAM_WEBHOOK_SECRET
-    ) {
-      console.error('Webhook Unauthorized: Secret mismatch');
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 403 }
-      )
-    }
-    */
-
     if (callbackQuery) {
       const telegramId = callbackQuery.from.id.toString()
       const data = callbackQuery.data
@@ -243,10 +227,6 @@ export async function POST(req: Request) {
             } catch {}
           }
 
-          // Удаляем сообщение "Назначен мастер. Выберите удобное время (для теста):"
-          // Просто удаляем текущее сообщение с клавиатурой
-          // Это сообщение будет заменено новым
-
           // DEV: упрощённое подтверждение
           if (process.env.NODE_ENV !== 'production') {
             // Удаляем старое сообщение и отправляем новое
@@ -293,29 +273,14 @@ export async function POST(req: Request) {
         )
       }
 
-      // return NextResponse.json({ ok: true }) // <-- REMOVED: Blocked bot.handleUpdate
     }
 
-    // const telegramId = message?.chat?.id?.toString()
-    // const text = message?.text
-
-    // if (!telegramId || !text) {
-    //   // Ничего полезного, просто подтверждаем обработку
-    //   return NextResponse.json({ ok: true })
-    // }
-
-    // Обработка сообщений через Grammy (bot.ts)
-    // Это оживит админские команды (сброс пароля и создание юзеров)
     if (update) {
-      console.log('Processing update via Grammy:', JSON.stringify(update, null, 2))
       try {
         if (!bot.isInited()) {
-          console.log('Initializing bot...')
           await bot.init()
-          console.log('Bot initialized')
         }
         await bot.handleUpdate(update)
-        console.log('Update processed successfully')
       } catch (e) {
         console.error('Error in bot.handleUpdate:', e)
       }

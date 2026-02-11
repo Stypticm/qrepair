@@ -69,30 +69,42 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         setLoading(true);
         setError('');
 
-        const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-
         try {
-            const res = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ login, password }),
-            });
+            if (mode === 'login') {
+                const { login: loginAction } = await import('@/stores/authStore').then(m => ({ login: m.useAppStore.getState().login }));
+                const success = await loginAction(login, password);
 
-            const data = await res.json();
+                if (success) {
+                    const user = await import('@/stores/authStore').then(m => m.useAppStore.getState().user);
+                    onSuccess?.(user);
+                    onClose();
+                } else {
+                    setError('Неверный логин или пароль');
+                }
+            } else {
+                // Register
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password }),
+                });
 
-            if (!res.ok) {
-                setError(data.error || 'Ошибка');
-                return;
+                const data = await res.json();
+
+                if (!res.ok) {
+                    setError(data.error || 'Ошибка');
+                    return;
+                }
+
+                // Update store
+                const { setAuthData } = await import('@/stores/authStore').then(m => m.useAppStore.getState());
+                setAuthData({ user: data.user, token: data.token });
+
+                onSuccess?.(data.user);
+                onClose();
             }
-
-            // Сохраняем токен
-            localStorage.setItem('auth_token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-
-            // Вызываем callback
-            onSuccess?.(data.user);
-            onClose();
         } catch (err: any) {
+            console.error(err);
             setError('Ошибка сервера');
         } finally {
             setLoading(false);

@@ -21,6 +21,7 @@ export const DesktopHeader = () => {
     const username = useAppStore(state => state.username);
     const userPhotoUrl = useAppStore(state => state.userPhotoUrl);
     const telegramId = useAppStore(state => state.telegramId);
+    const role = useAppStore(state => state.role);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const pathname = usePathname();
@@ -91,7 +92,7 @@ export const DesktopHeader = () => {
                             </>
                         )}
 
-                        {isAdminTelegramId(telegramId) && (
+                        {(isAdminTelegramId(telegramId) || role === 'master') && (
                             <Link href="/admin" className={cn(navLinkClass('/admin'), "relative")}>
                                 Админ
                                 {adminNotifs > 0 && (

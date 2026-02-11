@@ -110,6 +110,7 @@ interface AppState {
   addDebugInfo: (message: string) => void
   clearDebugInfo: () => void
   initializeTelegram: (initDataState?: any) => void
+  setAuthData: (data: { user: User, token: string }) => void
 }
 
 const stepOrder = [
@@ -497,6 +498,16 @@ export const useAppStore = create<AppState>()(
         // Deprecated - kept for compatibility
         // Auth now handled via login() method
         console.log('initializeTelegram is deprecated, use login() instead')
+      },
+      setAuthData: (data) => {
+        set({
+          user: data.user,
+          authToken: data.token,
+          telegramId: data.user.telegramId,
+          role: data.user.role === 'ADMIN' || data.user.role === 'MASTER' ? 'master' : 'client',
+          userId: parseInt(data.user.telegramId),
+          isManualLogout: false,
+        })
       },
     }),
     {
