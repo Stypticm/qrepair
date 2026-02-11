@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { notifyAllAdmins } from '@/lib/notifications/admin-notifications';
 
 export async function POST(req: Request) {
   try {
@@ -33,7 +34,14 @@ export async function POST(req: Request) {
         isClean: data.isClean ?? true,
         calculatedPrice: data.calculatedPrice || 0,
         status: 'pending',
-      },
+      }
+    });
+
+    // Notify Admins
+    await notifyAllAdmins({
+        title: `📱 Новая заявка Trade-in`,
+        body: `${data.model} ${data.storage} ${data.color} - ${data.calculatedPrice} ₽`,
+        url: `/admin/trade-in?id=${evaluation.id}`
     });
 
     return NextResponse.json(evaluation);

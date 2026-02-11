@@ -7,6 +7,7 @@ import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, Smartphone } from '
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
+import { PushNotificationToggle } from '@/components/admin/PushNotificationToggle';
 
 export function AdminPageClient() {
   const router = useRouter();
@@ -154,12 +155,16 @@ export function AdminPageClient() {
                 Добро пожаловать в админ-панель Qoqos
               </p>
             </div>
-            <button
-              onClick={() => router.push('/')}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border rounded-xl hover:bg-gray-50 transition-all"
-            >
-              На сайт
-            </button>
+
+            <div className="flex items-center gap-2">
+              <PushNotificationToggle />
+              <button
+                onClick={() => router.push('/')}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border rounded-xl hover:bg-gray-50 transition-all"
+              >
+                На сайт
+              </button>
+            </div>
           </div>
         </header>
 

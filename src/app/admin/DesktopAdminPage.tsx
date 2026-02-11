@@ -7,6 +7,7 @@ import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight, Smartph
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
+import { PushNotificationToggle } from '@/components/admin/PushNotificationToggle';
 
 export function DesktopAdminPage() {
     const router = useRouter();
@@ -130,13 +131,16 @@ export function DesktopAdminPage() {
                         </p>
                     </div>
 
-                    <button
-                        onClick={() => router.push('/')}
-                        className="group flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-gray-600 font-bold hover:text-gray-900 hover:border-gray-900 transition-all shadow-sm"
-                    >
-                        На главный сайт
-                        <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <PushNotificationToggle />
+                        <button
+                            onClick={() => router.push('/')}
+                            className="group flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-2xl text-gray-600 font-bold hover:text-gray-900 hover:border-gray-900 transition-all shadow-sm"
+                        >
+                            На главный сайт
+                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Grid Section */}

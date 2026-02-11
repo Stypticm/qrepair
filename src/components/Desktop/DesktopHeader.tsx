@@ -13,6 +13,7 @@ import { usePathname } from 'next/navigation';
 import { useState, memo, useEffect } from 'react';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { QRModal } from './QRModal';
 import { LoginQRModal } from './LoginQRModal';
 import { QrCode } from 'lucide-react';
@@ -34,6 +35,7 @@ export const DesktopHeader = () => {
     const pathname = usePathname();
     const { isDesktop } = useSafeArea();
     const { count: adminNotifs } = useAdminNotifications();
+    const { needsUpdate, performUpdate } = useVersionCheck();
 
     // Force check for LH admin if store seems empty but we are on LH
     useEffect(() => {
@@ -156,6 +158,19 @@ export const DesktopHeader = () => {
                             >
                                 <QrCode size={20} className="group-hover:scale-110 transition-transform" />
                                 <span className="font-semibold">Войти через QR</span>
+                            </button>
+                        )}
+
+                        {/* Update Button */}
+                        {needsUpdate && (
+                            <button
+                                onClick={performUpdate}
+                                className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-green-500 text-white text-sm font-bold rounded-xl hover:bg-green-600 transition-all shadow-md animate-pulse"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3" />
+                                </svg>
+                                <span>Обновить</span>
                             </button>
                         )}
 

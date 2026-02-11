@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { notifyAllAdmins } from '@/lib/notifications/admin-notifications';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -53,7 +54,20 @@ export async function POST(req: NextRequest) {
         senderType: 'user',
         text,
       },
+      include: {
+        chat: true,
+      }
     });
+
+    // Notify Admins
+    if (message) {
+        const nickname = message.chat.userNickname || telegramId;
+        await notifyAllAdmins({
+            title: `💬 Новое сообщение: ${nickname}`,
+            body: text.length > 50 ? text.substring(0, 50) + '...' : text,
+            url: `/admin/chats/${chat.id}`
+        });
+    }
 
     return NextResponse.json(message);
   } catch (error) {

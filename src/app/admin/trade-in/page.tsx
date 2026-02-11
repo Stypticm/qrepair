@@ -53,6 +53,8 @@ interface TradeInEvaluation {
     calculatedPrice: number;
     status: string;
     createdAt: string;
+    minPrice?: number;
+    maxPrice?: number;
 }
 
 export default function AdminTradeInPage() {
@@ -266,17 +268,33 @@ export default function AdminTradeInPage() {
                                             </div>
                                         </div>
 
-                                        <div className="p-6 bg-blue-600 rounded-[32px] text-white flex items-center justify-between shadow-xl shadow-blue-200">
-                                            <div>
-                                                <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">Предварительная цена</p>
-                                                <p className="text-3xl font-black">{formatPrice(selected.calculatedPrice)}</p>
+                                        <div className="p-6 bg-blue-600 rounded-[32px] text-white shadow-xl shadow-blue-200 space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">Предварительная цена</p>
+                                                    <p className="text-3xl font-black">{formatPrice(selected.calculatedPrice)}</p>
+                                                </div>
+                                                <button
+                                                    onClick={handleChatClick}
+                                                    className="bg-white text-blue-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-blue-50 transition-colors active:scale-95"
+                                                >
+                                                    Написать в чат
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={handleChatClick}
-                                                className="bg-white text-blue-600 px-6 py-3 rounded-2xl font-black text-sm hover:bg-blue-50 transition-colors active:scale-95"
-                                            >
-                                                Написать в чат
-                                            </button>
+
+                                            <div className="pt-4 border-t border-blue-500/30">
+                                                <PriceEditor
+                                                    id={selected.id}
+                                                    initialMin={selected.minPrice}
+                                                    initialMax={selected.maxPrice}
+                                                    onUpdate={(min: number, max: number) => {
+                                                        setEvaluations(prev => prev.map(e =>
+                                                            e.id === selected.id ? { ...e, minPrice: min, maxPrice: max } : e
+                                                        ));
+                                                        toast.success('Цены обновлены');
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -311,6 +329,56 @@ function DetailCard({ icon: Icon, label, value, color }: { icon: any, label: str
             <div>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{label}</p>
                 <p className="text-sm font-black text-gray-900">{value}</p>
+            </div>
+        </div>
+    );
+}
+
+import { updateTradeInPrice } from '@/services/admin-trade-in';
+
+function PriceEditor({ id, initialMin, initialMax, onUpdate }: { id: string, initialMin?: number, initialMax?: number, onUpdate: (min: number, max: number) => void }) {
+    const [min, setMin] = useState(initialMin?.toString() || '');
+    const [max, setMax] = useState(initialMax?.toString() || '');
+    const [saving, setSaving] = useState(false);
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            await updateTradeInPrice({ id, minPrice: min, maxPrice: max });
+            onUpdate(Number(min), Number(max));
+            toast.success('Цены обновлены');
+        } catch (e) {
+            toast.error('Ошибка сохранения');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col gap-2">
+            <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest">Установка диапазона цен</p>
+            <div className="flex gap-2">
+                <input
+                    type="number"
+                    placeholder="Мин. цена"
+                    value={min}
+                    onChange={(e) => setMin(e.target.value)}
+                    className="flex-1 bg-blue-700/50 border border-blue-500/50 text-white placeholder-blue-300/50 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-white/20"
+                />
+                <input
+                    type="number"
+                    placeholder="Макс. цена"
+                    value={max}
+                    onChange={(e) => setMax(e.target.value)}
+                    className="flex-1 bg-blue-700/50 border border-blue-500/50 text-white placeholder-blue-300/50 rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-white/20"
+                />
+                <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-xl transition-colors disabled:opacity-50"
+                >
+                    {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check className="w-5 h-5" />}
+                </button>
             </div>
         </div>
     );

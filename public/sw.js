@@ -1,5 +1,5 @@
 /* Minimal offline-first service worker for Next.js app shell */
-const CACHE_NAME = 'qoqos-cache-v1-4-252'
+const CACHE_NAME = 'qoqos-cache-v1-4-256'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',
@@ -71,4 +71,31 @@ self.addEventListener('fetch', (event) => {
       })
     )
   }
+})
+
+// Push Notifications
+self.addEventListener('push', function (event) {
+  if (event.data) {
+    const data = event.data.json()
+    const options = {
+      body: data.body,
+      icon: data.icon || '/logo.png',
+      badge: '/badge.png',
+      vibrate: [100, 50, 100],
+      data: {
+        dateOfArrival: Date.now(),
+        primaryKey: '2',
+        url: data.url || '/',
+      },
+    }
+    event.waitUntil(self.registration.showNotification(data.title, options))
+  }
+})
+
+self.addEventListener('notificationclick', function (event) {
+  console.log('Notification click received.')
+  event.notification.close()
+  event.waitUntil(
+    clients.openWindow(event.notification.data.url)
+  )
 })

@@ -412,9 +412,25 @@ model TradeInEvaluation {
   isClean          Boolean  @default(true) // Без ржавчины/окисления
   
   calculatedPrice  Float
+  minPrice         Float?
+  maxPrice         Float?
   status           String   @default("draft")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@schema("public")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String?  // telegramId (optional, if we want to link to user)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@schema("public")
