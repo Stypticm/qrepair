@@ -33,6 +33,51 @@ bot.command('start', async (ctx) => {
         ],
       },
     })
+  } else if (startParam.startsWith('auth_')) {
+    // Обработка авторизации через PWA
+    const uuid = startParam.replace('auth_', '');
+    const user = ctx.from;
+
+    if (!user) {
+        await ctx.reply('❌ Не удалось получить данные пользователя.');
+        return;
+    }
+
+    try {
+        const { prisma } = await import('@/core/lib/prisma');
+
+        const authRequest = await prisma.authRequest.findUnique({
+            where: { id: uuid }
+        });
+
+        if (!authRequest) {
+            await ctx.reply('❌ Ссылка устарела или недействительна.');
+            return;
+        }
+
+        if (authRequest.status === 'success') {
+             await ctx.reply('✅ Вы уже авторизованы.');
+             return;
+        }
+
+        // Обновляем запись в БД
+        await prisma.authRequest.update({
+            where: { id: uuid },
+            data: {
+                status: 'success',
+                telegramId: user.id.toString(),
+                telegramUsername: user.username,
+                telegramData: user as any
+            }
+        });
+
+        await ctx.reply('✅ Вы успешно авторизовались! Можете возвращаться в приложение.');
+
+    } catch (error) {
+        console.error('Auth error:', error);
+        await ctx.reply('❌ Произошла ошибка при авторизации.');
+    }
+
   } else {
     // Обычное приветствие с кнопкой открытия
     await ctx.reply(
