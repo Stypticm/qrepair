@@ -4,9 +4,19 @@ import { generatePassword, hashPassword } from '@/lib/auth/password'
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
+// Команда /start
+bot.command('start', async (ctx) => {
+  console.log('Received /start command')
+  await ctx.reply(
+    '🤖 Бот для управления учетными записями Qoqos\n\n' +
+      'Отправьте Telegram ID пользователя для создания или управления аккаунтом.'
+  )
+})
+
 // Обработка текстовых сообщений (Telegram ID)
 bot.on('message:text', async (ctx) => {
   const text = ctx.message.text.trim()
+  console.log('Received text message:', text)
 
   // Игнорируем команды
   if (text.startsWith('/')) return
@@ -180,13 +190,7 @@ bot.on('callback_query', async (ctx) => {
   }
 })
 
-// Команда /start
-bot.command('start', async (ctx) => {
-  await ctx.reply(
-    '🤖 Бот для управления учетными записями Qoqos\n\n' +
-      'Отправьте Telegram ID пользователя для создания или управления аккаунтом.'
-  )
-})
+
 
 // Инициализация бота
 export const initializeBot = async () => {
