@@ -457,3 +457,14 @@ model PushSubscription {
   @@index([userId])
   @@schema("public")
 }
+
+model BotAccess {
+  id           String    @id @default(cuid())
+  telegramId   String    @unique
+  isAuthenticated Boolean  @default(false)
+  attempts     Int       @default(0)
+  blockedUntil DateTime?
+  updatedAt    DateTime  @updatedAt
+
+  @@schema("public")
+}

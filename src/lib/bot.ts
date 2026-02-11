@@ -4,6 +4,65 @@ import { generatePassword, hashPassword } from '@/lib/auth/password'
 
 export const bot = new Bot(process.env.BOT_TOKEN!)
 
+// Middleware: Проверка пароля
+bot.use(async (ctx, next) => {
+  if (!ctx.from?.id) return next()
+
+  const telegramId = ctx.from.id.toString()
+  
+  // Получаем или создаем запись доступа
+  let access = await prisma.botAccess.findUnique({ where: { telegramId } })
+  if (!access) {
+    access = await prisma.botAccess.create({ data: { telegramId } })
+  }
+
+  // Если уже авторизован - пропускаем
+  if (access.isAuthenticated) return next()
+
+  // Проверка блокировки
+  if (access.blockedUntil && access.blockedUntil > new Date()) {
+    const minutesLeft = Math.ceil((access.blockedUntil.getTime() - Date.now()) / 60000)
+    await ctx.reply(`⛔ Вы временно заблокированы. Попробуйте через ${minutesLeft} мин.`)
+    return
+  }
+
+  // Обработка ввода пароля (любое текстовое сообщение)
+  if (ctx.message?.text) {
+    const text = ctx.message.text.trim()
+    
+    if (text === 'GolyanovoRomaMisha') {
+      await prisma.botAccess.update({
+        where: { telegramId },
+        data: { isAuthenticated: true, attempts: 0, blockedUntil: null }
+      })
+      await ctx.reply('✅ Доступ разрешен! Добро пожаловать.\n\nИспользуйте /start для начала работы.')
+      return
+    } else {
+      const newAttempts = access.attempts + 1
+      let blockedUntil = null
+      
+      if (newAttempts >= 3) {
+        blockedUntil = new Date(Date.now() + 30 * 60000) // Блокировка на 30 минут
+      }
+
+      await prisma.botAccess.update({
+        where: { telegramId },
+        data: { attempts: newAttempts, blockedUntil }
+      })
+
+      if (blockedUntil) {
+         await ctx.reply('⛔ Слишком много неверных попыток. Вы заблокированы на 30 минут.')
+      } else {
+         await ctx.reply(`❌ Неверный пароль. Попытка ${newAttempts}/3.`)
+      }
+      return
+    }
+  }
+
+  // Если это не текст пароля, и мы не авторизованы -> просим пароль
+  await ctx.reply('🔒 Бот защищен. Введите пароль доступа:')
+})
+
 // Команда /start
 bot.command('start', async (ctx) => {
   await ctx.reply(

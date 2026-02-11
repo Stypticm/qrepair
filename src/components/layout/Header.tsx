@@ -57,6 +57,15 @@ export const Header = () => {
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
               <span>Магазины открыты</span>
             </div>
+            {needsUpdate && (
+              <button
+                onClick={performUpdate}
+                className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 transition-colors bg-teal-50 px-2 py-0.5 rounded-md animate-pulse"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                <span>Доступно обновление</span>
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-6">
             <a href="tel:+79998887766" className="flex items-center gap-1.5 hover:text-teal-600 transition-colors">
@@ -146,14 +155,6 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 ml-auto lg:ml-0">
-            {needsUpdate && (
-              <button
-                onClick={performUpdate}
-                className="flex items-center gap-2 px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg hover:bg-green-600 transition-all shadow-md animate-pulse mr-2"
-              >
-                <span>Обновить</span>
-              </button>
-            )}
             {(!isAdminTelegramId(telegramId) && role !== 'master') ? (
               <>
                 <ActionButton icon={Scale} label="Сравнить" count={0} disabled tooltip="Скоро" />
