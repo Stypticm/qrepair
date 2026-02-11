@@ -1,6 +1,6 @@
 'use client'
 
-import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, LogIn, RefreshCw, PlusSquare, MessageCircle } from 'lucide-react';
+import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, RefreshCw, PlusSquare, MessageCircle } from 'lucide-react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
@@ -100,15 +100,6 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
                                             <MessageCircle className="relative w-6 h-6 text-blue-600 drop-shadow-sm" />
-                                        </button>
-
-                                        <button
-                                            onClick={handleLoginClick}
-                                            className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#54A9EB]/40 to-[#54A9EB]/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-[#54A9EB]/50 hover:to-[#54A9EB]/30 shadow-lg"
-                                            aria-label="Войти через Telegram"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                                            <LogIn className="relative w-6 h-6 text-[#54A9EB] drop-shadow-sm" />
                                         </button>
                                     </div>
                                 ) : (

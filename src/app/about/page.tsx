@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { LocationBlock } from '@/components/features/contacts/LocationBlock';
 
 export default function AboutPage() {
     return (
@@ -7,7 +8,7 @@ export default function AboutPage() {
             <Header />
 
             <main className="pt-12 pb-16">
-                <div className="max-w-4xl mx-auto px-6">
+                <div className="container mx-auto px-4">
                     <h1 className="text-4xl font-bold text-gray-900 mb-8">О компании</h1>
 
                     <div className="space-y-8">
@@ -47,12 +48,7 @@ export default function AboutPage() {
                         </section>
 
                         <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Контакты</h2>
-                            <div className="bg-gray-50 rounded-apple-lg p-6">
-                                <p className="text-gray-600 mb-2"><strong>Адрес:</strong> Москва, Горбушка</p>
-                                <p className="text-gray-600 mb-2"><strong>Телефон:</strong> +7 (999) 888-77-66</p>
-                                <p className="text-gray-600"><strong>Email:</strong> info@qoqos.ru</p>
-                            </div>
+                            <LocationBlock />
                         </section>
                     </div>
                 </div>

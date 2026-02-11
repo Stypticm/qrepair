@@ -72,9 +72,9 @@ export default function AdminOrdersPage() {
         loadOrders()
     }, [filterStatus])
 
-    const loadOrders = async () => {
+    const loadOrders = async (silent = false) => {
         try {
-            setLoading(true)
+            if (!silent) setLoading(true)
             const url = filterStatus === 'all'
                 ? '/api/admin/orders'
                 : `/api/admin/orders?status=${filterStatus}`
@@ -99,7 +99,7 @@ export default function AdminOrdersPage() {
             })
 
             if (res.ok) {
-                await loadOrders()
+                await loadOrders(true)
             } else {
                 alert('Ошибка при обновлении статуса')
             }

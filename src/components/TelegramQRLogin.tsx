@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAppStore } from '@/stores/authStore';
 
-export const TelegramQRLogin = ({ onSuccess }: { onSuccess?: () => void }) => {
+export const TelegramQRLogin = ({ onSuccess, botName: propBotName }: { onSuccess?: () => void, botName?: string }) => {
     const [uuid, setUuid] = useState<string | null>(null);
     const [status, setStatus] = useState<'loading' | 'pending' | 'success' | 'expired' | 'error'>('loading');
     const [botUsername, setBotUsername] = useState<string>('');
@@ -26,8 +26,8 @@ export const TelegramQRLogin = ({ onSuccess }: { onSuccess?: () => void }) => {
 
     // 1. Initial Auth Request Creation
     useEffect(() => {
-        // Fetch Bot Username from env
-        const botName = process.env.NEXT_PUBLIC_BOT_USERNAME || 'QoqosAppBot';
+        // Fetch Bot Username from props or env
+        const botName = propBotName || process.env.NEXT_PUBLIC_BOT_USERNAME || 'QoqosAppBot';
         setBotUsername(botName);
 
         const createAuthRequest = async () => {

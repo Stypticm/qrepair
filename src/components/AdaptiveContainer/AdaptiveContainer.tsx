@@ -18,7 +18,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const isAdminPath = pathname?.startsWith('/admin');
-  const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/buyback') || pathname?.includes('/repair') || pathname?.startsWith('/request');
+  const isWidePage = pathname === '/' || pathname?.startsWith('/catalog') || pathname?.startsWith('/about') || pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/buyback') || pathname?.includes('/repair') || pathname?.startsWith('/request');
 
   useEffect(() => {
     setIsMounted(true);

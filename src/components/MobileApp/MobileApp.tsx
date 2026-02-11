@@ -9,6 +9,7 @@ import { useMobileAppInit } from './useMobileAppInit';
 import { AuthModal } from './AuthModal';
 import { LoadingState } from './LoadingState';
 import { MainFeed } from './MainFeed';
+import { FAQAccordion } from '@/components/FAQ/FAQAccordion';
 
 export const MobileApp = () => {
     const {
@@ -64,6 +65,9 @@ export const MobileApp = () => {
                 setViewMode={setViewMode}
                 screenHeight={screenHeight}
             />
+            <div className="pb-24 bg-white">
+                <FAQAccordion />
+            </div>
         </AdaptiveContainer >
     );
 };

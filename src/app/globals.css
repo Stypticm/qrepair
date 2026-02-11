@@ -45,6 +45,7 @@
     overflow-x: hidden;
     /* Всегда показываем вертикальный scrollbar, чтобы избежать сдвига контента */
     overflow-y: scroll;
+    scrollbar-gutter: stable;
     scroll-behavior: smooth;
     /* Плавность для свайпов */
     -webkit-overflow-scrolling: touch;

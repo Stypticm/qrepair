@@ -62,7 +62,6 @@ export const Header = () => {
               <span>+7 (999) 888-77-66</span>
             </a>
             <div className="hidden sm:flex gap-4">
-              <Link href="/help" className="hover:text-teal-600">Помощь</Link>
               <Link href="/about" className="hover:text-teal-600">О компании</Link>
             </div>
           </div>
@@ -132,15 +131,7 @@ export const Header = () => {
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(!showAuthModal)}
-                className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition-all text-sm font-medium"
-              >
-                <User className="w-4 h-4" />
-                <span>Войти</span>
-              </button>
-            )}
+            ) : null}
           </div>
 
           {/* Actions */}

@@ -1,14 +1,14 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ReviewsCarousel } from '@/components/features/reviews/ReviewsCarousel';
 import { BlogGrid } from '@/components/features/blog/BlogGrid';
 import { RotatingBanner } from '@/components/RotatingBanner';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
+import { FAQAccordion } from '@/components/FAQ/FAQAccordion';
 import { useMarketplaceFeed } from '@/hooks/useMarketplaceFeed';
 import { useEffect, useMemo } from 'react';
+import { Header } from '@/components/layout/Header';
 
 export const DesktopHome = () => {
     const {
@@ -30,10 +30,9 @@ export const DesktopHome = () => {
     ], []);
 
     return (
-        <div className="min-h-screen bg-white text-gray-900 selection:bg-blue-100 selection:text-blue-900 font-sans">
+        <div className="min-h-screen bg-gray-50">
             <Header />
-
-            <main className="pt-0 pb-12">
+            <main className="pb-16">
                 {/* Intro / Filter Header */}
                 <div className="max-w-7xl mx-auto px-6 mb-12 pt-12">
                     {/* Banners */}
@@ -64,6 +63,7 @@ export const DesktopHome = () => {
 
                 <ReviewsCarousel />
                 <BlogGrid />
+                <FAQAccordion />
             </main>
 
             <Footer />
