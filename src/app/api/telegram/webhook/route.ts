@@ -307,11 +307,15 @@ export async function POST(req: Request) {
     // Обработка сообщений через Grammy (bot.ts)
     // Это оживит админские команды (сброс пароля и создание юзеров)
     if (update) {
+      console.log('Processing update via Grammy:', JSON.stringify(update, null, 2))
       try {
         if (!bot.isInited()) {
+          console.log('Initializing bot...')
           await bot.init()
+          console.log('Bot initialized')
         }
         await bot.handleUpdate(update)
+        console.log('Update processed successfully')
       } catch (e) {
         console.error('Error in bot.handleUpdate:', e)
       }
