@@ -296,13 +296,13 @@ export async function POST(req: Request) {
       // return NextResponse.json({ ok: true }) // <-- REMOVED: Blocked bot.handleUpdate
     }
 
-    const telegramId = message?.chat?.id?.toString()
-    const text = message?.text
+    // const telegramId = message?.chat?.id?.toString()
+    // const text = message?.text
 
-    if (!telegramId || !text) {
-      // Ничего полезного, просто подтверждаем обработку
-      return NextResponse.json({ ok: true })
-    }
+    // if (!telegramId || !text) {
+    //   // Ничего полезного, просто подтверждаем обработку
+    //   return NextResponse.json({ ok: true })
+    // }
 
     // Обработка сообщений через Grammy (bot.ts)
     // Это оживит админские команды (сброс пароля и создание юзеров)
