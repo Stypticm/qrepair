@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWebPush } from '@/hooks/useWebPush';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,6 +16,24 @@ export const PushNotificationToggle = () => {
             toast.error('Ошибка включения уведомлений');
         }
     };
+
+    const [isPWA, setIsPWA] = useState(false);
+
+    useEffect(() => {
+        // Check if running in standalone mode (PWA)
+        const checkPWA = () => {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                (window.navigator as any).standalone ||
+                document.referrer.includes('android-app://');
+            setIsPWA(!!isStandalone);
+        };
+
+        checkPWA();
+        window.matchMedia('(display-mode: standalone)').addEventListener('change', checkPWA);
+    }, []);
+
+    // Only show in PWA
+    if (!isPWA) return null;
 
     if (loading) {
         return (

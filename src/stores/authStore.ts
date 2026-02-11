@@ -544,7 +544,7 @@ export const useAppStore = create<AppState>()(
                  addDebugInfo(`🔧 Dev Mode: Авто-логин для localhost (${devId})`);
                  set({ 
                     telegramId: devId,
-                    username: process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME || 'qoqos_support',
+                    username: process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME || 'QoqosAppBot',
                     role: isAdminTelegramId(devId) ? 'master' : 'client',
                     userId: parseInt(devId),
                     isManualLogout: false

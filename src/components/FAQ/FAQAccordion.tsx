@@ -60,7 +60,7 @@ export const FAQAccordion = () => {
     };
 
     return (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white overflow-hidden">
             <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row gap-12">
 
                 {/* Заголовок */}

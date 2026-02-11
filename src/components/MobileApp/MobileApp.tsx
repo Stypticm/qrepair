@@ -10,6 +10,7 @@ import { AuthModal } from './AuthModal';
 import { LoadingState } from './LoadingState';
 import { MainFeed } from './MainFeed';
 import { FAQAccordion } from '@/components/FAQ/FAQAccordion';
+import { getPictureUrl } from '@/core/lib/assets';
 
 export const MobileApp = () => {
     const {
@@ -37,7 +38,7 @@ export const MobileApp = () => {
     }, []);
 
     if (isLoading || isInTelegram === null) {
-        return <LoadingState imageUrl={getImage('animation_running.gif') || '/animation_running.gif'} />;
+        return <LoadingState />;
     }
 
     return (

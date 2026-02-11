@@ -79,8 +79,8 @@ const FinalPage = () => {
                 } else {
                     // Fallback для тестирования в браузере
                     if (process.env.NODE_ENV === 'development') {
-                        setUserTelegramId('@qoqos_support');
-                        setTelegramUsername('qoqos_support');
+                        setUserTelegramId('@QoqosAppBot');
+                        setTelegramUsername('QoqosAppBot');
                         console.log('Set development fallback');
                     }
                 }
