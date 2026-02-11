@@ -16,7 +16,7 @@ export async function GET(req: Request) {
         
         // Construct the Telegram API URL
         // Note: drop_pending_updates=true ensures we don't get flooded with old messages if any
-        const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${webhookUrl}&drop_pending_updates=true`;
+        const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${webhookUrl}&drop_pending_updates=true&allowed_updates=["message","callback_query"]`;
 
         const res = await fetch(telegramUrl);
         const data = await res.json();
