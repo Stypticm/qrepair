@@ -308,6 +308,9 @@ export async function POST(req: Request) {
     // Это оживит админские команды (сброс пароля и создание юзеров)
     if (update) {
       try {
+        if (!bot.isInited()) {
+          await bot.init()
+        }
         await bot.handleUpdate(update)
       } catch (e) {
         console.error('Error in bot.handleUpdate:', e)
