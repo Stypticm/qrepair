@@ -16,8 +16,18 @@ bot.use(async (ctx, next) => {
     access = await prisma.botAccess.create({ data: { telegramId } })
   }
 
-  // Если уже авторизован - пропускаем
-  if (access.isAuthenticated) return next()
+  // Проверка сессии (24 часа)
+  if (access.isAuthenticated) {
+    const oneDay = 24 * 60 * 60 * 1000
+    if (Date.now() - access.updatedAt.getTime() > oneDay) {
+      access = await prisma.botAccess.update({
+        where: { telegramId },
+        data: { isAuthenticated: false }
+      })
+    } else {
+      return next()
+    }
+  }
 
   // Проверка блокировки
   if (access.blockedUntil && access.blockedUntil > new Date()) {
@@ -29,13 +39,19 @@ bot.use(async (ctx, next) => {
   // Обработка ввода пароля (любое текстовое сообщение)
   if (ctx.message?.text) {
     const text = ctx.message.text.trim()
+
+    // Если введена команда (например /start), не считаем это попыткой ввода пароля
+    if (text.startsWith('/')) {
+       await ctx.reply('🔒 Бот защищен. Введите пароль доступа:')
+       return
+    }
     
     if (text === 'GolyanovoRomaMisha') {
       await prisma.botAccess.update({
         where: { telegramId },
         data: { isAuthenticated: true, attempts: 0, blockedUntil: null }
       })
-      await ctx.reply('✅ Доступ разрешен! Добро пожаловать.\n\nИспользуйте /start для начала работы.')
+      await ctx.reply('✅ Доступ разрешен! С возвращением.\n\nИспользуйте /start для меню.')
       return
     } else {
       const newAttempts = access.attempts + 1

@@ -47,7 +47,7 @@ export const Header = () => {
     <header className="w-full bg-white z-50 sticky top-0 shadow-sm">
       {/* Top Bar */}
       <div className="border-b border-gray-100 bg-gray-50/50">
-        <div className="container mx-auto px-4 h-9 flex items-center justify-between text-xs text-gray-500 font-medium">
+        <div className="container mx-auto px-4 h-9 flex items-center justify-between text-xs text-gray-500 font-medium relative">
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-1.5 hover:text-teal-600 transition-colors">
               <MapPin className="w-3.5 h-3.5" />
@@ -57,16 +57,19 @@ export const Header = () => {
               <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
               <span>Магазины открыты</span>
             </div>
-            {needsUpdate && (
+          </div>
+
+          {needsUpdate && (
+            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2">
               <button
                 onClick={performUpdate}
-                className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 transition-colors bg-teal-50 px-2 py-0.5 rounded-md animate-pulse"
+                className="flex items-center gap-2 text-teal-700 hover:text-teal-800 transition-colors bg-teal-100/80 hover:bg-teal-200 px-4 py-1.5 rounded-full animate-pulse shadow-sm border border-teal-200"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
-                <span>Доступно обновление</span>
+                <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                <span className="font-bold text-xs sm:text-sm tracking-wide uppercase">Доступно обновление</span>
               </button>
-            )}
-          </div>
+            </div>
+          )}
           <div className="flex items-center gap-6">
             <a href="tel:+79998887766" className="flex items-center gap-1.5 hover:text-teal-600 transition-colors">
               <Phone className="w-3.5 h-3.5" />
