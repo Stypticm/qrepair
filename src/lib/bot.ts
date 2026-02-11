@@ -86,16 +86,24 @@ bot.on('message:text', async (ctx) => {
 // Обработка callback кнопок
 bot.on('callback_query', async (ctx) => {
   const data = ctx.callbackQuery.data
+  console.log('Received callback query:', data)
 
   if (!data) return
 
   try {
     // Создание нового пользователя
     if (data.startsWith('create:')) {
+      console.log('Processing create user...')
       const [_, telegramId, role] = data.split(':')
+      console.log(`Parsed: telegramId=${telegramId}, role=${role}`)
+      
       const password = generatePassword()
+      console.log('Password generated')
+      
       const passwordHash = await hashPassword(password)
+      console.log('Password hashed')
 
+      console.log('Creating user in DB...')
       await prisma.user.create({
         data: {
           telegramId,
@@ -103,6 +111,7 @@ bot.on('callback_query', async (ctx) => {
           role: role as any,
         },
       })
+      console.log('User created in DB')
 
       await ctx.answerCallbackQuery('✅ Аккаунт создан!')
       await ctx.editMessageText(
