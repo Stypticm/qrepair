@@ -117,16 +117,16 @@ export const ProductGrid = ({ products = MOCK_PRODUCTS, isLoading }: ProductGrid
 
     if (isLoading) {
         return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                 {[...Array(6)].map((_, i) => (
-                    <div key={i} className="bg-gray-100 rounded-apple-lg h-96 animate-pulse" />
+                    <div key={i} className="bg-gray-100 rounded-apple-lg h-80 animate-pulse" />
                 ))}
             </div>
         );
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
             {products.map((product) => {
                 const inCart = isInCart(product.id);
                 const isFav = isFavorite(product.id);
@@ -184,19 +184,19 @@ export const ProductGrid = ({ products = MOCK_PRODUCTS, isLoading }: ProductGrid
                         </div>
 
                         {/* Content */}
-                        <div className="p-4">
+                        <div className="p-3">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-xs font-medium text-gray-500">{product.brand}</span>
                                 <span className="text-xs text-gray-300">•</span>
                                 <span className="text-xs text-gray-500">{product.condition}</span>
                             </div>
 
-                            <h3 className="font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-teal-600 transition-colors">
+                            <h3 className="font-bold text-sm md:text-base text-gray-900 mb-2 line-clamp-2 group-hover:text-teal-600 transition-colors">
                                 {product.name}
                             </h3>
 
                             <div className="flex items-end gap-2">
-                                <span className="text-2xl font-bold text-gray-900">
+                                <span className="text-xl md:text-2xl font-bold text-gray-900">
                                     {product.price.toLocaleString()} ₽
                                 </span>
                                 {product.originalPrice && (

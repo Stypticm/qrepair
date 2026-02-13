@@ -74,6 +74,9 @@ export function useWebPush() {
         setLoading(true);
         setError(null);
         try {
+            console.log('[Push] Subscribe called, userId:', userId);
+            console.log('[Push] VAPID key present:', !!PUBLIC_VAPID_KEY);
+
             // Wait for Service Worker to be ready if not already registered
             let reg = registration;
             if (!reg) {
@@ -81,20 +84,33 @@ export function useWebPush() {
                 if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
                     throw new Error('Service Worker not supported');
                 }
-                reg = await navigator.serviceWorker.ready;
+                
+                // Add timeout to prevent infinite waiting
+                const timeout = new Promise<never>((_, reject) => 
+                    setTimeout(() => reject(new Error('Service Worker registration timeout')), 10000)
+                );
+                
+                reg = await Promise.race([
+                    navigator.serviceWorker.ready,
+                    timeout
+                ]) as ServiceWorkerRegistration;
+                
                 setRegistration(reg);
                 console.log('[Push] Service Worker is now ready:', reg.scope);
             }
 
             if (!PUBLIC_VAPID_KEY) {
+                console.error('[Push] VAPID key is missing!');
                 throw new Error('Public VAPID Key not found');
             }
 
             // Check if already subscribed
+            console.log('[Push] Checking for existing subscription...');
             let sub = await reg.pushManager.getSubscription();
             
             if (!sub) {
                 // Create new subscription only if none exists
+                console.log('[Push] Creating new subscription...');
                 sub = await reg.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
@@ -108,6 +124,7 @@ export function useWebPush() {
             setIsSubscribed(true);
 
             // Send to backend (upsert handles duplicates)
+            console.log('[Push] Sending subscription to backend...');
             const response = await fetch('/api/notifications/subscribe', {
                 method: 'POST',
                 headers: {
@@ -120,6 +137,8 @@ export function useWebPush() {
             });
 
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[Push] Server error:', errorText);
                 throw new Error('Failed to save subscription to server');
             }
 
