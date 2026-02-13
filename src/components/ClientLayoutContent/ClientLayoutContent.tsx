@@ -10,7 +10,7 @@ import { NavigationProvider } from '@/app/navigation/NavigationProvider'
 import { useKeyboardNavigation } from '@/app/navigation/useKeyboardNavigation'
 import { useSwipeNavigation } from '@/app/navigation/useSwipeNavigation'
 
-import { DebugLogger } from '../DebugLogger'
+
 
 export function ClientLayoutContent({ children }: PropsWithChildren) {
   useRequestSync()
@@ -23,7 +23,6 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
     <div id="app-root">
       <AdaptiveContainer>{children}</AdaptiveContainer>
       <ChatWidget />
-      <DebugLogger />
     </div>
   )
 }

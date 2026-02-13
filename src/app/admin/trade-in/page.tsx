@@ -90,6 +90,22 @@ function AdminTradeInContent() {
         }
     };
 
+    const handleSelect = (id: string | null) => {
+        setSelectedId(id);
+        if (id) {
+            router.replace(`/admin/trade-in?id=${id}`);
+            // Smooth scroll to details on mobile
+            if (window.innerWidth < 1024) {
+                setTimeout(() => {
+                    const el = document.getElementById('details-section');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
+        } else {
+            router.replace('/admin/trade-in');
+        }
+    };
+
     const filtered = evaluations.filter(e =>
         e.model.toLowerCase().includes(search.toLowerCase()) ||
         e.userId.includes(search)
@@ -168,7 +184,7 @@ function AdminTradeInContent() {
                             filtered.map(item => (
                                 <button
                                     key={item.id}
-                                    onClick={() => setSelectedId(item.id)}
+                                    onClick={() => handleSelect(item.id)}
                                     className={cn(
                                         "w-full p-6 rounded-[32px] transition-all text-left flex items-center justify-between group",
                                         selectedId === item.id
@@ -212,23 +228,31 @@ function AdminTradeInContent() {
                                         <Smartphone className="w-64 h-64 rotate-12" />
                                     </div>
 
-                                    <div className="relative z-10 flex flex-col gap-8">
+                                    <div className="relative z-10 flex flex-col gap-8" id="details-section">
                                         <div className="flex justify-between items-start">
-                                            <div>
+                                            <div className="flex-1 min-w-0 pr-12">
                                                 <Badge variant="outline" className="mb-3 px-3 py-1 rounded-full border-blue-100 text-blue-600 bg-blue-50/30 uppercase tracking-widest text-[10px] font-black">
                                                     ID: {selected.userId}
                                                 </Badge>
-                                                <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+                                                <h2 className="text-4xl font-black text-gray-900 tracking-tight break-words">
                                                     iPhone {selected.model}
-                                                    {selected.variant && <span className="text-blue-600 ml-2">{selected.variant}</span>}
+                                                    {selected.variant && <span className="text-blue-600 block md:inline md:ml-2">{selected.variant}</span>}
                                                 </h2>
                                                 <p className="text-gray-400 font-bold mt-1 uppercase tracking-tighter">{selected.storage} GB • {selected.color}</p>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="text-[10px] font-black text-gray-300 uppercase mb-1">Статус</div>
-                                                <Badge className="bg-amber-500 text-white border-none rounded-xl px-4 py-1.5 font-black text-xs">
-                                                    {selected.status === 'pending' ? 'ОЖИДАЕТ' : selected.status}
-                                                </Badge>
+                                            <div className="flex flex-col items-end gap-2 shrink-0">
+                                                <button
+                                                    onClick={() => handleSelect(null)}
+                                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors mb-2"
+                                                >
+                                                    <X className="w-5 h-5 text-gray-400" />
+                                                </button>
+                                                <div className="text-right">
+                                                    <div className="text-[10px] font-black text-gray-300 uppercase mb-1">Статус</div>
+                                                    <Badge className="bg-amber-500 text-white border-none rounded-xl px-4 py-1.5 font-black text-xs">
+                                                        {selected.status === 'pending' ? 'ОЖИДАЕТ' : selected.status}
+                                                    </Badge>
+                                                </div>
                                             </div>
                                         </div>
 

@@ -3,13 +3,12 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Send, User, MessageCircle, ArrowLeft, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSafeArea } from '@/hooks/useSafeArea';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -28,10 +27,12 @@ interface Chat {
 }
 
 function AdminChatsContent() {
-  const { telegramId } = useAppStore();
-  const { isDesktop, isTelegram } = useSafeArea();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const chatIdFromUrl = searchParams.get('id');
+
+  const { telegramId } = useAppStore();
+  const { isDesktop, isTelegram } = useSafeArea();
 
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -197,13 +198,16 @@ function AdminChatsContent() {
             "p-3 bg-white border-b flex items-center justify-between shadow-sm z-10 sticky top-0",
             isMobileView && "pt-[calc(0.75rem+env(safe-area-inset-top,0px))]"
           )}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               {isMobileView && (
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-10 w-10 -ml-2 text-gray-400"
-                  onClick={() => setSelectedChat(null)}
+                  onClick={() => {
+                    setSelectedChat(null);
+                    router.replace('/admin/chats');
+                  }}
                 >
                   <ChevronLeft size={24} />
                 </Button>
@@ -211,13 +215,21 @@ function AdminChatsContent() {
               <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                 <User size={18} className="text-blue-600" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h3 className="font-bold text-sm truncate leading-tight">
                   {selectedChat.userNickname || 'Пользователь'}
                 </h3>
                 <p className="text-[10px] text-gray-500">ID: {selectedChat.userTelegramId}</p>
               </div>
             </div>
+
+            {isMobileView && (
+              <Link href="/admin">
+                <Button variant="ghost" size="sm" className="h-9 px-2 text-xs text-gray-400">
+                  <ArrowLeft size={14} className="mr-1" /> Админ
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Messages */}
