@@ -86,12 +86,10 @@ export function DeviceCarousel({ items, isLoading, onLoadMore, hasMore }: Device
     return (
       <div className="w-full">
         <div className="flex justify-center items-center h-64">
-          <Image
-            src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+          <img
+            src={getPictureUrl('coconut-dancing.gif') || '/coconut-dancing.gif'}
             alt="Загрузка"
-            width={96}
-            height={96}
-            className="object-contain"
+            className="w-24 h-24 object-contain"
           />
         </div>
       </div>
@@ -146,7 +144,7 @@ export function DeviceCarousel({ items, isLoading, onLoadMore, hasMore }: Device
 
       {/* Карусель */}
       <div className="relative overflow-hidden min-h-[560px]">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <motion.div
             key={currentIndex}
             initial={{ opacity: 0, x: 50 }}

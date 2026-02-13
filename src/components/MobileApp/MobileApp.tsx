@@ -45,14 +45,14 @@ export const MobileApp = () => {
         <AdaptiveContainer
             fixedContent={
                 <>
+                    <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
+
+                    {!isInTelegram && <PWAInstallPrompt />}
+
                     <AuthModal
                         isOpen={isLoginModalOpen}
                         onClose={() => setIsLoginModalOpen(false)}
                     />
-
-                    <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
-
-                    {!isInTelegram && <PWAInstallPrompt />}
                 </>
             }
         >

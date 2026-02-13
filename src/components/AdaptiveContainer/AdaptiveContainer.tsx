@@ -67,12 +67,10 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
   if (!isMounted) {
     return (
       <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white">
-        <Image
-          src="/animation_running.gif"
+        <img
+          src="/coconut-dancing.gif"
           alt="Загрузка"
-          width={192}
-          height={192}
-          className="object-contain rounded-2xl"
+          className="w-32 h-32 object-contain"
         />
       </div>
     );
@@ -142,14 +140,13 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
   if (isTelegram && !isReady) {
     return (
-      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white">
-        <Image
-          src="/animation_running.gif"
+      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white p-6 text-center">
+        <img
+          src="/coconut-dancing.gif"
           alt="Загрузка"
-          width={192}
-          height={192}
-          className="object-contain rounded-2xl"
+          className="w-32 h-32 object-contain"
         />
+        <p className="mt-4 text-gray-500 font-medium animate-pulse">Загрузка интерфейса...</p>
       </div>
     );
   }

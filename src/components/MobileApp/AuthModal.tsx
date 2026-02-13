@@ -215,7 +215,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
     if (isDesktop) {
         return (
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="sm:max-w-[420px] w-[95%] rounded-3xl border-none bg-white/95 backdrop-blur-xl p-0 overflow-hidden shadow-2xl">
+                <DialogContent className="sm:max-w-[420px] w-[95%] rounded-3xl border-none bg-white/95 backdrop-blur-xl p-0 overflow-hidden shadow-2xl z-[20000]">
                     <div className="bg-gradient-to-b from-[#54A9EB]/10 to-transparent p-6 pb-2">
                         <DialogHeader>
                             <DialogTitle className="text-center text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#54A9EB] to-[#4397d7]">
@@ -234,9 +234,12 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
     // On Mobile we use a custom centered modal
     return (
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[10000] isolate">
+                <div
+                    className="fixed inset-0 z-[20000] flex items-center justify-center pointer-events-auto"
+                    data-lenis-prevent
+                >
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -247,7 +250,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                             e.stopPropagation();
                             onClose();
                         }}
-                        className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-md touch-none"
                     />
 
                     {/* Modal Container */}

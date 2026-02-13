@@ -41,12 +41,10 @@ export function LoadingIndicator({
                 {progress}%
               </p>
             </div>
-            <Image
-              src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+            <img
+              src={getPictureUrl('coconut-dancing.gif') || '/coconut-dancing.gif'}
               alt="Загрузка"
-              width={48}
-              height={48}
-              className="object-contain"
+              className="w-12 h-12 object-contain"
             />
           </div>
         </motion.div>

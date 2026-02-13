@@ -117,7 +117,7 @@ export function RotatingBanner({
       <div
         className={`w-full h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center ${desktopMode ? '' : 'absolute inset-0'}`}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           <motion.div
             key={currentIndex}
             initial={{ opacity: 0 }}

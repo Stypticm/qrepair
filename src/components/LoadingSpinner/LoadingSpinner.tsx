@@ -4,12 +4,10 @@ import Image from 'next/image';
 export default function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center p-4">
-      <Image
-        src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
+      <img
+        src={getPictureUrl('coconut-dancing.gif') || '/coconut-dancing.gif'}
         alt="Загрузка"
-        width={48}
-        height={48}
-        className="object-contain"
+        className="w-12 h-12 object-contain"
       />
     </div>
   );
