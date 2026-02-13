@@ -32,7 +32,7 @@ function AdminChatsContent() {
   const chatIdFromUrl = searchParams.get('id');
 
   const { telegramId } = useAppStore();
-  const { isDesktop, isTelegram } = useSafeArea();
+  const { isDesktop, isTelegram, isStandalone } = useSafeArea();
 
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -199,7 +199,7 @@ function AdminChatsContent() {
             isMobileView && "pt-[calc(0.75rem+env(safe-area-inset-top,0px))]"
           )}>
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {isMobileView && (
+              {isMobileView && !isStandalone && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -224,11 +224,17 @@ function AdminChatsContent() {
             </div>
 
             {isMobileView && (
-              <Link href="/admin">
-                <Button variant="ghost" size="sm" className="h-9 px-2 text-xs text-gray-400">
-                  <ArrowLeft size={14} className="mr-1" /> Админ
-                </Button>
-              </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-2 text-xs text-gray-400"
+                onClick={() => {
+                  setSelectedChat(null);
+                  router.replace('/admin/chats');
+                }}
+              >
+                Чаты
+              </Button>
             )}
           </div>
 
