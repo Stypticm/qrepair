@@ -44,14 +44,22 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
     const html = document.documentElement;
     // Включаем широкий режим только для Desktop в Telegram
-    if (isTelegram && safeArea.isDesktop && (isWidePage || isAdminPath)) {
+    const wideMode = (isTelegram && safeArea.isDesktop && (isWidePage || isAdminPath)) || isAdminPath;
+
+    if (wideMode) {
       html.classList.add('telegram-wide');
     } else {
       html.classList.remove('telegram-wide');
     }
 
+    if (isAdminPath) {
+      html.classList.add('is-admin');
+    } else {
+      html.classList.remove('is-admin');
+    }
+
     return () => {
-      html.classList.remove('telegram-wide');
+      html.classList.remove('telegram-wide', 'is-admin');
     };
   }, [isMounted, isTelegram, safeArea.isDesktop, isWidePage, isAdminPath]);
 
@@ -78,11 +86,14 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
   const getContainerStyles = () => {
     const { isMobile, isDesktop } = safeArea;
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : pathname;
+    const finalIsAdmin = currentPath?.startsWith('/admin') || isAdminPath;
 
     // Aggressively force full width for Admin paths before anything else
-    if (isAdminPath) {
+    if (finalIsAdmin) {
+      console.log('[AdaptiveContainer] Admin path detected, forcing full width');
       return {
-        container: 'min-h-dvh w-full flex flex-col bg-white',
+        container: 'min-h-dvh w-full flex flex-col bg-white overflow-x-hidden',
         main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
         wrapper: 'w-full h-full relative flex flex-col',
         fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
@@ -92,7 +103,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
     const baseStyles = (() => {
       if (!isTelegram) {
         if (isDesktop) {
-          if (isWidePage) { // Removed isAdminPath from here as it's handled above
+          if (isWidePage) {
             return {
               container: 'min-h-dvh w-full flex flex-col bg-gray-50/50',
               main: 'w-full flex-1 overflow-x-hidden overflow-y-auto relative',
@@ -117,7 +128,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
       }
 
       if (isDesktop) {
-        if (isWidePage) { // Removed isAdminPath from here
+        if (isWidePage) {
           return {
             container: 'min-h-dvh w-full flex flex-col bg-transparent',
             main: 'w-full flex-1 relative',

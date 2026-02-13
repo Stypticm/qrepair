@@ -195,8 +195,6 @@
   } */
 
   /* Для Telegram WebView на десктопе - компактный режим (размер телефона) */
-  /* Не расширяем на весь экран, показываем как будто размер телефона */
-  /* Используем только telegram-desktop, БЕЗ telegram-fullscreen */
   html.telegram-desktop {
     height: 100vh;
     display: flex;
@@ -212,7 +210,7 @@
     overflow: visible;
   }
 
-  html.telegram-desktop #__next {
+  html.telegram-desktop #app-root {
     width: 100%;
     max-width: 480px;
     min-height: 600px;
@@ -223,165 +221,22 @@
     background: #ffffff !important;
   }
 
-  /* Для Telegram WebView на мобильных - fullscreen */
-  html.telegram-fullscreen.telegram-mobile {
-    height: 100vh;
-    width: 100vw;
-  }
-
-  html.telegram-fullscreen.telegram-mobile body {
-    height: 100vh;
-    width: 100vw;
-  }
-
-  html.telegram-fullscreen.telegram-mobile #__next {
-    width: 100vw;
-    height: 100vh;
-    max-width: none;
-    max-height: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  /* iPhone-адаптивные стили для Telegram Mini App */
-  .telegram-container {
-    /* Используем реальную высоту viewport в Telegram WebApp */
-    min-height: 100dvh;
-    height: 100dvh;
-  }
-
-  .telegram-fullscreen {
-    /* Полноэкранный режим для Telegram WebApp */
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100dvh;
-    overflow: hidden;
-  }
-
-  .telegram-safe-area {
-    /* Учет safe area для iPhone с вырезом */
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
-
-  /* Адаптивные размеры для iPhone экранов */
-  @media (max-width: 375px) {
-    .iphone-se {
-      --image-size: 80px;
-      --button-height: 2.5rem;
-      --input-height: 2.25rem;
-      --text-size: 0.875rem;
-    }
-  }
-
-  @media (min-width: 376px) and (max-width: 390px) {
-    .iphone-standard {
-      --image-size: 100px;
-      --button-height: 2.75rem;
-      --input-height: 2.5rem;
-      --text-size: 0.875rem;
-    }
-  }
-
-  @media (min-width: 391px) and (max-width: 428px) {
-    .iphone-plus {
-      --image-size: 120px;
-      --button-height: 3rem;
-      --input-height: 2.75rem;
-      --text-size: 1rem;
-    }
-  }
-
-  /* Улучшения для мобильных устройств и клавиатуры */
-  @media (max-width: 768px) {
-
-    /* Плавная прокрутка для мобильных */
-    html {
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    /* Исправление проблемы с клавиатурой на мобильных */
-    body {
-      height: 100vh;
-      height: -webkit-fill-available;
-    }
-
-    /* Улучшение для полей ввода */
-    input:focus {
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
-    }
-
-    /* Предотвращение зума при фокусе на iOS */
-    input[type="text"],
-    input[type="email"],
-    input[type="tel"],
-    input[type="password"],
-    textarea {
-      font-size: 16px;
-    }
-
-    /* Улучшение прокрутки для полей ввода */
-    .scroll-to-input {
-      scroll-margin-top: 100px;
-      scroll-padding-top: 100px;
-    }
-
-    /* Исправление для контейнеров с h-screen */
-    .h-screen {
-      height: 100vh;
-      height: -webkit-fill-available;
-    }
-
-    /* Специальный класс для исправления проблемы с клавиатурой */
-    .keyboard-safe {
-      height: 100vh;
-      height: -webkit-fill-available;
-      overflow-y: auto;
-    }
-
-    /* Подавление оверскролла для предотвращения визуальных багов с наложением FIXED элементов */
-    .suppress-overscroll {
-      overscroll-behavior-y: none;
-      -webkit-overflow-scrolling: touch;
-    }
-  }
+  /* ... */
 
   /* 🔒 Telegram Desktop: ЗАПРЕЩАЕМ fullscreen viewport */
-  html.telegram-desktop {
-    height: auto !important;
-  }
-
-  html.telegram-desktop body {
-    height: auto !important;
-  }
-
-  html.telegram-desktop #__next {
+  html.telegram-desktop #app-root {
     min-height: unset !important;
     height: auto !important;
     max-height: 844px;
   }
 
   /* 🔓 Telegram Wide: Разрешаем широкий режим для специфических страниц */
-  html.telegram-desktop.telegram-wide #__next {
+  html.telegram-desktop.telegram-wide #app-root {
     max-width: none !important;
     max-height: none !important;
     min-height: 100vh !important;
     height: auto !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-  }
-
-  html.telegram-desktop.telegram-wide body {
-    height: auto !important;
-    min-height: 100vh !important;
-    overflow: visible !important;
   }
 }

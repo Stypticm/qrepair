@@ -149,7 +149,7 @@ export function AdminPageClient() {
       <div className="flex-1 w-full flex flex-col">
         {/* Заголовок */}
         <header className="bg-white border-b sticky top-0 z-10 px-4 py-4 lg:px-8 lg:py-6">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                 Панель управления
@@ -172,8 +172,8 @@ export function AdminPageClient() {
         </header>
 
         {/* Основной контент */}
-        <main className="flex-1 p-4 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+        <main className="flex-1 p-4 lg:p-8 w-full">
+          <div className="w-full">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {adminSections.map((section) => {
                 const IconComponent = section.icon;
