@@ -91,10 +91,9 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
     // Aggressively force full width for Admin paths before anything else
     if (finalIsAdmin) {
-      console.log('[AdaptiveContainer] Admin path detected, forcing full width');
       return {
         container: 'min-h-dvh w-full flex flex-col bg-white overflow-x-hidden',
-        main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
+        main: 'flex-1 min-h-0 w-full bg-white overflow-y-auto overflow-x-hidden relative',
         wrapper: 'w-full h-full relative flex flex-col',
         fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
       };
@@ -120,7 +119,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
         } else if (isMobile) {
           return {
             container: 'min-h-dvh w-full flex flex-col bg-white',
-            main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
+            main: 'flex-1 min-h-0 w-full bg-white overflow-y-auto overflow-x-hidden relative',
             wrapper: 'w-full h-full relative flex flex-col',
             fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
           };
@@ -150,7 +149,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
         return {
           container: `min-h-dvh w-full flex flex-col bg-white ${isTGWorkerMobile ? 'telegram-fullscreen' : ''}`,
-          main: 'flex-1 w-full overflow-y-auto overflow-x-hidden suppress-overscroll relative',
+          main: 'flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden suppress-overscroll relative',
           wrapper: 'w-full h-full flex flex-col relative',
           fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
         };
@@ -164,6 +163,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
   if (isTelegram && !isReady) {
     return (
+
       <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white p-6 text-center">
         <img
           src="/coconut-dancing.gif"

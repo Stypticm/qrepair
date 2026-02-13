@@ -18,7 +18,7 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
     // <NavigationProvider>
     //   <NavigationEffects />
     // </NavigationProvider>
-    <div id="app-root">
+    <div id="app-root" className="flex flex-col h-full min-h-dvh">
       <AdaptiveContainer>{children}</AdaptiveContainer>
       <ChatWidget />
     </div>
