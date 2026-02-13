@@ -74,19 +74,28 @@ export function useWebPush() {
         setLoading(true);
         setError(null);
         try {
-            if (!registration) {
-                throw new Error('Service Worker not ready');
+            // Wait for Service Worker to be ready if not already registered
+            let reg = registration;
+            if (!reg) {
+                console.log('[Push] Waiting for Service Worker to be ready...');
+                if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+                    throw new Error('Service Worker not supported');
+                }
+                reg = await navigator.serviceWorker.ready;
+                setRegistration(reg);
+                console.log('[Push] Service Worker is now ready:', reg.scope);
             }
+
             if (!PUBLIC_VAPID_KEY) {
                 throw new Error('Public VAPID Key not found');
             }
 
             // Check if already subscribed
-            let sub = await registration.pushManager.getSubscription();
+            let sub = await reg.pushManager.getSubscription();
             
             if (!sub) {
                 // Create new subscription only if none exists
-                sub = await registration.pushManager.subscribe({
+                sub = await reg.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
                 });
