@@ -14,37 +14,60 @@ export function useWebPush() {
 
     useEffect(() => {
         console.log('[Push] Initializing useWebPush hook...');
-        console.log('[Push] PUBLIC_VAPID_KEY present:', !!PUBLIC_VAPID_KEY);
-        if (PUBLIC_VAPID_KEY) {
-            console.log('[Push] VAPID Key start:', PUBLIC_VAPID_KEY.substring(0, 10) + '...');
-        }
+        
+        let mounted = true;
 
-        if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
-            navigator.serviceWorker.ready.then(reg => {
-                console.log('[Push] ServiceWorker ready:', reg.scope);
-                setRegistration(reg);
-                reg.pushManager.getSubscription().then(sub => {
+        async function checkSubscription() {
+            try {
+                if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+                    console.warn('[Push] Push notifications not supported');
+                    if (mounted) setIsChecking(false);
+                    return;
+                }
+
+                // Use getRegistration instead of .ready to avoid hanging
+                const reg = await navigator.serviceWorker.getRegistration('/sw.js') || 
+                            await navigator.serviceWorker.getRegistration();
+
+                if (reg) {
+                    console.log('[Push] ServiceWorker registration found:', reg.scope);
+                    if (mounted) setRegistration(reg);
+                    
+                    const sub = await reg.pushManager.getSubscription();
                     if (sub) {
                         console.log('[Push] Found existing subscription:', sub.endpoint);
-                        setSubscription(sub);
-                        setIsSubscribed(true);
+                        if (mounted) {
+                            setSubscription(sub);
+                            setIsSubscribed(true);
+                        }
                     } else {
-                        console.log('[Push] No existing subscription found');
-                        setIsSubscribed(false);
+                        console.log('[Push] No existing subscription');
+                        if (mounted) setIsSubscribed(false);
                     }
-                    setIsChecking(false);
-                }).catch(err => {
-                    console.error('[Push] Error getting subscription:', err);
-                    setIsChecking(false);
-                });
-            }).catch(err => {
-                console.error('[Push] Error waiting for ServiceWorker:', err);
-                setIsChecking(false);
-            });
-        } else {
-            console.warn('[Push] Push notifications not supported in this browser');
-            setIsChecking(false);
+                } else {
+                    console.log('[Push] No ServiceWorker registration found yet');
+                }
+            } catch (err) {
+                console.error('[Push] Error during initialization:', err);
+            } finally {
+                if (mounted) setIsChecking(false);
+            }
         }
+
+        checkSubscription();
+
+        // Safety timeout - never stay in loading more than 5 seconds
+        const timer = setTimeout(() => {
+            if (mounted && isChecking) {
+                console.warn('[Push] Initialization timed out');
+                setIsChecking(false);
+            }
+        }, 5000);
+
+        return () => {
+            mounted = false;
+            clearTimeout(timer);
+        };
     }, []);
 
     const subscribe = async (userId?: string) => {
