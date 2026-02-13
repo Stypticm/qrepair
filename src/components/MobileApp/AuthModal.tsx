@@ -232,47 +232,62 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
         );
     }
 
-    // On Mobile we use a custom full-screen modal
+    // On Mobile we use a custom centered modal
     return (
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
             {isOpen && (
-                <>
+                <div className="fixed inset-0 z-[10000] isolate">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onClose();
+                        }}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-md"
                     />
 
-                    {/* Modal */}
-                    <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                        className="fixed inset-x-0 bottom-0 z-[9999] bg-white rounded-t-3xl shadow-2xl max-h-[90vh] overflow-y-auto"
-                    >
-                        {/* Header */}
-                        <div className="sticky top-0 bg-gradient-to-b from-[#54A9EB]/10 to-transparent p-6 pb-4 flex items-center justify-between border-b border-gray-100">
-                            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#54A9EB] to-[#4397d7]">
-                                Авторизация
-                            </h2>
-                            <button
-                                onClick={onClose}
-                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                                <X size={24} className="text-gray-600" />
-                            </button>
-                        </div>
+                    {/* Modal Container */}
+                    <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            transition={{
+                                type: 'spring',
+                                damping: 25,
+                                stiffness: 350,
+                                opacity: { duration: 0.2 }
+                            }}
+                            className="w-full max-w-[400px] bg-white rounded-[2.5rem] shadow-2xl max-h-[90vh] overflow-hidden flex flex-col pointer-events-auto"
+                        >
+                            {/* Header */}
+                            <div className="bg-gradient-to-b from-[#54A9EB]/10 to-transparent p-6 pb-4 flex items-center justify-between border-b border-gray-100/50">
+                                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#54A9EB] to-[#4397d7]">
+                                    {mode === 'login' ? 'Вход' : 'Регистрация'}
+                                </h2>
+                                <button
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onClose();
+                                    }}
+                                    className="p-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"
+                                >
+                                    <X size={20} className="text-gray-500" />
+                                </button>
+                            </div>
 
-                        {/* Content */}
-                        <div className="p-6">
-                            {formContent}
-                        </div>
-                    </motion.div>
-                </>
+                            {/* Content */}
+                            <div className="p-6 overflow-y-auto">
+                                {formContent}
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
             )}
         </AnimatePresence>
     );
