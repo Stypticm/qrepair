@@ -216,7 +216,7 @@ function AdminTradeInContent() {
                     {/* Details */}
                     <div className="lg:col-span-7">
                         <AnimatePresence mode="wait">
-                            {selected ? (
+                            {selected && (
                                 <motion.div
                                     key={selected.id}
                                     initial={{ opacity: 0, scale: 0.98 }}
@@ -332,11 +332,6 @@ function AdminTradeInContent() {
                                         </div>
                                     </div>
                                 </motion.div>
-                            ) : (
-                                <div className="h-full bg-gray-100/30 rounded-[48px] border-4 border-dashed border-gray-200 flex flex-col items-center justify-center p-12 text-center opacity-40">
-                                    <Smartphone className="w-16 h-16 text-gray-300 mb-4" />
-                                    <p className="font-black text-xl text-gray-400 uppercase tracking-tighter leading-tight">Выберите заявку<br />для просмотра деталей</p>
-                                </div>
                             )}
                         </AnimatePresence>
                     </div>
