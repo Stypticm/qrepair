@@ -16,20 +16,22 @@ export const PushNotificationToggle = () => {
             return;
         }
 
-        await subscribe(telegramId?.toString());
-        if (!error) {
+        try {
+            await subscribe(telegramId?.toString());
             toast.success('Уведомления включены!');
-        } else {
-            toast.error('Ошибка включения уведомлений');
+        } catch (err: any) {
+            console.error('[PushToggle] Subscribe error:', err);
+            toast.error(`Ошибка: ${err.message || 'Не удалось включить уведомления'}`);
         }
     };
 
     const handleUnsubscribe = async () => {
-        await unsubscribe();
-        if (!error) {
+        try {
+            await unsubscribe();
             toast.success('Уведомления выключены');
-        } else {
-            toast.error('Ошибка выключения уведомлений');
+        } catch (err: any) {
+            console.error('[PushToggle] Unsubscribe error:', err);
+            toast.error(`Ошибка: ${err.message || 'Не удалось выключить уведомления'}`);
         }
     };
 

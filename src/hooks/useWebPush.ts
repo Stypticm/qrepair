@@ -81,16 +81,25 @@ export function useWebPush() {
                 throw new Error('Public VAPID Key not found');
             }
 
-            const sub = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
-            });
+            // Check if already subscribed
+            let sub = await registration.pushManager.getSubscription();
+            
+            if (!sub) {
+                // Create new subscription only if none exists
+                sub = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+                });
+                console.log('[Push] Created new subscription');
+            } else {
+                console.log('[Push] Reusing existing subscription');
+            }
 
             setSubscription(sub);
             setIsSubscribed(true);
 
-            // Send to backend
-            await fetch('/api/notifications/subscribe', {
+            // Send to backend (upsert handles duplicates)
+            const response = await fetch('/api/notifications/subscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -100,10 +109,16 @@ export function useWebPush() {
                     userId
                 }),
             });
-            console.log('Subscribed successfully');
+
+            if (!response.ok) {
+                throw new Error('Failed to save subscription to server');
+            }
+
+            console.log('[Push] Subscribed successfully');
         } catch (err: any) {
-            console.error('Failed to subscribe:', err);
+            console.error('[Push] Failed to subscribe:', err);
             setError(err.message);
+            throw err; // Re-throw so caller can handle it
         } finally {
             setLoading(false);
         }
@@ -113,12 +128,19 @@ export function useWebPush() {
         setLoading(true);
         setError(null);
         try {
-            if (!subscription) return;
+            if (!subscription) {
+                console.warn('[Push] No subscription to unsubscribe from');
+                return;
+            }
             
-            await subscription.unsubscribe();
+            // Unsubscribe from browser
+            const success = await subscription.unsubscribe();
+            if (!success) {
+                throw new Error('Failed to unsubscribe from push service');
+            }
             
             // Notify backend to remove subscription
-            await fetch('/api/notifications/unsubscribe', {
+            const response = await fetch('/api/notifications/unsubscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -127,13 +149,18 @@ export function useWebPush() {
                     endpoint: subscription.endpoint
                 }),
             });
+
+            if (!response.ok) {
+                console.warn('[Push] Failed to remove subscription from server, but local unsubscribe succeeded');
+            }
             
             setSubscription(null);
             setIsSubscribed(false);
-            console.log('Unsubscribed successfully');
+            console.log('[Push] Unsubscribed successfully');
         } catch (err: any) {
-            console.error('Failed to unsubscribe:', err);
+            console.error('[Push] Failed to unsubscribe:', err);
             setError(err.message);
+            throw err; // Re-throw so caller can handle it
         } finally {
             setLoading(false);
         }
