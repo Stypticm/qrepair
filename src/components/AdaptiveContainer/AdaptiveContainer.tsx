@@ -85,86 +85,21 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
   }
 
   const getContainerStyles = () => {
-    const { isMobile, isDesktop } = safeArea;
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : pathname;
-    const finalIsAdmin = currentPath?.startsWith('/admin') || isAdminPath;
-
-    // Aggressively force full width for Admin paths before anything else
-    if (finalIsAdmin) {
-      return {
-        container: 'min-h-dvh w-full flex flex-col bg-white overflow-x-hidden',
-        main: 'flex-1 min-h-0 w-full bg-white overflow-y-auto overflow-x-hidden relative',
-        wrapper: 'w-full h-full relative flex flex-col',
-        fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
-      };
-    }
-
-    const baseStyles = (() => {
-      if (!isTelegram) {
-        if (isDesktop) {
-          if (isWidePage) {
-            return {
-              container: 'min-h-dvh w-full flex flex-col bg-gray-50/50',
-              main: 'w-full flex-1 overflow-x-hidden overflow-y-auto relative',
-              wrapper: 'w-full flex-1 relative',
-              fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
-            };
-          }
-          return {
-            container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-            main: 'w-[390px] h-[844px] overflow-x-hidden overflow-y-auto relative border border-gray-100 shadow-2xl rounded-[32px] my-8',
-            wrapper: 'w-[390px] h-[844px] mx-auto relative',
-            fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
-          };
-        } else if (isMobile) {
-          return {
-            container: 'min-h-dvh w-full flex flex-col bg-white',
-            main: 'flex-1 min-h-0 w-full bg-white overflow-y-auto overflow-x-hidden relative',
-            wrapper: 'w-full h-full relative flex flex-col',
-            fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
-          };
-        }
-      }
-
-      if (isDesktop) {
-        if (isWidePage) {
-          return {
-            container: 'min-h-dvh w-full flex flex-col bg-transparent',
-            main: 'w-full flex-1 relative',
-            wrapper: 'w-full flex-1 relative flex flex-col',
-            fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
-          };
-        }
-        return {
-          container: 'w-full h-full flex flex-col bg-transparent',
-          main: 'w-full h-full overflow-y-auto relative',
-          wrapper: 'w-full h-full relative flex flex-col',
-          fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
-        };
-      }
-      else {
-        const isTGWorkerMobile = typeof window !== 'undefined' &&
-          (window as any).Telegram?.WebApp?.platform &&
-          ['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
-
-        return {
-          container: `min-h-dvh w-full flex flex-col bg-white ${isTGWorkerMobile ? 'telegram-fullscreen' : ''}`,
-          main: 'flex-1 min-h-0 w-full overflow-y-auto overflow-x-hidden suppress-overscroll relative',
-          wrapper: 'w-full h-full flex flex-col relative',
-          fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
-        };
-      }
-    })();
-
-    return baseStyles;
+    // We remove all "frame" and "nested scroll" logic. 
+    // The browser handles the scroll on the main document.
+    return {
+      container: 'w-full min-h-screen flex flex-col bg-white',
+      main: 'w-full flex-1 flex flex-col',
+      wrapper: 'w-full flex-1 flex flex-col',
+      fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
+    };
   };
 
   const styles = getContainerStyles();
 
   if (isTelegram && !isReady) {
     return (
-
-      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white p-6 text-center">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white p-6 text-center">
         <img
           src="/coconut-dancing.gif"
           alt="Загрузка"
@@ -178,9 +113,9 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
   return (
     <div className={`${styles.container} ${className}`}>
       <div className={styles.wrapper}>
-        <div className={styles.main}>
+        <main className={styles.main}>
           {children}
-        </div>
+        </main>
 
         {fixedContent && (
           <div className={styles.fixedLayer}>
