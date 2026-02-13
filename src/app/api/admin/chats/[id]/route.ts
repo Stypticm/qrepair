@@ -62,10 +62,13 @@ export async function POST(
       },
     });
 
-    // Update the updatedAt field of the chat
+    // Update the updatedAt field of the chat and ensure it's active
     const updatedChat = await prisma.operatorChat.update({
       where: { id: chatId },
-      data: { updatedAt: new Date() },
+      data: { 
+        updatedAt: new Date(),
+        status: 'active'
+      },
     });
 
     // Notify User

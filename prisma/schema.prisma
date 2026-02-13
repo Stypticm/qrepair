@@ -333,11 +333,20 @@ model OperatorChat {
   id             String            @id @default(cuid())
   userTelegramId String            @unique
   userNickname   String?
+  status         ChatStatus        @default(active)
   messages       OperatorMessage[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
   @@index([userTelegramId])
+  @@index([status])
+  @@schema("public")
+}
+
+enum ChatStatus {
+  active
+  archived
+
   @@schema("public")
 }
 

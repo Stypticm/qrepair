@@ -4,11 +4,12 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { Button } from '@/components/ui/button';
-import { Send, User, MessageCircle, ArrowLeft, ChevronLeft } from 'lucide-react';
+import { Send, User, MessageCircle, ArrowLeft, ChevronLeft, Archive, ArchiveRestore, Trash2, Inbox } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -18,10 +19,13 @@ interface Message {
   createdAt: string;
 }
 
+type ChatStatus = 'active' | 'archived';
+
 interface Chat {
   id: string;
   userTelegramId: string;
   userNickname: string | null;
+  status: ChatStatus;
   updatedAt: string;
   messages: Message[];
 }
@@ -39,6 +43,7 @@ function AdminChatsContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<ChatStatus>('active');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Robust mobile detection based on screen size
@@ -55,7 +60,7 @@ function AdminChatsContent() {
 
   const fetchChats = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/chats', {
+      const res = await fetch(`/api/admin/chats?status=${activeTab}`, {
         headers: { 'x-telegram-id': telegramId || '' }
       });
       const data = await res.json();
@@ -65,7 +70,7 @@ function AdminChatsContent() {
     } catch (error) {
       console.error('Failed to fetch chats:', error);
     }
-  }, [telegramId]);
+  }, [telegramId, activeTab]);
 
   const fetchChatMessages = useCallback(async (chatId: string) => {
     try {
@@ -76,10 +81,15 @@ function AdminChatsContent() {
       if (data.messages) {
         setMessages(data.messages);
       }
+
+      // Update selected chat status locally if it changed (e.g. from archived to active by new msg)
+      if (data.status && selectedChat && data.status !== selectedChat.status) {
+        setSelectedChat(prev => prev ? { ...prev, status: data.status } : null);
+      }
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     }
-  }, [telegramId]);
+  }, [telegramId, selectedChat]);
 
   useEffect(() => {
     fetchChats();
@@ -102,6 +112,8 @@ function AdminChatsContent() {
         const chat = chats.find(c => c.id === chatIdFromUrl);
         if (chat) {
           setSelectedChat(chat);
+          // If the chat from URL is archived but we are on Active tab, we might want to switch tabs
+          // but for now let's just show it.
         }
       } else {
         setSelectedChat(null);
@@ -129,11 +141,35 @@ function AdminChatsContent() {
       if (res.ok) {
         fetchChatMessages(selectedChat.id);
         fetchChats();
+        // If it was archived, it will become active and might disappear from current "Archive" tab view
       }
     } catch (error) {
       console.error('Failed to send message:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = async (chatId: string, newStatus: ChatStatus) => {
+    try {
+      const res = await fetch(`/api/admin/chats/${chatId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-telegram-id': telegramId || ''
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (res.ok) {
+        toast.success(newStatus === 'archived' ? 'Чат архивирован' : 'Чат восстановлен');
+        fetchChats();
+        if (selectedChat?.id === chatId) {
+          handleSelect(null);
+        }
+      }
+    } catch (error) {
+      toast.error('Ошибка при обновлении статуса');
     }
   };
 
@@ -155,19 +191,48 @@ function AdminChatsContent() {
       isMobileView ? "w-full" : "w-80"
     )}>
       <div className={cn(
-        "p-4 border-b flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20",
+        "p-4 border-b flex flex-col gap-4 bg-white/80 backdrop-blur-md sticky top-0 z-20",
         isMobileView && "pt-[calc(1rem+env(safe-area-inset-top,0px))]"
       )}>
-        <h2 className="font-bold text-lg">Чаты</h2>
-        <Link href="/admin">
-          <Button variant="ghost" size="sm" className="h-8 px-2 text-gray-400">
-            <ArrowLeft size={16} className="mr-1" /> Админ панель
-          </Button>
-        </Link>
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold text-lg">Чаты</h2>
+          <Link href="/admin">
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-blue-600 font-bold">
+              <ArrowLeft size={16} className="mr-1" /> Админ панель
+            </Button>
+          </Link>
+        </div>
+
+        {/* Status Tabs */}
+        <div className="flex bg-gray-100 p-1 rounded-xl translate-z-0">
+          <button
+            onClick={() => setActiveTab('active')}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-lg transition-all",
+              activeTab === 'active' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            <Inbox size={14} />
+            Активные
+          </button>
+          <button
+            onClick={() => setActiveTab('archived')}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-lg transition-all",
+              activeTab === 'archived' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            <Archive size={14} />
+            Архив
+          </button>
+        </div>
       </div>
+
       <div className="flex-1 overflow-y-auto">
         {chats.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 text-sm">Нет активных чатов</div>
+          <div className="p-8 text-center text-gray-500 text-sm">
+            {activeTab === 'active' ? 'Нет активных чатов' : 'Архив пуст'}
+          </div>
         ) : (
           chats.map((chat) => (
             <button
@@ -232,16 +297,35 @@ function AdminChatsContent() {
               </div>
             </div>
 
-            {isMobileView && (
+            <div className="flex items-center gap-1">
+              {/* Archive Toggle Button */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 px-2 text-xs text-blue-600 font-bold"
-                onClick={() => handleSelect(null)}
+                className={cn(
+                  "h-9 px-2 text-xs font-bold",
+                  selectedChat.status === 'active' ? "text-gray-400 hover:text-amber-600" : "text-amber-600 hover:text-amber-700"
+                )}
+                onClick={() => handleStatusUpdate(selectedChat.id, selectedChat.status === 'active' ? 'archived' : 'active')}
               >
-                <ChevronLeft size={16} className="mr-1" /> Чаты
+                {selectedChat.status === 'active' ? (
+                  <><Archive size={16} className="mr-1" /> В архив</>
+                ) : (
+                  <><ArchiveRestore size={16} className="mr-1" /> Восстановить</>
+                )}
               </Button>
-            )}
+
+              {isMobileView && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-2 text-xs text-blue-600 font-bold"
+                  onClick={() => handleSelect(null)}
+                >
+                  <ChevronLeft size={16} className="mr-1" /> Чаты
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Messages */}

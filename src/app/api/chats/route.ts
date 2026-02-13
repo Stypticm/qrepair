@@ -39,10 +39,15 @@ export async function POST(req: NextRequest) {
     // Upsert the chat
     const chat = await prisma.operatorChat.upsert({
       where: { userTelegramId: telegramId },
-      update: { userNickname: username },
+      update: { 
+        userNickname: username,
+        status: 'active',
+        updatedAt: new Date()
+      },
       create: {
         userTelegramId: telegramId,
         userNickname: username,
+        status: 'active'
       },
     });
 
