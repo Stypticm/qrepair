@@ -36,8 +36,17 @@ export default function AdminChatsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mobile mode if not on desktop
-  const isMobileView = !isDesktop;
+  // Robust mobile detection based on screen size
+  const [isMobileView, setIsMobileView] = useState(true);
+
+  useEffect(() => {
+    const checkSize = () => {
+      setIsMobileView(window.innerWidth < 1024);
+    };
+    checkSize();
+    window.addEventListener('resize', checkSize);
+    return () => window.removeEventListener('resize', checkSize);
+  }, []);
 
   const fetchChats = useCallback(async () => {
     try {
@@ -120,7 +129,7 @@ export default function AdminChatsPage() {
     )}>
       <div className={cn(
         "p-4 border-b flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-20",
-        isTelegram && "pt-[calc(1rem+env(safe-area-inset-top,0px))]"
+        isMobileView && "pt-[calc(1rem+env(safe-area-inset-top,0px))]"
       )}>
         <h2 className="font-bold text-lg">Чаты</h2>
         <Link href="/admin">
@@ -172,7 +181,7 @@ export default function AdminChatsPage() {
           {/* Header */}
           <div className={cn(
             "p-3 bg-white border-b flex items-center justify-between shadow-sm z-10 sticky top-0",
-            isTelegram && isMobileView && "pt-[calc(0.75rem+env(safe-area-inset-top,0px))]"
+            isMobileView && "pt-[calc(0.75rem+env(safe-area-inset-top,0px))]"
           )}>
             <div className="flex items-center gap-2">
               {isMobileView && (
@@ -228,7 +237,7 @@ export default function AdminChatsPage() {
           {/* Input Area */}
           <div className={cn(
             "p-3 bg-white border-t",
-            isTelegram && isMobileView && "pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
+            isMobileView && "pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
           )}>
             <div className="flex items-center gap-2 max-w-4xl mx-auto">
               <div className="flex-1 relative">
@@ -268,7 +277,7 @@ export default function AdminChatsPage() {
 
   return (
     <div className={cn(
-      "flex h-screen bg-gray-100",
+      "flex h-[100dvh] w-full grow bg-gray-100 overflow-hidden",
       !isMobileView && "pt-20" // Header offset for desktop
     )}>
       {/* Mobile Logic: Either List or Chat */}

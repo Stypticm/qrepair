@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useWebPush } from '@/hooks/useWebPush';
+import { useAppStore } from '@/stores/authStore';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const PushNotificationToggle = () => {
     const { isSubscribed, subscribe, loading, error } = useWebPush();
+    const telegramId = useAppStore(state => state.telegramId);
 
     const handleSubscribe = async () => {
-        await subscribe();
+        await subscribe(telegramId?.toString());
         if (!error) {
             toast.success('Уведомления включены!');
         } else {

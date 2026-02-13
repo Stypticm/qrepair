@@ -44,7 +44,7 @@ interface AppState {
   user: User | null
   authToken: string | null
   role: 'master' | 'client'
-  userId: number | null
+  userId: string | number | null
   modalOpen: boolean
   isManualLogout: boolean
 
@@ -217,7 +217,7 @@ export const useAppStore = create<AppState>()(
             authToken: data.token,
             telegramId: data.user.telegramId,
             role: data.user.role === 'ADMIN' || data.user.role === 'MASTER' ? 'master' : 'client',
-            userId: parseInt(data.user.telegramId),
+            userId: data.user.telegramId,
             isManualLogout: false,
           })
 
@@ -290,7 +290,7 @@ export const useAppStore = create<AppState>()(
             user: data.user,
             telegramId: data.user.telegramId,
             role: data.user.role === 'ADMIN' || data.user.role === 'MASTER' ? 'master' : 'client',
-            userId: parseInt(data.user.telegramId),
+            userId: data.user.telegramId,
           })
         } catch (error) {
           console.error('Check auth error:', error)
@@ -505,7 +505,7 @@ export const useAppStore = create<AppState>()(
           authToken: data.token,
           telegramId: data.user.telegramId,
           role: data.user.role === 'ADMIN' || data.user.role === 'MASTER' ? 'master' : 'client',
-          userId: parseInt(data.user.telegramId),
+          userId: data.user.telegramId,
           isManualLogout: false,
         })
       },
@@ -530,7 +530,7 @@ export const useAppStore = create<AppState>()(
   )
 )
 
-export const isMaster = (userId: number | null): boolean => {
+export const isMaster = (userId: string | number | null): boolean => {
   if (!userId) return false
   return isAdminTelegramId(userId)
 }

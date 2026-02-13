@@ -95,10 +95,18 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
           fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
         };
       } else if (isMobile) {
+        if (isWidePage || isAdminPath) {
+          return {
+            container: 'min-h-dvh w-full flex flex-col bg-white',
+            main: 'flex-1 w-full overflow-y-auto overflow-x-hidden relative',
+            wrapper: 'w-full flex-1 relative flex flex-col',
+            fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
+          };
+        }
         return {
-          container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-          main: 'flex-1 h-full w-full max-w-md mx-auto bg-white overflow-y-auto overflow-x-hidden relative',
-          wrapper: 'w-full h-full max-w-md mx-auto relative flex flex-col',
+          container: 'min-h-dvh w-full flex flex-col bg-white',
+          main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
+          wrapper: 'w-full h-full relative flex flex-col',
           fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
         };
       }

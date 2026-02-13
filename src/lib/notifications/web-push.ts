@@ -34,6 +34,10 @@ export async function sendPushNotification(
     payload: PushPayload
 ) {
     try {
+        console.log('Sending push notification:', {
+            title: payload.title,
+            endpoint: subscription.endpoint,
+        });
         await webpush.sendNotification(
             subscription,
             JSON.stringify(payload)

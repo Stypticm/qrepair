@@ -7,7 +7,7 @@ import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
-const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: any, isLoading: boolean }) => {
+const MenuComponent = ({ userId, router, isLoading }: { userId: string | number | null, router: any, isLoading: boolean }) => {
     const { telegramId, logout } = useAppStore();
     const { needsUpdate, performUpdate } = useVersionCheck();
     const [isStandalone, setIsStandalone] = useState(false);

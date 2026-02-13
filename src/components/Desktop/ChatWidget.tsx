@@ -137,6 +137,16 @@ export function ChatWidget() {
     }, [isNativeTelegram, isDesktop, handleTelegramSupport]);
 
     // Hide the chat widget for admin Telegram IDs
+    // Correct way to handle body scroll lock
+    useEffect(() => {
+        if (!isDesktop && isOpen) {
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = '';
+            };
+        }
+    }, [isOpen, isDesktop]);
+
     // CRITICAL: Hooks must be called before this return
     if (isAdminTelegramId(telegramId)) return null;
 
@@ -144,12 +154,21 @@ export function ChatWidget() {
     if (!isDesktop) return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[10000] flex items-end justify-center pointer-events-none p-4">
+                <div className="fixed inset-0 z-[10000] flex items-end justify-center pointer-events-auto px-4 pb-[env(safe-area-inset-bottom,16px)] pt-4">
+                    {/* Backdrop for mobile */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsOpen(false)}
+                        className="fixed inset-0 bg-black/40 backdrop-blur-md pointer-events-auto"
+                    />
+
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="pointer-events-auto w-full max-w-md h-[80vh] bg-white/80 backdrop-blur-2xl border border-white/40 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
+                        className="relative w-full max-w-md h-full max-h-[85dvh] bg-white/80 backdrop-blur-2xl border border-white/40 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
                         <div className="p-4 bg-gray-900 text-white flex items-center justify-between">
