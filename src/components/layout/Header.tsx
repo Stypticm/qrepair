@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { MegaMenu } from '@/components/layout/MegaMenu';
+import { useRouter } from 'next/navigation';
+import { useSafeArea } from '@/hooks/useSafeArea';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
 import { useAppStore } from '@/stores/authStore';
 import Link from 'next/link';
@@ -35,6 +37,9 @@ export const Header = () => {
   const { username, userPhotoUrl, telegramId, logout, role } = useAppStore();
   const { count: adminNotifs } = useAdminNotifications();
   const { needsUpdate, performUpdate } = useVersionCheck();
+  const { isStandalone } = useSafeArea();
+  const sourceParam = isStandalone ? '?source=pwa' : '';
+  const router = useRouter();
 
   // Force check for LH admin if store seems empty but we are on LH
   useEffect(() => {
@@ -86,7 +91,7 @@ export const Header = () => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center gap-8">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
+          <Link href={`/${sourceParam}`} className="flex-shrink-0">
             <div className="text-3xl font-bold tracking-tighter text-gray-900 select-none">
               QOQOS
               <span className="text-teal-500">.</span>

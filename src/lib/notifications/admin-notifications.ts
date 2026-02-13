@@ -6,15 +6,21 @@ export async function notifyAllAdmins(payload: { title: string; body: string; ur
     try {
         // 1. Fetch all subscriptions
         const subscriptions = await prisma.pushSubscription.findMany();
+        console.log(`[Push] Total subscriptions in DB: ${subscriptions.length}`);
 
         // 2. Filter for admins only
-        // This relies on userId being the Telegram ID, which is how we store it.
-        const adminSubscriptions = subscriptions.filter(sub => 
-            sub.userId && isAdminTelegramId(sub.userId)
-        );
+        const adminSubscriptions = subscriptions.filter(sub => {
+            const isAdmin = sub.userId && isAdminTelegramId(sub.userId);
+            if (!isAdmin) {
+                console.log(`[Push] Skipping non-admin subscription: ${sub.userId}`);
+            }
+            return isAdmin;
+        });
+
+        console.log(`[Push] Target admin subscriptions: ${adminSubscriptions.length}`);
 
         if (adminSubscriptions.length === 0) {
-            console.log('No admin subscriptions found');
+            console.log('[Push] No admin subscriptions found for broadcast');
             return;
         }
 

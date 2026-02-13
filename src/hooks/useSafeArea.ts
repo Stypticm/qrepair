@@ -24,6 +24,7 @@ interface SafeAreaState {
   isFullscreen: boolean
   isMobile: boolean
   isDesktop: boolean
+  isStandalone: boolean
   cssVars: {
     '--safe-area-top': string
     '--safe-area-right': string
@@ -346,6 +347,7 @@ export function useSafeArea() {
     isFullscreen,
     isMobile,
     isDesktop,
+    isStandalone: typeof window !== 'undefined' && ((window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone)),
     forceFullscreen,
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,
@@ -372,6 +374,7 @@ export function useSafeArea() {
       isFullscreen: false,
       isMobile: false,
       isDesktop: false,
+      isStandalone: false,
       forceFullscreen,
       cssVars: {
         '--safe-area-top': '0px',
@@ -394,6 +397,7 @@ export function useSafeArea() {
     isFullscreen,
     isMobile,
     isDesktop,
+    isStandalone: typeof window !== 'undefined' && ((window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone)),
     forceFullscreen,
     cssVars: {
       '--safe-area-top': `${safeAreaInsets.top}px`,

@@ -4,19 +4,15 @@ import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, Refre
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { useSafeArea } from '@/hooks/useSafeArea';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 
 const MenuComponent = ({ userId, router, isLoading }: { userId: string | number | null, router: any, isLoading: boolean }) => {
     const { telegramId, logout } = useAppStore();
     const { needsUpdate, performUpdate } = useVersionCheck();
-    const [isStandalone, setIsStandalone] = useState(false);
-
-    useEffect(() => {
-        // Проверяем, запущено ли приложение в режиме PWA
-        const standalone = typeof window !== 'undefined' && ((window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone));
-        setIsStandalone(!!standalone);
-    }, []);
+    const { isStandalone } = useSafeArea();
+    const sourceParam = isStandalone ? '?source=pwa' : '';
 
     const handleLoginClick = () => {
         const event = new CustomEvent('openLoginModal');
@@ -30,7 +26,7 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: string | number 
 
     const handleLogoutClick = () => {
         logout();
-        router.push('/');
+        router.push(`/${sourceParam}`);
     };
 
     const handleChatClick = () => {

@@ -64,5 +64,35 @@ export function useWebPush() {
         }
     };
 
-    return { isSubscribed, subscription, subscribe, loading, error };
+    const unsubscribe = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            if (!subscription) return;
+            
+            await subscription.unsubscribe();
+            
+            // Notify backend to remove subscription
+            await fetch('/api/notifications/unsubscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    endpoint: subscription.endpoint
+                }),
+            });
+            
+            setSubscription(null);
+            setIsSubscribed(false);
+            console.log('Unsubscribed successfully');
+        } catch (err: any) {
+            console.error('Failed to unsubscribe:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return { isSubscribed, subscription, subscribe, unsubscribe, loading, error };
 }

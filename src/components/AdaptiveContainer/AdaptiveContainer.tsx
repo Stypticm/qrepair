@@ -78,70 +78,75 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
   const getContainerStyles = () => {
     const { isMobile, isDesktop } = safeArea;
-    if (!isTelegram) {
+
+    const baseStyles = (() => {
+      if (!isTelegram) {
+        if (isDesktop) {
+          if (isWidePage || isAdminPath) {
+            return {
+              container: 'min-h-dvh w-full flex flex-col bg-gray-50/50',
+              main: 'w-full flex-1 overflow-x-hidden overflow-y-auto relative',
+              wrapper: 'w-full flex-1 relative',
+              fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
+            };
+          }
+          return {
+            container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
+            main: 'w-[390px] h-[844px] overflow-x-hidden overflow-y-auto relative border border-gray-100 shadow-2xl rounded-[32px] my-8',
+            wrapper: 'w-[390px] h-[844px] mx-auto relative',
+            fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
+          };
+        } else if (isMobile) {
+          return {
+            container: 'min-h-dvh w-full flex flex-col bg-white',
+            main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
+            wrapper: 'w-full h-full relative flex flex-col',
+            fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
+          };
+        }
+      }
+
       if (isDesktop) {
         if (isWidePage || isAdminPath) {
           return {
-            container: 'min-h-dvh w-full flex flex-col bg-gray-50/50',
-            main: 'w-full flex-1 overflow-x-hidden overflow-y-auto relative',
-            wrapper: 'w-full flex-1 relative',
+            container: 'min-h-dvh w-full flex flex-col bg-transparent',
+            main: 'w-full flex-1 relative',
+            wrapper: 'w-full flex-1 relative flex flex-col',
             fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
           };
         }
         return {
-          container: 'min-h-dvh w-full flex flex-col bg-white items-center justify-center',
-          main: 'w-[390px] h-[844px] overflow-x-hidden overflow-y-auto relative border border-gray-100 shadow-2xl rounded-[32px] my-8',
-          wrapper: 'w-[390px] h-[844px] mx-auto relative',
+          container: 'w-full h-full flex flex-col bg-transparent',
+          main: 'w-full h-full overflow-y-auto relative',
+          wrapper: 'w-full h-full relative flex flex-col',
           fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
         };
-      } else if (isMobile) {
-        if (isWidePage || isAdminPath) {
-          return {
-            container: 'min-h-dvh w-full flex flex-col bg-white',
-            main: 'flex-1 w-full overflow-y-auto overflow-x-hidden relative',
-            wrapper: 'w-full flex-1 relative flex flex-col',
-            fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
-          };
-        }
+      }
+      else {
+        const isTGWorkerMobile = typeof window !== 'undefined' &&
+          (window as any).Telegram?.WebApp?.platform &&
+          ['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
+
         return {
-          container: 'min-h-dvh w-full flex flex-col bg-white',
-          main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
-          wrapper: 'w-full h-full relative flex flex-col',
+          container: `min-h-dvh w-full flex flex-col bg-white ${isTGWorkerMobile ? 'telegram-fullscreen' : ''}`,
+          main: 'flex-1 w-full overflow-y-auto overflow-x-hidden suppress-overscroll relative',
+          wrapper: 'w-full h-full flex flex-col relative',
           fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
         };
       }
-    }
+    })();
 
-    if (isDesktop) {
-      if (isWidePage || isAdminPath) {
-        return {
-          container: 'min-h-dvh w-full flex flex-col bg-transparent',
-          main: 'w-full flex-1 relative', // Убираем внутренний overflow, полагаемся на скролл страницы
-          wrapper: 'w-full flex-1 relative flex flex-col',
-          fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
-        };
-      }
+    // Force full width for Admin paths regardless of any logic above
+    if (isAdminPath) {
       return {
-        // В Telegram Desktop заполняем весь webview, без внутренних рамок и фоновых полей
-        container: 'w-full h-full flex flex-col bg-transparent',
-        main: 'w-full h-full overflow-y-auto relative', // Разрешаем скролл
+        ...baseStyles,
+        container: 'min-h-dvh w-full flex flex-col bg-white',
+        main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
         wrapper: 'w-full h-full relative flex flex-col',
-        fixedLayer: 'absolute inset-0 pointer-events-none z-[10000]'
       };
     }
-    else {
-      // Проверяем платформу для мобильных устройств
-      const isTGWorkerMobile = typeof window !== 'undefined' &&
-        (window as any).Telegram?.WebApp?.platform &&
-        ['android', 'ios'].includes((window as any).Telegram?.WebApp?.platform);
 
-      return {
-        container: `min-h-dvh w-full flex flex-col bg-white ${isTGWorkerMobile ? 'telegram-fullscreen' : ''}`,
-        main: 'flex-1 w-full overflow-y-auto overflow-x-hidden suppress-overscroll relative', // Добавили класс для подавления оверскролла
-        wrapper: 'w-full h-full flex flex-col relative',
-        fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
-      };
-    }
+    return baseStyles;
   };
 
   const styles = getContainerStyles();

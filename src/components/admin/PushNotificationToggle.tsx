@@ -7,7 +7,7 @@ import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const PushNotificationToggle = () => {
-    const { isSubscribed, subscribe, loading, error } = useWebPush();
+    const { isSubscribed, subscribe, unsubscribe, loading, error } = useWebPush();
     const telegramId = useAppStore(state => state.telegramId);
 
     const handleSubscribe = async () => {
@@ -16,6 +16,15 @@ export const PushNotificationToggle = () => {
             toast.success('Уведомления включены!');
         } else {
             toast.error('Ошибка включения уведомлений');
+        }
+    };
+
+    const handleUnsubscribe = async () => {
+        await unsubscribe();
+        if (!error) {
+            toast.success('Уведомления выключены');
+        } else {
+            toast.error('Ошибка выключения уведомлений');
         }
     };
 
@@ -48,10 +57,12 @@ export const PushNotificationToggle = () => {
     if (isSubscribed) {
         return (
             <button
-                className="p-2 rounded-xl bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
-                title="Уведомления включены"
+                onClick={handleUnsubscribe}
+                className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 transition-all shadow-sm active:scale-95"
+                title="Отключить уведомления"
             >
                 <Bell className="w-5 h-5" />
+                <span className="text-sm font-medium">Уведомления включены</span>
             </button>
         );
     }
