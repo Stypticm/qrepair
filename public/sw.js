@@ -1,5 +1,5 @@
 /* Minimal offline-first service worker for Next.js app shell */
-const CACHE_NAME = 'qoqos-cache-v1-4-301'
+const CACHE_NAME = 'qoqos-cache-v1-4-302'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',
@@ -93,9 +93,36 @@ self.addEventListener('push', function (event) {
 })
 
 self.addEventListener('notificationclick', function (event) {
-  console.log('Notification click received.')
+  console.log('[SW] Notification click received:', event.notification.data)
   event.notification.close()
+  
+  const urlToOpen = event.notification.data.url || '/'
+  
   event.waitUntil(
-    clients.openWindow(event.notification.data.url)
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(function (clientList) {
+        // Check if there's already a window/tab open
+        for (let i = 0; i < clientList.length; i++) {
+          const client = clientList[i]
+          // If we find an open client, focus it and navigate to the URL
+          if ('focus' in client) {
+            return client.focus().then(() => {
+              // Navigate to the target URL
+              if ('navigate' in client) {
+                return client.navigate(urlToOpen)
+              }
+              // Fallback: post message to client to navigate
+              return client.postMessage({
+                type: 'NAVIGATE',
+                url: urlToOpen
+              })
+            })
+          }
+        }
+        // If no client is open, open a new window
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen)
+        }
+      })
   )
 })

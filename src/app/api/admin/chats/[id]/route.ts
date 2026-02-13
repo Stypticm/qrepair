@@ -63,10 +63,20 @@ export async function POST(
     });
 
     // Update the updatedAt field of the chat
-    await prisma.operatorChat.update({
+    const updatedChat = await prisma.operatorChat.update({
       where: { id: chatId },
       data: { updatedAt: new Date() },
     });
+
+    // Notify User
+    if (updatedChat.userTelegramId) {
+        const { notifyUser } = await import('@/lib/notifications/user-notifications');
+        await notifyUser(updatedChat.userTelegramId, {
+            title: '👨‍🔧 Ответ от оператора',
+            body: text.length > 50 ? text.substring(0, 50) + '...' : text,
+            url: '/', // The user is notified on the home page where the chat widget is
+        });
+    }
 
     return NextResponse.json(message);
   } catch (error) {

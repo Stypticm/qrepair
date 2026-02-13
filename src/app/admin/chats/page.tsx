@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Send, User, MessageCircle, ArrowLeft, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSafeArea } from '@/hooks/useSafeArea';
+import { useSearchParams } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -26,9 +27,12 @@ interface Chat {
   messages: Message[];
 }
 
-export default function AdminChatsPage() {
+function AdminChatsContent() {
   const { telegramId } = useAppStore();
   const { isDesktop, isTelegram } = useSafeArea();
+  const searchParams = useSearchParams();
+  const chatIdFromUrl = searchParams.get('id');
+
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -89,6 +93,16 @@ export default function AdminChatsPage() {
       return () => clearInterval(interval);
     }
   }, [selectedChat, fetchChatMessages]);
+
+  // Auto-select chat from URL
+  useEffect(() => {
+    if (chatIdFromUrl && chats.length > 0 && !selectedChat) {
+      const chat = chats.find(c => c.id === chatIdFromUrl);
+      if (chat) {
+        setSelectedChat(chat);
+      }
+    }
+  }, [chatIdFromUrl, chats, selectedChat]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || !selectedChat || !telegramId || isLoading) return;
@@ -290,5 +304,13 @@ export default function AdminChatsPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function AdminChatsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-500">Загрузка чатов...</div>}>
+      <AdminChatsContent />
+    </Suspense>
   );
 }

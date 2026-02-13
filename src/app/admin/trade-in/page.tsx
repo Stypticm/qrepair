@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Smartphone,
     Calendar,
@@ -57,8 +57,11 @@ interface TradeInEvaluation {
     maxPrice?: number;
 }
 
-export default function AdminTradeInPage() {
+function AdminTradeInContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const idFromUrl = searchParams.get('id');
+
     const [evaluations, setEvaluations] = useState<TradeInEvaluation[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -67,6 +70,13 @@ export default function AdminTradeInPage() {
     useEffect(() => {
         fetchEvaluations();
     }, []);
+
+    // Auto-select from URL when data loads
+    useEffect(() => {
+        if (idFromUrl && evaluations.length > 0 && !selectedId) {
+            setSelectedId(idFromUrl);
+        }
+    }, [idFromUrl, evaluations, selectedId]);
 
     const fetchEvaluations = async () => {
         try {
@@ -309,6 +319,14 @@ export default function AdminTradeInPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function AdminTradeInPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-gray-500">Загрузка заявок...</div>}>
+            <AdminTradeInContent />
+        </Suspense>
     );
 }
 

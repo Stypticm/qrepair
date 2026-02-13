@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
         await notifyAllAdmins({
             title: `💬 Новое сообщение: ${nickname}`,
             body: text.length > 50 ? text.substring(0, 50) + '...' : text,
-            url: `/admin/chats/${chat.id}`
+            url: `/admin/chats?id=${chat.id}`
         });
     }
 
