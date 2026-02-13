@@ -79,10 +79,20 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
   const getContainerStyles = () => {
     const { isMobile, isDesktop } = safeArea;
 
+    // Aggressively force full width for Admin paths before anything else
+    if (isAdminPath) {
+      return {
+        container: 'min-h-dvh w-full flex flex-col bg-white',
+        main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
+        wrapper: 'w-full h-full relative flex flex-col',
+        fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
+      };
+    }
+
     const baseStyles = (() => {
       if (!isTelegram) {
         if (isDesktop) {
-          if (isWidePage || isAdminPath) {
+          if (isWidePage) { // Removed isAdminPath from here as it's handled above
             return {
               container: 'min-h-dvh w-full flex flex-col bg-gray-50/50',
               main: 'w-full flex-1 overflow-x-hidden overflow-y-auto relative',
@@ -107,7 +117,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
       }
 
       if (isDesktop) {
-        if (isWidePage || isAdminPath) {
+        if (isWidePage) { // Removed isAdminPath from here
           return {
             container: 'min-h-dvh w-full flex flex-col bg-transparent',
             main: 'w-full flex-1 relative',
@@ -135,16 +145,6 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
         };
       }
     })();
-
-    // Force full width for Admin paths regardless of any logic above
-    if (isAdminPath) {
-      return {
-        ...baseStyles,
-        container: 'min-h-dvh w-full flex flex-col bg-white',
-        main: 'flex-1 h-full w-full bg-white overflow-y-auto overflow-x-hidden relative',
-        wrapper: 'w-full h-full relative flex flex-col',
-      };
-    }
 
     return baseStyles;
   };

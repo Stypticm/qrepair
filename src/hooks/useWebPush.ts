@@ -9,19 +9,41 @@ export function useWebPush() {
     const [subscription, setSubscription] = useState<PushSubscription | null>(null);
     const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isChecking, setIsChecking] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        console.log('[Push] Initializing useWebPush hook...');
+        console.log('[Push] PUBLIC_VAPID_KEY present:', !!PUBLIC_VAPID_KEY);
+        if (PUBLIC_VAPID_KEY) {
+            console.log('[Push] VAPID Key start:', PUBLIC_VAPID_KEY.substring(0, 10) + '...');
+        }
+
         if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
             navigator.serviceWorker.ready.then(reg => {
+                console.log('[Push] ServiceWorker ready:', reg.scope);
                 setRegistration(reg);
                 reg.pushManager.getSubscription().then(sub => {
                     if (sub) {
+                        console.log('[Push] Found existing subscription:', sub.endpoint);
                         setSubscription(sub);
                         setIsSubscribed(true);
+                    } else {
+                        console.log('[Push] No existing subscription found');
+                        setIsSubscribed(false);
                     }
+                    setIsChecking(false);
+                }).catch(err => {
+                    console.error('[Push] Error getting subscription:', err);
+                    setIsChecking(false);
                 });
+            }).catch(err => {
+                console.error('[Push] Error waiting for ServiceWorker:', err);
+                setIsChecking(false);
             });
+        } else {
+            console.warn('[Push] Push notifications not supported in this browser');
+            setIsChecking(false);
         }
     }, []);
 
@@ -94,5 +116,5 @@ export function useWebPush() {
         }
     };
 
-    return { isSubscribed, subscription, subscribe, unsubscribe, loading, error };
+    return { isSubscribed, subscription, subscribe, unsubscribe, loading, error, isChecking };
 }

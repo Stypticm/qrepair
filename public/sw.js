@@ -1,8 +1,8 @@
 /* Minimal offline-first service worker for Next.js app shell */
-const CACHE_NAME = 'qoqos-cache-v1-4-287'
+const CACHE_NAME = 'qoqos-cache-v1-4-291'
 const APP_SHELL = [
   '/',
-  '/manifest.webmanifest',
+  '/manifest.json',
   '/logo.png',
   '/logo2.png',
 ]

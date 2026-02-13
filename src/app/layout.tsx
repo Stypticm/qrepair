@@ -33,7 +33,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://qrepair.vercel.app'),
   title: 'Qoqos',
   description: 'Qoqos - Выкуп смартфонов',
-  manifest: '/manifest.webmanifest',
   icons: {
     icon: '/favicon.ico',
     apple: 'https://yirenghydwhxdoxyzntl.supabase.co/storage/v1/object/public/pictures/submit.png',

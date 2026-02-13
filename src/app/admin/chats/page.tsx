@@ -207,18 +207,18 @@ export default function AdminChatsPage() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-8">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-12 w-full">
             {messages.map((msg) => (
               <div
                 key={msg.id}
                 className={cn(
-                  "flex flex-col max-w-[85%] sm:max-w-[70%]",
-                  msg.senderType === 'admin' ? "ml-auto items-end" : "mr-auto items-start"
+                  "flex flex-col w-full",
+                  msg.senderType === 'admin' ? "items-end" : "items-start"
                 )}
               >
                 <div
                   className={cn(
-                    "px-4 py-2 rounded-2xl text-[13px] shadow-sm leading-relaxed",
+                    "px-4 py-2 rounded-2xl text-[13px] shadow-sm leading-relaxed max-w-[85%] sm:max-w-[70%] break-words",
                     msg.senderType === 'admin'
                       ? "bg-blue-600 text-white rounded-tr-none"
                       : "bg-white text-gray-900 rounded-tl-none"
@@ -231,7 +231,7 @@ export default function AdminChatsPage() {
                 </span>
               </div>
             ))}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} className="h-0 w-0" />
           </div>
 
           {/* Input Area */}
@@ -277,7 +277,7 @@ export default function AdminChatsPage() {
 
   return (
     <div className={cn(
-      "flex h-[100dvh] w-full grow bg-gray-100 overflow-hidden",
+      "flex h-[100dvh] w-full bg-gray-100 overflow-hidden",
       !isMobileView && "pt-20" // Header offset for desktop
     )}>
       {/* Mobile Logic: Either List or Chat */}

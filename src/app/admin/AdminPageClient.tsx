@@ -144,9 +144,9 @@ export function AdminPageClient() {
   };
 
   return (
-    <div className="min-h-full bg-gray-50 flex overflow-x-hidden">
+    <div className="min-h-full w-full bg-gray-50 flex overflow-x-hidden">
       {/* Левая боковая панель для десктопа (опционально, но сделаем пока сетку) */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 w-full flex flex-col">
         {/* Заголовок */}
         <header className="bg-white border-b sticky top-0 z-10 px-4 py-4 lg:px-8 lg:py-6">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">

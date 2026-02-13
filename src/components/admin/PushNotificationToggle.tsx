@@ -7,10 +7,15 @@ import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const PushNotificationToggle = () => {
-    const { isSubscribed, subscribe, unsubscribe, loading, error } = useWebPush();
+    const { isSubscribed, subscribe, unsubscribe, loading, error, isChecking } = useWebPush();
     const telegramId = useAppStore(state => state.telegramId);
 
     const handleSubscribe = async () => {
+        if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && !process.env.NEXT_PUBLIC_VAPID_PUBLIC) {
+            toast.error('VAPID ключи не настроены. Уведомления не будут работать локально.');
+            return;
+        }
+
         await subscribe(telegramId?.toString());
         if (!error) {
             toast.success('Уведомления включены!');
@@ -46,7 +51,7 @@ export const PushNotificationToggle = () => {
     // Only show in PWA
     if (!isPWA) return null;
 
-    if (loading) {
+    if (loading || isChecking) {
         return (
             <button disabled className="p-2 rounded-xl bg-gray-100 text-gray-400">
                 <Loader2 className="w-5 h-5 animate-spin" />
