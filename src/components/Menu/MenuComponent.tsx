@@ -1,6 +1,6 @@
 'use client'
 
-import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, RefreshCw, PlusSquare, MessageCircle } from 'lucide-react';
+import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, RefreshCw, PlusSquare, MessageCircle, LogIn } from 'lucide-react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
@@ -92,15 +92,26 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: number, router: 
                                             </button>
                                         )}
 
-                                        {/* Чат для гостей */}
-                                        <button
-                                            onClick={handleChatClick}
-                                            className="relative w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/40 to-blue-600/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-blue-500/50 hover:to-blue-600/30 shadow-lg"
-                                            aria-label="Чат с поддержкой"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
-                                            <MessageCircle className="relative w-6 h-6 text-blue-600 drop-shadow-sm" />
-                                        </button>
+                                        {/* Вход / Регистрация */}
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={handleLoginClick}
+                                                className="relative w-12 h-12 rounded-full bg-gradient-to-br from-[#2ba6e1]/40 to-[#2ba6e1]/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-[#2ba6e1]/50 hover:to-[#2ba6e1]/30 shadow-lg"
+                                                aria-label="Войти"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
+                                                <LogIn className="relative w-6 h-6 text-[#2ba6e1] drop-shadow-sm ml-0.5" />
+                                            </button>
+
+                                            <button
+                                                onClick={handleChatClick}
+                                                className="relative w-12 h-12 rounded-full bg-gradient-to-br from-purple-600/90 to-purple-700/80 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-purple-500/90 hover:to-purple-600/80 shadow-lg"
+                                                aria-label="Открыть чат"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full"></div>
+                                                <MessageCircle className="relative w-6 h-6 text-white drop-shadow-sm" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <>

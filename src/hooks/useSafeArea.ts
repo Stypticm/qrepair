@@ -19,6 +19,7 @@ interface SafeAreaState {
   safeAreaInsets: SafeAreaInsets
   isReady: boolean
   isTelegram: boolean
+  isNativeTelegram: boolean
   theme: 'light' | 'dark'
   isFullscreen: boolean
   isMobile: boolean
@@ -43,6 +44,7 @@ export function useSafeArea() {
     })
   const [isReady, setIsReady] = useState(false)
   const [isTelegram, setIsTelegram] = useState(false)
+  const [isNativeTelegram, setIsNativeTelegram] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>(
     'light'
   )
@@ -146,6 +148,20 @@ export function useSafeArea() {
     // Силовое логирование для дебага
     console.log('useSafeArea debug:', { mobile, desktop, userAgent })
 
+
+    const checkIsNativeTelegram = () => {
+      if (typeof window === 'undefined') return false
+      
+      const ua = window.navigator.userAgent.toLowerCase()
+      const isTgInside = ua.includes('telegram') || !!(window as any).TelegramWebviewProxy
+      const isStandalone = (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone)
+      
+      // If it's a PWA, it's NOT a native TG app view
+      if (isStandalone) return false
+      
+      return isTgInside && !!window.Telegram?.WebApp?.platform && window.Telegram.WebApp.platform !== 'unknown'
+    }
+
     const isInTelegram = !!(
       window.Telegram?.WebApp ||
       window.location.href.includes('tgWebAppPlatform') ||
@@ -156,6 +172,7 @@ export function useSafeArea() {
     if (isInTelegram && window.Telegram?.WebApp) {
       const webApp = window.Telegram.WebApp
       setIsTelegram(true)
+      setIsNativeTelegram(checkIsNativeTelegram())
 
       const setup = async () => {
         try {
@@ -324,6 +341,7 @@ export function useSafeArea() {
     safeAreaInsets,
     isReady,
     isTelegram,
+    isNativeTelegram,
     theme,
     isFullscreen,
     isMobile,
@@ -349,6 +367,7 @@ export function useSafeArea() {
       },
       isReady: false,
       isTelegram: false,
+      isNativeTelegram: false,
       theme: 'light' as const,
       isFullscreen: false,
       isMobile: false,
@@ -370,6 +389,7 @@ export function useSafeArea() {
     safeAreaInsets,
     isReady,
     isTelegram,
+    isNativeTelegram,
     theme,
     isFullscreen,
     isMobile,

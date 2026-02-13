@@ -25,7 +25,7 @@ export function ChatWidget() {
     const telegramId = useAppStore(state => state.telegramId);
     const username = useAppStore(state => state.username);
     const guestId = useAppStore(state => state.guestId);
-    const { isTelegram, isDesktop } = useSafeArea();
+    const { isNativeTelegram, isDesktop } = useSafeArea();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // If no telegramId and no guestId, generate one when opening
@@ -125,7 +125,8 @@ export function ChatWidget() {
     // Listen for custom events to open the chat
     useEffect(() => {
         const handleToggleChat = () => {
-            if (isTelegram && !isDesktop) {
+            // For NATIVE Telegram App (on mobile), we prefer opening a direct link to the support bot
+            if (isNativeTelegram && !isDesktop) {
                 handleTelegramSupport();
             } else {
                 setIsOpen(prev => !prev);
@@ -133,7 +134,7 @@ export function ChatWidget() {
         };
         window.addEventListener('toggleChat', handleToggleChat);
         return () => window.removeEventListener('toggleChat', handleToggleChat);
-    }, [isTelegram, isDesktop, handleTelegramSupport]);
+    }, [isNativeTelegram, isDesktop, handleTelegramSupport]);
 
     // Hide the chat widget for admin Telegram IDs
     // CRITICAL: Hooks must be called before this return
