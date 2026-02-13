@@ -160,8 +160,8 @@ function AdminChatsContent() {
       )}>
         <h2 className="font-bold text-lg">Чаты</h2>
         <Link href="/admin">
-          <Button variant="ghost" size="sm" className="h-8 px-2">
-            <ArrowLeft size={16} className="mr-1" /> Админ
+          <Button variant="ghost" size="sm" className="h-8 px-2 text-gray-400">
+            <ArrowLeft size={16} className="mr-1" /> Админ панель
           </Button>
         </Link>
       </div>
@@ -236,10 +236,10 @@ function AdminChatsContent() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 px-2 text-xs text-gray-400"
+                className="h-9 px-2 text-xs text-blue-600 font-bold"
                 onClick={() => handleSelect(null)}
               >
-                Чаты
+                <ChevronLeft size={16} className="mr-1" /> Чаты
               </Button>
             )}
           </div>
