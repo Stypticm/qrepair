@@ -8,10 +8,13 @@ import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { PushNotificationToggle } from '@/components/admin/PushNotificationToggle';
+import { useSafeArea } from '@/hooks/useSafeArea';
 
 export function AdminPageClient() {
   const router = useRouter();
   const { telegramId } = useAppStore();
+  const { isStandalone } = useSafeArea();
+  const sourceParam = isStandalone ? '?source=pwa' : '';
   const [accessDenied, setAccessDenied] = useState<boolean | null>(null);
 
   // Проверяем права доступа
@@ -60,7 +63,7 @@ export function AdminPageClient() {
           <h1 className="text-2xl font-bold text-red-600 mb-4">Доступ запрещен</h1>
           <p className="text-gray-600 mb-4">У вас нет прав для доступа к админ панели</p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push(`/${sourceParam}`)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Вернуться на главную
@@ -145,13 +148,13 @@ export function AdminPageClient() {
       {/* Левая боковая панель для десктопа (опционально, но сделаем пока сетку) */}
       <div className="flex-1 flex flex-col">
         {/* Заголовок */}
-        <header className="bg-white border-b sticky top-0 z-10 px-8 py-6">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+        <header className="bg-white border-b sticky top-0 z-10 px-4 py-4 lg:px-8 lg:py-6">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                 Панель управления
               </h1>
-              <p className="text-gray-500 mt-1">
+              <p className="text-gray-500 text-xs lg:text-sm mt-1">
                 Добро пожаловать в админ-панель Qoqos
               </p>
             </div>
@@ -159,7 +162,7 @@ export function AdminPageClient() {
             <div className="flex items-center gap-2">
               <PushNotificationToggle />
               <button
-                onClick={() => router.push('/')}
+                onClick={() => router.push(`/${sourceParam}`)}
                 className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white border rounded-xl hover:bg-gray-50 transition-all"
               >
                 На сайт
@@ -169,7 +172,7 @@ export function AdminPageClient() {
         </header>
 
         {/* Основной контент */}
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-4 lg:p-8">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {adminSections.map((section) => {
