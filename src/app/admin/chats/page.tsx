@@ -95,15 +95,19 @@ function AdminChatsContent() {
     }
   }, [selectedChat, fetchChatMessages]);
 
-  // Auto-select chat from URL
+  // Sync selection with URL
   useEffect(() => {
-    if (chatIdFromUrl && chats.length > 0 && !selectedChat) {
-      const chat = chats.find(c => c.id === chatIdFromUrl);
-      if (chat) {
-        setSelectedChat(chat);
+    if (chats.length > 0) {
+      if (chatIdFromUrl) {
+        const chat = chats.find(c => c.id === chatIdFromUrl);
+        if (chat) {
+          setSelectedChat(chat);
+        }
+      } else {
+        setSelectedChat(null);
       }
     }
-  }, [chatIdFromUrl, chats, selectedChat]);
+  }, [chatIdFromUrl, chats]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || !selectedChat || !telegramId || isLoading) return;
@@ -130,6 +134,14 @@ function AdminChatsContent() {
       console.error('Failed to send message:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSelect = (chatId: string | null) => {
+    if (chatId) {
+      router.replace(`/admin/chats?id=${chatId}`);
+    } else {
+      router.replace('/admin/chats');
     }
   };
 
@@ -160,7 +172,7 @@ function AdminChatsContent() {
           chats.map((chat) => (
             <button
               key={chat.id}
-              onClick={() => setSelectedChat(chat)}
+              onClick={() => handleSelect(chat.id)}
               className={cn(
                 "w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors border-b",
                 selectedChat?.id === chat.id && !isMobileView && "bg-blue-50 hover:bg-blue-50 border-r-4 border-r-blue-600"
@@ -204,10 +216,7 @@ function AdminChatsContent() {
                   variant="ghost"
                   size="icon"
                   className="h-10 w-10 -ml-2 text-gray-400"
-                  onClick={() => {
-                    setSelectedChat(null);
-                    router.replace('/admin/chats');
-                  }}
+                  onClick={() => handleSelect(null)}
                 >
                   <ChevronLeft size={24} />
                 </Button>
@@ -228,10 +237,7 @@ function AdminChatsContent() {
                 variant="ghost"
                 size="sm"
                 className="h-9 px-2 text-xs text-gray-400"
-                onClick={() => {
-                  setSelectedChat(null);
-                  router.replace('/admin/chats');
-                }}
+                onClick={() => handleSelect(null)}
               >
                 Чаты
               </Button>
