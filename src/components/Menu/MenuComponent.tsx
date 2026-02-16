@@ -143,16 +143,14 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: string | number 
                                             </button>
 
                                             {/* Выход (только для клиентов) */}
-                                            {!isAdminTelegramId(telegramId) && (
-                                                <button
-                                                    onClick={handleLogoutClick}
-                                                    className="relative w-12 h-12 rounded-full bg-gradient-to-br from-red-500/30 to-red-600/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-red-500/40 hover:to-red-600/30 shadow-lg"
-                                                    aria-label="Выйти"
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-full"></div>
-                                                    <LogOut className="relative w-5 h-5 text-red-600 drop-shadow-sm" />
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={handleLogoutClick}
+                                                className="relative w-12 h-12 rounded-full bg-gradient-to-br from-red-500/30 to-red-600/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-red-500/40 hover:to-red-600/30 shadow-lg"
+                                                aria-label="Выйти"
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-full"></div>
+                                                <LogOut className="relative w-5 h-5 text-red-600 drop-shadow-sm" />
+                                            </button>
                                         </div>
 
                                         {/* Акцентная кнопка (Чат для юзеров или Админка для админов) */}

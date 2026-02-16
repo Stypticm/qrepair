@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   description: 'Qoqos - Выкуп смартфонов',
   icons: {
     icon: '/favicon.ico',
-    apple: 'https://yirenghydwhxdoxyzntl.supabase.co/storage/v1/object/public/pictures/submit.png',
+    apple: '/logo4.png',
   },
   other: {
     'apple-mobile-web-app-capable': 'yes',
