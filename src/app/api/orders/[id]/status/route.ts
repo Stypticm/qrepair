@@ -118,7 +118,7 @@ export async function PATCH(
         if (statusText) {
             await notifyUser(updatedOrder.telegramId, {
                 title: 'Статус заказа изменен',
-                body: `Ваш заказ #${id.slice(0, 8)} ${statusText}.`,
+                body: `Ваш заказ ${statusText}.`,
                 url: `/my-devices`
             })
         }
@@ -178,6 +178,8 @@ export async function DELETE(
     // Проверяем права доступа
     const { isAdminTelegramId } = await import('@/core/lib/admin');
     const isAdmin = userId ? isAdminTelegramId(userId) : false;
+
+    console.log(`[OrderDelete] Attempting delete. User: ${userId}, IsAdmin: ${isAdmin}, OrderOwner: ${order.telegramId}, Status: ${order.status}`);
 
     if (!isAdmin) {
         // Для обычных пользователей: проверяем владельца и статус

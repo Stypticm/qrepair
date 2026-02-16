@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         if (finalTelegramId && !finalTelegramId.startsWith('guest_')) {
             await notifyUser(finalTelegramId, {
                 title: '✅ Заказ создан',
-                body: `Ваш заказ #${order.id.slice(0, 8)} успешно создан. Ожидайте подтверждения.`,
+                body: `Ваш заказ успешно создан. Ожидайте подтверждения.`,
                 url: '/my-devices'
             });
         }
