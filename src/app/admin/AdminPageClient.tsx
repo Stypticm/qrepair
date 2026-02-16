@@ -7,7 +7,7 @@ import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, Smartphone } from '
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
-import { PushNotificationToggle } from '@/components/admin/PushNotificationToggle';
+import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 import { useSafeArea } from '@/hooks/useSafeArea';
 
 export function AdminPageClient() {
