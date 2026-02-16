@@ -119,6 +119,22 @@ const MyDevices = () => {
     }
   }, [telegramId, activeTab]);
 
+  // Debug: отслеживаем изменения telegramId
+  useEffect(() => {
+    console.log('[MyDevices] telegramId changed:', telegramId);
+    if (!telegramId) {
+      console.warn('[MyDevices] telegramId is empty!');
+    }
+  }, [telegramId]);
+
+  // Debug: отслеживаем навигацию
+  useEffect(() => {
+    console.log('[MyDevices] Component mounted, path:', window.location.pathname);
+    return () => {
+      console.log('[MyDevices] Component unmounting');
+    };
+  }, []);
+
   const handleDeleteOrder = async (orderId: string) => {
     if (!confirm('Вы уверены, что хотите удалить этот заказ?')) {
       return;
