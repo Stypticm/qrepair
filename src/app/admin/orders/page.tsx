@@ -5,7 +5,7 @@ import { Page } from '@/components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
@@ -319,16 +319,18 @@ export default function AdminOrdersPage() {
                                                                             <Button
                                                                                 onClick={() => updateOrderStatus(order.id, 'confirmed')}
                                                                                 disabled={isUpdating}
-                                                                                className="bg-blue-500 hover:bg-blue-600 text-white"
+                                                                                className="bg-blue-500 hover:bg-blue-600 text-white min-w-[120px]"
                                                                             >
+                                                                                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                                                 Подтвердить
                                                                             </Button>
                                                                             <Button
                                                                                 onClick={() => updateOrderStatus(order.id, 'cancelled', 'Отменен администратором')}
                                                                                 disabled={isUpdating}
                                                                                 variant="outline"
-                                                                                className="border-red-500 text-red-500 hover:bg-red-50"
+                                                                                className="border-red-500 text-red-500 hover:bg-red-50 min-w-[120px]"
                                                                             >
+                                                                                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                                                 Отменить
                                                                             </Button>
                                                                         </>
@@ -337,8 +339,9 @@ export default function AdminOrdersPage() {
                                                                         <Button
                                                                             onClick={() => updateOrderStatus(order.id, 'in_delivery')}
                                                                             disabled={isUpdating}
-                                                                            className="bg-purple-500 hover:bg-purple-600 text-white"
+                                                                            className="bg-purple-500 hover:bg-purple-600 text-white min-w-[150px]"
                                                                         >
+                                                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                                             Отправить в доставку
                                                                         </Button>
                                                                     )}
@@ -346,8 +349,9 @@ export default function AdminOrdersPage() {
                                                                         <Button
                                                                             onClick={() => updateOrderStatus(order.id, 'completed')}
                                                                             disabled={isUpdating}
-                                                                            className="bg-green-500 hover:bg-green-600 text-white"
+                                                                            className="bg-green-500 hover:bg-green-600 text-white min-w-[120px]"
                                                                         >
+                                                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                                             Завершить
                                                                         </Button>
                                                                     )}

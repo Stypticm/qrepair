@@ -61,6 +61,30 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
                 if (success) {
                     const user = await import('@/stores/authStore').then(m => m.useAppStore.getState().user);
+
+                    // Попытка привязать пуш-подписку к вошедшему пользователю
+                    try {
+                        if ('serviceWorker' in navigator && user?.telegramId) {
+                            const reg = await navigator.serviceWorker.getRegistration();
+                            if (reg) {
+                                const sub = await reg.pushManager.getSubscription();
+                                if (sub) {
+                                    await fetch('/api/notifications/subscribe', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            subscription: sub,
+                                            userId: user.telegramId.toString()
+                                        }),
+                                    });
+                                    console.log('[Auth] Push subscription linked to user:', user.telegramId);
+                                }
+                            }
+                        }
+                    } catch (pushErr) {
+                        console.error('[Auth] Failed to link push subscription:', pushErr);
+                    }
+
                     onSuccess?.(user);
                     onClose();
                 } else {
@@ -84,6 +108,29 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                 // Update store
                 const { setAuthData } = await import('@/stores/authStore').then(m => m.useAppStore.getState());
                 setAuthData({ user: data.user, token: data.token });
+
+                // Попытка привязать пуш-подписку к новому пользователю
+                try {
+                    if ('serviceWorker' in navigator && data.user?.telegramId) {
+                        const reg = await navigator.serviceWorker.getRegistration();
+                        if (reg) {
+                            const sub = await reg.pushManager.getSubscription();
+                            if (sub) {
+                                await fetch('/api/notifications/subscribe', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        subscription: sub,
+                                        userId: data.user.telegramId.toString()
+                                    }),
+                                });
+                                console.log('[Auth] Push subscription linked to user after register:', data.user.telegramId);
+                            }
+                        }
+                    }
+                } catch (pushErr) {
+                    console.error('[Auth] Failed to link push subscription after register:', pushErr);
+                }
 
                 onSuccess?.(data.user);
                 onClose();

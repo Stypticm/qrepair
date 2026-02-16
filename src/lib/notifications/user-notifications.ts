@@ -36,6 +36,9 @@ export async function notifyUser(userId: string, payload: { title: string; body:
         console.log(`Sent user notifications: ${successCount}/${subscriptions.length}`);
 
     } catch (error) {
-        console.error('Error in notifyUser:', error);
+        console.error(`[Push] Error in notifyUser for user ${userId}:`, error);
+        if (error instanceof Error) {
+            console.error(`[Push] Error stack:`, error.stack);
+        }
     }
 }

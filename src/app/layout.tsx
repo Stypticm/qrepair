@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   description: 'Qoqos - Выкуп смартфонов',
   icons: {
     icon: '/favicon.ico',
-    apple: '/logo4.png',
+    apple: '/logo.png',
   },
   other: {
     'apple-mobile-web-app-capable': 'yes',
@@ -58,6 +58,9 @@ export default function RootLayout({
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
       </head>

@@ -43,8 +43,12 @@ export async function sendPushNotification(
             JSON.stringify(payload)
         );
         return { success: true };
-    } catch (error) {
-        console.error('Error sending push notification:', error);
+    } catch (error: any) {
+        console.error(`[Push] Error sending push to ${subscription.endpoint}:`, {
+            statusCode: error.statusCode,
+            body: error.body,
+            message: error.message
+        });
         return { success: false, error };
     }
 }
