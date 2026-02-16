@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Page } from '@/components/Page'
+import { useAppStore } from '@/stores/authStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,7 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
+    const telegramId = useAppStore(state => state.telegramId)
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
@@ -116,7 +118,10 @@ export default function AdminOrdersPage() {
         try {
             setUpdatingOrderId(orderId)
             const res = await fetch(`/api/orders/${orderId}/status`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'x-telegram-id': telegramId || ''
+                }
             })
 
             if (res.ok) {

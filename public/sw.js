@@ -1,5 +1,5 @@
 /* Minimal offline-first service worker for Next.js app shell */
-const CACHE_NAME = 'qoqos-cache-v1-4-325'
+const CACHE_NAME = 'qoqos-cache-v1-4-326'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',
@@ -32,6 +32,9 @@ self.addEventListener('activate', (event) => {
 // Network-first for navigation; cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event
+
+  // Ignore non-http requests (extensions, etc)
+  if (!request.url.startsWith('http')) return
 
   if (request.mode === 'navigate') {
     event.respondWith(
