@@ -293,7 +293,7 @@ function AdminChatsContent() {
                 <h3 className="font-bold text-sm truncate leading-tight">
                   {selectedChat.userNickname || 'Пользователь'}
                 </h3>
-                <p className="text-[10px] text-gray-500">ID: {selectedChat.userTelegramId}</p>
+                <p className="text-[10px] text-gray-500">ID: {selectedChat.telegramId}</p>
               </div>
             </div>
 

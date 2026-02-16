@@ -1,51 +1,55 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { sendPushNotification } from '@/lib/notifications/web-push';
+import { NextRequest, NextResponse } from 'next/server';
+import { isAdminTelegramId } from '@/core/lib/admin';
+import { NotificationService } from '@/services/notification.service';
 
-// This endpoint should be protected by Admin Auth in production!
-export async function POST(req: Request) {
+async function verifyAdmin(request: NextRequest) {
+    const initData = request.headers.get('x-telegram-init-data');
+    let userId: string | null = null;
+
+    if (initData) {
+        try {
+            const params = new URLSearchParams(initData);
+            const userStr = params.get('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                userId = user.id?.toString();
+            }
+        } catch (e) {
+            console.error('Error parsing initData:', e);
+        }
+    }
+
+    if (!userId) {
+        userId = request.headers.get('x-telegram-id');
+    }
+
+    return userId && isAdminTelegramId(userId);
+}
+
+export async function POST(req: NextRequest) {
+    if (!await verifyAdmin(req)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const body = await req.json();
-        const { userId, title, message, url } = body;
+        const { userId: telegramId, title, message, url } = body;
 
-        if (!userId || !title || !message) {
+        if (!telegramId || !title || !message) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // Find all subscriptions for this user
-        // In a real app, you might want to send to all of them
-        const subscriptions = await prisma.pushSubscription.findMany({
-            where: { userId },
+        const result = await NotificationService.sendToUser(telegramId, {
+            title,
+            message,
+            url
         });
 
-        if (subscriptions.length === 0) {
-            return NextResponse.json({ message: 'No subscriptions found for user' }, { status: 404 });
+        if (!result.success && result.count === 0) {
+            return NextResponse.json({ message: result.message }, { status: 404 });
         }
 
-        const results = await Promise.all(subscriptions.map(sub => {
-            const pushSubscription = {
-                endpoint: sub.endpoint,
-                keys: {
-                    p256dh: sub.p256dh,
-                    auth: sub.auth,
-                },
-            };
-
-            return sendPushNotification(pushSubscription, {
-                title,
-                body: message,
-                icon: '/logo.png', // Default icon
-                url: url || '/',
-            });
-        }));
-
-        const successCount = results.filter(r => r.success).length;
-
-        return NextResponse.json({ 
-            success: true, 
-            sent: successCount, 
-            total: subscriptions.length 
-        });
+        return NextResponse.json(result);
 
     } catch (error) {
         console.error('Error sending notification:', error);
