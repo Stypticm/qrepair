@@ -127,7 +127,10 @@ const MyDevices = () => {
     try {
       setDeletingOrderId(orderId);
       const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'x-telegram-id': telegramId || ''
+        }
       });
 
       if (res.ok) {
