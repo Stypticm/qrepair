@@ -156,7 +156,7 @@ export default function CheckoutPickupPage() {
                             </motion.div>
 
                             {/* Guest Notice - Apple Style */}
-                            {!telegramId && !username && (
+                            {(!telegramId || telegramId === 'guest_' || telegramId === 'browser_test_user') && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}

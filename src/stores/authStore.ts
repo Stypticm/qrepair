@@ -497,6 +497,24 @@ export const useAppStore = create<AppState>()(
       },
       initializeTelegram: () => {
         if (typeof window !== 'undefined') {
+          // 1. Try to get data from Telegram WebApp
+          const tg = (window as any).Telegram?.WebApp;
+          if (tg?.initDataUnsafe?.user) {
+            const tgUser = tg.initDataUnsafe.user;
+            const tgId = tgUser.id.toString();
+            console.log('📱 Telegram WebApp: Syncing user', tgId);
+            
+            set({
+              telegramId: tgId,
+              username: tgUser.username || tgUser.first_name || 'User',
+              role: isAdminTelegramId(tgId) ? 'master' : 'client',
+              userId: tgId,
+              isManualLogout: false
+            });
+            return;
+          }
+
+          // 2. Local Dev Mode Fallback
           const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
           const devId = process.env.NEXT_PUBLIC_DEV_TELEGRAM_ID;
           const devUser = process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME;

@@ -3,10 +3,11 @@ import prisma from '@/core/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    // Получаем userId из headers (Telegram WebApp)
-    const initData = request.headers.get('x-telegram-init-data')
-    let userId = 'browser_test_user' // fallback для браузера
+    // Получаем userId из headers или query params
+    const { searchParams } = new URL(request.url)
+    let userId = searchParams.get('telegramId')
 
+    const initData = request.headers.get('x-telegram-init-data')
     if (initData) {
       try {
         const params = new URLSearchParams(initData)
@@ -20,8 +21,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     // Получаем параметры фильтрации
-    const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') // 'pending' | 'confirmed' | 'in_delivery' | 'completed'
 
     // Формируем фильтр

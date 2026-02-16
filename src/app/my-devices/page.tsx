@@ -104,7 +104,7 @@ const MyDevices = () => {
       const getData = async () => {
         try {
           setLoading(true);
-          const res = await fetch(`/api/orders/my`);
+          const res = await fetch(`/api/orders/my?telegramId=${telegramId}`);
           const data = await res.json();
           setMyOrders(data.orders || []);
         } catch (e) {
@@ -163,8 +163,26 @@ const MyDevices = () => {
               <h1 className="text-2xl font-bold text-gray-900">Мои устройства</h1>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-6 space-y-4">
               <PushNotificationToggle />
+
+              {(!telegramId || telegramId === 'guest_' || telegramId === 'browser_test_user') && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-blue-50/50 border border-blue-100 rounded-[32px] p-5 flex items-start gap-4"
+                >
+                  <div className="w-10 h-10 bg-white rounded-2xl shadow-sm flex items-center justify-center shrink-0">
+                    <span className="text-xl">🔔</span>
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-blue-900">Будьте в курсе статуса</h4>
+                    <p className="text-xs text-blue-800/70 leading-relaxed">
+                      Войдите в аккаунт, чтобы получать мгновенные <b>Push-уведомления</b> об изменении статуса вашего заказа.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Вкладки */}
@@ -431,6 +449,7 @@ const MyDevices = () => {
                                   ))}
                                 </div>
                               </div>
+
 
                               {/* Доставка */}
                               <div className="border-t pt-4">
