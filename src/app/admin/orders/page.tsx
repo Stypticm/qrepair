@@ -144,7 +144,36 @@ export default function AdminOrdersPage() {
         <Page back={true}>
             <div className="min-h-screen bg-white">
                 <div className="max-w-4xl mx-auto px-4 py-8 pt-20">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-6">Управление заказами</h1>
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-3xl font-bold text-gray-900">Управление заказами</h1>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => loadOrders()}
+                            disabled={loading}
+                            className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 gap-2 h-10 px-4"
+                        >
+                            <span className={loading ? 'animate-spin' : ''}>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                    <path d="M21 3v5h-5" />
+                                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                    <path d="M3 21v-5h5" />
+                                </svg>
+                            </span>
+                            Сверка с БД
+                        </Button>
+                    </div>
 
                     {/* Фильтры */}
                     <div className="flex flex-wrap gap-2 mb-6">
