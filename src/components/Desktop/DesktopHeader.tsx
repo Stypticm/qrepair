@@ -114,7 +114,7 @@ export const DesktopHeader = () => {
                     <div className="flex items-center gap-4">
                         {/* Auth Status */}
                         {telegramId ? (
-                            <div className="hidden md:flex items-center gap-3 mr-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200 transition-colors hover:border-gray-300 dark:bg-zinc-900 dark:border-white/10">
+                            <div className="hidden md:flex items-center gap-3 mr-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200 dark:bg-zinc-900 dark:border-white/10">
                                 {userPhotoUrl ? (
                                     <Image
                                         src={userPhotoUrl}
@@ -125,14 +125,18 @@ export const DesktopHeader = () => {
                                     />
                                 ) : (
                                     <div className="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold dark:bg-blue-900/30 dark:text-blue-400">
-                                        {(username?.[0] || 'U').toUpperCase()}
+                                        {(username?.[0] || telegramId?.[0] || 'U').toUpperCase()}
                                     </div>
                                 )}
-                                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {username || 'Пользователь'}
+                                <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[150px]">
+                                    {username || telegramId || 'Пользователь'}
                                 </span>
                                 <button
-                                    onClick={() => useAppStore.getState().logout()}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        useAppStore.getState().logout();
+                                    }}
                                     className="ml-1 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all dark:hover:bg-red-900/20"
                                     title="Выйти"
                                 >
@@ -143,15 +147,7 @@ export const DesktopHeader = () => {
                                     </svg>
                                 </button>
                             </div>
-                        ) : (
-                            <button
-                                onClick={() => setIsAuthModalOpen(true)}
-                                className="flex items-center gap-2 bg-[#2ba6e1] hover:bg-[#2595ca] text-white px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 group"
-                            >
-                                <LogIn size={20} className="group-hover:scale-110 transition-transform" />
-                                <span className="font-semibold">Войти</span>
-                            </button>
-                        )}
+                        ) : null}
 
                         {/* Update Button */}
                         {needsUpdate && (

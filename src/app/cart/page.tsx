@@ -26,8 +26,7 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <Page back={true}>
-        <div className="hidden md:block"><Header /></div>
+      <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center md:pt-20">
           <div className="max-w-7xl w-full mx-auto px-6">
             <div className="text-center">
@@ -62,8 +61,7 @@ export default function CartPage() {
   }
 
   return (
-    <Page back={true}>
-      <div className="hidden md:block"><Header /></div>
+    <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
       <div className="min-h-screen bg-gray-50 md:pt-2">
         {/* md:pt-2 because Header is fixed and takes ~80px space. */}
         <div className="max-w-7xl mx-auto pt-16 md:pt-24 px-6 pb-32">

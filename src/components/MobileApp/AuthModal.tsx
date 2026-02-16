@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSafeArea } from '@/hooks/useSafeArea';
-import { X, LogIn, UserPlus } from 'lucide-react';
+import { X, LogIn, UserPlus, Check } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface AuthModalProps {
@@ -129,6 +129,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                             type="text"
                             value={login}
                             onChange={(e) => setLogin(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#54A9EB] focus:ring-2 focus:ring-[#54A9EB]/20 outline-none transition-all"
                             placeholder="Введите логин"
                         />
@@ -146,27 +147,6 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                             placeholder="Введите пароль"
                         />
                     </div>
-
-                    {error && (
-                        <div className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="w-full bg-[#54A9EB] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                        {loading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <>
-                                {mode === 'login' ? <LogIn size={20} /> : <UserPlus size={20} />}
-                                <span>{mode === 'login' ? 'Войти' : 'Зарегистрироваться'}</span>
-                            </>
-                        )}
-                    </button>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -178,8 +158,9 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                             type="text"
                             value={login}
                             onChange={(e) => setLogin(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#54A9EB] focus:border-transparent transition-all"
-                            placeholder="Введите логин"
+                            placeholder="Придумайте логин"
                         />
                     </div>
                     <div>
@@ -190,6 +171,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
                             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#54A9EB] focus:border-transparent transition-all"
                             placeholder="Введите пароль"
                         />
@@ -198,16 +180,48 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Подтвердите пароль
                         </label>
-                        <input
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#54A9EB] focus:border-transparent transition-all"
-                            placeholder="Повторите пароль"
-                        />
+                        <div className="relative">
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                                className={`w-full px-4 py-3 rounded-xl border outline-none transition-all ${confirmPassword && confirmPassword === password
+                                    ? 'border-green-500 focus:ring-2 focus:ring-green-500/20'
+                                    : 'border-gray-200 focus:ring-2 focus:ring-[#54A9EB]/20 focus:border-[#54A9EB]'
+                                    }`}
+                                placeholder="Повторите пароль"
+                            />
+                            {confirmPassword && confirmPassword === password && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-500 transition-all scale-110">
+                                    <Check size={20} strokeWidth={3} />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
+
+            {error && (
+                <div className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg">
+                    {error}
+                </div>
+            )}
+
+            <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-[#54A9EB] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+            >
+                {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                    <>
+                        {mode === 'login' ? <LogIn size={20} /> : <UserPlus size={20} />}
+                        <span>{mode === 'login' ? 'Войти' : 'Зарегистрироваться'}</span>
+                    </>
+                )}
+            </button>
         </div>
     );
 

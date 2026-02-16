@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/core/lib/prisma'
+import { notifyUser } from '@/lib/notifications/user-notifications'
 
 export async function PATCH(
   request: NextRequest,
@@ -62,6 +63,34 @@ export async function PATCH(
       updateData.courierPhone = courierPhone
     }
 
+    // Если заказ отменяется — возвращаем лоты в продажу
+    if (status === 'cancelled') {
+        const orderItems = await prisma.orderItem.findMany({
+            where: { orderId: id }
+        })
+        
+        for (const item of orderItems) {
+            await prisma.marketplaceLot.update({
+                where: { id: item.lotId },
+                data: { status: 'available' }
+            })
+        }
+    }
+
+    // Если заказ выполнен — помечаем лоты как проданные
+    if (status === 'completed') {
+        const orderItems = await prisma.orderItem.findMany({
+            where: { orderId: id }
+        })
+        
+        for (const item of orderItems) {
+            await prisma.marketplaceLot.update({
+                where: { id: item.lotId },
+                data: { status: 'sold', soldAt: new Date() }
+            })
+        }
+    }
+
     // Обновляем заказ
     const updatedOrder = await prisma.order.update({
       where: { id },
@@ -75,6 +104,25 @@ export async function PATCH(
         pickupPoint: true
       }
     })
+
+    // Отправляем уведомление пользователю об изменении статуса
+    if (status && updatedOrder.userId) {
+        const statusMap: any = {
+            'confirmed': 'подтвержден',
+            'in_delivery': 'передан в доставку',
+            'completed': 'выполнен',
+            'cancelled': 'отменен'
+        }
+        
+        const statusText = statusMap[status]
+        if (statusText) {
+            await notifyUser(updatedOrder.userId, {
+                title: 'Статус заказа изменен',
+                body: `Ваш заказ #${id.slice(0, 8)} ${statusText}.`,
+                url: `/my-devices`
+            })
+        }
+    }
 
     return NextResponse.json({
       success: true,

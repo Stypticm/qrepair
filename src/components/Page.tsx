@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore } from '@/stores/authStore';
 
-export function Page({ children, back = true }: PropsWithChildren<{
+export function Page({ children, header, back = true }: PropsWithChildren<{
+  header?: React.ReactNode;
   back?: boolean | (() => void);
 }>) {
   const router = useRouter();
@@ -68,7 +69,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
     ? 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto'
     : 'w-full h-full';
 
-  const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/buyback') || pathname?.includes('/repair') || pathname?.startsWith('/request');
+  const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/my-devices') || pathname?.includes('/buyback') || pathname?.includes('/repair') || pathname?.startsWith('/request');
   const isAdminPath = pathname?.startsWith('/admin');
 
   const finalOuterClass = isDesktop
@@ -87,6 +88,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
 
   return (
     <div className={finalOuterClass}>
+      {header}
       <div className={finalInnerClass}>
         <div className={isDesktop ? desktopContentClass : 'w-full h-full'}>
           {children}

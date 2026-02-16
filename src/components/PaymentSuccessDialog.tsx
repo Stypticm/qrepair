@@ -11,6 +11,7 @@ interface PaymentSuccessDialogProps {
   amount: number
   description: string
   autoCloseDuration?: number
+  isGuest?: boolean
 }
 
 export function PaymentSuccessDialog({
@@ -18,7 +19,8 @@ export function PaymentSuccessDialog({
   onClose,
   amount,
   description,
-  autoCloseDuration = 5000
+  autoCloseDuration = 8000, // Увеличим время, чтобы успели прочитать
+  isGuest = true
 }: PaymentSuccessDialogProps) {
   const [timeLeft, setTimeLeft] = useState(autoCloseDuration / 1000)
 
@@ -32,7 +34,7 @@ export function PaymentSuccessDialog({
     if (!isOpen) return
 
     setTimeLeft(autoCloseDuration / 1000)
-    
+
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -55,7 +57,7 @@ export function PaymentSuccessDialog({
   const getIconSize = () => {
     // iPhone-адаптивные размеры иконки
     if (typeof window === 'undefined') return 'w-16 h-16'
-    
+
     const { innerHeight } = window
     if (innerHeight <= 667) return 'w-12 h-12' // iPhone SE
     if (innerHeight <= 812) return 'w-14 h-14' // iPhone Standard
@@ -65,7 +67,7 @@ export function PaymentSuccessDialog({
 
   const getTextStyles = () => {
     if (typeof window === 'undefined') return 'text-2xl'
-    
+
     const { innerHeight } = window
     if (innerHeight <= 667) return 'text-xl' // iPhone SE
     if (innerHeight <= 812) return 'text-2xl' // iPhone Standard
@@ -83,34 +85,37 @@ export function PaymentSuccessDialog({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
-            onClick={onClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] pointer-events-auto"
+            onClick={(e) => {
+              // Предотвращаем случайное закрытие по клику на фон в этом важном окне
+              e.stopPropagation()
+            }}
           />
 
           {/* Диалог */}
           <motion.div
-            initial={{ 
-              opacity: 0, 
+            initial={{
+              opacity: 0,
               scale: 0.95,
               y: 20
             }}
-            animate={{ 
-              opacity: 1, 
+            animate={{
+              opacity: 1,
               scale: 1,
               y: 0
             }}
-            exit={{ 
-              opacity: 0, 
+            exit={{
+              opacity: 0,
               scale: 0.95,
               y: 20
             }}
-            transition={{ 
-              duration: 0.2, 
-              ease: 'easeOut' 
+            transition={{
+              duration: 0.2,
+              ease: 'easeOut'
             }}
-            className={`fixed inset-0 z-50 flex items-center justify-center p-4`}
+            className={`fixed inset-0 z-[10000] flex items-center justify-center p-4 pointer-events-none`}
           >
-            <div className={getDialogStyles()} onClick={(e) => e.stopPropagation()}>
+            <div className={`${getDialogStyles()} pointer-events-auto relative`} onClick={(e) => e.stopPropagation()}>
               {/* Крестик закрытия */}
               <button
                 onClick={onClose}
@@ -125,25 +130,25 @@ export function PaymentSuccessDialog({
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ 
-                    delay: 0.1, 
-                    duration: 0.3, 
-                    ease: 'easeOut' 
+                  transition={{
+                    delay: 0.1,
+                    duration: 0.3,
+                    ease: 'easeOut'
                   }}
                   className="flex justify-center mb-6"
                 >
                   <div className={`${getIconSize()} rounded-full bg-[#34C759] flex items-center justify-center`}>
-                    <svg 
-                      className="w-8 h-8 text-white" 
-                      fill="none" 
-                      stroke="currentColor" 
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
                       viewBox="0 0 24 24"
                     >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={3} 
-                        d="M5 13l4 4L19 7" 
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
                       />
                     </svg>
                   </div>
@@ -153,24 +158,58 @@ export function PaymentSuccessDialog({
                 <motion.h2
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    delay: 0.2, 
-                    duration: 0.3, 
-                    ease: 'easeOut' 
+                  transition={{
+                    delay: 0.2,
+                    duration: 0.3,
+                    ease: 'easeOut'
                   }}
                   className={`${getTextStyles()} font-semibold text-[#1D1D1F] mb-3`}
                 >
-                  Оплата успешна
+                  Заказ принят
                 </motion.h2>
+
+                {/* Информационное сообщение */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.25,
+                    duration: 0.3,
+                    ease: 'easeOut'
+                  }}
+                  className="mb-4 px-4 py-3 bg-blue-50 rounded-2xl border border-blue-100"
+                >
+                  <p className="text-sm text-blue-700 leading-relaxed">
+                    {isGuest
+                      ? "Оператор скоро свяжется с вами для подтверждения доставки."
+                      : "Вы можете отслеживать статус заказа в разделе 'Мои устройства'."
+                    }
+                  </p>
+                </motion.div>
+
+                {/* Предложение регистрации для гостей */}
+                {isGuest && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6, duration: 0.4 }}
+                    className="mb-6 p-4 bg-gray-50 rounded-2xl border border-gray-100 text-left"
+                  >
+                    <p className="text-xs text-gray-500 mb-2">💡 Совет:</p>
+                    <p className="text-sm text-gray-700">
+                      Зарегистрируйтесь, чтобы отслеживать статус этого и будущих заказов в реальном времени.
+                    </p>
+                  </motion.div>
+                )}
 
                 {/* Описание товара */}
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    delay: 0.3, 
-                    duration: 0.3, 
-                    ease: 'easeOut' 
+                  transition={{
+                    delay: 0.3,
+                    duration: 0.3,
+                    ease: 'easeOut'
                   }}
                   className="text-base text-gray-600 mb-2"
                 >
@@ -181,10 +220,10 @@ export function PaymentSuccessDialog({
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    delay: 0.4, 
-                    duration: 0.3, 
-                    ease: 'easeOut' 
+                  transition={{
+                    delay: 0.4,
+                    duration: 0.3,
+                    ease: 'easeOut'
                   }}
                   className="text-lg font-medium text-[#1D1D1F] mb-6"
                 >
@@ -195,10 +234,10 @@ export function PaymentSuccessDialog({
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ 
-                    delay: 0.5, 
-                    duration: 0.3, 
-                    ease: 'easeOut' 
+                  transition={{
+                    delay: 0.5,
+                    duration: 0.3,
+                    ease: 'easeOut'
                   }}
                   className="text-sm text-gray-500"
                 >

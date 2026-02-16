@@ -4,83 +4,66 @@ import prisma from '@/core/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { deliveryMethod, pickupPointId, pickupAddress, deliveryAddress, deliveryDate, deliveryTime, items } = body
+    const { userId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId } = body
 
-    // Получаем userId из headers (Telegram WebApp)
-    const initData = request.headers.get('x-telegram-init-data')
-    let userId = 'browser_test_user' // fallback для браузера
-
-    if (initData) {
-      try {
-        const params = new URLSearchParams(initData)
-        const userStr = params.get('user')
-        if (userStr) {
-          const user = JSON.parse(userStr)
-          userId = user.id?.toString() || userId
-        }
-      } catch (e) {
-        console.error('Error parsing Telegram init data:', e)
-      }
-    }
-
-    // Проверяем товары из запроса
-    if (!items || items.length === 0) {
+    if (!productId || !amount) {
       return NextResponse.json(
-        { error: 'Корзина пуста' },
+        { error: 'Missing required fields: productId and amount are required' },
         { status: 400 }
       )
     }
 
-    // Вычисляем общую сумму
-    const totalPrice = items.reduce((sum: number, item: any) => sum + (item.price || 0), 0)
+    // Получаем информацию о лоте
+    const lot = await prisma.marketplaceLot.findUnique({
+      where: { id: productId }
+    })
+
+    if (!lot) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      )
+    }
 
     // Создаем заказ
+    // userId может быть null для гостей, в таком случае мы можем либо 
+    // сохранять какой-то временный ID или просто оставлять поле пустым, 
+    // если схема позволяет. В схеме Order.userId - String (обязательное).
+    // Поэтому для гостей будем использовать специальный идентификатор или 
+    // требовать передачу какого-то ID (например из Telegram WebApp)
+    
     const order = await prisma.order.create({
       data: {
-        userId,
-        deliveryMethod,
-        deliveryAddress,
-        pickupPointId,
-        deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
-        deliveryTime,
-        totalPrice,
+        userId: userId || 'guest_' + Date.now(),
+        totalPrice: amount,
+        deliveryMethod: deliveryMethod || 'pickup',
+        deliveryAddress: deliveryAddress || '',
+        pickupPointId: pickupPointId || null,
         status: 'pending',
         items: {
-          create: items.map((item: any) => ({
-            lotId: item.id,
-            title: item.title,
-            price: item.price || 0,
-          }))
+          create: {
+            lotId: lot.id,
+            title: lot.title,
+            price: lot.price
+          }
         }
       },
       include: {
-        items: true,
-        pickupPoint: true
+        items: true
       }
     })
 
-    // Очищаем корзину в БД (если есть)
-    await prisma.cartItem.deleteMany({
-      where: { userId }
-    }).catch(() => {})
-
-    // Обновляем статус лотов на 'reserved'
-    await prisma.marketplaceLot.updateMany({
-      where: {
-        id: { in: items.map((item: any) => item.id) }
-      },
+    // Обновляем статус лота на 'reserved', чтобы он скрылся из каталога
+    await prisma.marketplaceLot.update({
+      where: { id: productId },
       data: { status: 'reserved' }
     })
 
-    return NextResponse.json({
-      success: true,
-      orderId: order.id,
-      order
-    })
+    return NextResponse.json({ success: true, order })
   } catch (error) {
     console.error('Error creating order:', error)
     return NextResponse.json(
-      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

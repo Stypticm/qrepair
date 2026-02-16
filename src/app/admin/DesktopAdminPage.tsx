@@ -7,7 +7,7 @@ import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight, Smartph
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
-import { PushNotificationToggle } from '@/components/admin/PushNotificationToggle';
+import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 
 export function DesktopAdminPage() {
     const router = useRouter();

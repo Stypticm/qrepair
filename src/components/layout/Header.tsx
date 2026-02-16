@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User, Settings } from 'lucide-react';
+import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User, Settings, Smartphone, Hammer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
@@ -125,7 +125,9 @@ export const Header = () => {
           {/* Auth */}
           <div className="hidden lg:flex items-center mr-4">
             {telegramId ? (
-              <div className="flex items-center gap-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200">
+              <div
+                className="flex items-center gap-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200"
+              >
                 {userPhotoUrl ? (
                   <Image
                     src={userPhotoUrl}
@@ -136,35 +138,38 @@ export const Header = () => {
                   />
                 ) : (
                   <div className="w-6 h-6 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-xs font-bold">
-                    {(username?.[0] || 'U').toUpperCase()}
+                    {(username?.[0] || telegramId?.[0] || 'U').toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm font-medium text-gray-900">
-                  {username || 'Пользователь'}
+                <span className="text-sm font-medium text-gray-900 truncate max-w-[120px]">
+                  {username || telegramId || 'Пользователь'}
                 </span>
                 <button
-                  onClick={logout}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    logout();
+                  }}
                   className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
                   title="Выйти"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-full transition-all shadow-sm active:scale-95"
-              >
-                <User size={18} />
-                <span className="font-medium">Войти</span>
-              </button>
-            )}
+            ) : null}
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2 ml-auto lg:ml-0">
             {(!isAdminTelegramId(telegramId) && role !== 'master') ? (
               <>
+                <div onClick={() => !telegramId && setShowAuthModal(true)} className="flex items-center">
+                  <ActionButton
+                    icon={Smartphone}
+                    label="Заказы"
+                    href={telegramId ? "/my-devices" : undefined}
+                  />
+                </div>
                 <ActionButton icon={Scale} label="Сравнить" count={0} disabled tooltip="Скоро" />
                 <ActionButton icon={Heart} label="Избранное" count={favorites.length} href="/favorites" />
                 <ActionButton icon={ShoppingCart} label="Корзина" count={getTotalItems()} href="/cart" badge />

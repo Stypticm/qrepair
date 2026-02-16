@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Grid, List, Filter, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Grid, List, Filter, Search, Hammer } from "lucide-react";
 import { AceternityDeviceCard } from './AceternityDeviceCard';
 import { SimpleDeviceCard } from './SimpleDeviceCard';
 import { HorizontalScrollCarousel } from './HorizontalScrollCarousel';
@@ -285,6 +285,24 @@ export function AdaptiveDeviceFeed({
                 <Grid className="w-5 h-5" />
                 Все устройства
               </button>
+            </div>
+
+            {/* Анонс ремонта - Только для мобильной версии */}
+            <div className="md:hidden flex justify-center mt-4 px-4">
+              <div className="w-full max-w-sm bg-white/60 backdrop-blur-md rounded-2xl border border-dashed border-teal-200 p-4 flex items-center gap-4 shadow-sm">
+                <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Hammer className="w-6 h-6 text-teal-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-gray-900 leading-none">Ремонт</h3>
+                    <span className="text-[10px] font-bold bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded uppercase tracking-wider">Скоро</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Совсем скоро вы сможете сдать свое устройство в профессиональный ремонт
+                  </p>
+                </div>
+              </div>
             </div>
           </motion.div>
         ) : (

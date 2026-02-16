@@ -3,6 +3,20 @@ import prisma from '@/core/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
+    // Авто-освобождение зарезервированных товаров старше 24 часов
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    await prisma.marketplaceLot.updateMany({
+      where: {
+        status: 'reserved',
+        updatedAt: {
+          lt: twentyFourHoursAgo
+        }
+      },
+      data: {
+        status: 'available'
+      }
+    })
+
     const { searchParams } = new URL(request.url)
     const limit = Math.min(
       parseInt(searchParams.get('limit') || '20', 10),

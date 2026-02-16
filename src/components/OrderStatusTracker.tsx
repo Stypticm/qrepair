@@ -12,6 +12,7 @@ interface OrderStatusTrackerProps {
     confirmedAt?: Date | null
     inDeliveryAt?: Date | null
     completedAt?: Date | null
+    hideDescription?: boolean
 }
 
 const statusConfig = {
@@ -19,31 +20,36 @@ const statusConfig = {
         label: 'Принят',
         icon: '📝',
         color: 'bg-blue-500',
-        textColor: 'text-blue-600'
+        textColor: 'text-blue-600',
+        description: 'Скоро наш оператор свяжется с вами для подтверждения деталей.'
     },
     confirmed: {
         label: 'Подтвержден',
         icon: '✓',
         color: 'bg-green-500',
-        textColor: 'text-green-600'
+        textColor: 'text-green-600',
+        description: 'Заказ подтвержден и готовится к выдаче или отправке.'
     },
     in_delivery: {
         label: 'В пути',
         icon: '🚚',
         color: 'bg-purple-500',
-        textColor: 'text-purple-600'
+        textColor: 'text-purple-600',
+        description: 'Ваш заказ передан курьеру.'
     },
     completed: {
         label: 'Доставлен',
         icon: '✓',
         color: 'bg-teal-500',
-        textColor: 'text-teal-600'
+        textColor: 'text-teal-600',
+        description: 'Заказ успешно выполнен. Благодарим за покупку!'
     },
     cancelled: {
         label: 'Отменен',
         icon: '✕',
         color: 'bg-red-500',
-        textColor: 'text-red-600'
+        textColor: 'text-red-600',
+        description: 'Заказ был отменен. Если у вас есть вопросы, пожалуйста, свяжитесь с нами.'
     }
 }
 
@@ -54,7 +60,8 @@ export function OrderStatusTracker({
     createdAt,
     confirmedAt,
     inDeliveryAt,
-    completedAt
+    completedAt,
+    hideDescription = false
 }: OrderStatusTrackerProps) {
     const formatDate = (date: Date | null | undefined) => {
         if (!date) return '--:--'
@@ -157,9 +164,20 @@ export function OrderStatusTracker({
             {/* Текущий статус (крупно) */}
             <div className="mt-6 text-center">
                 <p className="text-sm text-gray-600">Текущий статус:</p>
-                <p className={`text-lg font-semibold ${statusConfig[status].textColor}`}>
-                    {statusConfig[status].label}
+                <p className={`text-lg font-semibold ${(statusConfig as any)[status].textColor}`}>
+                    {(statusConfig as any)[status].label}
                 </p>
+                {!hideDescription && (statusConfig as any)[status].description && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-3 px-4 py-3 bg-gray-50 rounded-2xl border border-gray-100 mx-auto max-w-sm"
+                    >
+                        <p className="text-sm text-gray-600 leading-relaxed italic">
+                            {(statusConfig as any)[status].description}
+                        </p>
+                    </motion.div>
+                )}
             </div>
         </div>
     )

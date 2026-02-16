@@ -151,8 +151,8 @@ export default function AdminOrdersPage() {
                         <button
                             onClick={() => setFilterStatus('all')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'all'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             Все ({orders.length})
@@ -160,8 +160,8 @@ export default function AdminOrdersPage() {
                         <button
                             onClick={() => setFilterStatus('pending')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'pending'
-                                    ? 'bg-yellow-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-yellow-500 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             Новые ({orders.filter(o => o.status === 'pending').length})
@@ -169,8 +169,8 @@ export default function AdminOrdersPage() {
                         <button
                             onClick={() => setFilterStatus('confirmed')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'confirmed'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             Подтверждены ({orders.filter(o => o.status === 'confirmed').length})
@@ -178,8 +178,8 @@ export default function AdminOrdersPage() {
                         <button
                             onClick={() => setFilterStatus('in_delivery')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'in_delivery'
-                                    ? 'bg-purple-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-purple-500 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             В доставке ({orders.filter(o => o.status === 'in_delivery').length})
@@ -187,8 +187,8 @@ export default function AdminOrdersPage() {
                         <button
                             onClick={() => setFilterStatus('completed')}
                             className={`px-4 py-2 rounded-lg font-medium transition-colors ${filterStatus === 'completed'
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                ? 'bg-green-500 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                 }`}
                         >
                             Завершены ({orders.filter(o => o.status === 'completed').length})
@@ -261,6 +261,7 @@ export default function AdminOrdersPage() {
                                                             confirmedAt={order.confirmedAt ? new Date(order.confirmedAt) : null}
                                                             inDeliveryAt={order.inDeliveryAt ? new Date(order.inDeliveryAt) : null}
                                                             completedAt={order.completedAt ? new Date(order.completedAt) : null}
+                                                            hideDescription={true}
                                                         />
 
                                                         {/* Клиент */}

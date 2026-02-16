@@ -105,8 +105,7 @@ export default function FavoritesPage() {
 
   if (loadingLots) {
     return (
-      <Page back={true}>
-        <div className="hidden md:block"><Header /></div>
+      <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center md:pt-20">
           <div className="text-center">
             {/* ... */}
@@ -117,8 +116,7 @@ export default function FavoritesPage() {
   }
 
   return (
-    <Page back={true}>
-      <div className="hidden md:block"><Header /></div>
+    <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto pt-16 md:pt-24 px-6">
           <div className="mb-8">

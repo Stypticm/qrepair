@@ -17,13 +17,13 @@ interface PaymentButtonProps {
   children?: React.ReactNode
 }
 
-export function PaymentButton({ 
-  amount, 
-  description, 
-  productId, 
+export function PaymentButton({
+  amount,
+  description,
+  productId,
   onSuccess,
   className = '',
-  children 
+  children
 }: PaymentButtonProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string>('')
@@ -45,11 +45,11 @@ export function PaymentButton({
   useEffect(() => {
     const checkTelegram = () => {
       console.log('=== PaymentButton: Starting Telegram check ===')
-      
+
       const initialized = initializeTelegramSDK()
       const available = checkTelegramAvailable()
       setIsTelegramAvailable(available)
-      
+
       console.log('PaymentButton Telegram check result:', {
         initialized,
         available,
@@ -57,7 +57,7 @@ export function PaymentButton({
         windowTelegram: !!window.Telegram,
         windowTelegramWebApp: !!window.Telegram?.WebApp
       })
-      
+
       console.log('=== PaymentButton: Telegram check complete ===')
     }
 
@@ -66,39 +66,44 @@ export function PaymentButton({
 
     // Проверяем еще раз через небольшую задержку
     const timeout = setTimeout(checkTelegram, 500)
-    
+
     return () => clearTimeout(timeout)
   }, [])
 
   const handlePayment = async () => {
-    if (!isTelegramAvailable) {
-      setError('Telegram WebApp недоступен. Откройте приложение через Telegram.')
-      return
-    }
-
-    const availableMethods = paymentGateway.getAvailableMethods()
-    if (availableMethods.length === 0) {
-      setError('Способы оплаты недоступны')
-      return
-    }
-
     setIsProcessing(true)
     setError('')
 
     try {
-      const result = await paymentGateway.processPayment(availableMethods[0].id, paymentRequest)
+      // Получаем данные пользователя из Telegram
+      const tgUser = typeof window !== 'undefined' ? window.Telegram?.WebApp?.initDataUnsafe?.user : null
 
-      if (result.success) {
+      const response = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-telegram-init-data': typeof window !== 'undefined' ? window.Telegram?.WebApp?.initData || '' : ''
+        },
+        body: JSON.stringify({
+          userId: tgUser?.id?.toString() || null,
+          productId,
+          amount,
+          description,
+          deliveryMethod: 'pickup' // По умолчанию
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
         // Показываем диалог успеха
         setShowSuccessDialog(true)
-        console.log('Payment successful:', result)
+        console.log('Order created successfully:', data.order)
       } else {
-        // Показываем ошибку, карточка остается открытой
-        setError(result.error || 'Ошибка оплаты')
+        setError(data.error || 'Ошибка при оформлении заказа')
       }
     } catch (err) {
-      // Показываем ошибку, карточка остается открытой
-      setError('Произошла ошибка при обработке платежа')
+      setError('Произошла ошибка при соединении с сервером')
     } finally {
       setIsProcessing(false)
     }
@@ -107,8 +112,8 @@ export function PaymentButton({
   const handleSuccessDialogClose = () => {
     setShowSuccessDialog(false)
     // Вызываем onSuccess после закрытия диалога
-    onSuccess?.({ success: true, transactionId: `mock_${Date.now()}` })
-    
+    onSuccess?.({ success: true, transactionId: `order_${Date.now()}` })
+
     // Закрываем карточку товара через событие (правильный способ)
     const closeEvent = new CustomEvent('closeDeviceCard')
     window.dispatchEvent(closeEvent)
@@ -144,12 +149,12 @@ export function PaymentButton({
           children || (
             <>
               <CreditCard className="w-5 h-5 mr-2" />
-              Оплатить заказ
+              Оформить заказ
             </>
           )
         )}
       </Button>
-      
+
       {error && (
         <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
           <div className="text-sm text-red-600">{error}</div>
@@ -162,7 +167,8 @@ export function PaymentButton({
         onClose={handleSuccessDialogClose}
         amount={amount}
         description={description}
-        autoCloseDuration={5000}
+        autoCloseDuration={8000}
+        isGuest={typeof window !== 'undefined' ? !window.Telegram?.WebApp?.initDataUnsafe?.user : true}
       />
     </div>
   )
