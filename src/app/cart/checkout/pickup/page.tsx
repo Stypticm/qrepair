@@ -23,10 +23,8 @@ export default function CheckoutPickupPage() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [isNavigating, setIsNavigating] = useState(false)
-    const { telegramId, username } = useAppStore(state => ({
-        telegramId: state.telegramId,
-        username: state.username
-    }))
+    const telegramId = useAppStore(state => state.telegramId)
+    const username = useAppStore(state => state.username)
 
     // Загружаем точки приема
     useEffect(() => {
@@ -70,7 +68,7 @@ export default function CheckoutPickupPage() {
                     pickupPointId: selectedPoint,
                     pickupAddress: selectedPointData?.address,
                     items: cartItems, // Отправляем товары из localStorage
-                    telegramId: telegramId?.toString() // Передаем ID пользователя для связки с пушами
+                    telegramId: (useAppStore.getState().telegramId || telegramId)?.toString() // Гарантируем свежий ID
                 }),
             })
 
@@ -156,21 +154,16 @@ export default function CheckoutPickupPage() {
                             </motion.div>
 
                             {/* Guest Notice - Apple Style */}
-                            {(!telegramId || telegramId === 'guest_' || telegramId === 'browser_test_user') && (
+                            {(!telegramId || telegramId === 'browser_test_user' || telegramId.startsWith('guest_')) && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="bg-blue-50/50 border border-blue-100 rounded-[32px] p-5 flex items-start gap-4"
+                                    className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-4"
                                 >
-                                    <div className="w-10 h-10 bg-white rounded-2xl shadow-sm flex items-center justify-center shrink-0">
-                                        <span className="text-xl">🔔</span>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h4 className="text-sm font-bold text-blue-900">Будьте в курсе статуса</h4>
-                                        <p className="text-xs text-blue-800/70 leading-relaxed">
-                                            Войдите в аккаунт, чтобы получать мгновенные <b>Push-уведомления</b> об изменении статуса вашего заказа.
-                                        </p>
-                                    </div>
+                                    <p className="text-blue-800 text-sm font-medium flex items-center gap-2">
+                                        <span>💡</span>
+                                        Совет: зарегистрируйтесь или войдите, чтобы заказ сразу появился в вашем аккаунте и вы получали пуш-уведомления.
+                                    </p>
                                 </motion.div>
                             )}
 

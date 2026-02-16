@@ -59,7 +59,8 @@ interface Order {
 }
 
 const MyDevices = () => {
-  const { telegramId, setTelegramId } = useAppStore();
+  const telegramId = useAppStore(state => state.telegramId);
+  const setTelegramId = useAppStore(state => state.setTelegramId);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('selling')
   const [myDevices, setMyDevices] = useState<SkupkaRequest[]>([]);

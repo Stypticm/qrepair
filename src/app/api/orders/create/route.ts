@@ -4,9 +4,26 @@ import prisma from '@/core/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { telegramId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems } = body
+    const { telegramId: bodyTelegramId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems } = body
 
-    console.log(`[OrderCreate] Request from telegramId: ${telegramId}, items count: ${requestItems?.length || 0}`);
+    // Priority: Body ID (frontend state) > Auth Header (Telegram WebApp)
+    let finalTelegramId = bodyTelegramId;
+    
+    const initData = request.headers.get('x-telegram-init-data')
+    if (!finalTelegramId && initData) {
+        try {
+            const params = new URLSearchParams(initData)
+            const userStr = params.get('user')
+            if (userStr) {
+                const user = JSON.parse(userStr)
+                finalTelegramId = user.id?.toString()
+            }
+        } catch (e) {
+            console.error('[OrderCreate] Error parsing Telegram init data:', e)
+        }
+    }
+
+    console.log(`[OrderCreate] Final Identity: ${finalTelegramId || 'GUEST'}, Body ID provided: ${bodyTelegramId || 'none'}`);
 
     // Подготавливаем массив товаров для создания OrderItem
     let orderItemsData = [];
@@ -48,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Создаем заказ
     const order = await prisma.order.create({
         data: {
-            telegramId: telegramId || 'guest_' + Date.now(),
+            telegramId: finalTelegramId || 'guest_' + Date.now(),
             totalPrice: calculatedTotalPrice,
             deliveryMethod: deliveryMethod || 'pickup',
             deliveryAddress: deliveryAddress || '',
