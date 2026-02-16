@@ -144,7 +144,29 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    // Сначала проверяем существование заказа
+    // Получаем ID пользователя из headers или тела запроса
+    let userId: string | null = null;
+    const initData = request.headers.get('x-telegram-init-data');
+    
+    if (initData) {
+        try {
+            const params = new URLSearchParams(initData);
+            const userStr = params.get('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                userId = user.id?.toString();
+            }
+        } catch (e) {
+            console.error('[OrderDelete] Error parsing Telegram init data:', e);
+        }
+    }
+
+    // Fallback: проверяем заголовок
+    if (!userId) {
+        userId = request.headers.get('x-telegram-id');
+    }
+
+    // Проверяем существование заказа
     const order = await prisma.order.findUnique({
       where: { id }
     })
@@ -153,7 +175,33 @@ export async function DELETE(
       return NextResponse.json({ error: 'Заказ не найден' }, { status: 404 })
     }
 
-    // Удаляем заказ (связанные OrderItem удаляем явно)
+    // Проверяем права доступа
+    const { isAdminTelegramId } = await import('@/core/lib/admin');
+    const isAdmin = userId ? isAdminTelegramId(userId) : false;
+
+    if (!isAdmin) {
+        // Для обычных пользователей: проверяем владельца и статус
+        if (!userId || order.telegramId !== userId) {
+            return NextResponse.json({ error: 'Нет прав для удаления этого заказа' }, { status: 403 });
+        }
+        if (order.status !== 'pending') {
+            return NextResponse.json({ error: 'Можно удалить только заказы в статусе "Новый"' }, { status: 403 });
+        }
+    }
+
+    // Возвращаем лоты в продажу перед удалением
+    const orderItems = await prisma.orderItem.findMany({
+        where: { orderId: id }
+    });
+    
+    for (const item of orderItems) {
+        await prisma.marketplaceLot.update({
+            where: { id: item.lotId },
+            data: { status: 'available' }
+        });
+    }
+
+    // Удаляем заказ
     await prisma.$transaction([
         prisma.orderItem.deleteMany({ where: { orderId: id } }),
         prisma.order.delete({ where: { id } })

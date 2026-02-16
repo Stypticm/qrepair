@@ -11,7 +11,7 @@ import { SkupkaRequest } from '@/core/lib/interfaces';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QRCodeGenerator } from '@/components/QRCodeGenerator';
-import { ChevronDown, ChevronUp, Smartphone, Calendar, ShoppingBag, Package, ArrowLeft, Hammer } from 'lucide-react';
+import { ChevronDown, ChevronUp, Smartphone, Calendar, ShoppingBag, Package, ArrowLeft, Hammer, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
@@ -67,6 +67,7 @@ const MyDevices = () => {
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   const toggleCard = (deviceId: string) => {
     setExpandedCards(prev => {
@@ -117,6 +118,31 @@ const MyDevices = () => {
       getData();
     }
   }, [telegramId, activeTab]);
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить этот заказ?')) {
+      return;
+    }
+
+    try {
+      setDeletingOrderId(orderId);
+      const res = await fetch(`/api/orders/${orderId}/status`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        setMyOrders(prev => prev.filter(o => o.id !== orderId));
+      } else {
+        const data = await res.json();
+        alert(`Ошибка: ${data.error || 'Не удалось удалить заказ'}`);
+      }
+    } catch (e) {
+      console.error('Ошибка при удалении заказа:', e);
+      alert('Ошибка при удалении заказа');
+    } finally {
+      setDeletingOrderId(null);
+    }
+  };
 
   const getStatusText = (status: string | undefined) => {
     if (!status) return 'Неизвестно';
@@ -486,6 +512,30 @@ const MyDevices = () => {
                                   <div className="bg-yellow-50 p-3 rounded-lg">
                                     <p className="text-sm text-gray-800">{order.trackingNotes}</p>
                                   </div>
+                                </div>
+                              )}
+
+                              {/* Кнопка удаления для pending заказов */}
+                              {order.status === 'pending' && (
+                                <div className="border-t pt-4">
+                                  <Button
+                                    onClick={() => handleDeleteOrder(order.id)}
+                                    disabled={deletingOrderId === order.id}
+                                    variant="destructive"
+                                    className="w-full bg-red-600 hover:bg-red-700 text-white"
+                                  >
+                                    {deletingOrderId === order.id ? (
+                                      <>
+                                        <Trash2 className="w-4 h-4 mr-2 animate-pulse" />
+                                        Удаление...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Удалить заказ
+                                      </>
+                                    )}
+                                  </Button>
                                 </div>
                               )}
                             </CardContent>

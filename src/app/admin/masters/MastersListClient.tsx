@@ -132,7 +132,7 @@ export function MastersListClient({ masters: initialMasters }: MastersListClient
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Добавить нового мастера</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Telegram ID *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">User ID *</label>
               <input
                 type="text"
                 value={newMaster.telegramId}
@@ -211,9 +211,8 @@ export function MastersListClient({ masters: initialMasters }: MastersListClient
                 </div>
               </div>
               <span
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  master.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}
+                className={`px-3 py-1 text-sm font-medium rounded-full ${master.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}
               >
                 {master.isActive ? 'Активен' : 'Неактивен'}
               </span>
@@ -226,7 +225,7 @@ export function MastersListClient({ masters: initialMasters }: MastersListClient
                 </svg>
                 <div>
                   <p className="text-gray-700 font-medium">{master.telegramId}</p>
-                  <p className="text-gray-500 text-sm">Telegram ID</p>
+                  <p className="text-gray-500 text-sm">User ID</p>
                 </div>
               </div>
 

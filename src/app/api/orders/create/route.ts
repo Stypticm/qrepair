@@ -88,6 +88,31 @@ export async function POST(request: NextRequest) {
         });
     }
 
+    // Отправляем уведомления
+    try {
+        const { notifyAllAdmins } = await import('@/lib/notifications/admin-notifications');
+        const { notifyUser } = await import('@/lib/notifications/user-notifications');
+
+        // Уведомляем админов о новом заказе
+        await notifyAllAdmins({
+            title: '🛒 Новый заказ',
+            body: `Заказ #${order.id.slice(0, 8)} на сумму ${calculatedTotalPrice.toLocaleString('ru-RU')} ₽`,
+            url: '/admin/orders'
+        });
+
+        // Уведомляем клиента о создании заказа
+        if (finalTelegramId && !finalTelegramId.startsWith('guest_')) {
+            await notifyUser(finalTelegramId, {
+                title: '✅ Заказ создан',
+                body: `Ваш заказ #${order.id.slice(0, 8)} успешно создан. Ожидайте подтверждения.`,
+                url: '/my-devices'
+            });
+        }
+    } catch (notifError) {
+        console.error('[OrderCreate] Failed to send notifications:', notifError);
+        // Не прерываем выполнение, если уведомления не отправились
+    }
+
     return NextResponse.json({ success: true, order, orderId: order.id })
   } catch (error) {
     console.error('Error creating order:', error)

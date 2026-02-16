@@ -303,7 +303,7 @@ export default function AdminOrdersPage() {
                                                         <div className="border-t pt-4">
                                                             <p className="text-sm font-semibold text-gray-700 mb-2">Клиент:</p>
                                                             <div className="bg-gray-50 p-3 rounded-lg">
-                                                                <p className="text-sm text-gray-800">Telegram ID: {order.telegramId}</p>
+                                                                <p className="text-sm text-gray-800">User ID: {order.telegramId}</p>
                                                             </div>
                                                         </div>
 

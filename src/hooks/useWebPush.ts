@@ -132,7 +132,7 @@ export function useWebPush() {
                 },
                 body: JSON.stringify({
                     subscription: sub,
-                    telegramId: userId
+                    userId: userId  // API expects 'userId', not 'telegramId'
                 }),
             });
 

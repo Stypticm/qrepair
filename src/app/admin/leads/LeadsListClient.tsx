@@ -101,7 +101,7 @@ export function LeadsListClient() {
         // Set up poll every 30s
         const interval = setInterval(fetchLeads, 30000);
         return () => clearInterval(interval);
-    }, [adminTgId]);
+    }, [adminTgId, fetchLeads]);
 
     const getStatusBadge = (status: string) => {
         switch (status) {
