@@ -184,8 +184,9 @@ export async function DELETE(
         if (!userId || order.telegramId !== userId) {
             return NextResponse.json({ error: 'Нет прав для удаления этого заказа' }, { status: 403 });
         }
-        if (order.status !== 'pending') {
-            return NextResponse.json({ error: 'Можно удалить только заказы в статусе "Новый"' }, { status: 403 });
+        // Разрешаем удаление только до начала доставки
+        if (order.status === 'in_delivery' || order.status === 'completed') {
+            return NextResponse.json({ error: 'Нельзя удалить заказ, который уже в доставке или завершен' }, { status: 403 });
         }
     }
 

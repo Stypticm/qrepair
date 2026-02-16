@@ -515,8 +515,8 @@ const MyDevices = () => {
                                 </div>
                               )}
 
-                              {/* Кнопка удаления для pending заказов */}
-                              {order.status === 'pending' && (
+                              {/* Кнопка удаления для pending и confirmed заказов */}
+                              {(order.status === 'pending' || order.status === 'confirmed') && (
                                 <div className="border-t pt-4">
                                   <Button
                                     onClick={() => handleDeleteOrder(order.id)}

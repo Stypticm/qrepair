@@ -81,11 +81,14 @@ export const useVersionCheck = () => {
                 }
 
                 console.log('✅ Update applied, reloading...');
-                window.location.reload();
+                // Preserve current URL instead of potentially redirecting to home
+                const currentUrl = window.location.href;
+                window.location.href = currentUrl;
             })
             .catch(() => {
-                // Fallback reload
-                window.location.reload();
+                // Fallback reload - also preserve URL
+                const currentUrl = window.location.href;
+                window.location.href = currentUrl;
             });
     }, []);
 
