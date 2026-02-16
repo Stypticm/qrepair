@@ -1,5 +1,5 @@
 /* Minimal offline-first service worker for Next.js app shell */
-const CACHE_NAME = 'qoqos-cache-v1-4-322'
+const CACHE_NAME = 'qoqos-cache-v1-4-323'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',
@@ -46,6 +46,7 @@ self.addEventListener('fetch', (event) => {
         .catch(() =>
           caches
             .match(request)
+            // Only fallback to homepage if the specific page is not cached
             .then((res) => res || caches.match('/'))
         )
     )

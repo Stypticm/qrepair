@@ -68,16 +68,25 @@ export const useVersionCheck = () => {
         // We catch the build time AGAIN just before reload to be absolutely sure it's stored
         fetch('/version.json', { cache: 'no-store' })
             .then(res => res.json())
-            .then(data => {
+            .then(async (data) => {
                 localStorage.setItem('app_build_time', data.buildTime.toString());
                 
-                // Unregister Service Workers
+                // Clear all caches to prevent serving stale content
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(
+                        cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                    console.log('🗑️ Cleared all caches');
+                }
+                
+                // Update Service Workers
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then((registrations) => {
-                        for (let registration of registrations) {
-                            registration.update();
-                        }
-                    });
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(
+                        registrations.map(registration => registration.update())
+                    );
+                    console.log('🔄 Updated Service Workers');
                 }
 
                 console.log('✅ Update applied, reloading...');
