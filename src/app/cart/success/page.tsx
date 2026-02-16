@@ -189,19 +189,39 @@ export default function SuccessPage() {
                         transition={{ duration: 0.3, delay: 0.2 }}
                         className="space-y-4"
                     >
-                        {/* Guest nudge */}
-                        {!order.userId.startsWith('guest_') ? null : (
+                        {/* PWA / Guest nudge */}
+                        {(!order.userId || order.userId === 'browser_test_user' || order.userId.startsWith('guest_')) ? (
                             <div className="bg-white rounded-2xl p-6 border-2 border-dashed border-blue-100 text-center space-y-4">
                                 <div className="space-y-1">
-                                    <h3 className="font-bold text-gray-900">Хотите получать уведомления?</h3>
-                                    <p className="text-sm text-gray-500">Войдите через Telegram, чтобы мы могли прислать вам пуш-уведомление, когда заказ будет готов.</p>
+                                    <h3 className="font-bold text-gray-900">Хотите отслеживать заказ?</h3>
+                                    <p className="text-sm text-gray-500">
+                                        Установите наше приложение, чтобы получать мгновенные пуш-уведомления о статусе вашего заказа и иметь к нему быстрый доступ.
+                                    </p>
                                 </div>
-                                <button
-                                    onClick={() => router.push('/?auth=true')}
-                                    className="w-full py-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-colors"
-                                >
-                                    Войти и получать пуши
-                                </button>
+                                <div className="flex flex-col gap-2">
+                                    <button
+                                        onClick={() => {
+                                            const event = new CustomEvent('showPwaPrompt');
+                                            window.dispatchEvent(event);
+                                        }}
+                                        className="w-full py-3 bg-teal-50 text-teal-600 rounded-xl font-bold hover:bg-teal-100 transition-colors"
+                                    >
+                                        Установить приложение
+                                    </button>
+                                    <button
+                                        onClick={() => router.push('/?auth=true')}
+                                        className="w-full py-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-colors"
+                                    >
+                                        Войти в аккаунт
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-2xl p-6 border-2 border-dashed border-blue-100 text-center space-y-4">
+                                <div className="space-y-1">
+                                    <h3 className="font-bold text-gray-900">Спасибо за ваш заказ!</h3>
+                                    <p className="text-sm text-gray-500">Мы уже готовим его к отправке.</p>
+                                </div>
                             </div>
                         )}
 

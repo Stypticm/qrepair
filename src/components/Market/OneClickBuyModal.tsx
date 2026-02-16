@@ -26,7 +26,11 @@ export function OneClickBuyModal({ isOpen, onClose, productId, productTitle, pro
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
-    const { username, telegramId } = useAppStore();
+    const username = useAppStore(state => state.username);
+    const telegramId = useAppStore(state => state.telegramId);
+
+    // Check if current user is guest
+    const isGuest = !telegramId || telegramId === 'browser_test_user' || telegramId.startsWith('guest_');
 
     useEffect(() => {
         if (username) setName(username);
@@ -88,7 +92,7 @@ export function OneClickBuyModal({ isOpen, onClose, productId, productTitle, pro
                     productId,
                     productTitle,
                     price: productPrice,
-                    telegramId
+                    telegramId: useAppStore.getState().telegramId || telegramId
                 })
             });
 
@@ -153,6 +157,19 @@ export function OneClickBuyModal({ isOpen, onClose, productId, productTitle, pro
                             <DialogTitle className="text-xl font-bold text-gray-900 leading-tight">Купить в 1 клик</DialogTitle>
                             <p className="text-sm text-gray-500 mt-2 line-clamp-1">{productTitle}</p>
                         </DialogHeader>
+
+                        {isGuest && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 p-4 bg-blue-50 rounded-2xl border border-blue-100"
+                            >
+                                <p className="text-blue-800 text-xs font-medium flex items-center gap-2 leading-relaxed">
+                                    <span>💡</span>
+                                    Совет: установите приложение для получения уведомлений и отслеживания заказов в личном кабинете.
+                                </p>
+                            </motion.div>
+                        )}
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-1.5">

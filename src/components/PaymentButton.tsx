@@ -7,6 +7,7 @@ import { paymentGateway } from '@/core/payments/PaymentGateway'
 import { CreditCard, Loader2 } from 'lucide-react'
 import { initializeTelegramSDK, isTelegramAvailable as checkTelegramAvailable } from '@/core/telegram/init'
 import { PaymentSuccessDialog } from './PaymentSuccessDialog'
+import { useAppStore } from '@/stores/authStore'
 
 interface PaymentButtonProps {
   amount: number
@@ -29,6 +30,10 @@ export function PaymentButton({
   const [error, setError] = useState<string>('')
   const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
+
+  // Получаем данные из authStore
+  const telegramId = useAppStore(state => state.telegramId);
+  const isGuest = !telegramId || telegramId === 'browser_test_user' || telegramId.startsWith('guest_');
 
   const paymentRequest: PaymentRequest = {
     amount,
@@ -85,7 +90,7 @@ export function PaymentButton({
           'x-telegram-init-data': typeof window !== 'undefined' ? window.Telegram?.WebApp?.initData || '' : ''
         },
         body: JSON.stringify({
-          userId: tgUser?.id?.toString() || null,
+          telegramId: useAppStore.getState().telegramId || null, // Свежий ID из стора
           productId,
           amount,
           description,
@@ -168,7 +173,7 @@ export function PaymentButton({
         amount={amount}
         description={description}
         autoCloseDuration={8000}
-        isGuest={typeof window !== 'undefined' ? !window.Telegram?.WebApp?.initDataUnsafe?.user : true}
+        isGuest={isGuest}
       />
     </div>
   )

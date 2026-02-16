@@ -6,6 +6,8 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { name, phone, productId, productTitle, price, telegramId } = body;
 
+        console.log(`[QuickOrder] Request for ${productTitle} from ${telegramId || 'GUEST'}, phone: ${phone}`);
+
         if (!phone || !name) {
             return NextResponse.json(
                 { error: 'Имя и телефон обязательны' },

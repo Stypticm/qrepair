@@ -70,14 +70,13 @@ export default function AdminOrdersPage() {
 
     useEffect(() => {
         loadOrders()
-    }, [filterStatus])
+    }, [])
 
     const loadOrders = async (silent = false) => {
         try {
             if (!silent) setLoading(true)
-            const url = filterStatus === 'all'
-                ? '/api/admin/orders'
-                : `/api/admin/orders?status=${filterStatus}`
+            // Всегда загружаем все заказы для корректного подсчета счетчиков
+            const url = '/api/admin/orders'
 
             const res = await fetch(url)
             const data = await res.json()
