@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     // Получаем корзину пользователя из БД
     const cartItems = await prisma.cartItem.findMany({
-      where: { userId: telegramId },
+      where: { telegramId: telegramId },
       include: { 
         lot: true // включаем данные лота
       },
@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
       // Используем upsert для добавления или обновления количества
       const cartItem = await prisma.cartItem.upsert({
         where: {
-          userId_lotId: {
-            userId: telegramId,
+          telegramId_lotId: {
+            telegramId: telegramId,
             lotId: lotId
           }
         },
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           updatedAt: new Date()
         },
         create: {
-          userId: telegramId,
+          telegramId: telegramId,
           lotId: lotId,
           quantity: quantity || 1
         },
@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
 
       await prisma.cartItem.delete({
         where: {
-          userId_lotId: {
-            userId: telegramId,
+          telegramId_lotId: {
+            telegramId: telegramId,
             lotId: lotId
           }
         }
@@ -153,8 +153,8 @@ export async function POST(request: NextRequest) {
         // Если количество 0 или меньше, удаляем из корзины
         await prisma.cartItem.delete({
           where: {
-            userId_lotId: {
-              userId: telegramId,
+            telegramId_lotId: {
+              telegramId: telegramId,
               lotId: lotId
             }
           }
@@ -162,8 +162,8 @@ export async function POST(request: NextRequest) {
       } else {
         await prisma.cartItem.update({
           where: {
-            userId_lotId: {
-              userId: telegramId,
+            telegramId_lotId: {
+              telegramId: telegramId,
               lotId: lotId
             }
           },
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     // Очистка корзины
     if (action === 'clear') {
       await prisma.cartItem.deleteMany({
-        where: { userId: telegramId }
+        where: { telegramId: telegramId }
       })
 
       return NextResponse.json({

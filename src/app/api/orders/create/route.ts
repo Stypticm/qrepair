@@ -4,9 +4,9 @@ import prisma from '@/core/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems } = body
+    const { telegramId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems } = body
 
-    console.log(`[OrderCreate] Request from userId: ${userId}, items count: ${requestItems?.length || 0}`);
+    console.log(`[OrderCreate] Request from telegramId: ${telegramId}, items count: ${requestItems?.length || 0}`);
 
     // Подготавливаем массив товаров для создания OrderItem
     let orderItemsData = [];
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Создаем заказ
     const order = await prisma.order.create({
         data: {
-            userId: userId || 'guest_' + Date.now(),
+            telegramId: telegramId || 'guest_' + Date.now(),
             totalPrice: calculatedTotalPrice,
             deliveryMethod: deliveryMethod || 'pickup',
             deliveryAddress: deliveryAddress || '',

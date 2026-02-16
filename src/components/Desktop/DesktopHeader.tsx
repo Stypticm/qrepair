@@ -27,7 +27,7 @@ export const DesktopHeader = () => {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const pathname = usePathname();
     const { isDesktop } = useSafeArea();
-    const { count: adminNotifs } = useAdminNotifications();
+    const { count: adminNotifs, leads, skupka, orders, tradeIn } = useAdminNotifications();
     const { count: orderNotifs } = useOrderNotifications();
     const { needsUpdate, performUpdate } = useVersionCheck();
 
@@ -104,12 +104,29 @@ export const DesktopHeader = () => {
                         )}
 
                         {(isAdminTelegramId(telegramId) || role === 'master') && (
-                            <Link href="/admin" className={cn(navLinkClass('/admin'), "relative")}>
+                            <Link href="/admin" className={cn(navLinkClass('/admin'), "relative group/admin")}>
                                 Админ
                                 {adminNotifs > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                                        {adminNotifs}
-                                    </span>
+                                    <>
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-teal-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                                            {adminNotifs}
+                                        </span>
+                                        <div className="absolute top-full right-0 mt-2 opacity-0 group-hover/admin:opacity-100 transition-all pointer-events-none z-[60] scale-95 group-hover/admin:scale-100">
+                                            <div className="bg-gray-900/95 backdrop-blur-sm text-white text-[10px] p-2 rounded-xl shadow-xl border border-white/10 min-w-[120px] space-y-1">
+                                                {[
+                                                    { label: 'Заказы', count: orders },
+                                                    { label: 'Перезвоны', count: leads },
+                                                    { label: 'Трейд-ин', count: tradeIn },
+                                                    { label: 'Скупка', count: skupka }
+                                                ].filter(d => d.count > 0).map((d, i) => (
+                                                    <div key={i} className="flex justify-between items-center gap-4 text-left">
+                                                        <span className="opacity-60 whitespace-nowrap">{d.label}</span>
+                                                        <span className="font-bold text-teal-400">{d.count}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                             </Link>
                         )}

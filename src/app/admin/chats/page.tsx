@@ -23,7 +23,7 @@ type ChatStatus = 'active' | 'archived';
 
 interface Chat {
   id: string;
-  userTelegramId: string;
+  telegramId: string;
   userNickname: string | null;
   status: ChatStatus;
   updatedAt: string;
@@ -249,7 +249,7 @@ function AdminChatsContent() {
               <div className="flex-1 text-left min-w-0">
                 <div className="flex justify-between items-start mb-1">
                   <span className="font-semibold text-sm truncate">
-                    {chat.userNickname || `ID: ${chat.userTelegramId}`}
+                    {chat.userNickname || `ID: ${chat.telegramId}`}
                   </span>
                   <span className="text-[10px] text-gray-400">
                     {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

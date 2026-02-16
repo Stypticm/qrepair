@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const chat = await prisma.operatorChat.findUnique({
-      where: { userTelegramId: telegramId },
+      where: { telegramId: telegramId },
       include: {
         messages: {
           orderBy: { createdAt: 'asc' },
@@ -38,14 +38,14 @@ export async function POST(req: NextRequest) {
 
     // Upsert the chat
     const chat = await prisma.operatorChat.upsert({
-      where: { userTelegramId: telegramId },
+      where: { telegramId: telegramId },
       update: { 
         userNickname: username,
         status: 'active',
         updatedAt: new Date()
       },
       create: {
-        userTelegramId: telegramId,
+        telegramId: telegramId,
         userNickname: username,
         status: 'active'
       },

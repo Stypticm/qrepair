@@ -106,7 +106,7 @@ export async function PATCH(
     })
 
     // Отправляем уведомление пользователю об изменении статуса
-    if (status && updatedOrder.userId) {
+    if (status && updatedOrder.telegramId) {
         const statusMap: any = {
             'confirmed': 'подтвержден',
             'in_delivery': 'передан в доставку',
@@ -116,7 +116,7 @@ export async function PATCH(
         
         const statusText = statusMap[status]
         if (statusText) {
-            await notifyUser(updatedOrder.userId, {
+            await notifyUser(updatedOrder.telegramId, {
                 title: 'Статус заказа изменен',
                 body: `Ваш заказ #${id.slice(0, 8)} ${statusText}.`,
                 url: `/my-devices`
@@ -130,6 +130,38 @@ export async function PATCH(
     })
   } catch (error) {
     console.error('Error updating order status:', error)
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+
+    // Сначала проверяем существование заказа
+    const order = await prisma.order.findUnique({
+      where: { id }
+    })
+
+    if (!order) {
+      return NextResponse.json({ error: 'Заказ не найден' }, { status: 404 })
+    }
+
+    // Удаляем заказ (связанные OrderItem удаляем явно)
+    await prisma.$transaction([
+        prisma.orderItem.deleteMany({ where: { orderId: id } }),
+        prisma.order.delete({ where: { id } })
+    ])
+
+    return NextResponse.json({ success: true, message: 'Заказ полностью удален' })
+  } catch (error) {
+    console.error('Error deleting order:', error)
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

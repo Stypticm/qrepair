@@ -36,7 +36,7 @@ export const Header = () => {
   const { favorites } = useFavorites();
   const { getTotalItems } = useCart();
   const { username, userPhotoUrl, telegramId, logout, role } = useAppStore();
-  const { count: adminNotifs } = useAdminNotifications();
+  const { count: adminNotifs, leads, skupka, orders, tradeIn } = useAdminNotifications();
   const { count: orderNotifs } = useOrderNotifications();
   const { needsUpdate, performUpdate } = useVersionCheck();
   const { isStandalone } = useSafeArea();
@@ -179,7 +179,12 @@ export const Header = () => {
                 <ActionButton icon={ShoppingCart} label="Корзина" count={getTotalItems()} href="/cart" badge />
               </>
             ) : (
-              <ActionButton icon={Settings} label="Админ" href="/admin" count={adminNotifs} badge />
+              <ActionButton icon={Settings} label="Админ" href="/admin" count={adminNotifs} badge details={[
+                { label: 'Заказы', count: orders },
+                { label: 'Перезвоны', count: leads },
+                { label: 'Трейд-ин', count: tradeIn },
+                { label: 'Скупка', count: skupka }
+              ]} />
             )}
           </div>
         </div>
@@ -238,19 +243,25 @@ export const Header = () => {
   );
 };
 
+interface ActionDetail {
+  label: string;
+  count: number;
+}
+
 interface ActionButtonProps {
   icon: any;
   label: string;
   count?: number;
   badge?: boolean;
   disabled?: boolean;
+  details?: ActionDetail[];
   tooltip?: string;
   href?: string;
 }
 
-const ActionButton = ({ icon: Icon, label, count, badge, disabled, tooltip, href }: ActionButtonProps) => {
+const ActionButton = ({ icon: Icon, label, count, badge, disabled, details, tooltip, href }: ActionButtonProps) => {
   const content = (
-    <div className="relative group">
+    <div className="relative group/btn">
       <div className={cn(
         "flex flex-col items-center justify-center w-16 gap-1",
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"
@@ -258,12 +269,12 @@ const ActionButton = ({ icon: Icon, label, count, badge, disabled, tooltip, href
         <div className="relative">
           <Icon className={cn(
             "w-6 h-6 transition-colors",
-            disabled ? "text-gray-400" : "text-gray-700 group-hover:text-teal-600"
+            disabled ? "text-gray-400" : "text-gray-700 group-hover/btn:text-teal-600"
           )} strokeWidth={1.5} />
           {count !== undefined && count > 0 && (
             <span className={cn(
               "absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold text-white border-2 border-white",
-              badge ? "bg-teal-500" : "bg-gray-400 group-hover:bg-teal-500"
+              badge ? "bg-teal-500" : "bg-gray-400 group-hover/btn:bg-teal-500"
             )}>
               {count}
             </span>
@@ -271,11 +282,26 @@ const ActionButton = ({ icon: Icon, label, count, badge, disabled, tooltip, href
         </div>
         <span className={cn(
           "text-[10px] font-medium transition-colors",
-          disabled ? "text-gray-400" : "text-gray-500 group-hover:text-teal-600"
+          disabled ? "text-gray-400" : "text-gray-500 group-hover/btn:text-teal-600"
         )}>{label}</span>
       </div>
+
+      {/* Details Tooltip */}
+      {details && details.some(d => d.count > 0) && (
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover/btn:opacity-100 transition-all pointer-events-none z-[60] scale-95 group-hover/btn:scale-100">
+          <div className="bg-gray-900/95 backdrop-blur-sm text-white text-[10px] p-2 rounded-xl shadow-xl border border-white/10 min-w-[120px] space-y-1">
+            {details.filter(d => d.count > 0).map((d, i) => (
+              <div key={i} className="flex justify-between items-center gap-4">
+                <span className="opacity-60">{d.label}</span>
+                <span className="font-bold text-teal-400">{d.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {tooltip && disabled && (
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover/btn:opacity-100 transition-opacity pointer-events-none z-50">
           <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
             {tooltip}
           </div>

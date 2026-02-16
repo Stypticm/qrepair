@@ -5,7 +5,7 @@ export async function notifyUser(userId: string, payload: { title: string; body:
     try {
         // 1. Fetch all subscriptions for this user
         const subscriptions = await prisma.pushSubscription.findMany({
-            where: { userId },
+            where: { telegramId: userId },
         });
 
         if (subscriptions.length === 0) {

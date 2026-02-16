@@ -23,7 +23,10 @@ export default function CheckoutPickupPage() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [isNavigating, setIsNavigating] = useState(false)
-    const telegramId = useAppStore(state => state.telegramId)
+    const { telegramId, username } = useAppStore(state => ({
+        telegramId: state.telegramId,
+        username: state.username
+    }))
 
     // Загружаем точки приема
     useEffect(() => {
@@ -67,7 +70,7 @@ export default function CheckoutPickupPage() {
                     pickupPointId: selectedPoint,
                     pickupAddress: selectedPointData?.address,
                     items: cartItems, // Отправляем товары из localStorage
-                    userId: telegramId?.toString() // Передаем ID пользователя для связки с пушами
+                    telegramId: telegramId?.toString() // Передаем ID пользователя для связки с пушами
                 }),
             })
 
@@ -153,7 +156,7 @@ export default function CheckoutPickupPage() {
                             </motion.div>
 
                             {/* Guest Notice - Apple Style */}
-                            {!telegramId && (
+                            {!telegramId && !username && (
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}

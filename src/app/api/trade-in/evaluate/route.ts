@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     const evaluation = await prisma.tradeInEvaluation.create({
       data: {
-        userId: telegramId,
+        telegramId: telegramId,
         category: data.category,
         model: data.model,
         variant: data.variant || null,

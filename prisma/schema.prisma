@@ -3,10 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-  schemas   = ["public"]
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  directUrl    = env("DIRECT_URL")
+  schemas      = ["public"]
+  relationMode = "prisma"
 }
 
 model Skupka {
@@ -60,10 +61,9 @@ model Skupka {
   feedback             String?
   userEvaluation       String?
   additionalConditions Json?
-  telegramIdConfirmed  Boolean @default(false)
-  userTelegramId       String?
   assignedMasterId     String?
   assignedMaster       Master? @relation(fields: [assignedMasterId], references: [id])
+  user                 User?   @relation(fields: [telegramId], references: [telegramId])
 
   // связи
   inspections DeviceInspection[]
@@ -204,7 +204,8 @@ model MarketplaceLot {
   
   status       MarketplaceLotStatus @default(available)
   
-  sellerId     String   // telegramId продавца
+  telegramId   String   // telegramId продавца
+  user         User?    @relation(fields: [telegramId], references: [telegramId])
   sellerName   String?
   
   viewsCount   Int      @default(0)
@@ -220,7 +221,7 @@ model MarketplaceLot {
   favoriteItems       FavoriteItem[]
   orderItems          OrderItem[]         // Заказы с этим лотом
   
-  @@index([sellerId])
+  @@index([telegramId])
   @@index([status])
   @@index([createdAt])
   @@index([price])
@@ -229,7 +230,7 @@ model MarketplaceLot {
 
 model CartItem {
   id        String   @id @default(cuid())
-  userId    String   // telegramId пользователя
+  telegramId String   // telegramId пользователя
   lotId     String
   quantity  Int      @default(1)
   
@@ -238,25 +239,27 @@ model CartItem {
   
   // Связи
   lot       MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  user      User?          @relation(fields: [telegramId], references: [telegramId])
   
-  @@unique([userId, lotId]) // один лот = одна запись в корзине на пользователя
-  @@index([userId])
+  @@unique([telegramId, lotId])
+  @@index([telegramId])
   @@index([lotId])
   @@schema("public")
 }
 
 model FavoriteItem {
   id        String   @id @default(cuid())
-  userId    String   // telegramId пользователя
+  telegramId String   // telegramId пользователя
   lotId     String
   
   addedAt   DateTime @default(now())
   
   // Связи
   lot       MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  user      User?          @relation(fields: [telegramId], references: [telegramId])
   
-  @@unique([userId, lotId]) // один лот = одна запись в избранном
-  @@index([userId])
+  @@unique([telegramId, lotId])
+  @@index([telegramId])
   @@index([lotId])
   @@schema("public")
 }
@@ -273,7 +276,8 @@ enum OrderStatus {
 
 model Order {
   id              String      @id @default(cuid())
-  userId          String      // telegramId
+  telegramId      String      // telegramId
+  user            User?       @relation(fields: [telegramId], references: [telegramId])
   
   // Доставка
   deliveryMethod  String      // 'courier' | 'pickup'
@@ -305,7 +309,7 @@ model Order {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
-  @@index([userId])
+  @@index([telegramId])
   @@index([status])
   @@index([createdAt])
   @@index([status, createdAt])
@@ -331,14 +335,15 @@ model OrderItem {
 
 model OperatorChat {
   id             String            @id @default(cuid())
-  userTelegramId String            @unique
+  telegramId     String            @unique
+  user           User?             @relation(fields: [telegramId], references: [telegramId])
   userNickname   String?
   status         ChatStatus        @default(active)
   messages       OperatorMessage[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
-  @@index([userTelegramId])
+  @@index([telegramId])
   @@index([status])
   @@schema("public")
 }
@@ -383,6 +388,16 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Реляции для унификации
+  skupkaRequests  Skupka[]
+  orders          Order[]
+  tradeInRequests TradeInEvaluation[]
+  cartItems       CartItem[]
+  favoriteItems   FavoriteItem[]
+  pushSubscriptions PushSubscription[]
+  chats           OperatorChat[]
+  marketplaceLots MarketplaceLot[]
+
   @@index([telegramId])
   @@index([role])
   @@schema("public")
@@ -420,7 +435,8 @@ model QuickLead {
 }
 model TradeInEvaluation {
   id               String   @id @default(cuid())
-  userId           String   // telegramId
+  telegramId       String   // telegramId
+  user             User?    @relation(fields: [telegramId], references: [telegramId])
   category         String   @default("iPhone")
   model            String
   variant          String?
@@ -449,21 +465,22 @@ model TradeInEvaluation {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  @@index([userId])
+  @@index([telegramId])
   @@schema("public")
 }
 
 model PushSubscription {
-  id        String   @id @default(cuid())
-  userId    String?  // telegramId (optional, if we want to link to user)
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
+  id          String   @id @default(cuid())
+  telegramId  String?  // telegramId
+  user        User?    @relation(fields: [telegramId], references: [telegramId])
+  endpoint    String   @unique
+  p256dh      String
+  auth        String
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  @@index([telegramId])
   @@schema("public")
 }
 

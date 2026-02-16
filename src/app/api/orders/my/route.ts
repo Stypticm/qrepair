@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') // 'pending' | 'confirmed' | 'in_delivery' | 'completed'
 
     // Формируем фильтр
-    const where: any = { userId }
+    const where: any = { telegramId: userId }
     if (status) {
       where.status = status
     }

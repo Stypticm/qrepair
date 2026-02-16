@@ -5,12 +5,18 @@ import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 
 export function useAdminNotifications() {
-    const [count, setCount] = useState(0);
+    const [data, setData] = useState({
+        total: 0,
+        leads: 0,
+        skupka: 0,
+        orders: 0,
+        tradeIn: 0
+    });
     const telegramId = useAppStore(state => state.telegramId);
 
     useEffect(() => {
         if (!telegramId || !isAdminTelegramId(telegramId)) {
-            setCount(0);
+            setData({ total: 0, leads: 0, skupka: 0, orders: 0, tradeIn: 0 });
             return;
         }
 
@@ -28,8 +34,14 @@ export function useAdminNotifications() {
                 });
                 
                 if (response.ok) {
-                    const data = await response.json();
-                    setCount(data.count || 0);
+                    const result = await response.json();
+                    setData({
+                        total: result.count || 0,
+                        leads: result.leads || 0,
+                        skupka: result.skupka || 0,
+                        orders: result.orders || 0,
+                        tradeIn: result.tradeIn || 0
+                    });
                 }
             } catch (error) {
                 console.error('Failed to fetch admin notifications:', error);
@@ -51,5 +63,11 @@ export function useAdminNotifications() {
         };
     }, [telegramId]);
 
-    return { count };
+    return { 
+        count: data.total,
+        leads: data.leads,
+        skupka: data.skupka,
+        orders: data.orders,
+        tradeIn: data.tradeIn
+    };
 }

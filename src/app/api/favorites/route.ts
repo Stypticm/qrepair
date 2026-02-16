@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     // Получаем избранное пользователя из БД
     const favoriteItems = await prisma.favoriteItem.findMany({
-      where: { userId: telegramId },
+      where: { telegramId: telegramId },
       include: { 
         lot: true // включаем данные лота
       },
@@ -87,8 +87,8 @@ export async function POST(request: NextRequest) {
       // Проверяем, нет ли уже в избранном
       const existing = await prisma.favoriteItem.findUnique({
         where: {
-          userId_lotId: {
-            userId: telegramId,
+          telegramId_lotId: {
+            telegramId: telegramId,
             lotId: lotId
           }
         }
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       // Добавляем в избранное
       const favoriteItem = await prisma.favoriteItem.create({
         data: {
-          userId: telegramId,
+          telegramId: telegramId,
           lotId: lotId
         },
         include: { lot: true }
@@ -121,8 +121,8 @@ export async function POST(request: NextRequest) {
     if (action === 'remove') {
       await prisma.favoriteItem.delete({
         where: {
-          userId_lotId: {
-            userId: telegramId,
+          telegramId_lotId: {
+            telegramId: telegramId,
             lotId: lotId
           }
         }
@@ -140,8 +140,8 @@ export async function POST(request: NextRequest) {
     if (action === 'toggle') {
       const existing = await prisma.favoriteItem.findUnique({
         where: {
-          userId_lotId: {
-            userId: telegramId,
+          telegramId_lotId: {
+            telegramId: telegramId,
             lotId: lotId
           }
         }
@@ -151,8 +151,8 @@ export async function POST(request: NextRequest) {
         // Удаляем
         await prisma.favoriteItem.delete({
           where: {
-            userId_lotId: {
-              userId: telegramId,
+            telegramId_lotId: {
+              telegramId: telegramId,
               lotId: lotId
             }
           }
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
         // Добавляем
         await prisma.favoriteItem.create({
           data: {
-            userId: telegramId,
+            telegramId: telegramId,
             lotId: lotId
           }
         })

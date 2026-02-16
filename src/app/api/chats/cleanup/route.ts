@@ -15,7 +15,7 @@ export async function DELETE(req: Request) {
         // We use onDelete: Cascade in schema, so deleting the chat should delete messages
         await prisma.operatorChat.delete({
             where: {
-                userTelegramId: telegramId,
+                telegramId: telegramId,
             },
         });
 

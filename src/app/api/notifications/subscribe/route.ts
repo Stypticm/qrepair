@@ -15,13 +15,13 @@ export async function POST(req: Request) {
         const result = await prisma.pushSubscription.upsert({
             where: { endpoint: subscription.endpoint },
             update: {
-                userId: userId || null,
+                telegramId: userId || null,
                 p256dh: subscription.keys.p256dh,
                 auth: subscription.keys.auth,
                 updatedAt: new Date(),
             },
             create: {
-                userId: userId || null,
+                telegramId: userId || null,
                 endpoint: subscription.endpoint,
                 p256dh: subscription.keys.p256dh,
                 auth: subscription.keys.auth,

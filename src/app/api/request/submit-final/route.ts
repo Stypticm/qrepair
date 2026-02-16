@@ -84,8 +84,6 @@ export async function POST(request: NextRequest) {
         status: 'draft',
       },
       data: {
-        telegramIdConfirmed: true,
-        userTelegramId: userTelegramId,
         priceAgreed: true, // Пользователь согласен с ценой
         status: 'submitted',
         submittedAt: new Date(),
@@ -113,8 +111,6 @@ export async function POST(request: NextRequest) {
           modelname: modelname,
           price: price,
           priceAgreed: true,
-          telegramIdConfirmed: true,
-          userTelegramId: userTelegramId,
           deliveryMethod:
             deliveryData?.deliveryMethod || 'pickup',
           pickupPoint: pickupPointAddress,

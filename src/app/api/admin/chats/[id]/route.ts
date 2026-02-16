@@ -72,9 +72,9 @@ export async function POST(
     });
 
     // Notify User
-    if (updatedChat.userTelegramId) {
+    if (updatedChat.telegramId) {
         const { notifyUser } = await import('@/lib/notifications/user-notifications');
-        await notifyUser(updatedChat.userTelegramId, {
+        await notifyUser(updatedChat.telegramId, {
             title: '👨‍🔧 Ответ от оператора',
             body: text.length > 50 ? text.substring(0, 50) + '...' : text,
             url: '/', // The user is notified on the home page where the chat widget is

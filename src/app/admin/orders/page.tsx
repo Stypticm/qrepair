@@ -5,7 +5,7 @@ import { Page } from '@/components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Loader2, RotateCcw, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
@@ -15,7 +15,7 @@ type OrderStatus = 'pending' | 'confirmed' | 'in_delivery' | 'completed' | 'canc
 
 interface Order {
     id: string
-    userId: string
+    telegramId: string
     deliveryMethod: string
     deliveryAddress?: string
     pickupPointId?: number
@@ -111,6 +111,28 @@ export default function AdminOrdersPage() {
         }
     }
 
+    const deleteOrder = async (orderId: string) => {
+        if (!confirm('Вы уверены, что хотите безвозвратно удалить этот заказ из базы данных?')) return
+
+        try {
+            setUpdatingOrderId(orderId)
+            const res = await fetch(`/api/orders/${orderId}/status`, {
+                method: 'DELETE'
+            })
+
+            if (res.ok) {
+                setOrders(prev => prev.filter(o => o.id !== orderId))
+            } else {
+                alert('Ошибка при удалении заказа')
+            }
+        } catch (e) {
+            console.error('Ошибка при удалении заказа:', e)
+            alert('Ошибка при удалении заказа')
+        } finally {
+            setUpdatingOrderId(null)
+        }
+    }
+
     const getStatusBadgeColor = (status: OrderStatus) => {
         switch (status) {
             case 'pending': return 'bg-yellow-500'
@@ -154,22 +176,7 @@ export default function AdminOrdersPage() {
                             className="rounded-xl border-gray-200 hover:bg-gray-50 text-gray-600 gap-2 h-10 px-4"
                         >
                             <span className={loading ? 'animate-spin' : ''}>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-                                    <path d="M21 3v5h-5" />
-                                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-                                    <path d="M3 21v-5h5" />
-                                </svg>
+                                <RotateCcw className="w-4 h-4" />
                             </span>
                             Сверка с БД
                         </Button>
@@ -297,7 +304,7 @@ export default function AdminOrdersPage() {
                                                         <div className="border-t pt-4">
                                                             <p className="text-sm font-semibold text-gray-700 mb-2">Клиент:</p>
                                                             <div className="bg-gray-50 p-3 rounded-lg">
-                                                                <p className="text-sm text-gray-800">Telegram ID: {order.userId}</p>
+                                                                <p className="text-sm text-gray-800">Telegram ID: {order.telegramId}</p>
                                                             </div>
                                                         </div>
 
@@ -339,7 +346,7 @@ export default function AdminOrdersPage() {
                                                         </div>
 
                                                         {/* Управление статусом */}
-                                                        {order.status !== 'completed' && order.status !== 'cancelled' && (
+                                                        {order.status !== 'completed' && (
                                                             <div className="border-t pt-4">
                                                                 <p className="text-sm font-semibold text-gray-700 mb-3">Управление:</p>
                                                                 <div className="flex flex-wrap gap-2">
@@ -365,14 +372,25 @@ export default function AdminOrdersPage() {
                                                                         </>
                                                                     )}
                                                                     {order.status === 'confirmed' && (
-                                                                        <Button
-                                                                            onClick={() => updateOrderStatus(order.id, 'in_delivery')}
-                                                                            disabled={isUpdating}
-                                                                            className="bg-purple-500 hover:bg-purple-600 text-white min-w-[150px]"
-                                                                        >
-                                                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                                                            Отправить в доставку
-                                                                        </Button>
+                                                                        <>
+                                                                            <Button
+                                                                                onClick={() => updateOrderStatus(order.id, 'in_delivery')}
+                                                                                disabled={isUpdating}
+                                                                                className="bg-purple-500 hover:bg-purple-600 text-white min-w-[150px]"
+                                                                            >
+                                                                                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                                                                Отправить в доставку
+                                                                            </Button>
+                                                                            <Button
+                                                                                onClick={() => updateOrderStatus(order.id, 'cancelled', 'Отменен администратором')}
+                                                                                disabled={isUpdating}
+                                                                                variant="outline"
+                                                                                className="border-red-500 text-red-500 hover:bg-red-50"
+                                                                            >
+                                                                                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                                                                Отменить
+                                                                            </Button>
+                                                                        </>
                                                                     )}
                                                                     {order.status === 'in_delivery' && (
                                                                         <Button
@@ -382,6 +400,18 @@ export default function AdminOrdersPage() {
                                                                         >
                                                                             {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                                             Завершить
+                                                                        </Button>
+                                                                    )}
+                                                                    {order.status === 'cancelled' && (
+                                                                        <Button
+                                                                            onClick={() => deleteOrder(order.id)}
+                                                                            disabled={isUpdating}
+                                                                            variant="destructive"
+                                                                            className="bg-red-600 hover:bg-red-700 text-white"
+                                                                        >
+                                                                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                                                            <Trash2 className="w-4 h-4 mr-2" />
+                                                                            Удалить заявку
                                                                         </Button>
                                                                     )}
                                                                 </div>
