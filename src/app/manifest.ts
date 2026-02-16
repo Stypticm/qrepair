@@ -11,31 +11,31 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#ffffff',
     icons: [
       {
-        src: '/logo4.png',
+        src: 'https://yirenghydwhxdoxyzntl.supabase.co/storage/v1/object/public/pictures/submit.png',
         sizes: '96x96',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/logo4.png',
+        src: 'https://yirenghydwhxdoxyzntl.supabase.co/storage/v1/object/public/pictures/submit.png',
         sizes: '144x144',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/logo4.png',
+        src: 'https://yirenghydwhxdoxyzntl.supabase.co/storage/v1/object/public/pictures/submit.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/logo4.png',
+        src: 'https://yirenghydwhxdoxyzntl.supabase.co/storage/v1/object/public/pictures/submit.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
       },
       {
-        src: '/logo4.png',
+        src: 'https://yirenghydwhxdoxyzntl.supabase.co/storage/v1/object/public/pictures/submit.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',

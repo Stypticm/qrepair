@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/core/lib/prisma';
 import { sendPushNotification } from './web-push';
 
 export async function notifyUser(userId: string, payload: { title: string; body: string; url?: string }) {
@@ -9,11 +9,11 @@ export async function notifyUser(userId: string, payload: { title: string; body:
         });
 
         if (subscriptions.length === 0) {
-            console.log(`[Push] No subscriptions found for user: ${userId}`);
+            console.log(`[Push] No subscriptions found for user: ${userId} (type: ${typeof userId})`);
             return;
         }
 
-        console.log(`[Push] Sending notifications to ${subscriptions.length} devices for user: ${userId}`);
+        console.log(`[Push] Found ${subscriptions.length} subscriptions for user: ${userId}`);
 
         // 2. Send notifications
         const results = await Promise.all(subscriptions.map(sub => {

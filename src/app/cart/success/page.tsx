@@ -19,6 +19,7 @@ interface Order {
         title: string
         price: number
     }>
+    userId: string
     createdAt: string
 }
 
@@ -186,11 +187,27 @@ export default function SuccessPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: 0.2 }}
-                        className="space-y-3"
+                        className="space-y-4"
                     >
+                        {/* Guest nudge */}
+                        {!order.userId.startsWith('guest_') ? null : (
+                            <div className="bg-white rounded-2xl p-6 border-2 border-dashed border-blue-100 text-center space-y-4">
+                                <div className="space-y-1">
+                                    <h3 className="font-bold text-gray-900">Хотите получать уведомления?</h3>
+                                    <p className="text-sm text-gray-500">Войдите через Telegram, чтобы мы могли прислать вам пуш-уведомление, когда заказ будет готов.</p>
+                                </div>
+                                <button
+                                    onClick={() => router.push('/?auth=true')}
+                                    className="w-full py-3 bg-blue-50 text-blue-600 rounded-xl font-bold hover:bg-blue-100 transition-colors"
+                                >
+                                    Войти и получать пуши
+                                </button>
+                            </div>
+                        )}
+
                         <button
                             onClick={() => router.push('/')}
-                            className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-colors shadow-lg"
+                            className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold transition-all shadow-lg active:scale-[0.98]"
                         >
                             Вернуться в магазин
                         </button>

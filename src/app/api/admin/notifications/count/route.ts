@@ -31,18 +31,30 @@ export async function GET(request: NextRequest) {
             where: { isRead: false }
         });
 
-        // Count pending shop requests (Skupka) - for completeness
+        // Count pending shop requests (Skupka)
         const newSkupkaCount = await prisma.skupka.count({
             where: { status: 'submitted' }
         });
 
+        // Count new marketplace orders
+        const newOrdersCount = await prisma.order.count({
+            where: { status: 'pending' }
+        });
+
+        // Count pending trade-in evaluations
+        const newTradeInCount = await prisma.tradeInEvaluation.count({
+            where: { status: 'pending' }
+        });
+
         // Total unread notifications
-        const total = unreadLeadsCount + newSkupkaCount;
+        const total = unreadLeadsCount + newSkupkaCount + newOrdersCount + newTradeInCount;
 
         return NextResponse.json({
             count: total,
             leads: unreadLeadsCount,
-            skupka: newSkupkaCount
+            skupka: newSkupkaCount,
+            orders: newOrdersCount,
+            tradeIn: newTradeInCount
         });
     } catch (error) {
         console.error('Error fetching notification count:', error);

@@ -17,6 +17,7 @@ import { isAdminTelegramId } from '@/core/lib/admin';
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 
 const CATEGORIES = [
@@ -36,6 +37,7 @@ export const Header = () => {
   const { getTotalItems } = useCart();
   const { username, userPhotoUrl, telegramId, logout, role } = useAppStore();
   const { count: adminNotifs } = useAdminNotifications();
+  const { count: orderNotifs } = useOrderNotifications();
   const { needsUpdate, performUpdate } = useVersionCheck();
   const { isStandalone } = useSafeArea();
   const sourceParam = isStandalone ? '?source=pwa' : '';
@@ -168,6 +170,8 @@ export const Header = () => {
                     icon={Smartphone}
                     label="Заказы"
                     href={telegramId ? "/my-devices" : undefined}
+                    count={orderNotifs}
+                    badge
                   />
                 </div>
                 <ActionButton icon={Scale} label="Сравнить" count={0} disabled tooltip="Скоро" />

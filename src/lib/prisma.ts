@@ -1,17 +1,2 @@
-import { PrismaClient } from '@prisma/client'
-
-declare global {
-  // allow global `var` declarations
-  // eslint-disable-next-line no-var
-  var prisma: PrismaClient | undefined
-}
-
-export const prisma =
-  global.prisma ||
-  new PrismaClient({
-    // log: ['query'],
-  })
-
-if (process.env.NODE_ENV !== 'production') {
-  global.prisma = prisma
-}
+// This file is deprecated. Use src/core/lib/prisma.ts instead.
+export { prisma } from '@/core/lib/prisma';

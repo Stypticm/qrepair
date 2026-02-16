@@ -6,6 +6,7 @@ import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
 import { useCart } from '@/hooks/useCart'
+import { useAppStore } from '@/stores/authStore'
 
 interface PickupPoint {
     id: number
@@ -22,6 +23,7 @@ export default function CheckoutPickupPage() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [isNavigating, setIsNavigating] = useState(false)
+    const telegramId = useAppStore(state => state.telegramId)
 
     // Загружаем точки приема
     useEffect(() => {
@@ -65,6 +67,7 @@ export default function CheckoutPickupPage() {
                     pickupPointId: selectedPoint,
                     pickupAddress: selectedPointData?.address,
                     items: cartItems, // Отправляем товары из localStorage
+                    userId: telegramId?.toString() // Передаем ID пользователя для связки с пушами
                 }),
             })
 
@@ -133,18 +136,40 @@ export default function CheckoutPickupPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: 0.1 }}
-                                className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
+                                className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm w-full relative overflow-hidden"
                             >
-                                <div className="text-center space-y-2">
-                                    <p className="text-base text-gray-700">Ваш заказ:</p>
-                                    <p className="text-xl font-semibold text-gray-900">
+                                <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
+                                    <span className="text-6xl">🛍️</span>
+                                </div>
+                                <div className="text-center space-y-2 relative z-10">
+                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Ваш заказ</p>
+                                    <p className="text-2xl font-black text-gray-900">
                                         {getTotalItems()} товар{getTotalItems() === 1 ? '' : getTotalItems() < 5 ? 'а' : 'ов'}
                                     </p>
-                                    <p className="text-lg text-gray-700">
-                                        Сумма: <span className="font-semibold text-green-600">{formatPrice(getTotalPrice())}</span>
+                                    <p className="text-lg font-bold text-teal-600">
+                                        {formatPrice(getTotalPrice())}
                                     </p>
                                 </div>
                             </motion.div>
+
+                            {/* Guest Notice - Apple Style */}
+                            {!telegramId && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="bg-blue-50/50 border border-blue-100 rounded-[32px] p-5 flex items-start gap-4"
+                                >
+                                    <div className="w-10 h-10 bg-white rounded-2xl shadow-sm flex items-center justify-center shrink-0">
+                                        <span className="text-xl">🔔</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="text-sm font-bold text-blue-900">Будьте в курсе статуса</h4>
+                                        <p className="text-xs text-blue-800/70 leading-relaxed">
+                                            Войдите в аккаунт, чтобы получать мгновенные <b>Push-уведомления</b> об изменении статуса вашего заказа.
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
 
                             {/* Точки самовывоза */}
                             <div className="space-y-4 flex-1 overflow-auto min-h-0 h-full w-full p-4 pb-20">

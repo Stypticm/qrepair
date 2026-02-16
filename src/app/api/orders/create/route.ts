@@ -4,62 +4,74 @@ import prisma from '@/core/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId } = body
+    const { userId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems } = body
 
-    if (!productId || !amount) {
-      return NextResponse.json(
-        { error: 'Missing required fields: productId and amount are required' },
-        { status: 400 }
-      )
-    }
+    console.log(`[OrderCreate] Request from userId: ${userId}, items count: ${requestItems?.length || 0}`);
 
-    // Получаем информацию о лоте
-    const lot = await prisma.marketplaceLot.findUnique({
-      where: { id: productId }
-    })
+    // Подготавливаем массив товаров для создания OrderItem
+    let orderItemsData = [];
+    let calculatedTotalPrice = 0;
 
-    if (!lot) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      )
-    }
+    if (requestItems && Array.isArray(requestItems) && requestItems.length > 0) {
+        // Если передан массив товаров (из корзины)
+        for (const item of requestItems) {
+            orderItemsData.push({
+                lotId: item.lotId || item.id,
+                title: item.title,
+                price: item.price
+            });
+            calculatedTotalPrice += item.price * (item.quantity || 1);
+        }
+    } else if (productId && amount) {
+        // Если передан один товар (обратная совместимость)
+        const lot = await prisma.marketplaceLot.findUnique({
+            where: { id: productId }
+        });
 
-    // Создаем заказ
-    // userId может быть null для гостей, в таком случае мы можем либо 
-    // сохранять какой-то временный ID или просто оставлять поле пустым, 
-    // если схема позволяет. В схеме Order.userId - String (обязательное).
-    // Поэтому для гостей будем использовать специальный идентификатор или 
-    // требовать передачу какого-то ID (например из Telegram WebApp)
-    
-    const order = await prisma.order.create({
-      data: {
-        userId: userId || 'guest_' + Date.now(),
-        totalPrice: amount,
-        deliveryMethod: deliveryMethod || 'pickup',
-        deliveryAddress: deliveryAddress || '',
-        pickupPointId: pickupPointId || null,
-        status: 'pending',
-        items: {
-          create: {
+        if (!lot) {
+            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+        }
+
+        orderItemsData.push({
             lotId: lot.id,
             title: lot.title,
             price: lot.price
-          }
+        });
+        calculatedTotalPrice = amount;
+    } else {
+        return NextResponse.json(
+            { error: 'Missing required fields: items or productId+amount are required' },
+            { status: 400 }
+        );
+    }
+
+    // Создаем заказ
+    const order = await prisma.order.create({
+        data: {
+            userId: userId || 'guest_' + Date.now(),
+            totalPrice: calculatedTotalPrice,
+            deliveryMethod: deliveryMethod || 'pickup',
+            deliveryAddress: deliveryAddress || '',
+            pickupPointId: pickupPointId || null,
+            status: 'pending',
+            items: {
+                create: orderItemsData
+            }
+        },
+        include: {
+            items: true
         }
-      },
-      include: {
-        items: true
-      }
-    })
+    });
 
-    // Обновляем статус лота на 'reserved', чтобы он скрылся из каталога
-    await prisma.marketplaceLot.update({
-      where: { id: productId },
-      data: { status: 'reserved' }
-    })
+    // Обновляем статус лотов на 'reserved'
+    for (const item of orderItemsData) {
+        await prisma.marketplaceLot.update({
+            where: { id: item.lotId },
+            data: { status: 'reserved' }
+        });
+    }
 
-    return NextResponse.json({ success: true, order })
+    return NextResponse.json({ success: true, order, orderId: order.id })
   } catch (error) {
     console.error('Error creating order:', error)
     return NextResponse.json(

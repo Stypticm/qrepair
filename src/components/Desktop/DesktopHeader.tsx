@@ -12,6 +12,7 @@ import { usePathname } from 'next/navigation';
 import { useState, memo, useEffect } from 'react';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { QRModal } from './QRModal';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
@@ -27,6 +28,7 @@ export const DesktopHeader = () => {
     const pathname = usePathname();
     const { isDesktop } = useSafeArea();
     const { count: adminNotifs } = useAdminNotifications();
+    const { count: orderNotifs } = useOrderNotifications();
     const { needsUpdate, performUpdate } = useVersionCheck();
 
     // Force check for LH admin if store seems empty but we are on LH
@@ -84,6 +86,15 @@ export const DesktopHeader = () => {
                             <>
                                 <Link href="/favorites" className={navLinkClass('/favorites')}>
                                     Избранное
+                                </Link>
+
+                                <Link href="/my-devices" className={cn(navLinkClass('/my-devices'), "relative")}>
+                                    Заказы
+                                    {orderNotifs > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-teal-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                                            {orderNotifs}
+                                        </span>
+                                    )}
                                 </Link>
 
                                 <Link href="/cart" className={navLinkClass('/cart')}>

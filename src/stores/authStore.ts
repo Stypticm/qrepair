@@ -495,10 +495,23 @@ export const useAppStore = create<AppState>()(
       clearDebugInfo: () => {
         set({ debugInfo: [] })
       },
-      initializeTelegram: (initDataState?: any) => {
-        // Deprecated - kept for compatibility
-        // Auth now handled via login() method
-        console.log('initializeTelegram is deprecated, use login() instead')
+      initializeTelegram: () => {
+        if (typeof window !== 'undefined') {
+          const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const devId = process.env.NEXT_PUBLIC_DEV_TELEGRAM_ID;
+          const devUser = process.env.NEXT_PUBLIC_DEV_TELEGRAM_USERNAME;
+
+          if (isLocal && devId && !get().telegramId && !get().isManualLogout) {
+            console.log('🛠️ Local Dev Mode: Auto-authenticating as Admin', devId);
+            set({
+              telegramId: devId,
+              username: devUser || 'DevAdmin',
+              role: isAdminTelegramId(devId) ? 'master' : 'client',
+              userId: devId,
+              isManualLogout: false
+            });
+          }
+        }
       },
       setAuthData: (data) => {
         set({
