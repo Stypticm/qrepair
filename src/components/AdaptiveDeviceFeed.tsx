@@ -79,12 +79,6 @@ export function AdaptiveDeviceFeed({
 
   // Используем реальные данные из props (без фильтрации для начала)
   const displayItems = items;
-
-  // Отладка: логируем данные
-  console.log('🔍 AdaptiveDeviceFeed - items:', items.length, items);
-  console.log('🔍 AdaptiveDeviceFeed - displayItems:', displayItems.length, displayItems);
-  console.log('🔍 AdaptiveDeviceFeed - isLoading:', isLoading);
-
   const itemsPerPage = 1; // Показываем по 1 карточке за раз (настоящий carousel)
   const totalPages = Math.ceil(displayItems.length / itemsPerPage);
   const currentItems = displayItems.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage);

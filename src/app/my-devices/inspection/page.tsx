@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 // Оптимизировано с useCallback для предотвращения лишних перерендеров
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { DeviceTest, TestResult } from '@/core/lib/interfaces'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { AdaptiveContainer } from '@/components/AdaptiveContainer/AdaptiveContainer'
 
-export default function DeviceInspectionPage() {
+function DeviceInspectionContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const skupkaId = searchParams.get('id')
@@ -429,4 +429,10 @@ export default function DeviceInspectionPage() {
   )
 }
 
-
+export default function DeviceInspectionPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-900" />}>
+      <DeviceInspectionContent />
+    </Suspense>
+  )
+}

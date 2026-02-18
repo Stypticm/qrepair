@@ -72,17 +72,7 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
     return;
   }, [isMounted, safeArea.isTelegram]);
 
-  if (!isMounted) {
-    return (
-      <div className="min-h-dvh w-full flex flex-col items-center justify-center bg-white">
-        <img
-          src="/coconut-dancing.gif"
-          alt="Загрузка"
-          className="w-32 h-32 object-contain"
-        />
-      </div>
-    );
-  }
+
 
   const getContainerStyles = () => {
     // We remove all "frame" and "nested scroll" logic. 

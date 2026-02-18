@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Page } from '@/components/Page'
 import { motion } from 'framer-motion'
@@ -23,7 +23,7 @@ interface Order {
     createdAt: string
 }
 
-export default function SuccessPage() {
+function SuccessContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const orderId = searchParams.get('orderId')
@@ -235,5 +235,13 @@ export default function SuccessPage() {
                 </div>
             </div>
         </Page>
+    )
+}
+
+export default function SuccessPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+            <SuccessContent />
+        </Suspense>
     )
 }

@@ -1,11 +1,12 @@
 'use client';
 
 import { Page } from '@/components/Page';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
 
-export default function StatusPage() {
+function StatusContent() {
     const searchParams = useSearchParams();
     const status = searchParams.get('status');
 
@@ -50,5 +51,13 @@ export default function StatusPage() {
                 }
             </div>
         </Page>
+    );
+}
+
+export default function StatusPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen" />}>
+            <StatusContent />
+        </Suspense>
     );
 }

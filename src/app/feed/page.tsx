@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { ArrowUp } from 'lucide-react'
 import { useRouter } from 'next/navigation';
-import { useNavigation } from '../navigation/NavigationProvider';
+
 import MenuComponent from '@/components/Menu/MenuComponent';
 import { useAppStore } from '@/stores/authStore';
 
 export default function FeedPage() {
     const router = useRouter();
-    const { position } = useNavigation()
-    const {userId} = useAppStore();
+
+    const { userId } = useAppStore();
 
     // Состояние для marketplace
     const [marketplaceItems, setMarketplaceItems] = useState<Array<{
@@ -140,9 +140,7 @@ export default function FeedPage() {
                 />
             </div>
             {/* Нижнее меню — в центре */}
-            {(position.x === 0 && (position.y === 0 || position.y === 1)) && (
-                <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
-            )}
+            <MenuComponent userId={userId as number} router={router} isLoading={isLoading} />
         </div>
     )
 }

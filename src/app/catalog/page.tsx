@@ -4,7 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Filters } from '@/components/features/catalog/Filters';
 import { ProductGrid } from '@/components/features/catalog/ProductGrid';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { FilterState } from '@/components/features/catalog/Filters';
@@ -21,7 +21,7 @@ interface Product {
     condition?: string;
 }
 
-export default function CatalogPage() {
+function CatalogContent() {
     const searchParams = useSearchParams();
     const searchQuery = searchParams.get('q') || '';
 
@@ -147,5 +147,13 @@ export default function CatalogPage() {
 
             <Footer />
         </div>
+    );
+}
+
+export default function CatalogPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-white" />}>
+            <CatalogContent />
+        </Suspense>
     );
 }
