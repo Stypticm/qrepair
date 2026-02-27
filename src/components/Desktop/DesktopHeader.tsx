@@ -16,7 +16,7 @@ import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { QRModal } from './QRModal';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
-import { LogIn } from 'lucide-react';
+import { LogIn, Hammer } from 'lucide-react';
 
 export const DesktopHeader = () => {
     const username = useAppStore(state => state.username);
@@ -74,10 +74,6 @@ export const DesktopHeader = () => {
 
                         <Link href="/buyback" className={navLinkClass('/buyback')}>
                             Скупка
-                        </Link>
-
-                        <Link href="/repair" className={navLinkClass('/repair')}>
-                            Ремонт
                         </Link>
 
                         <div className="w-px h-6 bg-gray-200 mx-2"></div>
@@ -189,6 +185,16 @@ export const DesktopHeader = () => {
                                 <span>Обновить</span>
                             </button>
                         )}
+
+                        {/* Repair Button */}
+                        <Link
+                            href="/repair"
+                            className="flex items-center gap-2 px-4 py-2 bg-teal-50 text-teal-700 text-sm font-bold rounded-xl hover:bg-teal-100 transition-all shadow-sm border border-teal-200"
+                        >
+                            <Hammer className="w-4 h-4" />
+                            <span>Ремонт</span>
+                            <span className="text-[9px] bg-teal-200 text-teal-800 px-1 py-0.5 rounded uppercase tracking-wider ml-1">Скоро</span>
+                        </Link>
 
                         <button
                             onClick={() => setIsQRModalOpen(true)}

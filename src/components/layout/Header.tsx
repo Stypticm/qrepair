@@ -91,10 +91,10 @@ export const Header = () => {
 
       {/* Main Header */}
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 lg:gap-6 xl:gap-8">
           {/* Logo */}
           <Link href={`/${sourceParam}`} className="flex-shrink-0">
-            <div className="text-3xl font-bold tracking-tighter text-gray-900 select-none">
+            <div className="text-2xl lg:text-3xl font-bold tracking-tighter text-gray-900 select-none">
               QOQOS
               <span className="text-teal-500">.</span>
             </div>
@@ -120,12 +120,12 @@ export const Header = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-2xl">
+          <div className="flex-1 max-w-xl xl:max-w-2xl">
             <SearchBar />
           </div>
 
           {/* Auth */}
-          <div className="hidden lg:flex items-center mr-4">
+          <div className="hidden lg:flex items-center ml-1">
             {telegramId ? (
               <div
                 className="flex items-center gap-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200"
@@ -217,11 +217,23 @@ export const Header = () => {
                 </div>
               )
             ))}
-            <div className="ml-auto relative group">
-              <span className="text-gray-400 cursor-not-allowed">Блог</span>
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                  Скоро
+            <div className="ml-auto flex items-center gap-6">
+              <Link
+                href="/repair"
+                className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 transition-colors py-1 relative group font-bold"
+              >
+                <Hammer className="w-4 h-4" />
+                Ремонт
+                <span className="ml-1 text-[9px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded uppercase tracking-wider">Скоро</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-500 transition-all group-hover:w-full"></span>
+              </Link>
+
+              <div className="relative group">
+                <span className="text-gray-400 cursor-not-allowed">Блог</span>
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                    Скоро
+                  </div>
                 </div>
               </div>
             </div>
