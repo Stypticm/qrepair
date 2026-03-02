@@ -509,7 +509,6 @@ export default function OptimizedPhoneSelector({ open: externalOpen, onOpenChang
             <div className="flex gap-2 pt-4">
               <Button variant="outline" onClick={() => prevStep('health')} className="flex-1 h-12 rounded-xl font-black text-xs">Назад</Button>
               <Button
-                disabled={!state.isFunctional || !state.isBatterySafe || !state.isHardwareOk || !state.isClean}
                 onClick={() => nextStep('history')}
                 className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600"
               >

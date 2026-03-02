@@ -84,6 +84,7 @@ model Master {
   inspections      DeviceInspection[]
   point            Point?             @relation(fields: [pointId], references: [id])
   assignedRequests Skupka[]
+  repairRequests   RepairRequest[]
 
   @@schema("public")
 }
@@ -397,6 +398,7 @@ model User {
   pushSubscriptions PushSubscription[]
   chats           OperatorChat[]
   marketplaceLots MarketplaceLot[]
+  repairRequests  RepairRequest[]
 
   @@index([telegramId])
   @@index([role])
@@ -408,6 +410,7 @@ enum Role {
   ADMIN
   MASTER
   MANAGER
+  COURIER
 
   @@schema("public")
 }
@@ -492,5 +495,66 @@ model BotAccess {
   blockedUntil DateTime?
   updatedAt    DateTime  @updatedAt
 
+  @@schema("public")
+}
+
+model RepairRequest {
+  id              String       @id @default(cuid())
+  telegramId      String
+  user            User?        @relation(fields: [telegramId], references: [telegramId])
+  
+  // Устройство
+  deviceModel     String
+  serialNumber    String?
+  
+  // Ремонт
+  category        String       // screen, battery, camera, board, body, diagnostics
+  issueDescription String?
+  issuePhotos     String[]
+  
+  // Оценка
+  estimatedMin    Float?
+  estimatedMax    Float?
+  finalPrice      Float?
+  
+  // Логистика
+  deliveryMethod  String       // 'self' | 'courier'
+  appointmentDate DateTime?
+  appointmentTime String?
+  
+  // Трекинг
+  status          RepairStatus @default(created)
+  unpackVideoUrl  String?
+  envelopeNumber  String?
+  
+  // Мастер
+  assignedMasterId String?
+  assignedMaster   Master?     @relation(fields: [assignedMasterId], references: [id])
+  
+  courierNotes    String?
+  customerNotes   String?
+  
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([telegramId])
+  @@index([status])
+  @@schema("public")
+}
+
+enum RepairStatus {
+  created          // заявка создана
+  courier_assigned // курьер назначен
+  in_transit       // устройство в пути
+  received         // получено в мастерской
+  unpacked         // распаковано на камеру
+  diagnosing       // диагностика
+  price_approval   // согласование цены
+  repairing        // в ремонте
+  completed        // ремонт завершён
+  ready_for_pickup // готово к выдаче
+  delivered        // доставлено клиенту
+  cancelled        // отменено
+  
   @@schema("public")
 }

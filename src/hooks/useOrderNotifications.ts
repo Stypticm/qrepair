@@ -7,39 +7,54 @@ export function useOrderNotifications() {
     const [count, setCount] = useState(0);
     const telegramId = useAppStore(state => state.telegramId);
 
+    const [isUnauthorized, setIsUnauthorized] = useState(false);
+
     const fetchOrders = async () => {
-        if (!telegramId) {
+        if (!telegramId || isUnauthorized) {
             setCount(0);
             return;
         }
 
         try {
             const response = await fetch('/api/orders/my');
+            
+            if (response.status === 401) {
+                // Если не авторизован, запоминаем это и больше не опрашиваем
+                setIsUnauthorized(true);
+                setCount(0);
+                return;
+            }
+
             if (response.ok) {
                 const data = await response.json();
                 const orders = data.orders || [];
                 
                 // Считаем заказы, которые находятся в "активной" фазе обработки
-                // (подтвержден или в доставке) - то, что точно интересно клиенту
                 const activeOrders = orders.filter((o: any) => 
                     o.status === 'confirmed' || o.status === 'in_delivery'
                 );
                 
                 setCount(activeOrders.length);
+                setIsUnauthorized(false);
             }
         } catch (error) {
-            console.error('Failed to fetch order notifications:', error);
+            // Игнорируем сетевые ошибки
         }
     };
 
     useEffect(() => {
+        setIsUnauthorized(false); // Сбрасываем при смене пользователя
         fetchOrders();
 
-        // Обновляем раз в 30 секунд
-        const interval = setInterval(fetchOrders, 30000);
+        // Обновляем раз в 30 секунд, только если нет ошибки авторизации
+        const interval = setInterval(() => {
+            if (!isUnauthorized) fetchOrders();
+        }, 30000);
 
-        // Также обновляем при фокусе окна
-        const handleFocus = () => fetchOrders();
+        const handleFocus = () => {
+            if (isUnauthorized) setIsUnauthorized(false); // Пробуем снова при фокусе
+            fetchOrders();
+        };
         window.addEventListener('focus', handleFocus);
 
         return () => {

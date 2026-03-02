@@ -72,71 +72,128 @@ export default function CartPage() {
             </p>
           </div>
 
-          <div className="space-y-4 mb-8">
-            {cartItems.map((item) => (
-              <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-4">
-                    {/* Мини-изображение */}
-                    <div className="relative w-20 h-20 bg-gray-100 rounded-xl flex-shrink-0">
-                      {item.cover ? (
-                        <Image
-                          src={item.cover}
-                          alt={item.title}
-                          fill
-                          className="object-cover rounded-xl"
-                        />
-                      ) : item.photos && item.photos.length > 0 ? (
-                        <Image
-                          src={item.photos[0]}
-                          alt={item.title}
-                          fill
-                          className="object-cover rounded-xl"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
+          <div className="flex flex-col lg:flex-row gap-8 mb-8">
+            <div className="flex-1 space-y-4">
+              {cartItems.map((item) => (
+                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-center gap-4">
+                      {/* Мини-изображение */}
+                      <div className="relative w-20 h-20 bg-gray-100 rounded-xl flex-shrink-0">
+                        {item.cover ? (
                           <Image
-                            src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
-                            alt="Нет фото"
-                            width={24}
-                            height={24}
-                            className="opacity-50"
+                            src={item.cover}
+                            alt={item.title}
+                            fill
+                            className="object-cover rounded-xl"
                           />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Основная информация */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
-                        {item.title}
-                      </h3>
-                      {item.model && (
-                        <p className="text-sm text-gray-500 mb-1">
-                          {item.model} {item.storage && `· ${item.storage}`} {item.color && `· ${item.color}`}
-                        </p>
-                      )}
-                      <div className="text-xl font-bold text-gray-900">
-                        {formatPrice(item.price)}
+                        ) : item.photos && item.photos.length > 0 ? (
+                          <Image
+                            src={item.photos[0]}
+                            alt={item.title}
+                            fill
+                            className="object-cover rounded-xl"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Image
+                              src={getPictureUrl('animation_logo2.gif') || '/animation_logo2.gif'}
+                              alt="Нет фото"
+                              width={24}
+                              height={24}
+                              className="opacity-50"
+                            />
+                          </div>
+                        )}
                       </div>
-                    </div>
 
-                    {/* Кнопка удаления */}
-                    <button
-                      onClick={() => removeFromCart(item.id)}
-                      disabled={loading}
-                      className="p-3 bg-red-50 hover:bg-red-100 rounded-xl transition-colors disabled:opacity-50"
-                      title="Удалить из корзины"
-                    >
-                      <Trash2 className="w-5 h-5 text-red-500" />
-                    </button>
+                      {/* Основная информация */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+                          {item.title}
+                        </h3>
+                        {item.model && (
+                          <p className="text-sm text-gray-500 mb-1">
+                            {item.model} {item.storage && `· ${item.storage}`} {item.color && `· ${item.color}`}
+                          </p>
+                        )}
+                        <div className="text-xl font-bold text-gray-900">
+                          {formatPrice(item.price)}
+                        </div>
+                      </div>
+
+                      {/* Кнопка удаления */}
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        disabled={loading}
+                        className="p-3 bg-red-50 hover:bg-red-100 rounded-xl transition-colors disabled:opacity-50"
+                        title="Удалить из корзины"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-500" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Bottom Checkout Section - Mobile only */}
+            {/* Desktop Checkout Section */}
+            <div className="hidden md:block w-[380px] flex-shrink-0">
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sticky top-28">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">Ваш заказ</h2>
+
+                <div className="space-y-4 mb-6 text-sm text-gray-600">
+                  <div className="flex justify-between">
+                    <span>Товары ({getTotalItems()})</span>
+                    <span className="font-medium text-gray-900">{formatPrice(getTotalPrice())}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Скидка</span>
+                    <span className="font-medium text-teal-600">0 ₽</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-100 pt-4 mb-6">
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-base font-semibold text-gray-900">Итого</span>
+                    <span className="text-2xl font-bold text-gray-900">{formatPrice(getTotalPrice())}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={handleCheckout}
+                    disabled={loading}
+                    className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-2xl font-semibold transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    Перейти к оформлению
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      className="w-5 h-5 ml-1"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </button>
+
+                  <button
+                    onClick={clearCart}
+                    disabled={loading}
+                    className="w-full h-12 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-2xl font-medium transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Очистить корзину
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-bottom md:hidden">
             <div className="max-w-md mx-auto">
               <div className="flex justify-between items-center mb-4">

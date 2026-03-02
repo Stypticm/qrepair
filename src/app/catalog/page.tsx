@@ -4,9 +4,10 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Filters } from '@/components/features/catalog/Filters';
 import { ProductGrid } from '@/components/features/catalog/ProductGrid';
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { SlidersHorizontal, X } from 'lucide-react';
 import type { FilterState } from '@/components/features/catalog/Filters';
 
 interface Product {
@@ -19,7 +20,10 @@ interface Product {
     storage?: string;
     color?: string;
     condition?: string;
+    date?: string;
 }
+
+type SortKey = 'popular' | 'cheap' | 'expensive' | 'newest';
 
 function CatalogContent() {
     const searchParams = useSearchParams();
@@ -34,67 +38,146 @@ function CatalogContent() {
 
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [totalCount, setTotalCount] = useState(0);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [offset, setOffset] = useState(0);
+    const LIMIT = 12;
 
-    // Load products from API
-    const loadProducts = useCallback(async () => {
-        setIsLoading(true);
+    const [sortKey, setSortKey] = useState<SortKey>('popular');
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+    const loadProducts = useCallback(async (currentOffset: number, isLoadMore = false) => {
+        if (isLoadMore) {
+            setIsLoadingMore(true);
+        } else {
+            setIsLoading(true);
+        }
+
         try {
-            const limit = 24;
-            const res = await fetch(`/api/market/feed?limit=${limit}&offset=0`, { cache: 'no-store' });
+            const res = await fetch(`/api/market/feed?limit=${LIMIT}&offset=${currentOffset}`, { cache: 'no-store' });
             const data = await res.json();
 
             if (res.ok && Array.isArray(data.items)) {
-                setProducts(data.items);
-                setTotalCount(data.items.length);
+                if (data.items.length < LIMIT) {
+                    setHasMore(false);
+                } else {
+                    setHasMore(true);
+                }
+
+                if (isLoadMore) {
+                    setProducts(prev => [...prev, ...data.items]);
+                } else {
+                    setProducts(data.items);
+                }
+            } else {
+                setHasMore(false);
             }
         } catch (error) {
             console.error('Error loading products:', error);
+            setHasMore(false);
         } finally {
             setIsLoading(false);
+            setIsLoadingMore(false);
         }
-    }, []);
+    }, [LIMIT]);
 
     useEffect(() => {
-        loadProducts();
+        setOffset(0);
+        setHasMore(true);
+        loadProducts(0, false);
     }, [loadProducts]);
+
+    const handleLoadMore = () => {
+        const nextOffset = offset + LIMIT;
+        setOffset(nextOffset);
+        loadProducts(nextOffset, true);
+    };
 
     const handleFilterChange = (newFilters: FilterState) => {
         setFilters(newFilters);
-        // TODO: Apply filters to products
-        console.log('Filters changed:', newFilters);
     };
 
-    // Filter products based on search query
-    const filteredProducts = searchQuery
-        ? products.filter(item => {
-            const query = searchQuery.toLowerCase();
-            return (
-                item.title?.toLowerCase().includes(query) ||
-                item.model?.toLowerCase().includes(query) ||
-                item.storage?.toLowerCase().includes(query) ||
-                item.color?.toLowerCase().includes(query)
-            );
-        })
-        : products;
+    // Apply search + filters + sort
+    const transformedProducts = useMemo(() => {
+        let result = [...products];
 
-    // Transform marketplace items to product format
-    const transformedProducts = filteredProducts.map(item => ({
-        id: item.id,
-        name: item.title,
-        price: item.price || 0,
-        image: item.cover || (item.photos && item.photos[0]) || 'https://placehold.co/400x400/e2e8f0/64748b?text=No+Image',
-        condition: item.condition || 'Новый',
-        brand: item.model?.split(' ')[0] || 'Unknown',
-        inStock: true,
-    }));
+        // Search query
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            result = result.filter(item =>
+                item.title?.toLowerCase().includes(q) ||
+                item.model?.toLowerCase().includes(q) ||
+                item.storage?.toLowerCase().includes(q) ||
+                item.color?.toLowerCase().includes(q)
+            );
+        }
+
+        // Price filter
+        if (filters.priceRange[0] > 0 || filters.priceRange[1] < 200000) {
+            result = result.filter(item => {
+                const price = item.price || 0;
+                return price >= filters.priceRange[0] && price <= filters.priceRange[1];
+            });
+        }
+
+        // Brand filter
+        if (filters.brands.length > 0) {
+            result = result.filter(item => {
+                const brand = item.model?.split(' ')[0] || '';
+                return filters.brands.some(b => brand.toLowerCase().includes(b.toLowerCase()));
+            });
+        }
+
+        // Condition filter
+        if (filters.conditions.length > 0) {
+            result = result.filter(item =>
+                filters.conditions.includes(item.condition || 'Новый')
+            );
+        }
+
+        // Sort
+        switch (sortKey) {
+            case 'cheap':
+                result.sort((a, b) => (a.price || 0) - (b.price || 0));
+                break;
+            case 'expensive':
+                result.sort((a, b) => (b.price || 0) - (a.price || 0));
+                break;
+            case 'newest':
+                result.sort((a, b) => {
+                    const da = a.date ? new Date(a.date).getTime() : 0;
+                    const db = b.date ? new Date(b.date).getTime() : 0;
+                    return db - da;
+                });
+                break;
+            default:
+                break;
+        }
+
+        return result.map(item => ({
+            id: item.id,
+            name: item.title,
+            price: item.price || 0,
+            image: item.cover || (item.photos && item.photos[0]) || 'https://placehold.co/400x400/e2e8f0/64748b?text=No+Image',
+            condition: item.condition || 'Новый',
+            brand: item.model?.split(' ')[0] || 'Unknown',
+            inStock: true,
+        }));
+    }, [products, searchQuery, filters, sortKey]);
+
+    const sortButtons: { key: SortKey; label: string }[] = [
+        { key: 'popular', label: 'Популярные' },
+        { key: 'cheap', label: 'Дешевле' },
+        { key: 'expensive', label: 'Дороже' },
+        { key: 'newest', label: 'Новинки' },
+    ];
 
     return (
         <div className="min-h-screen bg-white">
             <Header />
 
             <main className="pt-6 pb-12">
-                <div className="max-w-7xl mx-auto px-6">
+                <div className="max-w-7xl mx-auto px-4 md:px-6">
                     {/* Breadcrumbs */}
                     <nav className="mb-6 text-sm text-gray-500">
                         <Link href="/" className="hover:text-teal-600">Главная</Link>
@@ -103,43 +186,85 @@ function CatalogContent() {
                     </nav>
 
                     {/* Page Header */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                            {searchQuery ? `Результаты поиска: "${searchQuery}"` : 'Каталог товаров'}
-                        </h1>
-                        <p className="text-gray-500">Найдено {transformedProducts.length} товаров</p>
+                    <div className="mb-6 md:mb-8 flex items-end justify-between">
+                        <div>
+                            <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-1">
+                                {searchQuery ? `Результаты: «${searchQuery}»` : 'Каталог'}
+                            </h1>
+                            <p className="text-gray-500 text-sm">{transformedProducts.length} товаров</p>
+                        </div>
+                        {/* Mobile filter toggle */}
+                        <button
+                            onClick={() => setMobileFiltersOpen(true)}
+                            className="md:hidden flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                            <SlidersHorizontal className="w-4 h-4" />
+                            Фильтры
+                        </button>
                     </div>
 
                     {/* Layout: Filters + Grid */}
                     <div className="flex gap-8">
-                        <Filters onFilterChange={handleFilterChange} />
+                        {/* Desktop filters */}
+                        <div className="hidden md:block">
+                            <Filters onFilterChange={handleFilterChange} />
+                        </div>
+
+                        {/* Mobile filters drawer */}
+                        {mobileFiltersOpen && (
+                            <div className="fixed inset-0 z-50 md:hidden">
+                                <div className="absolute inset-0 bg-black/40" onClick={() => setMobileFiltersOpen(false)} />
+                                <div className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-2xl overflow-y-auto">
+                                    <div className="flex items-center justify-between p-4 border-b">
+                                        <span className="font-bold text-gray-900">Фильтры</span>
+                                        <button onClick={() => setMobileFiltersOpen(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <Filters onFilterChange={(f) => { handleFilterChange(f); setMobileFiltersOpen(false); }} />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex-1">
                             {/* Sort Options */}
-                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 overflow-x-auto">
                                 <div className="flex gap-2">
-                                    <button className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium">
-                                        Популярные
-                                    </button>
-                                    <button className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium transition-colors">
-                                        Дешевле
-                                    </button>
-                                    <button className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium transition-colors">
-                                        Дороже
-                                    </button>
-                                    <button className="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-50 text-sm font-medium transition-colors">
-                                        Новинки
-                                    </button>
+                                    {sortButtons.map(btn => (
+                                        <button
+                                            key={btn.key}
+                                            onClick={() => setSortKey(btn.key)}
+                                            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${sortKey === btn.key
+                                                ? 'bg-gray-900 text-white'
+                                                : 'text-gray-600 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            {btn.label}
+                                        </button>
+                                    ))}
                                 </div>
-
-                                <select className="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:border-teal-500">
-                                    <option>Показывать по 24</option>
-                                    <option>Показывать по 48</option>
-                                    <option>Показывать по 96</option>
-                                </select>
                             </div>
 
                             <ProductGrid products={transformedProducts} isLoading={isLoading} />
+
+                            {!isLoading && hasMore && transformedProducts.length > 0 && (
+                                <div className="mt-8 flex justify-center">
+                                    <button
+                                        onClick={handleLoadMore}
+                                        disabled={isLoadingMore}
+                                        className="px-8 py-3 bg-white border-2 border-gray-200 text-gray-900 rounded-2xl font-bold hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    >
+                                        {isLoadingMore ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                                                Загрузка...
+                                            </>
+                                        ) : (
+                                            'Показать ещё'
+                                        )}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

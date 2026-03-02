@@ -1,6 +1,7 @@
 'use client';
 
-import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User, Settings, Smartphone, Hammer } from 'lucide-react';
+import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User, Settings, Smartphone, Hammer, Coins } from 'lucide-react';
+import OptimizedPhoneSelector from '@/components/OptimizedPhoneSelector';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
@@ -33,6 +34,7 @@ const CATEGORIES = [
 export const Header = () => {
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isTradeInModalOpen, setIsTradeInModalOpen] = useState(false);
   const { favorites } = useFavorites();
   const { getTotalItems } = useCart();
   const { username, userPhotoUrl, telegramId, logout, role } = useAppStore();
@@ -218,13 +220,21 @@ export const Header = () => {
               )
             ))}
             <div className="ml-auto flex items-center gap-6">
+              <button
+                onClick={() => setIsTradeInModalOpen(true)}
+                className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors py-1 relative group font-bold"
+              >
+                <Coins className="w-4 h-4" />
+                Скупка
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all group-hover:w-full"></span>
+              </button>
+
               <Link
                 href="/repair"
                 className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 transition-colors py-1 relative group font-bold"
               >
                 <Hammer className="w-4 h-4" />
                 Ремонт
-                <span className="ml-1 text-[9px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded uppercase tracking-wider">Скоро</span>
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-500 transition-all group-hover:w-full"></span>
               </Link>
 
@@ -251,6 +261,11 @@ export const Header = () => {
 
       {/* Auth Modal */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+
+      <OptimizedPhoneSelector
+        open={isTradeInModalOpen}
+        onOpenChange={setIsTradeInModalOpen}
+      />
     </header>
   );
 };

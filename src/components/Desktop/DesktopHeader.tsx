@@ -16,7 +16,8 @@ import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { QRModal } from './QRModal';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
-import { LogIn, Hammer } from 'lucide-react';
+import { LogIn, Hammer, Coins } from 'lucide-react';
+import OptimizedPhoneSelector from '@/components/OptimizedPhoneSelector';
 
 export const DesktopHeader = () => {
     const username = useAppStore(state => state.username);
@@ -25,6 +26,7 @@ export const DesktopHeader = () => {
     const role = useAppStore(state => state.role);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [isTradeInModalOpen, setIsTradeInModalOpen] = useState(false);
     const pathname = usePathname();
     const { isDesktop } = useSafeArea();
     const { count: adminNotifs, leads, skupka, orders, tradeIn } = useAdminNotifications();
@@ -70,10 +72,6 @@ export const DesktopHeader = () => {
                     <nav className="hidden lg:flex items-center gap-2 flex-1">
                         <Link href="/" className={navLinkClass('/')}>
                             Главная
-                        </Link>
-
-                        <Link href="/buyback" className={navLinkClass('/buyback')}>
-                            Скупка
                         </Link>
 
                         <div className="w-px h-6 bg-gray-200 mx-2"></div>
@@ -186,14 +184,20 @@ export const DesktopHeader = () => {
                             </button>
                         )}
 
-                        {/* Repair Button */}
+                        <button
+                            onClick={() => setIsTradeInModalOpen(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 text-sm font-bold rounded-xl hover:bg-blue-100 transition-all shadow-sm border border-blue-200"
+                        >
+                            <Coins className="w-4 h-4" />
+                            <span>Скупка</span>
+                        </button>
+
                         <Link
                             href="/repair"
                             className="flex items-center gap-2 px-4 py-2 bg-teal-50 text-teal-700 text-sm font-bold rounded-xl hover:bg-teal-100 transition-all shadow-sm border border-teal-200"
                         >
                             <Hammer className="w-4 h-4" />
                             <span>Ремонт</span>
-                            <span className="text-[9px] bg-teal-200 text-teal-800 px-1 py-0.5 rounded uppercase tracking-wider ml-1">Скоро</span>
                         </Link>
 
                         <button
@@ -208,6 +212,10 @@ export const DesktopHeader = () => {
 
             <QRModal isOpen={isQRModalOpen} onClose={() => setIsQRModalOpen(false)} />
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+            <OptimizedPhoneSelector
+                open={isTradeInModalOpen}
+                onOpenChange={setIsTradeInModalOpen}
+            />
         </>
     );
 };

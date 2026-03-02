@@ -6,7 +6,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { useAppStore } from '@/stores/authStore';
 
-export function Page({ children, header, back = true }: PropsWithChildren<{
+export function Page({ children, title, header, back = true }: PropsWithChildren<{
+  title?: string;
   header?: React.ReactNode;
   back?: boolean | (() => void);
 }>) {

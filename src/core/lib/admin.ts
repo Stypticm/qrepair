@@ -1,3 +1,4 @@
+// Hardcoded IDs — fallback for dev environment
 const DEFAULT_ADMIN_IDS = ['1', '296925626', '531360988', 'qoqos_support'];
 
 const rawAdminIds =
@@ -11,9 +12,9 @@ const parsedAdminIds = rawAdminIds
       .filter(Boolean)
   : [];
 
-// Merge env IDs with defaults to ensure dev IDs always work
 export const ADMIN_TELEGRAM_IDS: string[] = Array.from(new Set([...DEFAULT_ADMIN_IDS, ...parsedAdminIds]));
 
+// Quick synchronous check (hardcoded/env IDs only, for client-side)
 export const isAdminTelegramId = (
   telegramId?: string | number | null
 ): boolean => {
@@ -21,3 +22,5 @@ export const isAdminTelegramId = (
   const idStr = telegramId.toString().toLowerCase();
   return ADMIN_TELEGRAM_IDS.some(adminId => adminId.toLowerCase() === idStr);
 };
+
+

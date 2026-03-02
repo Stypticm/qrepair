@@ -84,8 +84,7 @@ export default function CheckoutPage() {
     const handleCourier = () => {
         setSelectedOption('courier')
         setIsNavigating(true)
-        // Пока редирект на pickup, позже создадим courier
-        setTimeout(() => router.push('/cart/checkout/pickup'), 200)
+        setTimeout(() => router.push('/cart/checkout/courier'), 200)
     }
 
     // Показываем загрузку если корзина пуста (редирект в useEffect)
@@ -170,15 +169,15 @@ export default function CheckoutPage() {
                                 </Button>
                             </motion.div>
 
-                            {/* Курьер (временно disabled) */}
+                            {/* Курьер */}
                             <motion.div
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="relative opacity-50"
+                                className="relative"
                             >
                                 <Button
-                                    disabled
-                                    className={`w-full ${adaptiveStyles.buttonHeight} bg-white text-gray-400 rounded-3xl font-semibold shadow-xl border-2 border-gray-200 overflow-hidden relative cursor-not-allowed`}
+                                    onClick={handleCourier}
+                                    className={`w-full ${adaptiveStyles.buttonHeight} bg-white hover:bg-gray-50 text-gray-800 hover:text-gray-900 rounded-3xl font-semibold shadow-xl border-2 border-gray-200 hover:border-gray-300 overflow-hidden relative group`}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-b from-gray-50/50 to-transparent rounded-3xl" />
 
@@ -188,9 +187,10 @@ export default function CheckoutPage() {
                                         </div>
                                         <div className="text-left">
                                             <div className={`font-bold ${adaptiveStyles.textSize}`}>Курьер</div>
-                                            <div className={`${adaptiveStyles.subTextSize} opacity-70 font-medium`}>Скоро доступно</div>
+                                            <div className={`${adaptiveStyles.subTextSize} opacity-70 font-medium`}>До двери</div>
                                         </div>
                                     </div>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200/20 to-transparent -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 </Button>
                             </motion.div>
                         </motion.div>
