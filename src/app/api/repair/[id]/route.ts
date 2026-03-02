@@ -4,9 +4,10 @@ import { checkAdminAccessFromDB } from '@/core/lib/admin-server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const telegramId = request.headers.get('x-telegram-id')
 
     if (!telegramId) {
@@ -14,7 +15,7 @@ export async function GET(
     }
 
     const requestData = await prisma.repairRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         assignedMaster: {
           select: { name: true }
@@ -45,9 +46,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const telegramId = request.headers.get('x-telegram-id')
     if (!telegramId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -67,7 +69,7 @@ export async function PATCH(
     delete updates.createdAt
 
     const result = await prisma.repairRequest.update({
-      where: { id: params.id },
+      where: { id },
       data: updates
     })
 

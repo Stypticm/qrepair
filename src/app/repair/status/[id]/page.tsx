@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useAppStore } from '@/stores/authStore'
 import { Loader2, Package, Truck, Hammer, CheckCircle, Clock } from 'lucide-react'
@@ -18,8 +18,10 @@ const STATUS_STEPS = [
     { id: 'delivered', label: 'Выдано клиенту', icon: CheckCircle },
 ]
 
-export default function RepairStatusPage({ params }: { params: { id: string } }) {
+export default function RepairStatusPage() {
     const router = useRouter()
+    const params = useParams()
+    const idParam = params?.id as string
     const { telegramId } = useAppStore()
     const [request, setRequest] = useState<any>(null)
     const [loading, setLoading] = useState(true)
@@ -28,9 +30,9 @@ export default function RepairStatusPage({ params }: { params: { id: string } })
         const fetchStatus = async () => {
             try {
                 const id = telegramId || sessionStorage.getItem('telegramId')
-                if (!id) return
+                if (!id || !idParam) return
 
-                const res = await fetch(`/api/repair/${params.id}`, {
+                const res = await fetch(`/api/repair/${idParam}`, {
                     headers: { 'x-telegram-id': id.toString() }
                 })
 
@@ -49,7 +51,7 @@ export default function RepairStatusPage({ params }: { params: { id: string } })
         // Poll every 30s
         const interval = setInterval(fetchStatus, 30000)
         return () => clearInterval(interval)
-    }, [params.id, telegramId])
+    }, [idParam, telegramId])
 
     if (loading) {
         return (
