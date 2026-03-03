@@ -2,7 +2,7 @@
 
 import { RotatingBanner } from '@/components/RotatingBanner';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
-import { Hammer } from 'lucide-react';
+import { Hammer, Coins } from 'lucide-react';
 import Link from 'next/link';
 
 interface MainFeedProps {
@@ -41,19 +41,25 @@ export const MainFeed = ({
                                     <RotatingBanner banners={bannerList} interval={5000} screenHeight={screenHeight} />
                                 </div>
 
-                                {/* Анонс ремонта */}
-                                <div className="flex justify-center mb-6 px-1">
-                                    <Link href="/repair" className="w-full bg-white/60 backdrop-blur-md rounded-2xl border border-dashed border-teal-200 p-4 flex items-center gap-4 shadow-sm hover:bg-white/80 transition-colors active:scale-[0.98]">
-                                        <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <Hammer className="w-6 h-6 text-teal-600" />
+                                {/* Кнопки сервисов */}
+                                <div className="grid grid-cols-2 gap-3 mb-6 px-1">
+                                    <Link href="/repair" className="bg-white/60 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm border border-gray-100 hover:bg-white/80 transition-all active:scale-[0.96]">
+                                        <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <Hammer className="w-5 h-5 text-teal-600" />
                                         </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="font-bold text-gray-900 leading-none">Ремонт</h3>
-                                            </div>
-                                            <p className="text-xs text-gray-500 mt-1">
-                                                Профессиональный ремонт вашей техники
-                                            </p>
+                                        <div className="text-center">
+                                            <h3 className="font-bold text-gray-900 text-sm leading-none">Ремонт</h3>
+                                            <p className="text-[10px] text-gray-500 mt-1">Сервис</p>
+                                        </div>
+                                    </Link>
+
+                                    <Link href="/buyback" className="bg-white/60 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm border border-gray-100 hover:bg-white/80 transition-all active:scale-[0.96]">
+                                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <Coins className="w-5 h-5 text-blue-600" />
+                                        </div>
+                                        <div className="text-center">
+                                            <h3 className="font-bold text-gray-900 text-sm leading-none">Скупка</h3>
+                                            <p className="text-[10px] text-gray-500 mt-1">Быстрая цена</p>
                                         </div>
                                     </Link>
                                 </div>

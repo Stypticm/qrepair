@@ -17,7 +17,6 @@ import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { QRModal } from './QRModal';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
 import { LogIn, Hammer, Coins } from 'lucide-react';
-import OptimizedPhoneSelector from '@/components/OptimizedPhoneSelector';
 
 export const DesktopHeader = () => {
     const username = useAppStore(state => state.username);
@@ -26,7 +25,6 @@ export const DesktopHeader = () => {
     const role = useAppStore(state => state.role);
     const [isQRModalOpen, setIsQRModalOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [isTradeInModalOpen, setIsTradeInModalOpen] = useState(false);
     const pathname = usePathname();
     const { isDesktop } = useSafeArea();
     const { count: adminNotifs, leads, skupka, orders, tradeIn } = useAdminNotifications();
@@ -184,13 +182,13 @@ export const DesktopHeader = () => {
                             </button>
                         )}
 
-                        <button
-                            onClick={() => setIsTradeInModalOpen(true)}
+                        <Link
+                            href="/buyback"
                             className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 text-sm font-bold rounded-xl hover:bg-blue-100 transition-all shadow-sm border border-blue-200"
                         >
                             <Coins className="w-4 h-4" />
                             <span>Скупка</span>
-                        </button>
+                        </Link>
 
                         <Link
                             href="/repair"
@@ -212,10 +210,6 @@ export const DesktopHeader = () => {
 
             <QRModal isOpen={isQRModalOpen} onClose={() => setIsQRModalOpen(false)} />
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
-            <OptimizedPhoneSelector
-                open={isTradeInModalOpen}
-                onOpenChange={setIsTradeInModalOpen}
-            />
         </>
     );
 };

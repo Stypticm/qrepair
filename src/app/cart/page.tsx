@@ -6,7 +6,6 @@ import { useCart } from '@/hooks/useCart'
 import { ShoppingCart, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
-import { Header } from '@/components/layout/Header'
 
 export default function CartPage() {
   const router = useRouter()
@@ -26,8 +25,8 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center md:pt-20">
+      <Page back={true}>
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center md:pt-40">
           <div className="max-w-7xl w-full mx-auto px-6">
             <div className="text-center">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -38,7 +37,7 @@ export default function CartPage() {
             </div>
             <button
               onClick={() => router.push('/')}
-              className="md:hidden px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors font-semibold flex items-center justify-center gap-2 mx-auto"
+              className="mt-6 px-8 py-3 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors font-semibold flex items-center justify-center gap-2 mx-auto shadow-lg shadow-teal-500/20 active:scale-[0.98]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -61,10 +60,10 @@ export default function CartPage() {
   }
 
   return (
-    <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
+    <Page back={true}>
       <div className="min-h-screen bg-gray-50 md:pt-2">
         {/* md:pt-2 because Header is fixed and takes ~80px space. */}
-        <div className="max-w-7xl mx-auto pt-16 md:pt-24 px-6 pb-32">
+        <div className="max-w-7xl mx-auto pt-16 md:pt-32 px-6 pb-32">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Корзина</h1>
             <p className="text-gray-600">

@@ -1,6 +1,5 @@
 'use client';
 
-import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Filters } from '@/components/features/catalog/Filters';
 import { ProductGrid } from '@/components/features/catalog/ProductGrid';
@@ -173,9 +172,7 @@ function CatalogContent() {
     ];
 
     return (
-        <div className="min-h-screen bg-white">
-            <Header />
-
+        <div className="min-h-screen bg-white pt-20">
             <main className="pt-6 pb-12">
                 <div className="max-w-7xl mx-auto px-4 md:px-6">
                     {/* Breadcrumbs */}

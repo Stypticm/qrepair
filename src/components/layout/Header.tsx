@@ -34,7 +34,6 @@ const CATEGORIES = [
 export const Header = () => {
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [isTradeInModalOpen, setIsTradeInModalOpen] = useState(false);
   const { favorites } = useFavorites();
   const { getTotalItems } = useCart();
   const { username, userPhotoUrl, telegramId, logout, role } = useAppStore();
@@ -220,14 +219,14 @@ export const Header = () => {
               )
             ))}
             <div className="ml-auto flex items-center gap-6">
-              <button
-                onClick={() => setIsTradeInModalOpen(true)}
+              <Link
+                href="/buyback"
                 className="flex items-center gap-1.5 text-blue-600 hover:text-blue-700 transition-colors py-1 relative group font-bold"
               >
                 <Coins className="w-4 h-4" />
                 Скупка
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all group-hover:w-full"></span>
-              </button>
+              </Link>
 
               <Link
                 href="/repair"
@@ -259,13 +258,7 @@ export const Header = () => {
         <MegaMenu isOpen={isCatalogOpen} onClose={() => setIsCatalogOpen(false)} />
       </div>
 
-      {/* Auth Modal */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
-
-      <OptimizedPhoneSelector
-        open={isTradeInModalOpen}
-        onOpenChange={setIsTradeInModalOpen}
-      />
     </header>
   );
 };
