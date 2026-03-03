@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdminTelegramId } from '@/core/lib/admin';
+import { checkRole } from '@/core/lib/auth';
 import { NotificationService } from '@/services/notification.service';
 
 export async function POST(request: NextRequest) {
@@ -11,7 +11,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (!isAdminTelegramId(adminTelegramId)) {
+    const hasAccess = await checkRole(adminTelegramId, ['ADMIN', 'MANAGER']);
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdminTelegramId } from '@/core/lib/admin';
+import { checkRole } from '@/core/lib/auth';
 
-export async function GET(req: NextRequest) {
-  const telegramId = req.headers.get('x-telegram-id');
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get('status') || 'active';
-
-  if (!isAdminTelegramId(telegramId)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function GET(request: NextRequest) {
   try {
+    const adminId = request.headers.get('x-admin-id');
+    const hasAccess = await checkRole(adminId, ['ADMIN', 'MANAGER']);
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') || 'active';
+
     // 1. Auto-archive inactive chats (older than 5 days)
     const fiveDaysAgo = new Date();
     fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
@@ -19,28 +20,26 @@ export async function GET(req: NextRequest) {
     await prisma.operatorChat.updateMany({
       where: {
         status: 'active',
-        updatedAt: { lt: fiveDaysAgo }
+        updatedAt: { lt: fiveDaysAgo },
       },
-      data: { status: 'archived' }
+      data: { status: 'archived' },
     });
 
-    // 2. Fetch chats by requested status
+    // 2. Fetch chats
     const chats = await prisma.operatorChat.findMany({
-      where: {
-        status: status as any
-      },
+      where: status === 'all' ? {} : { status: status as any },
       include: {
         messages: {
-          take: 1,
           orderBy: { createdAt: 'desc' },
+          take: 1,
         },
       },
       orderBy: { updatedAt: 'desc' },
     });
 
-    return NextResponse.json(chats);
+    return NextResponse.json({ success: true, chats });
   } catch (error) {
-    console.error('Error fetching chats for admin:', error);
+    console.error('Error fetching chats:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

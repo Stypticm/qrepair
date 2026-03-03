@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdminTelegramId } from '@/core/lib/admin';
+import { checkRole } from '@/core/lib/auth';
 import { Role } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
     const adminId = request.headers.get('x-admin-id');
-    if (!adminId || !isAdminTelegramId(adminId)) {
+    const hasAccess = await checkRole(adminId, ['ADMIN', 'MANAGER']);
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -30,7 +31,8 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const adminId = request.headers.get('x-admin-id');
-    if (!adminId || !isAdminTelegramId(adminId)) {
+    const hasAccess = await checkRole(adminId, ['ADMIN']);
+    if (!hasAccess) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

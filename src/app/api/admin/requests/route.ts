@@ -1,60 +1,27 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { checkRole } from '@/core/lib/auth';
 
-const prisma = new PrismaClient()
-
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url)
-    const adminTelegramId = searchParams.get(
-      'adminTelegramId'
-    )
-
-    if (!adminTelegramId) {
-      return NextResponse.json(
-        { error: 'Admin Telegram ID is required' },
-        { status: 400 }
-      )
+    const adminId = request.headers.get('x-admin-id');
+    const hasAccess = await checkRole(adminId, ['ADMIN', 'MANAGER']);
+    
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    // Проверяем, что пользователь является админом
-    const admin = await prisma.master.findUnique({
-      where: { telegramId: adminTelegramId },
-    })
-
-    if (
-      !admin ||
-      (admin.telegramId !== '1' &&
-        admin.telegramId !== '531360988' &&
-        admin.telegramId !== '296925626')
-    ) {
-      // Только главные админы
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      )
-    }
-
-    // Получаем все заявки с назначенными мастерами
-    const requests = await prisma.skupka.findMany({
+    const requests = await prisma.repairRequest.findMany({
       include: {
-        assignedMaster: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
+        assignedMaster: true,
+        assignedCourier: true,
       },
       orderBy: { createdAt: 'desc' },
-    })
+    });
 
-    return NextResponse.json({ requests })
+    return NextResponse.json({ success: true, requests });
   } catch (error) {
-    console.error('Error fetching requests:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('Error fetching requests:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

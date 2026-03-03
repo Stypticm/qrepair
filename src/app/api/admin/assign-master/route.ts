@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/core/lib/prisma'
-import { isAdminTelegramId } from '@/core/lib/admin'
+import { checkRole } from '@/core/lib/auth'
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +13,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!isAdminTelegramId(adminTelegramId)) {
+    const hasAccess = await checkRole(adminTelegramId, ['ADMIN', 'MANAGER'])
+    if (!hasAccess) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
