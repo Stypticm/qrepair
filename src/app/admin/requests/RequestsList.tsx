@@ -18,6 +18,10 @@ interface Request {
     name: string | null;
     username: string;
   } | null;
+  assignedCourier: {
+    id: string;
+    telegramId: string;
+  } | null;
 }
 
 interface RequestsListProps {
@@ -60,11 +64,10 @@ export function RequestsList({ requests }: RequestsListProps) {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${
-                statusFilter === status
+              className={`px-3 py-1 text-sm font-medium rounded-full transition-colors ${statusFilter === status
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+                }`}
             >
               {statusTranslations[status] || status} ({statusCounts[status] || 0})
             </button>

@@ -57,6 +57,8 @@ export default function AdminOrdersPage() {
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
     const [filterStatus, setFilterStatus] = useState<OrderStatus | 'all'>('all')
     const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
+    const [couriers, setCouriers] = useState<Array<{ id: string, telegramId: string }>>([])
+    const [selectedCourier, setSelectedCourier] = useState<{ [key: string]: string }>({})
 
     const toggleCard = (orderId: string) => {
         setExpandedCards(prev => {
@@ -72,7 +74,23 @@ export default function AdminOrdersPage() {
 
     useEffect(() => {
         loadOrders()
-    }, [])
+        loadStaff()
+    }, [telegramId])
+
+    const loadStaff = async () => {
+        if (!telegramId) return
+        try {
+            const res = await fetch('/api/admin/staff', {
+                headers: { 'x-admin-id': telegramId }
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setCouriers(data.users.filter((u: any) => u.role === 'COURIER'))
+            }
+        } catch (e) {
+            console.error('Error loading staff:', e)
+        }
+    }
 
     const loadOrders = async (silent = false) => {
         try {
@@ -107,6 +125,35 @@ export default function AdminOrdersPage() {
         } catch (e) {
             console.error('Ошибка при обновлении статуса:', e)
             alert('Ошибка при обновлении статуса')
+        } finally {
+            setUpdatingOrderId(null)
+        }
+    }
+
+    const handleAssignCourier = async (orderId: string) => {
+        const courierId = selectedCourier[orderId]
+        if (!courierId) return alert('Выберите курьера')
+
+        try {
+            setUpdatingOrderId(orderId)
+            const res = await fetch('/api/admin/assign-courier', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requestId: orderId,
+                    type: 'ORDER',
+                    courierId,
+                    adminTelegramId: telegramId
+                })
+            })
+            if (res.ok) {
+                await loadOrders(true)
+                alert('Курьер назначен')
+            } else {
+                alert('Ошибка при назначении курьера')
+            }
+        } catch (e) {
+            alert('Ошибка при назначении курьера')
         } finally {
             setUpdatingOrderId(null)
         }
@@ -418,6 +465,32 @@ export default function AdminOrdersPage() {
                                                                             Удалить заявку
                                                                         </Button>
                                                                     )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Управление курьером */}
+                                                        {order.deliveryMethod === 'courier' && (
+                                                            <div className="border-t pt-4">
+                                                                <p className="text-sm font-semibold text-gray-700 mb-2">Назначение курьера:</p>
+                                                                <div className="flex gap-2">
+                                                                    <select
+                                                                        value={selectedCourier[order.id] || ''}
+                                                                        onChange={(e) => setSelectedCourier(prev => ({ ...prev, [order.id]: e.target.value }))}
+                                                                        className="flex-grow p-2 text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                                                                    >
+                                                                        <option value="">Выберите курьера</option>
+                                                                        {couriers.map(c => (
+                                                                            <option key={c.id} value={c.id}>{c.telegramId}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                    <Button
+                                                                        onClick={() => handleAssignCourier(order.id)}
+                                                                        disabled={!selectedCourier[order.id] || isUpdating}
+                                                                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                                                                    >
+                                                                        Назначить
+                                                                    </Button>
                                                                 </div>
                                                             </div>
                                                         )}

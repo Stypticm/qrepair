@@ -12,6 +12,12 @@ export async function RequestsData() {
           username: true,
         },
       },
+      assignedCourier: {
+        select: {
+          id: true,
+          telegramId: true,
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
   });

@@ -63,10 +63,15 @@ model Skupka {
   additionalConditions Json?
   assignedMasterId     String?
   assignedMaster       Master? @relation(fields: [assignedMasterId], references: [id])
-  user                 User?   @relation(fields: [telegramId], references: [telegramId])
+
+  // Курьер (реляционная связь)
+  courierId       String?
+  assignedCourier User?   @relation("SkupkaCourier", fields: [courierId], references: [id])
+
+  user User? @relation(fields: [telegramId], references: [telegramId])
 
   // связи
-  inspections DeviceInspection[]
+  inspections    DeviceInspection[]
   marketplaceLot MarketplaceLot?
 
   @@schema("public")
@@ -95,7 +100,7 @@ model Point {
   workingHours String   @default("10:00 - 22:00")
   name         String   @default("Точка приёма")
   masters      Master[]
-  orders       Order[]  // Заказы с самовывозом
+  orders       Order[] // Заказы с самовывозом
 
   @@schema("public")
 }
@@ -181,47 +186,47 @@ enum SkupkaStatus {
 }
 
 enum MarketplaceLotStatus {
-  draft       // черновик
-  available   // доступен для покупки
-  reserved    // зарезервирован
-  sold        // продан
-  archived    // архивирован
+  draft // черновик
+  available // доступен для покупки
+  reserved // зарезервирован
+  sold // продан
+  archived // архивирован
 
   @@schema("public")
 }
 
 model MarketplaceLot {
-  id           String   @id @default(cuid())
-  skupkaId     String?  @unique // связь с заявкой (опционально)
-  title        String
-  model        String?
-  storage      String?
-  color        String?
-  condition    String?
-  description  String?
-  price        Float
-  photos       String[] // массив URL
-  coverPhoto   String?  // обложка
-  
-  status       MarketplaceLotStatus @default(available)
-  
-  telegramId   String   // telegramId продавца
-  user         User?    @relation(fields: [telegramId], references: [telegramId])
-  sellerName   String?
-  
-  viewsCount   Int      @default(0)
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  publishedAt  DateTime?
-  soldAt       DateTime?
-  
+  id          String   @id @default(cuid())
+  skupkaId    String?  @unique // связь с заявкой (опционально)
+  title       String
+  model       String?
+  storage     String?
+  color       String?
+  condition   String?
+  description String?
+  price       Float
+  photos      String[] // массив URL
+  coverPhoto  String? // обложка
+
+  status MarketplaceLotStatus @default(available)
+
+  telegramId String // telegramId продавца
+  user       User?   @relation(fields: [telegramId], references: [telegramId])
+  sellerName String?
+
+  viewsCount Int @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
+  soldAt      DateTime?
+
   // Связи
-  skupka              Skupka?             @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
-  cartItems           CartItem[]
-  favoriteItems       FavoriteItem[]
-  orderItems          OrderItem[]         // Заказы с этим лотом
-  
+  skupka        Skupka?        @relation(fields: [skupkaId], references: [id], onDelete: Cascade)
+  cartItems     CartItem[]
+  favoriteItems FavoriteItem[]
+  orderItems    OrderItem[] // Заказы с этим лотом
+
   @@index([telegramId])
   @@index([status])
   @@index([createdAt])
@@ -230,18 +235,18 @@ model MarketplaceLot {
 }
 
 model CartItem {
-  id        String   @id @default(cuid())
-  telegramId String   // telegramId пользователя
-  lotId     String
-  quantity  Int      @default(1)
-  
+  id         String @id @default(cuid())
+  telegramId String // telegramId пользователя
+  lotId      String
+  quantity   Int    @default(1)
+
   addedAt   DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Связи
-  lot       MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
-  user      User?          @relation(fields: [telegramId], references: [telegramId])
-  
+  lot  MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  user User?          @relation(fields: [telegramId], references: [telegramId])
+
   @@unique([telegramId, lotId])
   @@index([telegramId])
   @@index([lotId])
@@ -249,16 +254,16 @@ model CartItem {
 }
 
 model FavoriteItem {
-  id        String   @id @default(cuid())
-  telegramId String   // telegramId пользователя
-  lotId     String
-  
-  addedAt   DateTime @default(now())
-  
+  id         String @id @default(cuid())
+  telegramId String // telegramId пользователя
+  lotId      String
+
+  addedAt DateTime @default(now())
+
   // Связи
-  lot       MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
-  user      User?          @relation(fields: [telegramId], references: [telegramId])
-  
+  lot  MarketplaceLot @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  user User?          @relation(fields: [telegramId], references: [telegramId])
+
   @@unique([telegramId, lotId])
   @@index([telegramId])
   @@index([lotId])
@@ -266,50 +271,54 @@ model FavoriteItem {
 }
 
 enum OrderStatus {
-  pending      // ожидает обработки
-  confirmed    // подтвержден
-  in_delivery  // в доставке
-  completed    // завершен
-  cancelled    // отменен
+  pending // ожидает обработки
+  confirmed // подтвержден
+  in_delivery // в доставке
+  completed // завершен
+  cancelled // отменен
 
   @@schema("public")
 }
 
 model Order {
-  id              String      @id @default(cuid())
-  telegramId      String      // telegramId
-  user            User?       @relation(fields: [telegramId], references: [telegramId])
-  
-  // Доставка
-  deliveryMethod  String      // 'courier' | 'pickup'
-  deliveryAddress String?     // для курьера
-  pickupPointId   Int?        // для самовывоза
-  pickupPoint     Point?      @relation(fields: [pickupPointId], references: [id])
-  
-  // Даты
-  deliveryDate    DateTime?
-  deliveryTime    String?
-  
-  // Статус и цена
-  status          OrderStatus @default(pending)
-  totalPrice      Float
-  
-  // Tracking
-  confirmedAt     DateTime?
-  inDeliveryAt    DateTime?
-  completedAt     DateTime?
-  
-  // Курьер (опционально)
-  courierName     String?
-  courierPhone    String?
-  trackingNotes   String?  // заметки админа
-  
-  // Связи
-  items           OrderItem[]
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id         String @id @default(cuid())
+  telegramId String // telegramId
+  user       User?  @relation(fields: [telegramId], references: [telegramId])
 
+  // Доставка
+  deliveryMethod  String // 'courier' | 'pickup'
+  deliveryAddress String? // для курьера
+  pickupPointId   Int? // для самовывоза
+  pickupPoint     Point?  @relation(fields: [pickupPointId], references: [id])
+
+  // Даты
+  deliveryDate DateTime?
+  deliveryTime String?
+
+  // Статус и цена
+  status     OrderStatus @default(pending)
+  totalPrice Float
+
+  // Tracking
+  confirmedAt  DateTime?
+  inDeliveryAt DateTime?
+  completedAt  DateTime?
+
+  // Курьер (реляционная связь)
+  courierId       String?
+  assignedCourier User?   @relation("OrderCourier", fields: [courierId], references: [id])
+
+  courierName   String? // для обратной совместимости или кастомных имен
+  courierPhone  String?
+  trackingNotes String? // заметки админа
+
+  // Связи
+  items OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courierId])
   @@index([telegramId])
   @@index([status])
   @@index([createdAt])
@@ -321,13 +330,13 @@ model OrderItem {
   id      String @id @default(cuid())
   orderId String
   lotId   String
-  
+
   // Копируем данные лота на момент покупки
-  title   String
-  price   Float
-  
-  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  lot     MarketplaceLot @relation(fields: [lotId], references: [id])
+  title String
+  price Float
+
+  order Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  lot   MarketplaceLot @relation(fields: [lotId], references: [id])
 
   @@index([orderId])
   @@index([lotId])
@@ -335,14 +344,14 @@ model OrderItem {
 }
 
 model OperatorChat {
-  id             String            @id @default(cuid())
-  telegramId     String            @unique
-  user           User?             @relation(fields: [telegramId], references: [telegramId])
-  userNickname   String?
-  status         ChatStatus        @default(active)
-  messages       OperatorMessage[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id           String            @id @default(cuid())
+  telegramId   String            @unique
+  user         User?             @relation(fields: [telegramId], references: [telegramId])
+  userNickname String?
+  status       ChatStatus        @default(active)
+  messages     OperatorMessage[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
   @@index([telegramId])
   @@index([status])
@@ -390,15 +399,20 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Реляции для унификации
-  skupkaRequests  Skupka[]
-  orders          Order[]
-  tradeInRequests TradeInEvaluation[]
-  cartItems       CartItem[]
-  favoriteItems   FavoriteItem[]
+  skupkaRequests    Skupka[]
+  orders            Order[]
+  tradeInRequests   TradeInEvaluation[]
+  cartItems         CartItem[]
+  favoriteItems     FavoriteItem[]
   pushSubscriptions PushSubscription[]
-  chats           OperatorChat[]
-  marketplaceLots MarketplaceLot[]
-  repairRequests  RepairRequest[]
+  chats             OperatorChat[]
+  marketplaceLots   MarketplaceLot[]
+  repairRequests    RepairRequest[]
+
+  // Новые связи для курьера
+  assignedOrders  Order[]         @relation("OrderCourier")
+  assignedRepairs RepairRequest[] @relation("RepairCourier")
+  assignedSkupkas Skupka[]        @relation("SkupkaCourier")
 
   @@index([telegramId])
   @@index([role])
@@ -421,6 +435,7 @@ enum SenderType {
 
   @@schema("public")
 }
+
 model QuickLead {
   id           String   @id @default(cuid())
   name         String
@@ -436,50 +451,51 @@ model QuickLead {
 
   @@schema("public")
 }
+
 model TradeInEvaluation {
-  id               String   @id @default(cuid())
-  telegramId       String   // telegramId
-  user             User?    @relation(fields: [telegramId], references: [telegramId])
-  category         String   @default("iPhone")
-  model            String
-  variant          String?
-  storage          String
-  color            String
-  isOriginal       Boolean  @default(true)
-  isReset          Boolean  @default(true)
-  screenCondition  String   // perfect, good, worn, bad
-  bodyCondition    String   // perfect, good, worn, bad
-  isRostest        Boolean  @default(true)
-  batteryHealth    String   // e.g. "100%", "80-99%", etc
-  hasFullSet       Boolean  @default(true)
-  wasRepaired      Boolean  @default(false)
-  hasReceipt       Boolean  @default(false)
-  
+  id              String  @id @default(cuid())
+  telegramId      String // telegramId
+  user            User?   @relation(fields: [telegramId], references: [telegramId])
+  category        String  @default("iPhone")
+  model           String
+  variant         String?
+  storage         String
+  color           String
+  isOriginal      Boolean @default(true)
+  isReset         Boolean @default(true)
+  screenCondition String // perfect, good, worn, bad
+  bodyCondition   String // perfect, good, worn, bad
+  isRostest       Boolean @default(true)
+  batteryHealth   String // e.g. "100%", "80-99%", etc
+  hasFullSet      Boolean @default(true)
+  wasRepaired     Boolean @default(false)
+  hasReceipt      Boolean @default(false)
+
   // New functional checks
-  isFunctional     Boolean  @default(true) // Включается и заряжается
-  isBatterySafe    Boolean  @default(true) // Не вздутый
-  isHardwareOk     Boolean  @default(true) // FaceID, WiFi, Sim и т.д.
-  isClean          Boolean  @default(true) // Без ржавчины/окисления
-  
-  calculatedPrice  Float
-  minPrice         Float?
-  maxPrice         Float?
-  status           String   @default("draft")
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  isFunctional  Boolean @default(true) // Включается и заряжается
+  isBatterySafe Boolean @default(true) // Не вздутый
+  isHardwareOk  Boolean @default(true) // FaceID, WiFi, Sim и т.д.
+  isClean       Boolean @default(true) // Без ржавчины/окисления
+
+  calculatedPrice Float
+  minPrice        Float?
+  maxPrice        Float?
+  status          String   @default("draft")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([telegramId])
   @@schema("public")
 }
 
 model PushSubscription {
-  id          String   @id @default(cuid())
-  telegramId  String?  // telegramId
-  user        User?    @relation(fields: [telegramId], references: [telegramId])
-  endpoint    String   @unique
-  p256dh      String
-  auth        String
-  
+  id         String  @id @default(cuid())
+  telegramId String? // telegramId
+  user       User?   @relation(fields: [telegramId], references: [telegramId])
+  endpoint   String  @unique
+  p256dh     String
+  auth       String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -488,73 +504,79 @@ model PushSubscription {
 }
 
 model BotAccess {
-  id           String    @id @default(cuid())
-  telegramId   String    @unique
-  isAuthenticated Boolean  @default(false)
-  attempts     Int       @default(0)
-  blockedUntil DateTime?
-  updatedAt    DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  telegramId      String    @unique
+  isAuthenticated Boolean   @default(false)
+  attempts        Int       @default(0)
+  blockedUntil    DateTime?
+  updatedAt       DateTime  @updatedAt
 
   @@schema("public")
 }
 
 model RepairRequest {
-  id              String       @id @default(cuid())
-  telegramId      String
-  user            User?        @relation(fields: [telegramId], references: [telegramId])
-  
+  id         String @id @default(cuid())
+  telegramId String
+  user       User?  @relation(fields: [telegramId], references: [telegramId])
+
   // Устройство
-  deviceModel     String
-  serialNumber    String?
-  
+  deviceModel  String
+  serialNumber String?
+
   // Ремонт
-  category        String       // screen, battery, camera, board, body, diagnostics
+  category         String // screen, battery, camera, board, body, diagnostics
   issueDescription String?
-  issuePhotos     String[]
-  
+  issuePhotos      String[]
+
   // Оценка
-  estimatedMin    Float?
-  estimatedMax    Float?
-  finalPrice      Float?
-  
+  estimatedMin Float?
+  estimatedMax Float?
+  finalPrice   Float?
+
   // Логистика
-  deliveryMethod  String       // 'self' | 'courier'
+  deliveryMethod  String // 'self' | 'courier'
   appointmentDate DateTime?
   appointmentTime String?
-  
+
   // Трекинг
-  status          RepairStatus @default(created)
-  unpackVideoUrl  String?
-  envelopeNumber  String?
-  
+  status         RepairStatus @default(created)
+  unpackVideoUrl String?
+  envelopeNumber String?
+
   // Мастер
   assignedMasterId String?
-  assignedMaster   Master?     @relation(fields: [assignedMasterId], references: [id])
-  
-  courierNotes    String?
-  customerNotes   String?
-  
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  assignedMaster   Master? @relation(fields: [assignedMasterId], references: [id])
 
+  // Курьер (реляционная связь)
+  courierId       String?
+  assignedCourier User?   @relation("RepairCourier", fields: [courierId], references: [id])
+
+  courierNotes  String?
+  customerNotes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courierId])
+  @@index([assignedMasterId])
   @@index([telegramId])
   @@index([status])
   @@schema("public")
 }
 
 enum RepairStatus {
-  created          // заявка создана
+  created // заявка создана
   courier_assigned // курьер назначен
-  in_transit       // устройство в пути
-  received         // получено в мастерской
-  unpacked         // распаковано на камеру
-  diagnosing       // диагностика
-  price_approval   // согласование цены
-  repairing        // в ремонте
-  completed        // ремонт завершён
+  in_transit // устройство в пути
+  received // получено в мастерской
+  unpacked // распаковано на камеру
+  diagnosing // диагностика
+  price_approval // согласование цены
+  repairing // в ремонте
+  completed // ремонт завершён
   ready_for_pickup // готово к выдаче
-  delivered        // доставлено клиенту
-  cancelled        // отменено
-  
+  delivered // доставлено клиенту
+  cancelled // отменено
+
   @@schema("public")
 }

@@ -21,6 +21,10 @@ interface Request {
     name: string | null;
     username: string;
   } | null;
+  assignedCourier: {
+    id: string;
+    telegramId: string;
+  } | null;
 }
 
 interface RequestsListClientProps {
@@ -29,11 +33,17 @@ interface RequestsListClientProps {
 
 export function RequestsListClient({ requests }: RequestsListClientProps) {
   const { telegramId } = useAppStore();
-  const { masters } = useMasters();
+  const { masters, couriers } = useMasters();
   const [selectedMaster, setSelectedMaster] = useState<{
     [requestId: string]: string;
   }>({});
+  const [selectedCourier, setSelectedCourier] = useState<{
+    [requestId: string]: string;
+  }>({});
   const [assigningRequestId, setAssigningRequestId] = useState<string | null>(
+    null
+  );
+  const [assigningCourierId, setAssigningCourierId] = useState<string | null>(
     null
   );
 
@@ -71,6 +81,43 @@ export function RequestsListClient({ requests }: RequestsListClientProps) {
       masterId,
       adminTelegramId: currentTelegramId,
     });
+  };
+
+  const handleAssignCourier = async (requestId: string) => {
+    const courierId = selectedCourier[requestId];
+    if (!courierId) {
+      alert('Пожалуйста, выберите курьера.');
+      return;
+    }
+    const currentTelegramId =
+      telegramId ||
+      (typeof window !== 'undefined' ? sessionStorage.getItem('telegramId') : null);
+
+    if (!currentTelegramId) {
+      alert('Ошибка: не найден Telegram ID');
+      return;
+    }
+
+    setAssigningCourierId(requestId);
+    try {
+      const res = await fetch('/api/admin/assign-courier', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          requestId,
+          type: 'SKUPKA', // it's skupka (using 'skupka' table here)
+          courierId,
+          adminTelegramId: currentTelegramId,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to assign');
+      window.location.reload();
+    } catch (error) {
+      alert('Ошибка назначения курьера');
+    } finally {
+      setAssigningCourierId(null);
+    }
   };
 
   const deleteRequest = async (requestId: string) => {
@@ -125,11 +172,10 @@ export function RequestsListClient({ requests }: RequestsListClientProps) {
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      request.status === 'submitted'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}
+                    className={`px-3 py-1 text-sm font-medium rounded-full ${request.status === 'submitted'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-green-100 text-green-800'
+                      }`}
                   >
                     {request.status}
                   </span>
@@ -159,38 +205,76 @@ export function RequestsListClient({ requests }: RequestsListClientProps) {
                     @{request.assignedMaster.username})
                   </p>
                 )}
+                {request.assignedCourier && (
+                  <p>
+                    <strong>Курьер:</strong> {request.assignedCourier.telegramId}
+                  </p>
+                )}
               </div>
 
               {!request.assignedMasterId && (
-                <div className="flex gap-2 items-center">
-                  <select
-                    value={selectedMaster[request.id] || ''}
-                    onChange={(e) =>
-                      setSelectedMaster((prev) => ({
-                        ...prev,
-                        [request.id]: e.target.value,
-                      }))
-                    }
-                    className="flex-grow p-2 border border-gray-300 rounded-lg text-sm"
-                  >
-                    <option value="" disabled>
-                      Выберите мастера
-                    </option>
-                    {masters.map((master) => (
-                      <option key={master.id} value={master.id}>
-                        {master.name} (@{master.username})
+                <div className="flex flex-col gap-4">
+                  <div className="flex gap-2 items-center">
+                    <select
+                      value={selectedMaster[request.id] || ''}
+                      onChange={(e) =>
+                        setSelectedMaster((prev) => ({
+                          ...prev,
+                          [request.id]: e.target.value,
+                        }))
+                      }
+                      className="flex-grow p-2 border border-gray-200 rounded-lg text-sm outline-none"
+                    >
+                      <option value="" disabled>
+                        Выберите мастера
                       </option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => handleAssignRequest(request.id)}
-                    disabled={
-                      !selectedMaster[request.id] || assignMutation.isPending
-                    }
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 w-36"
-                  >
-                    {isAssigning ? 'Назначается...' : 'Назначить'}
-                  </button>
+                      {masters.map((master) => (
+                        <option key={master.id} value={master.id}>
+                          {master.name} (@{master.username})
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => handleAssignRequest(request.id)}
+                      disabled={
+                        !selectedMaster[request.id] || assignMutation.isPending
+                      }
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-200 transition-colors w-36 whitespace-nowrap"
+                    >
+                      {isAssigning ? 'Назначается...' : 'Назначить мастера'}
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                    <select
+                      value={selectedCourier[request.id] || ''}
+                      onChange={(e) =>
+                        setSelectedCourier((prev) => ({
+                          ...prev,
+                          [request.id]: e.target.value,
+                        }))
+                      }
+                      className="flex-grow p-2 border border-gray-200 rounded-lg text-sm outline-none"
+                    >
+                      <option value="" disabled>
+                        Выберите курьера
+                      </option>
+                      {couriers.map((courier) => (
+                        <option key={courier.id} value={courier.id}>
+                          {courier.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => handleAssignCourier(request.id)}
+                      disabled={
+                        !selectedCourier[request.id] || !!assigningCourierId
+                      }
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-200 transition-colors w-36 whitespace-nowrap"
+                    >
+                      {assigningCourierId === request.id ? 'Назначается...' : 'Назначить курьера'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

@@ -2,34 +2,39 @@
 
 import { createContext, useContext, ReactNode } from 'react';
 
-interface Master {
+interface StaffMember {
   id: string;
   name: string | null;
   username: string;
 }
 
 interface MastersContextType {
-  masters: Master[];
+  masters: StaffMember[];
+  couriers: StaffMember[];
 }
 
 const MastersContext = createContext<MastersContextType | undefined>(undefined);
 
-export function useMasters() {
+export function useStaff() {
   const context = useContext(MastersContext);
   if (!context) {
-    throw new Error('useMasters must be used within MastersProvider');
+    throw new Error('useStaff must be used within StaffProvider');
   }
   return context;
 }
 
-interface MastersProviderProps {
-  masters: Master[];
+// Keep legacy export for compatibility if needed, but useStaff is preferred
+export const useMasters = useStaff;
+
+interface StaffProviderProps {
+  masters: StaffMember[];
+  couriers: StaffMember[];
   children?: ReactNode;
 }
 
-export function MastersProvider({ masters, children }: MastersProviderProps) {
+export function MastersProvider({ masters, couriers, children }: StaffProviderProps) {
   return (
-    <MastersContext.Provider value={{ masters }}>
+    <MastersContext.Provider value={{ masters, couriers }}>
       {children}
     </MastersContext.Provider>
   );
