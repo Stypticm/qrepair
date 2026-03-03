@@ -239,7 +239,7 @@ export function RequestsListClient({ requests }: RequestsListClientProps) {
                       disabled={
                         !selectedMaster[request.id] || assignMutation.isPending
                       }
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-200 transition-colors w-36 whitespace-nowrap"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-200 transition-colors min-w-[160px] whitespace-nowrap"
                     >
                       {isAssigning ? 'Назначается...' : 'Назначить мастера'}
                     </button>
@@ -270,7 +270,7 @@ export function RequestsListClient({ requests }: RequestsListClientProps) {
                       disabled={
                         !selectedCourier[request.id] || !!assigningCourierId
                       }
-                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-200 transition-colors w-36 whitespace-nowrap"
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-200 transition-colors min-w-[160px] whitespace-nowrap"
                     >
                       {assigningCourierId === request.id ? 'Назначается...' : 'Назначить курьера'}
                     </button>

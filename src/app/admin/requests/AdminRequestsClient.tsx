@@ -7,10 +7,12 @@ import { useRouter } from 'next/navigation';
 
 interface AdminRequestsClientProps {
   children: ReactNode;
+  title?: string;
 }
 
 export function AdminRequestsClient({
   children,
+  title = 'Управление заявками',
 }: AdminRequestsClientProps) {
   const { telegramId } = useAppStore();
   const [accessDenied, setAccessDenied] = useState<boolean | null>(null);
@@ -80,7 +82,7 @@ export function AdminRequestsClient({
       <div className="mx-auto pt-16 px-4 pb-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Управление заявками
+            {title}
           </h1>
         </div>
         {children}

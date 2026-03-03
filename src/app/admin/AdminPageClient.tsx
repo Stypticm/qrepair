@@ -121,16 +121,8 @@ export function AdminPageClient() {
             </p>
           </div>
 
-          <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+          <div className="flex items-center justify-end gap-3 w-full md:w-auto">
             <PushNotificationToggle />
-            <button
-              onClick={() => router.push(`/${sourceParam}`)}
-              className="group flex-1 md:flex-none justify-center flex items-center gap-2 px-4 md:px-6 py-3 bg-white border border-gray-200 rounded-xl md:rounded-2xl text-gray-600 text-sm md:text-base font-bold hover:text-gray-900 hover:border-gray-900 transition-all shadow-sm active:scale-95"
-            >
-              <span className="md:hidden">На сайт</span>
-              <span className="hidden md:inline">На главный сайт</span>
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </button>
           </div>
         </div>
 

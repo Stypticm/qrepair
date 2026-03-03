@@ -3,7 +3,7 @@ import StaffManagementClient from './StaffManagementClient';
 
 export default function StaffPage() {
     return (
-        <AdminRequestsClient>
+        <AdminRequestsClient title="Управление персоналом">
             <StaffManagementClient />
         </AdminRequestsClient>
     );
