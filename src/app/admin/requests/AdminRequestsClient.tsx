@@ -79,8 +79,8 @@ export function AdminRequestsClient({
 
   return (
     <div className="w-full min-h-full bg-gray-50">
-      <div className="mx-auto pt-16 px-4 pb-8">
-        <div className="mb-8">
+      <div className="mx-auto pt-4 md:pt-16 px-4 pb-8">
+        <div className="mb-8 hidden md:block">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
             {title}
           </h1>
