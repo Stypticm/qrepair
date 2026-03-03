@@ -30,9 +30,17 @@ export const useRequestSync = () => {
     '/request/delivery-options',
     '/request/pickup-points',
     '/request/photos',
+    '/request/evaluation-mode',
     '/repair',    
     '/buyback',     
     '/admin',
+    '/master',
+    '/cart',
+    '/favorites',
+    '/my-devices',
+    '/internal',
+    '/debug',
+    '/test',
   ]
 
   // Страницы где синхронизация должна быть более осторожной
