@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ArrowRight, X, Calendar, User, Tag, Clock, Newspaper } from 'lucide-react';
+import { ArrowRight, X, Calendar, User, Tag, Clock, Newspaper, ArrowLeft } from 'lucide-react';
+import { useSafeArea } from '@/hooks/useSafeArea';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -21,6 +22,7 @@ interface BlogPost {
 
 export const BlogGrid = () => {
     const pathname = usePathname();
+    const { isDesktop } = useSafeArea();
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -60,13 +62,15 @@ export const BlogGrid = () => {
 
     return (
         <section
-            className="py-20 bg-white border-t border-gray-100 relative overflow-hidden"
+            className="py-20 bg-white border-t border-gray-100 relative"
         >
-            {/* Background elements for premium look */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/30 rounded-full blur-[120px] -mr-64 -mt-64" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-50/20 rounded-full blur-[120px] -ml-64 -mb-64" />
+            {/* Background elements container with overflow-hidden to prevent clipping of cards while containing blurs */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/30 rounded-full blur-[120px] -mr-64 -mt-64" />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-50/20 rounded-full blur-[120px] -ml-64 -mb-64" />
+            </div>
 
-            <div className="max-w-7xl mx-auto px-6 relative">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                     <div className="flex flex-col md:flex-row md:items-end gap-6">
                         <div>
@@ -111,7 +115,7 @@ export const BlogGrid = () => {
                         <p className="text-gray-500 mt-1 max-w-xs mx-auto">Совсем скоро здесь появятся интересные обзоры и новости мира технологий.</p>
                     </div>
                 ) : (
-                    <div className="grid md:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
                         <AnimatePresence>
                             {posts.map((post, index) => (
                                 <motion.div
@@ -186,12 +190,24 @@ export const BlogGrid = () => {
                             exit={{ opacity: 0, scale: 0.95, y: 40 }}
                             className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[48px] shadow-2xl relative overflow-hidden flex flex-col border border-gray-100"
                         >
-                            <button
-                                onClick={() => setSelectedPost(null)}
-                                className="absolute top-8 right-8 p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-20"
-                            >
-                                <X className="w-5 h-5 text-gray-900" />
-                            </button>
+                            {!isDesktop ? (
+                                <div className="absolute top-6 left-0 right-0 flex justify-center z-20">
+                                    <button
+                                        onClick={() => setSelectedPost(null)}
+                                        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white/80 backdrop-blur-md px-5 py-2 rounded-full border border-gray-100 shadow-sm active:scale-95 transition-all"
+                                    >
+                                        <ArrowLeft className="w-4 h-4" />
+                                        Назад
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setSelectedPost(null)}
+                                    className="absolute top-8 right-8 p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-20"
+                                >
+                                    <X className="w-5 h-5 text-gray-900" />
+                                </button>
+                            )}
 
                             <div className="flex-1 overflow-y-auto scrollbar-hide">
                                 <div className="w-full aspect-[21/9] bg-gray-100 relative">

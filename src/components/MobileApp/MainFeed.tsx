@@ -67,11 +67,7 @@ export const MainFeed = ({
                             </>
                         )}
 
-                        <div className="mt-8 mb-6">
-                            <BlogGrid />
-                        </div>
-
-                        <div className="w-full">
+                        <div className="w-full mt-4">
                             <AdaptiveDeviceFeed
                                 items={marketplaceItems}
                                 isLoading={marketplaceLoading}
@@ -80,6 +76,10 @@ export const MainFeed = ({
                                 mode="auto"
                                 onViewModeChange={setViewMode}
                             />
+                        </div>
+
+                        <div className="mt-12 mb-6">
+                            <BlogGrid />
                         </div>
                     </div>
                 </div>

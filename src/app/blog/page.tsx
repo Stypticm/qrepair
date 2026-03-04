@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar, Newspaper, X, User } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Page } from '@/components/Page';
+import { useSafeArea } from '@/hooks/useSafeArea';
 
 interface BlogPost {
     id: string;
@@ -19,6 +20,8 @@ interface BlogPost {
 }
 
 export default function PublicBlogPage() {
+    const router = useRouter();
+    const { isDesktop } = useSafeArea();
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
@@ -64,19 +67,24 @@ export default function PublicBlogPage() {
                     <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
 
                     <div className="max-w-[1400px] mx-auto relative z-10">
+                        {!isDesktop && (
+                            <div className="flex justify-center mb-6">
+                                <button
+                                    onClick={() => router.back()}
+                                    className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white/80 backdrop-blur-md hover:bg-white px-5 py-2 rounded-full border border-gray-100 shadow-sm active:scale-95 transition-all"
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Назад
+                                </button>
+                            </div>
+                        )}
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                             className="text-center"
                         >
-                            {/* <span className="inline-block px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-6 shadow-sm border border-blue-100/50">
-                                Наш журнал
-                            </span> */}
-                            {/* <h1 className="text-6xl md:text-8xl font-bold text-gray-900 tracking-[-0.04em] mb-6 leading-none">Блог</h1>
-                            <p className="text-gray-500 text-xl font-medium max-w-2xl mx-auto leading-relaxed">
-                                Свежие новости из мира технологий, экспертные разборы и жизнь Q-Repair в деталях.
-                            </p> */}
+                            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Блог</h1>
                         </motion.div>
                     </div>
 
@@ -86,7 +94,7 @@ export default function PublicBlogPage() {
                 </header>
 
                 {/* Content Container */}
-                <main className="max-w-[1440px] mx-auto px-6 md:px-10 py-12">
+                <main className="max-w-[1440px] mx-auto px-4 md:px-10 py-12">
                     {loading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -201,12 +209,24 @@ export default function PublicBlogPage() {
                                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                                 className="bg-white w-full max-w-5xl h-full md:h-[94vh] md:rounded-[4rem] shadow-2xl relative overflow-hidden flex flex-col border border-gray-100"
                             >
-                                <button
-                                    onClick={() => setSelectedPost(null)}
-                                    className="absolute top-8 right-8 p-4 bg-white/80 backdrop-blur-xl border border-gray-100 hover:bg-gray-50 rounded-full transition-all z-[100] shadow-xl active:scale-95 group"
-                                >
-                                    <X className="w-6 h-6 text-gray-900 transition-transform group-hover:rotate-90 duration-300" />
-                                </button>
+                                {!isDesktop ? (
+                                    <div className="absolute top-6 left-0 right-0 flex justify-center z-[110]">
+                                        <button
+                                            onClick={() => setSelectedPost(null)}
+                                            className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white/80 backdrop-blur-md px-5 py-2 rounded-full border border-gray-100 shadow-sm active:scale-95 transition-all"
+                                        >
+                                            <ArrowLeft className="w-4 h-4" />
+                                            Назад
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setSelectedPost(null)}
+                                        className="absolute top-8 right-8 p-4 bg-white/80 backdrop-blur-xl border border-gray-100 hover:bg-gray-50 rounded-full transition-all z-[100] shadow-xl active:scale-95 group"
+                                    >
+                                        <X className="w-6 h-6 text-gray-900 transition-transform group-hover:rotate-90 duration-300" />
+                                    </button>
+                                )}
 
                                 <div className="flex-1 overflow-y-auto scrollbar-hide">
                                     <div className="w-full aspect-[21/10] bg-gray-50 relative">
