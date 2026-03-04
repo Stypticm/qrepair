@@ -123,8 +123,14 @@ export const DesktopHeader = () => {
                             </Link>
                         )}
 
+                        <Link href="/#blog" className={navLinkClass('/#blog')}>
+                            Блог
+                        </Link>
+
+                        <div className="w-px h-6 bg-gray-200 mx-2"></div>
+
                         <span
-                            className="px-4 py-2 rounded-xl text-base font-medium text-gray-300 cursor-not-allowed select-none transition-all duration-200"
+                            className="px-4 py-2 rounded-xl text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 cursor-pointer transition-all duration-200"
                         >
                             Контакты
                         </span>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, Smartphone, Wrench, LogOut, Home, ArrowLeft } from 'lucide-react';
+import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, Smartphone, Wrench, LogOut, Home, ArrowLeft, Newspaper } from 'lucide-react';
 import { useUserRole, getSectionsForRole } from '@/hooks/useUserRole';
 import { useAppStore } from '@/stores/authStore';
 
@@ -17,6 +17,7 @@ const allSections = [
     { id: 'leads', title: 'Быстрые заявки', icon: ShoppingBag },
     { id: 'trade-in', title: 'Оценки', icon: Smartphone },
     { id: 'repair', title: 'Ремонт', icon: Wrench },
+    { id: 'blog', title: 'Блог', icon: Newspaper },
 ];
 
 export function AdminSidebar() {

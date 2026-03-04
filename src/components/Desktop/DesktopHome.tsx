@@ -32,7 +32,7 @@ export const DesktopHome = () => {
     const CoconutBanner = dynamic(() => import('@/components/CoconutBanner'), { ssr: false });
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-20">
+        <div className="min-h-screen bg-gray-50 pt-4">
             <main className="pb-16">
                 {/* Intro / Filter Header */}
                 <div className="max-w-7xl mx-auto px-6 mb-12 pt-8">
@@ -70,8 +70,8 @@ export const DesktopHome = () => {
                     </div>
                 </section>
 
-                <ReviewsCarousel />
                 <BlogGrid />
+                <ReviewsCarousel />
                 <FAQAccordion />
             </main>
 

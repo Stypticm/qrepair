@@ -36,7 +36,7 @@ export const Footer = () => {
                         <h4 className="font-bold text-gray-900 mb-6">Компания</h4>
                         <ul className="space-y-3 text-sm text-gray-500">
                             <li><Link href="/about" className="hover:text-teal-600">О нас</Link></li>
-                            <li><span className="text-gray-400 cursor-not-allowed">Блог</span></li>
+                            <li><Link href="/blog" className="hover:text-teal-600">Блог</Link></li>
                             <li><Link href="#" className="hover:text-teal-600">Вакансии</Link></li>
                         </ul>
                     </div>

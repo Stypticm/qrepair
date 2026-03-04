@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { Button } from '@/components/ui/button';
-import { Send, User, MessageCircle, ArrowLeft, ChevronLeft, Archive, ArchiveRestore, Trash2, Inbox } from 'lucide-react';
+import { Send, User, MessageCircle, ArrowLeft, ChevronLeft, Archive, ArchiveRestore, Trash2, Inbox, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSafeArea } from '@/hooks/useSafeArea';
@@ -298,6 +298,20 @@ function AdminChatsContent() {
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Create Order Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-2 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                onClick={() => {
+                  const name = selectedChat.userNickname || '';
+                  const telegramId = selectedChat.telegramId || '';
+                  router.push(`/admin/orders?create=true&name=${encodeURIComponent(name)}&telegramId=${encodeURIComponent(telegramId)}`);
+                }}
+              >
+                <ShoppingCart size={16} className="mr-1" /> Создать заказ
+              </Button>
+
               {/* Archive Toggle Button */}
               <Button
                 variant="ghost"

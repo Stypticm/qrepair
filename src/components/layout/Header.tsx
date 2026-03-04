@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { MegaMenu } from '@/components/layout/MegaMenu';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
 import { useAppStore } from '@/stores/authStore';
@@ -43,6 +43,7 @@ export const Header = () => {
   const { isStandalone } = useSafeArea();
   const sourceParam = isStandalone ? '?source=pwa' : '';
   const router = useRouter();
+  const pathname = usePathname();
 
   // Force check for LH admin if store seems empty but we are on LH
   useEffect(() => {
@@ -237,14 +238,13 @@ export const Header = () => {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-500 transition-all group-hover:w-full"></span>
               </Link>
 
-              <div className="relative group">
-                <span className="text-gray-400 cursor-not-allowed">Блог</span>
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                    Скоро
-                  </div>
-                </div>
-              </div>
+              <Link
+                href="/blog"
+                className="hover:text-teal-600 transition-colors py-1 relative group"
+              >
+                Блог
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-500 transition-all group-hover:w-full"></span>
+              </Link>
             </div>
           </nav>
         </div>

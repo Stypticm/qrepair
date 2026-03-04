@@ -4,7 +4,7 @@ import prisma from '@/core/lib/prisma';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { name, phone, productId, productTitle, price, telegramId } = body;
+        const { name, phone, productId, productTitle, price, telegramId, address, deliveryDate, deliveryTime } = body;
 
         console.log(`[QuickOrder] Request for ${productTitle} from ${telegramId || 'GUEST'}, phone: ${phone}`);
 
@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
                 productTitle: productTitle || null,
                 price: price || null,
                 telegramId: telegramId ? telegramId.toString() : null,
+                address: address || null,
+                deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
+                deliveryTime: deliveryTime || null,
                 status: 'new'
             }
         });

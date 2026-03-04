@@ -1,12 +1,22 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { DeviceCard } from '@/components/AdaptiveDeviceFeed';
 
+// Simple global session cache
+let cachedMarketplaceItems: DeviceCard[] = [];
+let cachedMarketplaceOffset = 0;
+let cachedMarketplaceHasMore = true;
+
 export const useMarketplaceFeed = () => {
-    const [marketplaceItems, setMarketplaceItems] = useState<DeviceCard[]>([]);
+    const [marketplaceItems, setMarketplaceItems] = useState<DeviceCard[]>(cachedMarketplaceItems);
     const [marketplaceLoading, setMarketplaceLoading] = useState(false);
-    const [marketplaceHasMore, setMarketplaceHasMore] = useState(true);
-    const [marketplaceOffset, setMarketplaceOffset] = useState(0);
-    const marketplaceOffsetRef = useRef(0);
+    const [marketplaceHasMore, setMarketplaceHasMore] = useState(cachedMarketplaceHasMore);
+    const [marketplaceOffset, setMarketplaceOffset] = useState(cachedMarketplaceOffset);
+    const marketplaceOffsetRef = useRef(cachedMarketplaceOffset);
+
+    // Sync ref with initial state from cache
+    useEffect(() => {
+        marketplaceOffsetRef.current = marketplaceOffset;
+    }, []);
 
     const loadMoreMarketplaceItems = useCallback(async () => {
         console.log('Loading marketplace items...');
@@ -23,20 +33,24 @@ export const useMarketplaceFeed = () => {
             const newItems = Array.isArray(data.items) ? data.items : [];
             console.log('New items loaded:', newItems.length);
             setMarketplaceItems((prev) => {
-                // Determine uniqueness by id to avoid duplicates if any
                 const existingIds = new Set(prev.map(i => i.id));
                 const uniqueNewItems = newItems.filter((i: DeviceCard) => !existingIds.has(i.id));
-                return [...prev, ...uniqueNewItems];
+                const updatedItems = [...prev, ...uniqueNewItems];
+                cachedMarketplaceItems = updatedItems;
+                return updatedItems;
             });
             const nextOffset = currentOffset + (newItems.length || 0);
             marketplaceOffsetRef.current = nextOffset;
+            cachedMarketplaceOffset = nextOffset;
             setMarketplaceOffset(nextOffset);
             if (newItems.length < limit) {
                 setMarketplaceHasMore(false);
+                cachedMarketplaceHasMore = false;
             }
         } catch (e) {
             console.error('Feed load error', e);
             setMarketplaceHasMore(false);
+            cachedMarketplaceHasMore = false;
         } finally {
             setMarketplaceLoading(false);
         }
@@ -52,9 +66,12 @@ export const useMarketplaceFeed = () => {
 
             const newItems = Array.isArray(data.items) ? data.items : [];
             setMarketplaceItems(newItems);
+            cachedMarketplaceItems = newItems;
             marketplaceOffsetRef.current = newItems.length;
+            cachedMarketplaceOffset = newItems.length;
             setMarketplaceOffset(newItems.length);
-            setMarketplaceHasMore(true); // Reset hasMore on refresh
+            setMarketplaceHasMore(true);
+            cachedMarketplaceHasMore = true;
         } catch (e) {
             console.error('Feed refresh error', e);
         } finally {

@@ -95,4 +95,14 @@
     margin: 0 auto;
     padding: 0 1rem;
   }
+
+  /* Shimmer animation for skeletons */
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2.5s infinite linear;
+  }
 }

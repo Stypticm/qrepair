@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight, Smartphone, Wrench } from 'lucide-react';
+import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight, Smartphone, Wrench, Newspaper } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
@@ -99,6 +99,7 @@ export function AdminPageClient() {
     { id: 'leads', title: 'Быстрые заявки', description: 'Лиды «в 1 клик»', icon: ShoppingBag, color: 'bg-pink-500' },
     { id: 'trade-in', title: 'Оценки', description: 'Расчет стоимости устройств', icon: Smartphone, color: 'bg-purple-600' },
     { id: 'repair', title: 'Ремонт', description: 'Заявки на ремонт', icon: Wrench, color: 'bg-orange-500' },
+    { id: 'blog', title: 'Блог', description: 'Статьи и новости', icon: Newspaper, color: 'bg-blue-500' },
   ];
 
   const allowedIds = getSectionsForRole(role || (accessDenied === false ? 'ADMIN' : null));

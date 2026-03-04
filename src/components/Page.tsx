@@ -70,7 +70,7 @@ export function Page({ children, title, header, back = true }: PropsWithChildren
     ? 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto'
     : 'w-full h-full';
 
-  const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/my-devices') || pathname?.includes('/buyback') || pathname?.includes('/repair') || pathname?.startsWith('/request');
+  const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/my-devices') || pathname?.includes('/buyback') || pathname?.includes('/repair') || pathname?.startsWith('/request') || pathname?.includes('/blog');
   const isAdminPath = pathname?.startsWith('/admin');
 
   const finalOuterClass = isDesktop

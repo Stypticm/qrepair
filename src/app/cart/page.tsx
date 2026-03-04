@@ -63,7 +63,7 @@ export default function CartPage() {
     <Page back={true}>
       <div className="min-h-screen bg-gray-50 md:pt-2">
         {/* md:pt-2 because Header is fixed and takes ~80px space. */}
-        <div className="max-w-7xl mx-auto pt-16 md:pt-32 px-6 pb-32">
+        <div className="max-w-7xl mx-auto pt-6 md:pt-12 px-6 pb-32">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Корзина</h1>
             <p className="text-gray-600">

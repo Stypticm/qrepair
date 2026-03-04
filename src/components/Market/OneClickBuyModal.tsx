@@ -25,6 +25,9 @@ interface OneClickBuyModalProps {
 export function OneClickBuyModal({ isOpen, onClose, productId, productTitle, productPrice }: OneClickBuyModalProps) {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
+    const [address, setAddress] = useState('');
+    const [deliveryDate, setDeliveryDate] = useState('');
+    const [deliveryTime, setDeliveryTime] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
     const username = useAppStore(state => state.username);
     const telegramId = useAppStore(state => state.telegramId);
@@ -92,7 +95,10 @@ export function OneClickBuyModal({ isOpen, onClose, productId, productTitle, pro
                     productId,
                     productTitle,
                     price: productPrice,
-                    telegramId: useAppStore.getState().telegramId || telegramId
+                    telegramId: useAppStore.getState().telegramId || telegramId,
+                    address,
+                    deliveryDate,
+                    deliveryTime
                 })
             });
 
@@ -197,6 +203,37 @@ export function OneClickBuyModal({ isOpen, onClose, productId, productTitle, pro
                                         onChange={handlePhoneChange}
                                         placeholder="+7 (___) ___-__-__"
                                         className="h-14 pl-12 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white focus:ring-teal-500 transition-all text-base font-mono"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-gray-400 ml-4 uppercase tracking-wider">Адрес доставки</label>
+                                <Input
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    placeholder="Город, улица, дом..."
+                                    className="h-14 px-5 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white focus:ring-teal-500 transition-all text-base"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-gray-400 ml-4 uppercase tracking-wider">Дата</label>
+                                    <Input
+                                        type="date"
+                                        value={deliveryDate}
+                                        onChange={(e) => setDeliveryDate(e.target.value)}
+                                        className="h-14 px-5 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white focus:ring-teal-500 transition-all text-base"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-gray-400 ml-4 uppercase tracking-wider">Время</label>
+                                    <Input
+                                        type="time"
+                                        value={deliveryTime}
+                                        onChange={(e) => setDeliveryTime(e.target.value)}
+                                        className="h-14 px-5 rounded-2xl border-gray-100 bg-gray-50/50 focus:bg-white focus:ring-teal-500 transition-all text-base"
                                     />
                                 </div>
                             </div>

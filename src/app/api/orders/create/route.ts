@@ -4,7 +4,7 @@ import prisma from '@/core/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { telegramId: bodyTelegramId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems } = body
+    const { telegramId: bodyTelegramId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems, deliveryDate, deliveryTime } = body
 
     // Priority: Body ID (frontend state) > Auth Header (Telegram WebApp)
     let finalTelegramId = bodyTelegramId;
@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
             deliveryMethod: deliveryMethod || 'pickup',
             deliveryAddress: deliveryAddress || '',
             pickupPointId: pickupPointId || null,
+            deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
+            deliveryTime: deliveryTime || null,
             status: 'pending',
             items: {
                 create: orderItemsData

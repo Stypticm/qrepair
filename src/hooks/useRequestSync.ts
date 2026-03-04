@@ -41,6 +41,7 @@ export const useRequestSync = () => {
     '/internal',
     '/debug',
     '/test',
+    '/blog',
   ]
 
   // Страницы где синхронизация должна быть более осторожной

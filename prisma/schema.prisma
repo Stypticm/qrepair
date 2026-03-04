@@ -445,10 +445,30 @@ model QuickLead {
   price        Float?
   telegramId   String?
   status       String   @default("new") // new, contacted, closed
+  address      String?
+  deliveryDate DateTime?
+  deliveryTime String?
   isRead       Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  @@schema("public")
+}
+
+model BlogPost {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  excerpt   String?  @db.Text
+  image     String?
+  category  String   @default("Новости")
+  author    String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
+  @@index([createdAt])
   @@schema("public")
 }
 

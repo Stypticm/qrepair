@@ -59,9 +59,9 @@ export function useUserRole(): UseUserRoleReturn {
 export function getSectionsForRole(role: Role | null): string[] {
   switch (role) {
     case 'ADMIN':
-      return ['staff', 'masters', 'requests', 'orders', 'add-lot', 'chats', 'leads', 'trade-in', 'repair']
+      return ['staff', 'masters', 'requests', 'orders', 'add-lot', 'chats', 'leads', 'trade-in', 'repair', 'blog']
     case 'MANAGER':
-      return ['requests', 'orders', 'add-lot', 'chats', 'leads', 'trade-in', 'repair']
+      return ['requests', 'orders', 'add-lot', 'chats', 'leads', 'trade-in', 'repair', 'blog']
     case 'MASTER':
       return ['requests', 'trade-in', 'repair']
     case 'COURIER':

@@ -172,7 +172,7 @@ function CatalogContent() {
     ];
 
     return (
-        <div className="min-h-screen bg-white pt-20">
+        <div className="min-h-screen bg-white pt-4">
             <main className="pt-6 pb-12">
                 <div className="max-w-7xl mx-auto px-4 md:px-6">
                     {/* Breadcrumbs */}

@@ -3,6 +3,7 @@
 import { RotatingBanner } from '@/components/RotatingBanner';
 import { AdaptiveDeviceFeed } from '@/components/AdaptiveDeviceFeed';
 import { Hammer, Coins } from 'lucide-react';
+import { BlogGrid } from '@/components/features/blog/BlogGrid';
 import Link from 'next/link';
 
 interface MainFeedProps {
@@ -65,6 +66,10 @@ export const MainFeed = ({
                                 </div>
                             </>
                         )}
+
+                        <div className="mt-8 mb-6">
+                            <BlogGrid />
+                        </div>
 
                         <div className="w-full">
                             <AdaptiveDeviceFeed

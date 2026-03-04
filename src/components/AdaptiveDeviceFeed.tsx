@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Grid, List, Filter, Search, Hammer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Grid, List, Filter, Search, Hammer, Smartphone } from "lucide-react";
 import { AceternityDeviceCard } from './AceternityDeviceCard';
 import { SimpleDeviceCard } from './SimpleDeviceCard';
 import { HorizontalScrollCarousel } from './HorizontalScrollCarousel';
@@ -146,39 +146,36 @@ export function AdaptiveDeviceFeed({
 
 
   // Показываем скелетон только при загрузке
-  if (isLoading) {
+  if (isLoading && displayItems.length === 0) {
     return (
       <div className="w-full">
-        <div className="space-y-2">
-          {/* Индикаторы страниц (скелетон) */}
-          <div className="flex justify-center gap-2 mb-4">
-            <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"></div>
+        <div className="space-y-4">
+          <div className="flex flex-col items-center justify-center mb-8 gap-2">
+            <div className="flex gap-2">
+              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse opacity-60" style={{ animationDelay: '0.2s' }} />
+              <div className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.4s' }} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Загрузка каталога...</span>
           </div>
 
-          {/* Карусель скелетон - простой */}
-          <div className="relative outline-none flex justify-center w-full mx-auto bg-white/15 backdrop-blur-lg rounded-3xl shadow-3xl border border-white/30 pb-4">
-            <div className="h-[380px] w-full max-w-sm bg-white rounded-2xl shadow-lg overflow-hidden animate-pulse">
-              {/* Изображение скелетон */}
-              <div className="h-78 bg-gray-200 flex items-center justify-center">
-                <div className="w-32 h-32 bg-gray-300 rounded-lg"></div>
+          <div className="relative flex justify-center w-full mx-auto">
+            <div className="w-full max-w-sm aspect-[4/5] bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-6 flex flex-col animate-pulse overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer" />
+
+              <div className="aspect-square w-full bg-gray-50 rounded-3xl flex items-center justify-center mb-8 relative overflow-hidden">
+                <div className="w-32 h-32 bg-gray-100/80 rounded-2xl flex items-center justify-center">
+                  <Smartphone className="w-12 h-12 text-gray-200" />
+                </div>
               </div>
 
-              {/* Контент скелетон */}
-              <div className="p-4 flex flex-col h-full">
-                <div className="flex-1">
-                  {/* Заголовок скелетон */}
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+              <div className="space-y-4 px-2">
+                <div className="h-6 bg-gray-100 rounded-full w-3/4" />
+                <div className="h-4 bg-gray-50 rounded-full w-1/2" />
 
-                  {/* Цена скелетон */}
-                  <div className="h-6 bg-gray-200 rounded w-1/3 mt-auto"></div>
-                </div>
-
-                {/* Кнопка скелетон */}
-                <div className="w-full mt-2">
-                  <div className="h-10 bg-gray-200 rounded-lg"></div>
+                <div className="pt-4 mt-auto flex justify-between items-center">
+                  <div className="h-8 bg-gray-100 rounded-full w-1/3" />
+                  <div className="h-12 bg-gray-100 rounded-2xl w-12" />
                 </div>
               </div>
             </div>
