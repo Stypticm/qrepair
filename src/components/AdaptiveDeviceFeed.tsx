@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Grid, List, Filter, Search, Hammer, Smartphone } from "lucide-react";
+import { ChevronLeft, ChevronRight, Grid, List, Filter, Search, Hammer, Smartphone, X } from "lucide-react";
+import { useSafeArea } from '@/hooks/useSafeArea';
 import { AceternityDeviceCard } from './AceternityDeviceCard';
 import { SimpleDeviceCard } from './SimpleDeviceCard';
 import { HorizontalScrollCarousel } from './HorizontalScrollCarousel';
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
+import { cn } from '@/lib/utils';
 
 export interface DeviceCard {
   id: string;
@@ -55,6 +57,7 @@ export function AdaptiveDeviceFeed({
   const touchStartY = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
   const lastWheelTs = useRef<number>(0);
+  const { isDesktop } = useSafeArea();
   const rootRef = useRef<HTMLDivElement | null>(null);
 
   const switchToGrid = useCallback(() => {
@@ -204,6 +207,35 @@ export function AdaptiveDeviceFeed({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
+        {/* Поиск (виден только на мобилках/PWA, так как на десктопе есть в шапке) */}
+        {!isDesktop && (
+          <div className="pt-5 mb-4">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className={cn(
+                  "w-4 h-4 transition-colors",
+                  searchQuery ? "text-teal-500" : "text-gray-400"
+                )} />
+              </div>
+              <input
+                type="text"
+                placeholder="Поиск по названию или модели..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-gray-100 h-12 pl-11 pr-10 rounded-2xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {viewMode === 'grid' && (
           <div className="bg-gray-50 rounded-xl p-4 space-y-3">
             {/* Кнопка возврата к рекомендациям по центру (вверху) */}
