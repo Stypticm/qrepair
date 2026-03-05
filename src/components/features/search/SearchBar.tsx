@@ -51,9 +51,9 @@ export const SearchBar = () => {
         onBlur={() => setIsFocused(false)}
       />
 
-      <div className="h-6 w-[1px] bg-gray-300 mx-2"></div>
+      <div className="hidden lg:block h-6 w-[1px] bg-gray-300 mx-2"></div>
 
-      <div className="relative h-full">
+      <div className="hidden lg:block relative h-full">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
@@ -98,7 +98,7 @@ export const SearchBar = () => {
 
       <button
         onClick={handleSearch}
-        className="h-[calc(100%-8px)] mr-1 px-6 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm"
+        className="hidden lg:block h-[calc(100%-8px)] mr-1 px-6 bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium rounded-md transition-colors shadow-sm"
       >
         Найти
       </button>

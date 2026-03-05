@@ -67,7 +67,11 @@ export const MainFeed = ({
                             </>
                         )}
 
-                        <div className="w-full mt-4">
+                        <div className="w-full mt-8">
+                            <div className="mb-4 px-2">
+                                <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Новинки</h2>
+                                <p className="text-sm text-gray-500 font-medium">Последние поступления</p>
+                            </div>
                             <AdaptiveDeviceFeed
                                 items={marketplaceItems}
                                 isLoading={marketplaceLoading}
@@ -75,10 +79,11 @@ export const MainFeed = ({
                                 hasMore={marketplaceHasMore}
                                 mode="auto"
                                 onViewModeChange={setViewMode}
+                                hideSorting={true}
                             />
                         </div>
 
-                        <div className="mt-12 mb-6">
+                        <div className="mt-4 mb-6">
                             <BlogGrid />
                         </div>
                     </div>

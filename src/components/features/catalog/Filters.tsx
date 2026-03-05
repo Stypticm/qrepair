@@ -6,9 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 interface FiltersProps {
     onFilterChange?: (filters: FilterState) => void;
+    className?: string;
 }
 
 export interface FilterState {
@@ -21,7 +23,7 @@ export interface FilterState {
 const BRANDS = ['Apple', 'Samsung', 'Xiaomi', 'Google', 'OnePlus', 'Sony', 'Asus'];
 const CONDITIONS = ['Новый', 'Как новый', 'Отличное', 'Хорошее', 'Удовлетворительное'];
 
-export const Filters = ({ onFilterChange }: FiltersProps) => {
+export const Filters = ({ onFilterChange, className }: FiltersProps) => {
     const [priceRange, setPriceRange] = useState<[number, number]>([0, 200000]);
     const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
     const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
@@ -60,7 +62,7 @@ export const Filters = ({ onFilterChange }: FiltersProps) => {
     const hasActiveFilters = selectedBrands.length > 0 || selectedConditions.length > 0 || inStock || priceRange[0] > 0 || priceRange[1] < 200000;
 
     return (
-        <aside className="w-72 flex-shrink-0 bg-white border-r border-gray-100 p-6 h-[calc(100vh-180px)] overflow-y-auto sticky top-24">
+        <aside className={cn("bg-white", className)}>
             <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-bold text-gray-900">Фильтры</h3>
                 {hasActiveFilters && (

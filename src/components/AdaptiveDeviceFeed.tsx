@@ -10,6 +10,7 @@ import { HorizontalScrollCarousel } from './HorizontalScrollCarousel';
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export interface DeviceCard {
   id: string;
@@ -35,6 +36,7 @@ interface AdaptiveDeviceFeedProps {
   mode?: 'carousel' | 'grid' | 'auto';
   onViewModeChange?: (mode: 'carousel' | 'grid') => void;
   showRecommendationsButton?: boolean;
+  hideSorting?: boolean;
 }
 
 
@@ -45,7 +47,8 @@ export function AdaptiveDeviceFeed({
   hasMore,
   mode = 'carousel',
   onViewModeChange,
-  showRecommendationsButton = true
+  showRecommendationsButton = true,
+  hideSorting = false
 }: AdaptiveDeviceFeedProps) {
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>('carousel');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -207,35 +210,6 @@ export function AdaptiveDeviceFeed({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Поиск (виден только на мобилках/PWA, так как на десктопе есть в шапке) */}
-        {!isDesktop && (
-          <div className="pt-5 mb-4">
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className={cn(
-                  "w-4 h-4 transition-colors",
-                  searchQuery ? "text-teal-500" : "text-gray-400"
-                )} />
-              </div>
-              <input
-                type="text"
-                placeholder="Поиск по названию или модели..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-gray-100 h-12 pl-11 pr-10 rounded-2xl text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-sm"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
         {viewMode === 'grid' && (
           <div className="bg-gray-50 rounded-xl p-4 space-y-3">
             {/* Кнопка возврата к рекомендациям по центру (вверху) */}
@@ -245,7 +219,7 @@ export function AdaptiveDeviceFeed({
                   onClick={switchToCarousel}
                   className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
                 >
-                  ← Рекомендации
+                  ← На главную
                 </button>
               </div>
             )}
@@ -253,21 +227,23 @@ export function AdaptiveDeviceFeed({
 
 
             {/* Фильтр (сортировка) */}
-            <div className="flex gap-2">
-              <span className="text-sm text-gray-600 self-center">Сортировка:</span>
-              {(['date', 'price', 'popularity'] as const).map((sort) => (
-                <button
-                  key={sort}
-                  onClick={() => setSortBy(sort)}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${sortBy === sort
-                    ? 'bg-[#2dc2c6] text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-100'
-                    }`}
-                >
-                  {sort === 'date' ? 'По дате' : sort === 'price' ? 'По цене' : 'По популярности'}
-                </button>
-              ))}
-            </div>
+            {!hideSorting && (
+              <div className="flex gap-2">
+                <span className="text-sm text-gray-600 self-center">Сортировка:</span>
+                {(['date', 'price', 'popularity'] as const).map((sort) => (
+                  <button
+                    key={sort}
+                    onClick={() => setSortBy(sort)}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${sortBy === sort
+                      ? 'bg-[#2dc2c6] text-white'
+                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      }`}
+                  >
+                    {sort === 'date' ? 'По дате' : sort === 'price' ? 'По цене' : 'По популярности'}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Результаты поиска */}
             {searchQuery && (
@@ -299,15 +275,15 @@ export function AdaptiveDeviceFeed({
               ))}
             </HorizontalScrollCarousel>
 
-            {/* Кнопка "Все устройства" */}
+            {/* Кнопка "Каталог" */}
             <div className="flex justify-center mt-6">
-              <button
-                onClick={switchToGrid}
+              <Link
+                href="/catalog"
                 className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
               >
                 <Grid className="w-5 h-5" />
-                Все устройства
-              </button>
+                Каталог
+              </Link>
             </div>
 
           </motion.div>

@@ -154,6 +154,13 @@ export const useRequestSync = () => {
 
       // Если заявка не существует, но у нас есть данные в store
       if (!data.exists) {
+        const currentStep = useAppStore.getState().currentStep
+        
+        // Если у пользователя и так нет активной или начатой заявки в сторе, не сбрасываем состояние
+        if (!currentStep) {
+          return
+        }
+
         console.log(
           '🔄 Request deleted by admin, clearing local state'
         )
@@ -175,10 +182,14 @@ export const useRequestSync = () => {
               'telegramUsername',
               tgUsername
             )
+            
+          if (window.location.pathname !== '/') {
+            router.replace('/')
+          }
+        } else {
+          router.replace('/')
         }
-
-        // Редиректим на главную
-        router.replace('/')
+        
         return
       }
 

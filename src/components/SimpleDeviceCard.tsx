@@ -239,6 +239,18 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                 amount={active?.price || 0}
                 description={active?.title || 'Устройство'}
                 productId={active?.id || ''}
+                productDetails={active ? {
+                  id: active.id,
+                  title: active.title,
+                  price: active.price || 0,
+                  cover: active.cover,
+                  photos: active.photos,
+                  model: active.model,
+                  storage: active.storage,
+                  color: active.color,
+                  condition: active.condition,
+                  description: active.description,
+                } : undefined}
                 className="w-full h-12 bg-gradient-to-r from-[#007AFF] to-[#00C6FF] hover:from-[#005BBF] hover:to-[#0099CC] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 Оплатить заказ
@@ -278,7 +290,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
           <div
             key={`card-${card.id}`}
             onClick={() => setActive(card)}
-            className={`${isSingle ? "h-[380px] w-full max-w-sm" : "h-[280px]"} bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
+            className={`group ${isSingle ? "h-[380px] w-full max-w-sm" : "h-[280px]"} bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
           >
             <div className={`${isSingle ? 'h-78' : 'h-48'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden`}>
               <Image
@@ -286,7 +298,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                 height={400}
                 src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
                 alt={card.title}
-                className={`${isSingle ? 'h-[380%] -mb-[160%]' : 'h-[380%] -mb-[120%]'} w-full object-cover object-center`}
+                className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700"
               />
             </div>
 

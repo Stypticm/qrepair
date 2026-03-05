@@ -62,7 +62,7 @@ export const BlogGrid = () => {
 
     return (
         <section
-            className="py-20 bg-white border-t border-gray-100 relative"
+            className="pb-20 bg-white border-t border-gray-100 relative"
         >
             {/* Background elements container with overflow-hidden to prevent clipping of cards while containing blurs */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">

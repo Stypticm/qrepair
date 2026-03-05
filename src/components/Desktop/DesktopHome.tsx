@@ -32,10 +32,10 @@ export const DesktopHome = () => {
     const CoconutBanner = dynamic(() => import('@/components/CoconutBanner'), { ssr: false });
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-4">
-            <main className="pb-16">
+        <div className="min-h-screen bg-gray-50">
+            <main className="">
                 {/* Intro / Filter Header */}
-                <div className="max-w-7xl mx-auto px-6 mb-12 pt-8">
+                <div className="max-w-7xl mx-auto px-6 mb-12">
                     {/* Banners */}
                     {/* <div className="mt-8 mb-12 max-w-2xl mx-auto">
                         <RotatingBanner
@@ -58,7 +58,11 @@ export const DesktopHome = () => {
 
                 {/* Marketplace Feed Section */}
                 <section className="min-h-[600px]" id="marketplace">
-                    <div className="max-w-7xl mx-auto px-6">
+                    <div className="max-w-7xl mx-auto px-4 md:px-6">
+                        <div className="mb-8">
+                            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">Новинки</h2>
+                            <p className="text-gray-500 mt-2 font-medium">Самые свежие поступления в нашем каталоге</p>
+                        </div>
                         <AdaptiveDeviceFeed
                             items={marketplaceItems}
                             isLoading={marketplaceLoading}
@@ -66,6 +70,7 @@ export const DesktopHome = () => {
                             onLoadMore={loadMoreMarketplaceItems}
                             mode="grid"
                             showRecommendationsButton={false}
+                            hideSorting={true}
                         />
                     </div>
                 </section>

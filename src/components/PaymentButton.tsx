@@ -12,7 +12,19 @@ import { useAppStore } from '@/stores/authStore'
 interface PaymentButtonProps {
   amount: number
   description: string
-  productId?: string
+  productId: string
+  productDetails?: {
+    id: string;
+    title: string;
+    price: number;
+    cover: string | null;
+    photos: string[];
+    model?: string;
+    storage?: string;
+    color?: string;
+    condition?: string;
+    description?: string;
+  }
   onSuccess?: (result: any) => void
   className?: string
   children?: React.ReactNode
@@ -22,6 +34,7 @@ export function PaymentButton({
   amount,
   description,
   productId,
+  productDetails,
   onSuccess,
   className = '',
   children
@@ -31,9 +44,13 @@ export function PaymentButton({
   const [isTelegramAvailable, setIsTelegramAvailable] = useState(false)
   const [showSuccessDialog, setShowSuccessDialog] = useState(false)
 
-  // Получаем данные из authStore
   const telegramId = useAppStore(state => state.telegramId);
   const isGuest = !telegramId || telegramId === 'browser_test_user' || telegramId.startsWith('guest_');
+
+  // Need useRouter to redirect to checkout
+  const router = typeof window !== 'undefined' ? require('next/navigation').useRouter() : null;
+  // Use cart to temporarily store item if we are doing a direct buy
+  const { addToCart, cartItems, isInCart } = require('@/hooks/useCart').useCart();
 
   const paymentRequest: PaymentRequest = {
     amount,
@@ -80,37 +97,40 @@ export function PaymentButton({
     setError('')
 
     try {
-      // Получаем данные пользователя из Telegram
-      const tgUser = typeof window !== 'undefined' ? window.Telegram?.WebApp?.initDataUnsafe?.user : null
+      // 1. Add item to cart if it's not already there and productDetails is provided
+      if (productId && productDetails && !isInCart(productId)) {
+        await addToCart({
+          id: productDetails.id,
+          title: productDetails.title,
+          price: productDetails.price,
+          cover: productDetails.cover,
+          photos: productDetails.photos,
+          model: productDetails.model,
+          storage: productDetails.storage,
+          color: productDetails.color,
+          condition: productDetails.condition,
+          description: productDetails.description,
+          date: new Date().toISOString(),
+        });
+      }
 
-      const response = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-telegram-init-data': typeof window !== 'undefined' ? window.Telegram?.WebApp?.initData || '' : ''
-        },
-        body: JSON.stringify({
-          telegramId: useAppStore.getState().telegramId || null, // Свежий ID из стора
-          productId,
-          amount,
-          description,
-          deliveryMethod: 'pickup' // По умолчанию
-        })
-      })
+      // 2. Redirect to the pickup checkout page (acting as a "checkout" button)
+      if (router) {
+        // Close modal first
+        const closeEvent = new CustomEvent('closeDeviceCard');
+        window.dispatchEvent(closeEvent);
 
-      const data = await response.json()
-
-      if (data.success) {
-        // Показываем диалог успеха
-        setShowSuccessDialog(true)
-        console.log('Order created successfully:', data.order)
+        // Wait a slight moment for cart state to serialize if needed
+        setTimeout(() => {
+          router.push('/cart/checkout');
+        }, 100);
       } else {
-        setError(data.error || 'Ошибка при оформлении заказа')
+        setError('Не удалось перейти к оформлению');
+        setIsProcessing(false);
       }
     } catch (err) {
-      setError('Произошла ошибка при соединении с сервером')
-    } finally {
-      setIsProcessing(false)
+      setError('Произошла ошибка при подготовке заказа');
+      setIsProcessing(false);
     }
   }
 

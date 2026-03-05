@@ -263,7 +263,7 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
             layoutId={`card-${card.id}-${id}`}
             key={`card-${card.id}-${id}`}
             onClick={() => setActive(card)}
-            className={`${isSingle ? "h-[380px] w-full max-w-md" : "h-[280px]"} bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
+            className={`group ${isSingle ? "h-[380px] w-full max-w-md" : "h-[280px]"} bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
           >
             <motion.div layoutId={`image-${card.id}-${id}`}>
               <div className={`${isSingle ? 'h-72' : 'h-44'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden`}>
@@ -272,7 +272,7 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                   height={400}
                   src={card.cover || getPictureUrl('display_front_new.png')}
                   alt={card.title}
-                  className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform"
+                  className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700"
                 />
               </div>
             </motion.div>
