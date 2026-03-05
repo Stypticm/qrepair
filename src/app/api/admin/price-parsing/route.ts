@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/core/lib/prisma'
+import { requireAuth } from '@/core/lib/requireAuth'
 
 const PYTHON_PARSER_URL =
   process.env.PYTHON_PARSER_URL || 'http://localhost:8001'
@@ -34,6 +35,9 @@ function createSearchQuery(device: any): string {
 // Mock-функция удалена - используем только реальный парсинг
 
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const {
       deviceId,
@@ -317,6 +321,9 @@ export async function POST(req: NextRequest) {
 
 // GET - получить статистику парсинга для устройства
 export async function GET(req: NextRequest) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { searchParams } = new URL(req.url)
     const deviceId = searchParams.get('deviceId')

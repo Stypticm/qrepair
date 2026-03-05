@@ -56,7 +56,7 @@ interface Order {
 }
 
 function AdminOrdersContent() {
-    const telegramId = useAppStore(state => state.telegramId)
+    const authToken = useAppStore(state => state.authToken)
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
@@ -109,13 +109,13 @@ function AdminOrdersContent() {
             })
             setIsCreateModalOpen(true)
         }
-    }, [telegramId, searchParams])
+    }, [authToken, searchParams])
 
     const loadStaff = async () => {
-        if (!telegramId) return
+        if (!authToken) return
         try {
             const res = await fetch('/api/admin/staff', {
-                headers: { 'x-admin-id': telegramId }
+                headers: { 'Authorization': `Bearer ${authToken}` }
             })
             if (res.ok) {
                 const data = await res.json()
@@ -129,7 +129,9 @@ function AdminOrdersContent() {
     const loadOrders = async (silent = false) => {
         try {
             if (!silent) setLoading(true)
-            const res = await fetch('/api/admin/orders')
+            const res = await fetch('/api/admin/orders', {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
             const data = await res.json()
             setOrders(data.orders || [])
         } catch (e) {
@@ -170,12 +172,14 @@ function AdminOrdersContent() {
             setUpdatingOrderId(orderId)
             const res = await fetch('/api/admin/assign-courier', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
                 body: JSON.stringify({
                     requestId: orderId,
                     type: 'ORDER',
                     courierId,
-                    adminTelegramId: telegramId
                 })
             })
             if (res.ok) {
@@ -196,12 +200,14 @@ function AdminOrdersContent() {
             setUpdatingOrderId(orderId)
             const res = await fetch(`/api/admin/orders/${orderId}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
                 body: JSON.stringify({
                     address: editingAddress[orderId],
                     deliveryDate: editingDate[orderId],
                     deliveryTime: editingTime[orderId],
-                    adminTelegramId: telegramId
                 })
             })
             if (res.ok) {
@@ -227,7 +233,7 @@ function AdminOrdersContent() {
             setUpdatingOrderId(orderId)
             const res = await fetch(`/api/orders/${orderId}/status`, {
                 method: 'DELETE',
-                headers: { 'x-telegram-id': telegramId || '' }
+                headers: { 'Authorization': `Bearer ${authToken}` }
             })
 
             if (res.ok) {
@@ -250,11 +256,11 @@ function AdminOrdersContent() {
             setIsCreating(true)
             const res = await fetch('/api/admin/orders/create', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...newLead,
-                    adminTelegramId: telegramId
-                })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({ ...newLead })
             })
             if (res.ok) {
                 toast.success('Заявка создана')

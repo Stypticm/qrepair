@@ -46,7 +46,7 @@ bot.use(async (ctx, next) => {
        return
     }
     
-    if (text === 'GolyanovoRomaMisha') {
+    if (text === process.env.BOT_PASSWORD) {
       await prisma.botAccess.update({
         where: { telegramId },
         data: { isAuthenticated: true, attempts: 0, blockedUntil: null }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/core/lib/prisma'
+import { requireAuth } from '@/core/lib/requireAuth'
 
 // Функция для реального парсинга через Python API
 async function parseDevicePrices(
@@ -251,6 +252,9 @@ async function parseDevicePrices(
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const {
       limit = 1000, // Парсим все устройства
@@ -380,6 +384,9 @@ export async function POST(req: NextRequest) {
 
 // GET - получить статистику массового парсинга
 export async function GET(req: NextRequest) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { searchParams } = new URL(req.url)
     const days = parseInt(searchParams.get('days') || '7')

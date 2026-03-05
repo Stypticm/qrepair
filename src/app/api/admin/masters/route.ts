@@ -1,37 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
-import { isAdminTelegramId } from '@/core/lib/admin'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/core/lib/requireAuth';
+import prisma from '@/core/lib/prisma';
 
 export async function GET(req: NextRequest) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
-    const { searchParams } = new URL(req.url)
-    const adminTelegramId = searchParams.get('adminTelegramId')
-
-    if (!adminTelegramId) {
-      return NextResponse.json(
-        { error: 'Admin Telegram ID is required' },
-        { status: 400 }
-      )
-    }
-
-    if (!isAdminTelegramId(adminTelegramId)) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      )
-    }
-
     const masters = await prisma.master.findMany({
       include: { point: true },
       orderBy: { createdAt: 'desc' },
     })
-
     return NextResponse.json({ masters })
   } catch (error) {
     console.error('Error fetching masters:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

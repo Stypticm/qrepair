@@ -22,7 +22,7 @@ const ROLE_ICONS = {
 };
 
 export default function StaffManagementPage() {
-    const { telegramId } = useAppStore();
+    const { authToken } = useAppStore();
     const [users, setUsers] = useState<StaffUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -35,7 +35,7 @@ export default function StaffManagementPage() {
     const fetchUsers = async () => {
         try {
             const res = await fetch('/api/admin/staff', {
-                headers: { 'x-admin-id': telegramId || '' }
+                headers: { 'Authorization': `Bearer ${authToken}` }
             });
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
@@ -48,8 +48,8 @@ export default function StaffManagementPage() {
     };
 
     useEffect(() => {
-        if (telegramId) fetchUsers();
-    }, [telegramId]);
+        if (authToken) fetchUsers();
+    }, [authToken]);
 
     const updateRole = async (userId: string, newRole: string) => {
         try {
@@ -57,7 +57,7 @@ export default function StaffManagementPage() {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-admin-id': telegramId || ''
+                    'Authorization': `Bearer ${authToken}`
                 },
                 body: JSON.stringify({ userId, role: newRole }),
             });

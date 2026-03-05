@@ -3,9 +3,15 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+    const authHeader = req.headers.get('authorization');
+    const expected = `Bearer ${process.env.JWT_SECRET}`;
+    if (!authHeader || authHeader !== expected) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const BOT_TOKEN = process.env.BOT_TOKEN;
-        const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://qrepair.vercel.app'; // Fallback to assumed prod URL if env missing
+        const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://qrepair.vercel.app';
 
         if (!BOT_TOKEN) {
             return NextResponse.json({ error: 'Missing BOT_TOKEN' }, { status: 500 });

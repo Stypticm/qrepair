@@ -1,89 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/core/lib/requireAuth';
 import { prisma } from '@/lib/prisma';
-import { isAdminTelegramId } from '@/core/lib/admin';
 
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const telegramId = req.headers.get('x-telegram-id');
-  const { id: chatId } = await params;
-
-  if (!isAdminTelegramId(telegramId)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const chat = await prisma.operatorChat.findUnique({
-      where: { id: chatId },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' },
-        },
-      },
+      where: { id },
+      include: { messages: { orderBy: { createdAt: 'asc' } } },
     });
 
-    if (!chat) {
-      return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
-    }
+    if (!chat) return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
 
-    return NextResponse.json(chat);
+    return NextResponse.json({ success: true, chat });
   } catch (error) {
-    console.error('Error fetching chat for admin:', error);
+    console.error('Error fetching chat:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const adminTelegramId = req.headers.get('x-telegram-id');
-  const { id: chatId } = await params;
-
-  if (!isAdminTelegramId(adminTelegramId)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
 
   try {
-    const body = await req.json();
-    const { text } = body;
+    const { id } = await params;
+    const { message } = await request.json();
 
-    if (!text) {
-      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
-    }
+    if (!message) return NextResponse.json({ error: 'Message required' }, { status: 400 });
 
-    const message = await prisma.operatorMessage.create({
-      data: {
-        chatId,
-        senderId: adminTelegramId!,
-        senderType: 'admin',
-        text,
-      },
+    const newMessage = await prisma.operatorMessage.create({
+      data: { chatId: id, senderId: auth.user.telegramId, senderType: 'admin', text: message },
     });
 
-    // Update the updatedAt field of the chat and ensure it's active
-    const updatedChat = await prisma.operatorChat.update({
-      where: { id: chatId },
-      data: { 
-        updatedAt: new Date(),
-        status: 'active'
-      },
-    });
+    await prisma.operatorChat.update({ where: { id }, data: { updatedAt: new Date() } });
 
-    // Notify User
-    if (updatedChat.telegramId) {
-        const { notifyUser } = await import('@/lib/notifications/user-notifications');
-        await notifyUser(updatedChat.telegramId, {
-            title: '👨‍🔧 Ответ от оператора',
-            body: text.length > 50 ? text.substring(0, 50) + '...' : text,
-            url: '/', // The user is notified on the home page where the chat widget is
-        });
-    }
-
-    return NextResponse.json(message);
+    return NextResponse.json({ success: true, message: newMessage });
   } catch (error) {
-    console.error('Error sending admin message:', error);
+    console.error('Error sending message:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

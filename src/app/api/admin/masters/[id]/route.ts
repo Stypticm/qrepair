@@ -1,78 +1,46 @@
-import { NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/core/lib/requireAuth';
+import prisma from '@/core/lib/prisma';
 
-// Обновление мастера (активация/деактивация)
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { id } = await params
-    const body = await req.json()
-    const { isActive } = body
+    const { isActive } = await req.json()
 
-    const master = await prisma.master.update({
-      where: { id },
-      data: { isActive },
-    })
-
-    return NextResponse.json({
-      success: true,
-      master,
-    })
+    const master = await prisma.master.update({ where: { id }, data: { isActive } })
+    return NextResponse.json({ success: true, master })
   } catch (error) {
     console.error('Error updating master:', error)
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
 
-// Удаление мастера
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAuth(req, ['ADMIN']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { id } = await params
 
-    // Проверяем, есть ли связанные проверки
-    const relatedInspections =
-      await prisma.deviceInspection.findMany({
-        where: {
-          master: {
-            id: id,
-          },
-        },
-      })
+    const relatedInspections = await prisma.deviceInspection.findMany({ where: { master: { id } } })
 
     if (relatedInspections.length > 0) {
-      // Если есть связанные проверки, обновляем их, убирая связь с мастером
-      await prisma.deviceInspection.updateMany({
-        where: {
-          master: {
-            id: id,
-          },
-        },
-        data: {
-          masterUsername: '',
-        },
-      })
+      await prisma.deviceInspection.updateMany({ where: { master: { id } }, data: { masterUsername: '' } })
     }
 
-    await prisma.master.delete({
-      where: { id },
-    })
-
-    return NextResponse.json({
-      success: true,
-    })
+    await prisma.master.delete({ where: { id } })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting master:', error)
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

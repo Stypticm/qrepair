@@ -1,56 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server'
-import {
-  FEATURE_FLAGS,
-  type FeatureFlag,
-} from '@/lib/featureFlags'
+import { NextRequest, NextResponse } from 'next/server';
+import { FEATURE_FLAGS } from '@/lib/featureFlags';
+import { requireAuth } from '@/core/lib/requireAuth';
 
-// Получить все флаги
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
-    return NextResponse.json({
-      success: true,
-      flags: FEATURE_FLAGS,
-    })
+    return NextResponse.json({ success: true, flags: FEATURE_FLAGS })
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch feature flags' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to fetch feature flags' }, { status: 500 })
   }
 }
 
-// Обновить флаг
 export async function POST(request: NextRequest) {
-  try {
-    const { feature, telegramId, enabled } =
-      await request.json()
+  const auth = requireAuth(request, ['ADMIN']);
+  if (auth instanceof NextResponse) return auth;
 
-    if (
-      !feature ||
-      !telegramId ||
-      typeof enabled !== 'boolean'
-    ) {
-      return NextResponse.json(
-        {
-          error:
-            'Missing required fields: feature, telegramId, enabled',
-        },
-        { status: 400 }
-      )
+  try {
+    const { feature, telegramId, enabled } = await request.json()
+
+    if (!feature || !telegramId || typeof enabled !== 'boolean') {
+      return NextResponse.json({ error: 'Missing required fields: feature, telegramId, enabled' }, { status: 400 })
     }
 
-    // В реальном приложении здесь была бы работа с БД
-    // Пока что просто возвращаем успех
     return NextResponse.json({
       success: true,
-      message: `Feature ${feature} ${
-        enabled ? 'enabled' : 'disabled'
-      } for user ${telegramId}`,
+      message: `Feature ${feature} ${enabled ? 'enabled' : 'disabled'} for user ${telegramId}`,
     })
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to update feature flag' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to update feature flag' }, { status: 500 })
   }
 }

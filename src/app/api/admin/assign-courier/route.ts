@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { checkRole } from '@/core/lib/auth';
+import { requireAuth } from '@/core/lib/requireAuth';
 import { NotificationService } from '@/services/notification.service';
 
 export async function POST(request: NextRequest) {
+  const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
-    const { requestId, type, courierId, adminTelegramId } = await request.json();
+    const { requestId, type, courierId } = await request.json();
 
-    if (!requestId || !type || !courierId || !adminTelegramId) {
+    if (!requestId || !type || !courierId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
-    const hasAccess = await checkRole(adminTelegramId, ['ADMIN', 'MANAGER']);
-    if (!hasAccess) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     const courier = await prisma.user.findUnique({
@@ -29,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (type === 'REPAIR') {
       updatedRecord = await prisma.repairRequest.update({
         where: { id: requestId },
-        data: { 
+        data: {
           assignedCourier: { connect: { id: courierId } },
           status: 'courier_assigned'
         },
@@ -37,27 +35,22 @@ export async function POST(request: NextRequest) {
     } else if (type === 'ORDER') {
       updatedRecord = await prisma.order.update({
         where: { id: requestId },
-        data: { 
-          assignedCourier: { connect: { id: courierId } },
-        },
+        data: { assignedCourier: { connect: { id: courierId } } },
       });
     } else if (type === 'SKUPKA') {
       updatedRecord = await prisma.skupka.update({
         where: { id: requestId },
-        data: { 
-          assignedCourier: { connect: { id: courierId } },
-        },
+        data: { assignedCourier: { connect: { id: courierId } } },
       });
     }
 
-    // Отправка уведомления
     await NotificationService.sendToUser(courier.telegramId, {
       title: '📦 Новое назначение',
       message: `Вам назначен новый заказ #${requestId.slice(-4)}. Проверьте детали в приложении.`,
-      url: type === 'REPAIR' 
-        ? `/request/track/${requestId}` 
-        : type === 'ORDER' 
-          ? `/orders/${requestId}` 
+      url: type === 'REPAIR'
+        ? `/request/track/${requestId}`
+        : type === 'ORDER'
+          ? `/orders/${requestId}`
           : `/admin/requests`
     });
 

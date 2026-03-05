@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/core/lib/requireAuth';
+import prisma from '@/core/lib/prisma';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const body = await req.json()
     const { telegramId, username, name, pointId } = body
@@ -13,7 +17,6 @@ export async function POST(req: Request) {
       )
     }
 
-    // Проверяем, не существует ли уже мастер с таким telegramId или username
     const existingMaster = await prisma.master.findFirst({
       where: {
         OR: [{ telegramId }, { username }],
@@ -22,15 +25,11 @@ export async function POST(req: Request) {
 
     if (existingMaster) {
       return NextResponse.json(
-        {
-          error:
-            'Master already exists with this telegramId or username',
-        },
+        { error: 'Master already exists with this telegramId or username' },
         { status: 409 }
       )
     }
 
-    // Создаём нового мастера
     const master = await prisma.master.create({
       data: {
         telegramId,
@@ -52,9 +51,6 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error('Error adding master:', error)
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

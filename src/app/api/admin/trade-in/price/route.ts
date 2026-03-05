@@ -1,26 +1,30 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/core/lib/requireAuth';
 import { prisma } from '@/lib/prisma';
 
-export async function POST(req: Request) {
-    try {
-        const body = await req.json();
-        const { id, minPrice, maxPrice } = body;
+export async function POST(req: NextRequest) {
+  const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
 
-        if (!id) {
-            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-        }
+  try {
+    const body = await req.json();
+    const { id, minPrice, maxPrice } = body;
 
-        const updated = await prisma.tradeInEvaluation.update({
-            where: { id },
-            data: {
-                minPrice: minPrice ? parseFloat(minPrice) : null,
-                maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-            },
-        });
-
-        return NextResponse.json(updated);
-    } catch (error) {
-        console.error('Error updating price:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
+
+    const updated = await prisma.tradeInEvaluation.update({
+      where: { id },
+      data: {
+        minPrice: minPrice ? parseFloat(minPrice) : null,
+        maxPrice: maxPrice ? parseFloat(maxPrice) : null,
+      },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error('Error updating price:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 }
