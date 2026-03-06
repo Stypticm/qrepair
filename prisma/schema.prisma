@@ -600,3 +600,27 @@ enum RepairStatus {
 
   @@schema("public")
 }
+
+model AgentAuditLog {
+  id        String   @id @default(cuid())
+  requestId String?  // ID заявки, если есть (skupkaId или repairRequestId)
+  agentName String   // Имя или ID n8n агента
+  action    String   // Действие (например, GET_CONTEXT, UPDATE_STATUS)
+  input     Json?    // Входящие данные
+  output    Json?    // Ответ или результат
+  status    String   // success, error
+  createdAt DateTime @default(now())
+
+  @@index([requestId])
+  @@index([agentName])
+  @@index([createdAt])
+  @@schema("public")
+}
+
+model IdempotencyKey {
+  id        String   @id // Сам ключ идемпотентности, передаваемый в заголовке
+  createdAt DateTime @default(now())
+  
+  // При необходимости можно добавить expiration, но для базовой защиты достаточно уникального ID
+  @@schema("public")
+}
