@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 
 export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request, ['ADMIN']);
@@ -13,17 +13,18 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID заявки обязателен' }, { status: 400 })
     }
 
-    const deletedRequest = await prisma.skupka.delete({ where: { id: requestId } })
+    // Удаляем заявку через Go API
+    const deletedRequest = await api.delete('skupkas', requestId);
 
-    console.log('🗑️ Admin deleted request:', { id: deletedRequest.id, telegramId: deletedRequest.telegramId, status: deletedRequest.status })
+    console.log('🗑️ Admin deleted request:', { id: requestId })
 
     return NextResponse.json({
       success: true,
       message: 'Заявка успешно удалена',
-      deletedRequest: { id: deletedRequest.id, telegramId: deletedRequest.telegramId, status: deletedRequest.status },
+      deletedRequest: { id: requestId },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete request error:', error)
-    return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 })
+    return NextResponse.json({ error: error.message || 'Внутренняя ошибка сервера' }, { status: 500 })
   }
 }

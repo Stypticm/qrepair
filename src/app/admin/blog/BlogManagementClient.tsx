@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Plus, Pencil, Trash2, Eye, Newspaper, ExternalLink, Globe, Lock, X, Save, User } from 'lucide-react';
+import { Newspaper, ExternalLink, Globe, Lock, X, Save, User, Upload, Loader2, Plus, Pencil, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/services/api';
 
 interface BlogPost {
     id: string;
@@ -29,6 +30,22 @@ export function BlogManagementClient() {
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            toast.loading('Загрузка изображения...');
+            const { url } = await api.upload(file);
+            setEditingPost(prev => ({ ...prev!, image: url }));
+            toast.dismiss();
+            toast.success('Изображение загружено');
+        } catch (error) {
+            toast.dismiss();
+            toast.error('Ошибка при загрузке');
+        }
+    };
 
     const fetchPosts = async () => {
         try {
@@ -278,19 +295,42 @@ export function BlogManagementClient() {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase ml-1">Ссылка на обложку (изображение)</label>
-                                        <div className="relative group">
-                                            <Input
-                                                value={editingPost?.image || ''}
-                                                onChange={(e) => setEditingPost(prev => ({ ...prev!, image: e.target.value }))}
-                                                placeholder="https://example.com/image.jpg"
-                                                className="h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all pl-10"
-                                            />
-                                            <ExternalLink className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                                        <label className="text-xs font-bold text-gray-400 uppercase ml-1">Изображение (URL или загрузка)</label>
+                                        <div className="flex gap-2">
+                                            <div className="relative group flex-1">
+                                                <Input
+                                                    value={editingPost?.image || ''}
+                                                    onChange={(e) => setEditingPost(prev => ({ ...prev!, image: e.target.value }))}
+                                                    placeholder="/static/blogs/image.jpg"
+                                                    className="h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all pl-10"
+                                                />
+                                                <ExternalLink className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                                            </div>
+                                            <div className="relative">
+                                                <input
+                                                    type="file"
+                                                    id="blog-image-upload"
+                                                    className="hidden"
+                                                    accept="image/*"
+                                                    onChange={handleImageUpload}
+                                                />
+                                                <label
+                                                    htmlFor="blog-image-upload"
+                                                    className="h-12 px-4 rounded-xl border border-gray-200 bg-white flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-all text-gray-600"
+                                                    title="Загрузить с компьютера"
+                                                >
+                                                    <Upload className="w-5 h-5" />
+                                                </label>
+                                            </div>
                                         </div>
                                         {editingPost?.image && (
                                             <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 aspect-video bg-gray-50">
-                                                <img src={editingPost.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
+                                                <img
+                                                    src={editingPost.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${editingPost.image}` : editingPost.image}
+                                                    alt="Preview"
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => e.currentTarget.style.display = 'none'}
+                                                />
                                             </div>
                                         )}
                                     </div>

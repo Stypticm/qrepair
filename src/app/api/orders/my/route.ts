@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { api } from '@/services/api'
 
 export async function GET(request: NextRequest) {
   try {
-    // Получаем userId из headers или query params
     const { searchParams } = new URL(request.url)
-    let userId = searchParams.get('telegramId')
+    let telegramId = searchParams.get('telegramId')
 
     const initData = request.headers.get('x-telegram-init-data')
     if (initData) {
@@ -14,47 +13,51 @@ export async function GET(request: NextRequest) {
         const userStr = params.get('user')
         if (userStr) {
           const user = JSON.parse(userStr)
-          userId = user.id?.toString() || userId
+          telegramId = user.id?.toString() || telegramId
         }
       } catch (e) {
         console.error('Error parsing Telegram init data:', e)
       }
     }
 
-    if (!userId) {
+    if (!telegramId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Получаем параметры фильтрации
-    const status = searchParams.get('status') // 'pending' | 'confirmed' | 'in_delivery' | 'completed'
+    const status = searchParams.get('status')
+    const filters: any = { telegramId }
+    if (status) filters.status = status
 
-    // Формируем фильтр
-    const where: any = { telegramId: userId }
-    if (status) {
-      where.status = status
-    }
+    // Получаем заказы через Go API
+    const allOrders = await api.list<any>('orders', filters);
 
-    // Получаем заказы пользователя
-    const orders = await prisma.order.findMany({
-      where,
-      include: {
-        items: {
-          include: {
-            lot: true
+    // Обогащаем данными о позициях заказа
+    const ordersWithItems = await Promise.all(allOrders.map(async (order: any) => {
+      try {
+        // Получаем айтемы заказа
+        const items = await api.list<any>('order-items', { orderId: order.id });
+        
+        // Обогащаем айтемы данными о лотах
+        const itemsWithLots = await Promise.all(items.map(async (item: any) => {
+          try {
+            const lot = await api.get<any>('marketplace-lots', item.lotId);
+            return { ...item, lot };
+          } catch (e) {
+            return item;
           }
-        },
-        pickupPoint: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        }));
 
-    return NextResponse.json({ orders })
-  } catch (error) {
+        return { ...order, items: itemsWithLots };
+      } catch (e) {
+        return { ...order, items: [] };
+      }
+    }));
+
+    return NextResponse.json({ orders: ordersWithItems })
+  } catch (error: any) {
     console.error('Error fetching user orders:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     )
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 
 export async function PATCH(
   req: NextRequest,
@@ -10,14 +10,14 @@ export async function PATCH(
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const { id } = await params
-    const { isActive } = await req.json()
+    const { id } = await params;
+    const { isActive } = await req.json();
 
-    const master = await prisma.master.update({ where: { id }, data: { isActive } })
-    return NextResponse.json({ success: true, master })
+    const master = await api.patch<any>('masters', id, { isActive });
+    return NextResponse.json({ success: true, master });
   } catch (error) {
-    console.error('Error updating master:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    console.error('Error updating master:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
@@ -29,18 +29,13 @@ export async function DELETE(
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const { id } = await params
+    const { id } = await params;
 
-    const relatedInspections = await prisma.deviceInspection.findMany({ where: { master: { id } } })
-
-    if (relatedInspections.length > 0) {
-      await prisma.deviceInspection.updateMany({ where: { master: { id } }, data: { masterUsername: '' } })
-    }
-
-    await prisma.master.delete({ where: { id } })
-    return NextResponse.json({ success: true })
+    // TODO: Handle related inspections in Go backend if needed for consistency
+    await api.delete('masters', id);
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting master:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    console.error('Error deleting master:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

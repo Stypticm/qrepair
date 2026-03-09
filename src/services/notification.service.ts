@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 import { sendPushNotification } from '@/lib/notifications/web-push';
 import webpush from 'web-push';
 
@@ -13,16 +13,16 @@ export class NotificationService {
    * Sends a notification to all user's subscriptions
    */
   static async sendToUser(telegramId: string, payload: NotificationPayload) {
-    const subscriptions = await prisma.pushSubscription.findMany({
-      where: { telegramId },
-    });
+    // Получаем подписки через Go API
+    const allSubscriptions = await api.list<any>('push-subscriptions');
+    const subscriptions = allSubscriptions.filter((sub: any) => sub.telegramId === telegramId);
 
     if (subscriptions.length === 0) {
       return { success: false, message: 'No subscriptions found', count: 0 };
     }
 
     const results = await Promise.all(
-      subscriptions.map(async (sub) => {
+      subscriptions.map(async (sub: any) => {
         const pushSubscription: webpush.PushSubscription = {
           endpoint: sub.endpoint,
           keys: {
@@ -43,9 +43,9 @@ export class NotificationService {
           const statusCode = (result.error as any).statusCode;
           if (statusCode === 410 || statusCode === 404) {
             console.log(`[NotificationService] Deleting expired subscription: ${sub.id}`);
-            await prisma.pushSubscription.delete({
-              where: { id: sub.id },
-            }).catch(err => console.error('[NotificationService] Failed to delete subscription', err));
+            await api.delete('push-subscriptions', sub.id).catch(err => 
+              console.error('[NotificationService] Failed to delete subscription', err)
+            );
           }
         }
 

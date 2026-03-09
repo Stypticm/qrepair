@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import { prisma } from '@/core/lib/prisma';
-import { createClient } from '@supabase/supabase-js';
+import { api } from '@/services/api';
 import { v4 as uuidv4 } from 'uuid';
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!
@@ -16,10 +16,6 @@ export async function POST(request: NextRequest) {
   let photoFiles: File[] = []
 
   try {
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json({ error: 'Конфигурация Supabase не задана' }, { status: 500 })
-    }
-
     const formData = await request.formData()
     const model = formData.get('model') as string
     const storage = formData.get('storage') as string
@@ -45,6 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Добавьте хотя бы одно фото' }, { status: 400 })
     }
 
+    // Фото пока загружаем в Supabase Storage (как просил пользователь - оставить Auth/Storage)
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     lotId = uuidv4()
     uploadedPhotos = []
@@ -61,19 +58,18 @@ export async function POST(request: NextRequest) {
       uploadedPhotos.push(publicUrl)
     }
 
-    const newLot = await prisma.skupka.create({
-      data: {
-        id: lotId,
-        telegramId: auth.user.telegramId,
-        username: 'admin_panel',
-        modelname: modelName,
-        price: parseInt(price),
-        comment: description || null,
-        photoUrls: uploadedPhotos,
-        status: 'paid',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
+    // Сохранение в новую БД через наш Go API
+    const newLot = await api.create('skupkas', {
+      id: lotId,
+      telegramId: auth.user.telegramId,
+      username: 'admin_panel',
+      modelname: modelName,
+      price: parseInt(price),
+      comment: description || null,
+      photoUrls: uploadedPhotos,
+      status: 'paid',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
 
     return NextResponse.json({ success: true, lot: newLot, message: 'Лот успешно создан' })
@@ -95,16 +91,12 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const { data: lots, error } = await createClient(supabaseUrl, supabaseServiceKey)
-      .from('Skupka')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) return NextResponse.json({ error: 'Ошибка получения лотов' }, { status: 500 })
+    // Получение через наш Go API
+    const lots = await api.list('skupkas', { limit: 100 });
 
     return NextResponse.json({ success: true, lots })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get lots error:', error)
-    return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 })
+    return NextResponse.json({ error: error.message || 'Внутренняя ошибка сервера' }, { status: 500 })
   }
 }

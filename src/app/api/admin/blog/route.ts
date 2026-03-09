@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 
 export async function GET(request: NextRequest) {
   // Public: returns only published posts. With auth: returns all.
@@ -8,10 +8,7 @@ export async function GET(request: NextRequest) {
   const isAdmin = !(auth instanceof NextResponse);
 
   try {
-    const posts = await prisma.blogPost.findMany({
-      where: isAdmin ? {} : { published: true },
-      orderBy: { createdAt: 'desc' }
-    });
+    const posts = await api.list<any>('blog-posts', isAdmin ? {} : { published: 'true' });
     return NextResponse.json(posts);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
@@ -25,8 +22,16 @@ export async function POST(request: NextRequest) {
   try {
     const { title, content, excerpt, image, category, author, published } = await request.json();
 
-    const post = await prisma.blogPost.create({
-      data: { title, content, excerpt, image, category: category || 'Новости', author: author || null, published: published ?? false }
+    const post = await api.create<any>('blog-posts', {
+      title,
+      content,
+      excerpt,
+      image,
+      category: category || 'Новости',
+      author: author || null,
+      published: published ?? false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
     return NextResponse.json(post);
   } catch (error) {
@@ -43,9 +48,15 @@ export async function PATCH(request: NextRequest) {
     const { id, title, content, excerpt, image, category, author, published } = await request.json();
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
-    const post = await prisma.blogPost.update({
-      where: { id },
-      data: { title, content, excerpt, image, category, author, published }
+    const post = await api.patch<any>('blog-posts', id, {
+      title,
+      content,
+      excerpt,
+      image,
+      category,
+      author,
+      published,
+      updatedAt: new Date().toISOString()
     });
     return NextResponse.json(post);
   } catch (error) {
@@ -62,7 +73,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
-    await prisma.blogPost.delete({ where: { id } });
+    await api.delete('blog-posts', id);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });

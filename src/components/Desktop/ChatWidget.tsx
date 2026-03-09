@@ -15,6 +15,7 @@ interface Message {
     senderType: 'user' | 'admin';
     text: string;
     createdAt: string;
+    requestId?: string;
 }
 
 export function ChatWidget() {
@@ -61,54 +62,59 @@ export function ChatWidget() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, []);
 
-    const fetchChat = useCallback(async () => {
-        if (!activeId) return;
-        try {
-            const res = await fetch(`/api/chats?telegramId=${activeId}`);
-            const data = await res.json();
-            if (data.messages) {
-                setMessages(data.messages);
-            }
-        } catch (error) {
-            console.error('Failed to fetch chat:', error);
-        }
-    }, [activeId]);
-
-    useEffect(() => {
-        if (isOpen && activeId) {
-            fetchChat();
-            const interval = setInterval(fetchChat, 5000); // Polling every 5 seconds
-            return () => clearInterval(interval);
-        }
-    }, [isOpen, activeId, fetchChat]);
-
     useEffect(() => {
         scrollToBottom();
-    }, [messages, scrollToBottom]);
+    }, [messages, isLoading, scrollToBottom]);
 
     const handleSendMessage = async () => {
         if (!input.trim() || !activeId || isLoading) return;
 
-        setIsLoading(true);
         const text = input.trim();
         setInput('');
 
+        const userMsg: Message = {
+            id: crypto.randomUUID(),
+            senderId: activeId,
+            senderType: 'user',
+            text,
+            createdAt: new Date().toISOString(),
+        };
+        setMessages(prev => [...prev, userMsg]);
+        setIsLoading(true);
+
         try {
-            const res = await fetch('/api/chats', {
+            const reqId = `client_${crypto.randomUUID()}`;
+            const res = await fetch('/api/agents/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    telegramId: activeId,
-                    username: username || 'Гость',
+                    userId: activeId,
                     text,
+                    requestId: reqId,
                 }),
             });
 
-            if (res.ok) {
-                fetchChat();
-            }
+            const data = await res.json();
+
+            const botMsg: Message = {
+                id: crypto.randomUUID(),
+                senderId: 'bot',
+                senderType: 'admin',
+                text: data.ok ? data.reply : (data.reply || "Сервис временно недоступен, попробуйте через минуту."),
+                createdAt: new Date().toISOString(),
+                requestId: data.requestId || reqId,
+            };
+            setMessages(prev => [...prev, botMsg]);
         } catch (error) {
             console.error('Failed to send message:', error);
+            const errorMsg: Message = {
+                id: crypto.randomUUID(),
+                senderId: 'bot',
+                senderType: 'admin',
+                text: "Не удалось отправить сообщение. Проверьте подключение к сети.",
+                createdAt: new Date().toISOString(),
+            };
+            setMessages(prev => [...prev, errorMsg]);
         } finally {
             setIsLoading(false);
         }
@@ -177,10 +183,19 @@ export function ChatWidget() {
                                     <MessageCircle size={20} />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-sm">Поддержка Qoqos</h3>
+                                    <h3 className="font-semibold text-sm">Ассистент QRepair</h3>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                        <span className="text-[10px] text-gray-400 capitalize">Оператор онлайн</span>
+                                        {isLoading ? (
+                                            <>
+                                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                                                <span className="text-[10px] text-gray-400 capitalize">Печатает...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                                <span className="text-[10px] text-gray-400 capitalize">В сети</span>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -228,6 +243,18 @@ export function ChatWidget() {
                                         </span>
                                     </div>
                                 ))
+                            )}
+                            {isLoading && (
+                                <div className="flex flex-col items-start max-w-[80%] mr-auto">
+                                    <div className="px-4 py-3 rounded-2xl text-sm shadow-sm bg-gray-100 text-gray-900 rounded-tl-none flex items-center gap-1.5 h-10 w-16">
+                                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                        Ассистент печатает...
+                                    </span>
+                                </div>
                             )}
                             <div ref={messagesEndRef} />
                         </div>

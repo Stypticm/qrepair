@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { api } from '@/services/api'
 import {
   sendTelegramMessage,
   sendTelegramPhoto,
@@ -7,8 +7,6 @@ import {
 import { getServerImageUrl } from '@/core/lib/assets'
 import fs from 'fs'
 import path from 'path'
-
-const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,91 +53,71 @@ export async function POST(request: NextRequest) {
         pickupPointAddress
       )
     } else {
-      // Иначе получаем из базы данных
-      const draftRecord = await prisma.skupka.findFirst({
-        where: {
-          telegramId: telegramId,
-          status: 'draft',
-        },
-        orderBy: {
-          updatedAt: 'desc',
-        },
-      })
+      // Иначе получаем из нашего API
+      const skupkas = await api.list<any>('skupkas');
+      const draftRecord = skupkas
+        .filter(s => s.telegramId === telegramId && s.status === 'draft')
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0];
 
       if (draftRecord?.pickupPoint) {
         pickupPointAddress = draftRecord.pickupPoint
         console.log(
-          '📍 Используем адрес из БД:',
+          '📍 Используем адрес из API:',
           pickupPointAddress
         )
       } else {
-        console.log('⚠️ Адрес точки не найден в БД')
+        console.log('⚠️ Адрес точки не найден в API')
       }
     }
 
-    // Обновляем запись в базе данных
-    const updatedSkupka = await prisma.skupka.updateMany({
-      where: {
-        telegramId: telegramId,
-        status: 'draft',
-      },
-      data: {
-        priceAgreed: true, // Пользователь согласен с ценой
-        status: 'submitted',
-        submittedAt: new Date(),
-        pickupPoint: pickupPointAddress,
-        deliveryMethod:
-          deliveryData?.deliveryMethod || 'pickup',
-        courier:
-          deliveryData?.deliveryMethod === 'courier'
-            ? deliveryData?.courier || null
-            : null,
-        priceRange: priceRange || undefined,
-        videoUrls: Array.isArray(videoUrls)
-          ? videoUrls
-          : undefined,
-      },
-    })
+    // Ищем черновик для обновления
+    const skupkas = await api.list<any>('skupkas');
+    const draftRecords = skupkas
+      .filter(s => s.telegramId === telegramId && s.status === 'draft');
 
     let skupkaId: string | null = null
-    if (updatedSkupka.count === 0) {
-      // Если запись не найдена, создаем новую
-      const newSkupka = await prisma.skupka.create({
-        data: {
-          telegramId: telegramId,
-          username: username || 'Unknown', // Правильный username
-          modelname: modelname,
-          price: price,
+
+    if (draftRecords.length > 0) {
+      // Обновляем все черновики пользователя (как это делал updateMany)
+      for (const record of draftRecords) {
+        await api.patch('skupkas', record.id, {
           priceAgreed: true,
-          deliveryMethod:
-            deliveryData?.deliveryMethod || 'pickup',
-          pickupPoint: pickupPointAddress,
-          courier:
-            deliveryData?.deliveryMethod === 'courier'
-              ? deliveryData?.courier || null
-              : null,
           status: 'submitted',
-          submittedAt: new Date(),
-          photoUrls: [],
-          videoUrls: Array.isArray(videoUrls)
-            ? videoUrls
-            : [],
-          priceRange: priceRange || null,
-        },
+          submittedAt: new Date().toISOString(),
+          pickupPoint: pickupPointAddress,
+          deliveryMethod: deliveryData?.deliveryMethod || 'pickup',
+          courier: deliveryData?.deliveryMethod === 'courier'
+            ? deliveryData?.courier || null
+            : null,
+          priceRange: priceRange || undefined,
+          videoUrls: Array.isArray(videoUrls) ? videoUrls : undefined,
+          updatedAt: new Date().toISOString(),
+        })
+      }
+      // ID последней обновленной записи
+      skupkaId = draftRecords.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0].id;
+    } else {
+      // Если запись не найдена, создаем новую
+      const newSkupka = await api.create<any>('skupkas', {
+        telegramId: telegramId,
+        username: username || 'Unknown',
+        modelname: modelname,
+        price: price,
+        priceAgreed: true,
+        deliveryMethod: deliveryData?.deliveryMethod || 'pickup',
+        pickupPoint: pickupPointAddress,
+        courier: deliveryData?.deliveryMethod === 'courier'
+          ? deliveryData?.courier || null
+          : null,
+        status: 'submitted',
+        submittedAt: new Date().toISOString(),
+        photoUrls: [],
+        videoUrls: Array.isArray(videoUrls) ? videoUrls : [],
+        priceRange: priceRange || null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
       skupkaId = newSkupka.id
-    } else {
-      // Получаем ID обновленной записи
-      const updatedRecord = await prisma.skupka.findFirst({
-        where: {
-          telegramId: telegramId,
-          status: 'submitted',
-        },
-        orderBy: {
-          updatedAt: 'desc',
-        },
-      })
-      skupkaId = updatedRecord?.id || null
     }
 
     // Формируем сообщение для Telegram

@@ -1,22 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { api } from '@/services/api'
 
 export async function GET(request: NextRequest) {
   try {
-    // Авто-освобождение зарезервированных товаров старше 24 часов
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    await prisma.marketplaceLot.updateMany({
-      where: {
-        status: 'reserved',
-        updatedAt: {
-          lt: twentyFourHoursAgo
-        }
-      },
-      data: {
-        status: 'available'
-      }
-    })
-
     const { searchParams } = new URL(request.url)
     const limit = Math.min(
       parseInt(searchParams.get('limit') || '20', 10),
@@ -27,33 +13,28 @@ export async function GET(request: NextRequest) {
       0
     )
 
-    // Получаем лоты из таблицы MarketplaceLot
-    const items = await prisma.marketplaceLot.findMany({
-      where: {
-        status: 'available', // Только доступные лоты
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-      skip: offset,
-    })
+    // Получаем лоты через Go API
+    // Примечание: Если API не поддерживает фильтрацию, фильтруем на стороне Next.js
+    const items = await api.list<any>('marketplace-lots', { limit: 100, offset: 0 });
 
-    const feed = items.map((item) => {
-      return {
-        id: item.id,
-        title: item.title,
-        price: item.price,
-        date: item.createdAt.toISOString(),
-        cover: item.coverPhoto,
-        photos: item.photos || [],
-        model: item.model,
-        storage: item.storage,
-        color: item.color,
-        condition: item.condition || 'Отличное',
-        description: item.description,
-      }
-    })
+    const feed = items
+      .filter((item: any) => item.status === 'available') // Только доступные лоты
+      .slice(offset, offset + limit)
+      .map((item: any) => {
+        return {
+          id: item.id,
+          title: item.title,
+          price: item.price,
+          date: item.createdAt,
+          cover: item.coverPhoto,
+          photos: item.photos || [],
+          model: item.model,
+          storage: item.storage,
+          color: item.color,
+          condition: item.condition || 'Отличное',
+          description: item.description,
+        }
+      })
 
     return NextResponse.json({ items: feed, limit, offset })
   } catch (error) {

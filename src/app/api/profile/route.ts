@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { api } from '@/services/api'
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
@@ -13,23 +13,14 @@ export async function GET(req: Request) {
   }
 
   try {
-    const application = await prisma.skupka.findMany({
-      where: { telegramId },
-      orderBy: { createdAt: 'desc' },
-    })
+    // Получаем заявки через Go API
+    const applications = await api.list<any>('skupkas', { telegramId });
 
-    if (!application) {
-      return NextResponse.json(
-        { error: 'Application not found' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(application)
-  } catch (error) {
+    return NextResponse.json(applications)
+  } catch (error: any) {
     console.error('Error fetching application:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     )
   }

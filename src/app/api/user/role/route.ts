@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { api } from '@/services/api'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,10 +9,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ role: null }, { status: 401 })
     }
 
-    const user = await prisma.user.findUnique({
-      where: { telegramId },
-      select: { role: true },
-    })
+    // Ищем пользователя по telegramId через Go API
+    const users = await api.list<any>('users', { telegramId });
+    const user = users[0];
 
     return NextResponse.json({ role: user?.role || null })
   } catch (error) {

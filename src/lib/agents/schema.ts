@@ -21,3 +21,18 @@ export const escalationSchema = z.object({
   agentName: z.string().min(1, 'agentName is required'),
   context: z.any().optional(),
 });
+
+export const chatProxyRequestSchema = z.object({
+  userId: z.string().min(1, 'userId is required'),
+  text: z.string().min(1, 'text is required').max(2000, 'text is too long'),
+  requestId: z.string().optional(),
+});
+
+export const chatProxyResponseSchema = z.object({
+  ok: z.boolean(),
+  reply: z.string(),
+  route: z.string().optional(),
+  requestId: z.string().optional(),
+  error: z.string().optional(),
+});
+

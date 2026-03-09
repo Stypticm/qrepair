@@ -1,6 +1,6 @@
 import { Page } from '@/components/Page';
 import Image from 'next/image';
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { notFound } from 'next/navigation';
 import { MarketItemClient } from './MarketItemClient';
 
@@ -11,20 +11,13 @@ interface MarketItemPageProps {
 export default async function MarketItemPage({ params }: MarketItemPageProps) {
   const { id } = await params;
 
-  // Получаем данные из БД
-  const item = await prisma.skupka.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      modelname: true,
-      price: true,
-      photoUrls: true,
-      userEvaluation: true,
-      comment: true,
-      createdAt: true,
-      status: true,
-    },
-  });
+  let item: any;
+  try {
+    // Получаем данные через Go API
+    item = await api.get<any>('skupkas', id);
+  } catch (e) {
+    notFound();
+  }
 
   if (!item || item.status !== 'paid') {
     notFound();
@@ -37,7 +30,7 @@ export default async function MarketItemPage({ params }: MarketItemPageProps) {
   let color = '';
 
   if (modelParts.length >= 3) {
-    const gbIndex = modelParts.findIndex((part) => part.includes('GB'));
+    const gbIndex = modelParts.findIndex((part: string) => part.includes('GB'));
     if (gbIndex > 0) {
       model = modelParts.slice(0, gbIndex).join(' ');
       storage = modelParts[gbIndex];

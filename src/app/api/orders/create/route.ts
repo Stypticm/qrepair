@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { api } from '@/services/api'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { telegramId: bodyTelegramId, productId, amount, deliveryMethod, deliveryAddress, pickupPointId, items: requestItems, deliveryDate, deliveryTime } = body
 
-    // Priority: Body ID (frontend state) > Auth Header (Telegram WebApp)
     let finalTelegramId = bodyTelegramId;
-    
     const initData = request.headers.get('x-telegram-init-data')
     if (!finalTelegramId && initData) {
         try {
@@ -23,14 +21,12 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    console.log(`[OrderCreate] Final Identity: ${finalTelegramId || 'GUEST'}, Body ID provided: ${bodyTelegramId || 'none'}`);
+    console.log(`[OrderCreate] Final Identity: ${finalTelegramId || 'GUEST'}`);
 
-    // Подготавливаем массив товаров для создания OrderItem
     let orderItemsData = [];
     let calculatedTotalPrice = 0;
 
     if (requestItems && Array.isArray(requestItems) && requestItems.length > 0) {
-        // Если передан массив товаров (из корзины)
         for (const item of requestItems) {
             orderItemsData.push({
                 lotId: item.lotId || item.id,
@@ -40,15 +36,7 @@ export async function POST(request: NextRequest) {
             calculatedTotalPrice += item.price * (item.quantity || 1);
         }
     } else if (productId && amount) {
-        // Если передан один товар (обратная совместимость)
-        const lot = await prisma.marketplaceLot.findUnique({
-            where: { id: productId }
-        });
-
-        if (!lot) {
-            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-        }
-
+        const lot = await api.get<any>('marketplace-lots', productId);
         orderItemsData.push({
             lotId: lot.id,
             title: lot.title,
@@ -56,38 +44,37 @@ export async function POST(request: NextRequest) {
         });
         calculatedTotalPrice = amount;
     } else {
-        return NextResponse.json(
-            { error: 'Missing required fields: items or productId+amount are required' },
-            { status: 400 }
-        );
+        return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Создаем заказ
-    const order = await prisma.order.create({
-        data: {
-            telegramId: finalTelegramId || 'guest_' + Date.now(),
-            totalPrice: calculatedTotalPrice,
-            deliveryMethod: deliveryMethod || 'pickup',
-            deliveryAddress: deliveryAddress || '',
-            pickupPointId: pickupPointId || null,
-            deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
-            deliveryTime: deliveryTime || null,
-            status: 'pending',
-            items: {
-                create: orderItemsData
-            }
-        },
-        include: {
-            items: true
-        }
+    // Создаем заказ через Go API
+    const order = await api.create<any>('orders', {
+        telegramId: finalTelegramId || 'guest_' + Date.now(),
+        totalPrice: calculatedTotalPrice,
+        deliveryMethod: deliveryMethod || 'pickup',
+        deliveryAddress: deliveryAddress || '',
+        pickupPointId: pickupPointId || null,
+        deliveryDate: deliveryDate ? new Date(deliveryDate).toISOString() : null,
+        deliveryTime: deliveryTime || null,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
     });
 
-    // Обновляем статус лотов на 'reserved'
-    for (const item of orderItemsData) {
-        await prisma.marketplaceLot.update({
-            where: { id: item.lotId },
-            data: { status: 'reserved' }
+    // Создаем айтемы заказа
+    const createdItems = [];
+    for (const itemData of orderItemsData) {
+        const orderItem = await api.create<any>('order-items', {
+            orderId: order.id,
+            lotId: itemData.lotId,
+            title: itemData.title,
+            price: itemData.price,
+            quantity: 1 // В данной реализации 1, можно расширить
         });
+        createdItems.push(orderItem);
+
+        // Обновляем статус лота
+        await api.patch('marketplace-lots', itemData.lotId, { status: 'reserved' });
     }
 
     // Отправляем уведомления
@@ -95,14 +82,12 @@ export async function POST(request: NextRequest) {
         const { notifyAllAdmins } = await import('@/lib/notifications/admin-notifications');
         const { notifyUser } = await import('@/lib/notifications/user-notifications');
 
-        // Уведомляем админов о новом заказе
         await notifyAllAdmins({
             title: '🛒 Новый заказ',
             body: `Заказ #${order.id.slice(0, 8)} на сумму ${calculatedTotalPrice.toLocaleString('ru-RU')} ₽`,
             url: '/admin/orders'
         });
 
-        // Уведомляем клиента о создании заказа
         if (finalTelegramId && !finalTelegramId.startsWith('guest_')) {
             await notifyUser(finalTelegramId, {
                 title: '✅ Заказ создан',
@@ -112,15 +97,11 @@ export async function POST(request: NextRequest) {
         }
     } catch (notifError) {
         console.error('[OrderCreate] Failed to send notifications:', notifError);
-        // Не прерываем выполнение, если уведомления не отправились
     }
 
-    return NextResponse.json({ success: true, order, orderId: order.id })
-  } catch (error) {
+    return NextResponse.json({ success: true, order: { ...order, items: createdItems }, orderId: order.id })
+  } catch (error: any) {
     console.error('Error creating order:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 })
   }
 }
