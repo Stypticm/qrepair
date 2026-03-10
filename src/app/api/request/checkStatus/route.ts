@@ -1,40 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
 
 export async function POST(request: NextRequest) {
   try {
-    const { telegramId } = await request.json()
+    const { telegramId } = await request.json();
 
     if (!telegramId) {
       return NextResponse.json(
         { error: 'Telegram ID required' },
         { status: 400 }
-      )
+      );
     }
 
-    // Проверяем существование активной заявки
-    const activeRequest = await prisma.skupka.findFirst({
-      where: {
-        telegramId,
-        status: 'draft',
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-      select: {
-        id: true,
-        status: true,
-        currentStep: true,
-        updatedAt: true,
-      },
-    })
+    // Проверяем существование активной заявки через Go API
+    const requests = await api.list<any>('skupka', {
+      telegramId,
+      status: 'draft',
+      order_by: 'updatedAt desc',
+      limit: 1,
+    });
+    
+    const activeRequest = requests[0];
 
     if (!activeRequest) {
       return NextResponse.json({
         success: true,
         exists: false,
         message: 'No active request found',
-      })
+      });
     }
 
     return NextResponse.json({
@@ -46,12 +39,12 @@ export async function POST(request: NextRequest) {
         currentStep: activeRequest.currentStep,
         updatedAt: activeRequest.updatedAt,
       },
-    })
+    });
   } catch (error) {
-    console.error('Check status error:', error)
+    console.error('Check status error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

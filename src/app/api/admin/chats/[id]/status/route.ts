@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 
 export async function PATCH(
   req: NextRequest,
@@ -17,7 +17,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    const updatedChat = await prisma.operatorChat.update({ where: { id: chatId }, data: { status } });
+    const updatedChat = await api.patch('operator-chats', chatId, { status });
     return NextResponse.json(updatedChat);
   } catch (error) {
     console.error('Error updating chat status:', error);

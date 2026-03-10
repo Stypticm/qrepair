@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,11 +9,15 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const [newRepairs, newTradeIns, newOrders] = await Promise.all([
-      prisma.repairRequest.count({ where: { status: 'created' } }),
-      prisma.skupka.count({ where: { status: 'draft' } }),
-      prisma.order.count({ where: { status: 'pending' } })
+    const [repairs, skupkas, orders] = await Promise.all([
+      api.list<any>('repair-requests', { status: 'created' }),
+      api.list<any>('skupkas', { status: 'draft' }),
+      api.list<any>('orders', { status: 'pending' }),
     ]);
+
+    const newRepairs = (repairs || []).length;
+    const newTradeIns = (skupkas || []).length;
+    const newOrders = (orders || []).length;
 
     return NextResponse.json({
       metrics: {

@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 import { isAdminTelegramId } from './admin';
 
 export type UserRole = 'USER' | 'ADMIN' | 'MANAGER' | 'MASTER' | 'COURIER';
@@ -22,10 +22,8 @@ export async function checkRole(
 
   // 2. Проверка роли в базе данных
   try {
-    const user = await prisma.user.findUnique({
-      where: { telegramId: idStr },
-      select: { role: true }
-    });
+    const users = await api.list<any>('users', { telegramId: idStr });
+    const user = users && users.length > 0 ? users[0] : null;
 
     if (!user) return false;
 

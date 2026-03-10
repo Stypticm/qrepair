@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 import { requireAuth } from '@/core/lib/requireAuth';
 import { NotificationService } from '@/services/notification.service';
 
@@ -14,33 +14,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const courier = await prisma.user.findUnique({
-      where: { id: courierId },
-      include: { pushSubscriptions: true }
-    });
+    const couriers = await api.list<any>('users', { id: courierId });
+    const courier = couriers && couriers.length > 0 ? couriers[0] : null;
 
     if (!courier) {
       return NextResponse.json({ error: 'Courier not found' }, { status: 404 });
     }
 
-    let updatedRecord;
+    let updatedRecord: any;
     if (type === 'REPAIR') {
-      updatedRecord = await prisma.repairRequest.update({
-        where: { id: requestId },
-        data: {
-          assignedCourier: { connect: { id: courierId } },
-          status: 'courier_assigned'
-        },
+      updatedRecord = await api.patch('repair-requests', requestId, {
+        assignedCourierId: courierId,
+        status: 'courier_assigned',
       });
     } else if (type === 'ORDER') {
-      updatedRecord = await prisma.order.update({
-        where: { id: requestId },
-        data: { assignedCourier: { connect: { id: courierId } } },
+      updatedRecord = await api.patch('orders', requestId, {
+        assignedCourierId: courierId,
       });
     } else if (type === 'SKUPKA') {
-      updatedRecord = await prisma.skupka.update({
-        where: { id: requestId },
-        data: { assignedCourier: { connect: { id: courierId } } },
+      updatedRecord = await api.patch('skupkas', requestId, {
+        assignedCourierId: courierId,
       });
     }
 

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
-import { checkAdminAccessFromDB } from '@/core/lib/admin-server'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
+import { checkAdminAccessFromDB } from '@/core/lib/admin-server';
 
 export async function GET(
   request: NextRequest,
@@ -8,39 +8,34 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const telegramId = request.headers.get('x-telegram-id')
+    const telegramId = request.headers.get('x-telegram-id');
 
     if (!telegramId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const requestData = await prisma.repairRequest.findUnique({
-      where: { id },
-      include: {
-        assignedMaster: {
-          select: { name: true }
-        }
-      }
-    })
+    const requestData = await api.get<any>('repair-requests', id, {
+      _embed: 'assignedMaster'
+    });
 
     if (!requestData) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     // Проверяем доступ: либо владелец заявки, либо сотрудник
-    const { hasAccess } = await checkAdminAccessFromDB(telegramId)
+    const { hasAccess } = await checkAdminAccessFromDB(telegramId);
     
     if (requestData.telegramId !== telegramId && !hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    return NextResponse.json({ request: requestData })
+    return NextResponse.json({ request: requestData });
   } catch (error) {
-    console.error('Error fetching repair request:', error)
+    console.error('Error fetching repair request:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -50,35 +45,34 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const telegramId = request.headers.get('x-telegram-id')
+    const telegramId = request.headers.get('x-telegram-id');
     if (!telegramId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Только сотрудники могут менять статус
-    const { hasAccess } = await checkAdminAccessFromDB(telegramId)
+    const { hasAccess } = await checkAdminAccessFromDB(telegramId);
     if (!hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const updates = await request.json()
+    const updates = await request.json();
     
     // Запрещаем менять некоторые поля напрямую
-    delete updates.id
-    delete updates.telegramId
-    delete updates.createdAt
+    delete updates.id;
+    delete updates.telegramId;
+    delete updates.createdAt;
 
-    const result = await prisma.repairRequest.update({
-      where: { id },
-      data: updates
-    })
+    updates.updatedAt = new Date().toISOString();
 
-    return NextResponse.json({ success: true, request: result })
+    const result = await api.patch<any>('repair-requests', id, updates);
+
+    return NextResponse.json({ success: true, request: result });
   } catch (error) {
-    console.error('Error updating repair request:', error)
+    console.error('Error updating repair request:', error);
     return NextResponse.json(
       { error: 'Failed to update request' },
       { status: 500 }
-    )
+    );
   }
 }

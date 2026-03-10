@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req, ['ADMIN', 'MANAGER']);
@@ -14,12 +14,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    const updated = await prisma.tradeInEvaluation.update({
-      where: { id },
-      data: {
-        minPrice: minPrice ? parseFloat(minPrice) : null,
-        maxPrice: maxPrice ? parseFloat(maxPrice) : null,
-      },
+    const updated = await api.patch('trade-in-evaluations', id, {
+      minPrice: minPrice ? parseFloat(minPrice) : null,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : null,
     });
 
     return NextResponse.json(updated);

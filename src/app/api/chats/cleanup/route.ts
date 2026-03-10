@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 
 export async function DELETE(req: Request) {
     try {
@@ -12,12 +12,10 @@ export async function DELETE(req: Request) {
 
         console.log(`🧹 Cleaning up guest chat: ${telegramId}`);
 
-        // We use onDelete: Cascade in schema, so deleting the chat should delete messages
-        await prisma.operatorChat.delete({
-            where: {
-                telegramId: telegramId,
-            },
-        });
+        const chats = await api.list<any>('operator-chats', { telegramId });
+        for (const chat of (chats || [])) {
+            await api.delete('operator-chats', chat.id);
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

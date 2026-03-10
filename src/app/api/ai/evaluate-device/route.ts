@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { api } from '@/services/api'
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,9 +21,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Проверяем, что мастер существует
-    const master = await prisma.master.findUnique({
-      where: { telegramId },
-    })
+    const masters = await api.list<any>('masters', { telegramId })
+    const master = masters && masters.length > 0 ? masters[0] : null
 
     if (!master) {
       return NextResponse.json(
@@ -33,11 +32,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Проверяем, что заявка существует
-    const request = await prisma.skupka.findUnique({
-      where: { id: requestId },
-    })
+    const skupkaRequest = await api.get<any>('skupkas', requestId)
 
-    if (!request) {
+    if (!skupkaRequest) {
       return NextResponse.json(
         { error: 'Request not found' },
         { status: 404 }
@@ -61,27 +58,19 @@ export async function POST(req: NextRequest) {
         damagePercent: 0,
         description: 'Отличное состояние',
       },
-      finalPrice: Math.round((request.price || 0) * 0.89), // Примерная финальная цена
+      finalPrice: Math.round((skupkaRequest.price || 0) * 0.89),
       analysisDate: new Date().toISOString(),
       masterId: master.id,
     }
 
     // Сохраняем результат анализа в базу данных
-    const updatedRequest = await prisma.skupka.update({
-      where: { id: requestId },
-      data: {
-        aiAnalysis: analysisResult,
-        photoUrls: photos, // Сохраняем ссылки на фото
-        videoUrls: Array.isArray(videoUrls)
-          ? videoUrls
-          : undefined,
-        aiModelUsed: aiModelUsed || undefined,
-        analysisConfidence:
-          typeof analysisConfidence === 'number'
-            ? analysisConfidence
-            : undefined,
-        priceRange: priceRange || undefined,
-      },
+    const updatedRequest = await api.patch<any>('skupkas', requestId, {
+      aiAnalysis: analysisResult,
+      photoUrls: photos,
+      videoUrls: Array.isArray(videoUrls) ? videoUrls : undefined,
+      aiModelUsed: aiModelUsed || undefined,
+      analysisConfidence: typeof analysisConfidence === 'number' ? analysisConfidence : undefined,
+      priceRange: priceRange || undefined,
     })
 
     return NextResponse.json({

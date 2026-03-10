@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 import { notifyAllAdmins } from '@/lib/notifications/admin-notifications';
 
 export async function POST(req: Request) {
@@ -11,30 +11,28 @@ export async function POST(req: Request) {
 
     const data = await req.json();
 
-    const evaluation = await prisma.tradeInEvaluation.create({
-      data: {
-        telegramId: telegramId,
-        category: data.category,
-        model: data.model,
-        variant: data.variant || null,
-        storage: data.storage,
-        color: data.color,
-        isOriginal: data.isOriginal,
-        isReset: data.isReset,
-        screenCondition: data.screenCondition,
-        bodyCondition: data.bodyCondition,
-        isRostest: data.isRostest,
-        batteryHealth: data.batteryHealth,
-        hasFullSet: data.hasFullSet,
-        wasRepaired: data.wasRepaired,
-        hasReceipt: data.hasReceipt,
-        isFunctional: data.isFunctional ?? true,
-        isBatterySafe: data.isBatterySafe ?? true,
-        isHardwareOk: data.isHardwareOk ?? true,
-        isClean: data.isClean ?? true,
-        calculatedPrice: data.calculatedPrice || 0,
-        status: 'pending',
-      }
+    const evaluation = await api.create<any>('trade-in-evaluations', {
+      telegramId,
+      category: data.category,
+      model: data.model,
+      variant: data.variant || null,
+      storage: data.storage,
+      color: data.color,
+      isOriginal: data.isOriginal,
+      isReset: data.isReset,
+      screenCondition: data.screenCondition,
+      bodyCondition: data.bodyCondition,
+      isRostest: data.isRostest,
+      batteryHealth: data.batteryHealth,
+      hasFullSet: data.hasFullSet,
+      wasRepaired: data.wasRepaired,
+      hasReceipt: data.hasReceipt,
+      isFunctional: data.isFunctional ?? true,
+      isBatterySafe: data.isBatterySafe ?? true,
+      isHardwareOk: data.isHardwareOk ?? true,
+      isClean: data.isClean ?? true,
+      calculatedPrice: data.calculatedPrice || 0,
+      status: 'pending',
     });
 
     // Notify Admins

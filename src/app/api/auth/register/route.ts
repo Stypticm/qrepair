@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { hashPassword } from '@/lib/auth/password';
 import { createToken } from '@/lib/auth/jwt';
-import { Role } from '@prisma/client';
 
 export async function POST(req: Request) {
   try {
@@ -24,11 +23,9 @@ export async function POST(req: Request) {
     }
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { telegramId: login },
-    });
+    const existingUsers = await api.list<any>('users', { telegramId: login });
 
-    if (existingUser) {
+    if (existingUsers && existingUsers.length > 0) {
       return NextResponse.json(
         { error: 'Пользователь с таким логином уже существует' },
         { status: 409 }
@@ -39,16 +36,14 @@ export async function POST(req: Request) {
     const passwordHash = await hashPassword(password);
 
     // Create new user
-    const newUser = await prisma.user.create({
-      data: {
+    const newUser = await api.create<any>('users', {
         telegramId: login,
-        passwordHash,
-        role: Role.USER, // Default role
-      },
+        passwordHash: passwordHash,
+        role: 'USER', // Default role
     });
 
     // Generate JWT token
-    const token = createToken({
+    const token = await createToken({
       userId: newUser.id,
       telegramId: newUser.telegramId,
       role: newUser.role,

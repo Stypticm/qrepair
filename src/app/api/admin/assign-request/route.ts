@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { requireAuth } from '@/core/lib/requireAuth';
 
 export async function POST(request: NextRequest) {
@@ -13,12 +13,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const updatedRequest = await prisma.skupka.update({
-      where: { id: requestId },
-      data: {
+    const updatedRequest = await api.patch<any>('skupkas', requestId, {
         assignedMasterId: masterId,
         status: 'accepted',
-      },
+        updatedAt: new Date().toISOString()
     });
 
     return NextResponse.json({ success: true, request: updatedRequest });

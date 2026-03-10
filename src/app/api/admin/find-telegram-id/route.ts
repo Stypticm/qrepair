@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { requireAuth } from '@/core/lib/requireAuth';
 
 export async function GET(request: NextRequest) {
@@ -7,28 +7,28 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const { searchParams } = new URL(request.url)
-    const username = searchParams.get('username')
+    const { searchParams } = new URL(request.url);
+    const username = searchParams.get('username');
 
     if (!username) {
-      return NextResponse.json({ error: 'Username is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
-    const master = await prisma.master.findFirst({ where: { username } })
+    const masters = await api.list<any>('masters', { username });
 
-    if (master) {
-      return NextResponse.json({ success: true, telegramId: master.telegramId, source: 'master' })
+    if (masters && masters.length > 0) {
+      return NextResponse.json({ success: true, telegramId: masters[0].telegramId, source: 'master' });
     }
 
-    const user = await prisma.skupka.findFirst({ where: { username } })
+    const users = await api.list<any>('skupkas', { username });
 
-    if (user) {
-      return NextResponse.json({ success: true, telegramId: user.telegramId, source: 'user' })
+    if (users && users.length > 0) {
+      return NextResponse.json({ success: true, telegramId: users[0].telegramId, source: 'user' });
     }
 
-    return NextResponse.json({ success: false, telegramId: null, message: 'User not found' })
+    return NextResponse.json({ success: false, telegramId: null, message: 'User not found' });
   } catch (error) {
-    console.error('Error finding Telegram ID:', error)
-    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+    console.error('Error finding Telegram ID:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

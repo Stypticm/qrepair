@@ -32,8 +32,10 @@ const defaultHeaders = {
 };
 
 export interface ApiService {
+  getDistinct(resource: string, field: string, params?: Record<string, string | number>): Promise<string[]>;
   list<T>(resource: string, params?: Record<string, string | number>): Promise<T[]>;
-  get<T>(resource: string, id: string): Promise<T>;
+  listPaginated<T>(resource: string, params?: Record<string, string | number>): Promise<{ items: T[], total: number }>;
+  get<T>(resource: string, id: string, params?: Record<string, string | number>): Promise<T>;
   create<T>(resource: string, data: any): Promise<T>;
   update<T>(resource: string, id: string, data: any): Promise<T>;
   patch<T>(resource: string, id: string, data: any): Promise<T>;
@@ -42,6 +44,23 @@ export interface ApiService {
 }
 
 export const api: ApiService = {
+  /**
+   * Получить уникальные значения для поля (GET /api/{resource}/distinct/{field})
+   */
+  async getDistinct(resource: string, field: string, params?: Record<string, string | number>): Promise<string[]> {
+    const url = new URL(`${API_URL}/api/${resource}/distinct/${field}`);
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        url.searchParams.append(key, val.toString());
+      });
+    }
+    
+    const res = await fetch(url.toString(), {
+      headers: defaultHeaders,
+    });
+    return handleResponse<string[]>(res);
+  },
+
   /**
    * Получить список ресурсов (GET /api/{resource})
    * Возвращает массив элементов.
@@ -61,10 +80,39 @@ export const api: ApiService = {
   },
 
   /**
+   * Получить список ресурсов с пагинацией (GET /api/{resource})
+   * Возвращает объект с массивом элементов и общим количеством.
+   */
+  async listPaginated<T>(resource: string, params?: Record<string, string | number>): Promise<{ items: T[], total: number }> {
+    const url = new URL(`${API_URL}/api/${resource}`);
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        url.searchParams.append(key, val.toString());
+      });
+    }
+    
+    const res = await fetch(url.toString(), {
+      headers: defaultHeaders,
+    });
+    const json = await res.json();
+    return {
+      items: json.data || [],
+      total: json.total || 0,
+    };
+  },
+
+  /**
    * Получить один ресурс по ID (GET /api/{resource}/{id})
    */
-  async get<T>(resource: string, id: string): Promise<T> {
-    const res = await fetch(`${API_URL}/api/${resource}/${id}`, {
+  async get<T>(resource: string, id: string, params?: Record<string, string | number>): Promise<T> {
+    const url = new URL(`${API_URL}/api/${resource}/${id}`);
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        url.searchParams.append(key, val.toString());
+      });
+    }
+    
+    const res = await fetch(url.toString(), {
       headers: defaultHeaders,
     });
     return handleResponse<T>(res);

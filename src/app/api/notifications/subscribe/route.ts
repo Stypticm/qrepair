@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 
 export async function POST(req: Request) {
     try {
@@ -10,23 +10,24 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Invalid subscription' }, { status: 400 });
         }
 
-        // Save or update subscription
-        // We use endpoint as the unique identifier
-        const result = await prisma.pushSubscription.upsert({
-            where: { endpoint: subscription.endpoint },
-            update: {
+        // Upsert: check if exists, then update or create
+        const existing = await api.list<any>('push-subscriptions', { endpoint: subscription.endpoint });
+
+        let result: any;
+        if (existing && existing.length > 0) {
+            result = await api.patch('push-subscriptions', existing[0].id, {
                 telegramId: userId || null,
                 p256dh: subscription.keys.p256dh,
                 auth: subscription.keys.auth,
-                updatedAt: new Date(),
-            },
-            create: {
+            });
+        } else {
+            result = await api.create('push-subscriptions', {
                 telegramId: userId || null,
                 endpoint: subscription.endpoint,
                 p256dh: subscription.keys.p256dh,
                 auth: subscription.keys.auth,
-            },
-        });
+            });
+        }
 
         return NextResponse.json({ success: true, id: result.id });
     } catch (error) {

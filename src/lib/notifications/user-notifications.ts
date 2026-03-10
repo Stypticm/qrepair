@@ -1,14 +1,12 @@
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { sendPushNotification } from './web-push';
 
 export async function notifyUser(userId: string, payload: { title: string; body: string; url?: string }) {
     try {
         // 1. Fetch all subscriptions for this user
-        const subscriptions = await prisma.pushSubscription.findMany({
-            where: { telegramId: userId },
-        });
+        const subscriptions = await api.list<any>('push-subscriptions', { telegramId: userId });
 
-        if (subscriptions.length === 0) {
+        if (!subscriptions || subscriptions.length === 0) {
             console.log(`[Push] No subscriptions found for user: ${userId} (type: ${typeof userId})`);
             return;
         }
@@ -16,7 +14,7 @@ export async function notifyUser(userId: string, payload: { title: string; body:
         console.log(`[Push] Found ${subscriptions.length} subscriptions for user: ${userId}`);
 
         // 2. Send notifications
-        const results = await Promise.all(subscriptions.map(sub => {
+        const results = await Promise.all(subscriptions.map((sub: any) => {
             const pushSubscription = {
                 endpoint: sub.endpoint,
                 keys: {
@@ -32,7 +30,7 @@ export async function notifyUser(userId: string, payload: { title: string; body:
             });
         }));
 
-        const successCount = results.filter(r => r.success).length;
+        const successCount = results.filter((r: any) => r.success).length;
         console.log(`Sent user notifications: ${successCount}/${subscriptions.length}`);
 
     } catch (error) {
@@ -42,3 +40,4 @@ export async function notifyUser(userId: string, payload: { title: string; body:
         }
     }
 }
+

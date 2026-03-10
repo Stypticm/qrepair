@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 
 export async function POST(request: NextRequest) {
     try {
@@ -15,24 +15,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Create the lead in the database
-        const lead = await prisma.quickLead.create({
-            data: {
-                name,
-                phone,
-                productId: productId || null,
-                productTitle: productTitle || null,
-                price: price || null,
-                telegramId: telegramId ? telegramId.toString() : null,
-                address: address || null,
-                deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
-                deliveryTime: deliveryTime || null,
-                status: 'new'
-            }
+        const lead = await api.create<any>('quick-leads', {
+            name,
+            phone,
+            productId: productId || null,
+            productTitle: productTitle || null,
+            price: price ? Number(price) : null,
+            telegramId: telegramId ? telegramId.toString() : null,
+            address: address || null,
+            deliveryDate: deliveryDate ? new Date(deliveryDate).toISOString() : null,
+            deliveryTime: deliveryTime || null,
+            status: 'new',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         });
-
-        // NOTE: Here you could trigger a Telegram bot notification to the admin
-        // For example: await bot.api.sendMessage(adminId, `Новый лид! ${name} ${phone} ...`);
 
         return NextResponse.json({
             success: true,

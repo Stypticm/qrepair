@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const model = searchParams.get('model')
-    const variant = searchParams.get('variant')
-    const storage = searchParams.get('storage')
-    const color = searchParams.get('color')
+    const { searchParams } = new URL(request.url);
+    const model = searchParams.get('model');
+    const variant = searchParams.get('variant');
+    const storage = searchParams.get('storage');
+    const color = searchParams.get('color');
 
     if (!model || !storage || !color) {
       return NextResponse.json(
@@ -17,44 +17,38 @@ export async function GET(request: NextRequest) {
             'Model, storage, and color parameters are required',
         },
         { status: 400 }
-      )
+      );
     }
 
-    // Строим whereClause без null значений
-    const whereClause: any = {
+    const filters: any = {
       model,
       storage,
       color,
-    }
+    };
 
-    // Добавляем variant только если он не пустой
     if (variant && variant !== '' && variant !== 'null') {
-      whereClause.variant = variant
+      filters.variant = variant;
     } else {
-      // Если variant пустой, ищем устройства с пустым variant
-      whereClause.variant = ''
+      filters.variant = '';
     }
 
-    console.log('🔍 Device API - whereClause:', whereClause)
+    console.log('🔍 Device API - filters:', filters);
 
-    let device = await prisma.device.findFirst({
-      where: whereClause,
-    })
+    let devices = await api.list<any>('devices', filters);
+    let device = devices.length > 0 ? devices[0] : null;
 
-    // Если не найдено с пустым variant, пробуем найти любое устройство с этой моделью
     if (!device && (variant === '' || variant === 'null')) {
       console.log(
         '🔍 Device API - trying fallback search without variant'
-      )
-      const fallbackWhereClause = {
+      );
+      const fallbackFilters = {
         model,
         storage,
         color,
-      }
+      };
 
-      device = await prisma.device.findFirst({
-        where: fallbackWhereClause,
-      })
+      devices = await api.list<any>('devices', fallbackFilters);
+      device = devices.length > 0 ? devices[0] : null;
     }
 
     if (!device) {
@@ -64,7 +58,7 @@ export async function GET(request: NextRequest) {
           error: 'Device not found',
         },
         { status: 404 }
-      )
+      );
     }
 
     console.log('🔍 Device API - found device:', {
@@ -74,14 +68,14 @@ export async function GET(request: NextRequest) {
       storage: device.storage,
       color: device.color,
       basePrice: device.basePrice,
-    })
+    });
 
-    return NextResponse.json(device)
+    return NextResponse.json(device);
   } catch (error) {
-    console.error('Error fetching device:', error)
+    console.error('Error fetching device:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch device' },
       { status: 500 }
-    )
+    );
   }
 }

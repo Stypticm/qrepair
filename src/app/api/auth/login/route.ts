@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { verifyPassword } from '@/lib/auth/password';
 import { createToken } from '@/lib/auth/jwt';
 
@@ -17,9 +17,8 @@ export async function POST(req: Request) {
     }
 
     // Ищем пользователя по telegramId (который используется как логин)
-    const user = await prisma.user.findUnique({
-      where: { telegramId: login },
-    });
+    const users = await api.list<any>('users', { telegramId: login });
+    const user = users && users.length > 0 ? users[0] : null;
 
     if (!user) {
       return NextResponse.json(

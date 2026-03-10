@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
+import { RequestManager } from '@/core/lib/requestManager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,56 +10,48 @@ export async function POST(request: NextRequest) {
       damagePercent,
       price,
       priceRange,
-    } = await request.json()
+    } = await request.json();
 
     if (!telegramId) {
       return NextResponse.json(
         { error: 'Telegram ID is required' },
         { status: 400 }
-      )
+      );
     }
 
-    // Находим активную заявку пользователя
-    const activeRequest = await prisma.skupka.findFirst({
-      where: {
-        telegramId,
-        status: 'draft',
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    })
+    // Находим активную заявку пользователя через Go API
+    const requests = await api.list<any>('skupka', {
+      telegramId,
+      status: 'draft',
+      order_by: 'updatedAt desc',
+      limit: 1,
+    });
+    
+    const activeRequest = requests[0];
 
     if (!activeRequest) {
-      console.log(
-        '❌ No active request found for telegramId:',
-        telegramId
-      )
+      console.log('❌ No active request found for telegramId:', telegramId);
       return NextResponse.json(
         { error: 'No active request found' },
         { status: 404 }
-      )
+      );
     }
 
     console.log('✅ Found active request:', {
       id: activeRequest.id,
       telegramId: activeRequest.telegramId,
-      currentStep: activeRequest.currentStep,
       status: activeRequest.status,
-    })
+    });
 
-    // Обновляем заявку с данными оценки
-    const updatedRequest = await prisma.skupka.update({
-      where: { id: activeRequest.id },
-      data: {
-        userEvaluation: userEvaluation || null,
-        damagePercent: damagePercent || 0,
-        price: price ?? activeRequest.price,
-        priceRange: priceRange || activeRequest.priceRange,
-        currentStep: 'submit',
-        updatedAt: new Date(),
-      },
-    })
+    // Обновляем заявку с данными оценки через Go API
+    const updatedRequest = await api.patch<any>('skupka', activeRequest.id, {
+      userEvaluation: userEvaluation || null,
+      damagePercent: damagePercent || 0,
+      price: price ?? activeRequest.price,
+      priceRange: priceRange || activeRequest.priceRange,
+      currentStep: 'submit',
+      updatedAt: new Date().toISOString(),
+    });
 
     console.log('✅ Evaluation saved:', {
       id: updatedRequest.id,
@@ -67,7 +60,7 @@ export async function POST(request: NextRequest) {
       damagePercent,
       price,
       currentStep: updatedRequest.currentStep,
-    })
+    });
 
     return NextResponse.json({
       success: true,
@@ -79,12 +72,12 @@ export async function POST(request: NextRequest) {
         priceRange: updatedRequest.priceRange,
         currentStep: updatedRequest.currentStep,
       },
-    })
+    });
   } catch (error) {
-    console.error('Error saving evaluation:', error)
+    console.error('Error saving evaluation:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

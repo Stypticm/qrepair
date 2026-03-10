@@ -1,38 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id } = await params;
 
-    const order = await prisma.order.findUnique({
-      where: { id },
-      include: {
-        items: {
-          include: {
-            lot: true
-          }
-        },
-        pickupPoint: true
-      }
-    })
+    const order = await api.get<any>('orders', id, {
+      _embed: 'items.lot,pickupPoint'
+    });
 
     if (!order) {
       return NextResponse.json(
         { error: 'Заказ не найден' },
         { status: 404 }
-      )
+      );
     }
 
-    return NextResponse.json({ order })
+    return NextResponse.json({ order });
   } catch (error) {
-    console.error('Error fetching order:', error)
+    console.error('Error fetching order:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

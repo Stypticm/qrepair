@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 
 export async function PATCH(
   request: NextRequest,
@@ -17,18 +17,15 @@ export async function PATCH(
     const data: any = {};
     if (deliveryAddress !== undefined) data.deliveryAddress = deliveryAddress;
     if (address !== undefined) data.deliveryAddress = address;
-    if (deliveryDate !== undefined) data.deliveryDate = deliveryDate ? new Date(deliveryDate) : null;
+    if (deliveryDate !== undefined) data.deliveryDate = deliveryDate ? new Date(deliveryDate).toISOString() : null;
     if (deliveryTime !== undefined) data.deliveryTime = deliveryTime;
     if (status !== undefined) data.status = status;
     if (courierId !== undefined) {
-      data.assignedCourier = courierId ? { connect: { id: courierId } } : { disconnect: true };
+      data.courierId = courierId || null; // Update courierId directly
     }
+    data.updatedAt = new Date().toISOString();
 
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data,
-      include: { items: true, assignedCourier: true }
-    });
+    const updatedOrder = await api.patch<any>('orders', id, data);
 
     return NextResponse.json(updatedOrder);
   } catch (error) {

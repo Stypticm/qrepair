@@ -1,9 +1,4 @@
-/**
- * Централизованный менеджер заявок
- * Принцип единой истины: одна заявка на весь путь воронки
- */
-
-import prisma from '@/core/lib/prisma'
+import { api } from '@/services/api'
 
 export interface RequestData {
   telegramId: string
@@ -36,25 +31,23 @@ export class RequestManager {
     telegramId: string,
     initialData?: Partial<RequestData>
   ) {
-    // Ищем активную заявку (draft или submitted)
-    let activeRequest = await prisma.skupka.findFirst({
-      where: {
-        telegramId,
-        status: { in: ['draft', 'submitted'] },
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
+    // Ищем активную заявку (draft или submitted) через Go API
+    const requests = await api.list<any>('skupka', {
+      telegramId,
+      status: 'draft,submitted',
+      order_by: 'updatedAt desc',
+      limit: 1,
     })
+    
+    let activeRequest = requests[0]
 
-    // Если нет активной заявки, создаем новую
+    // Если нет активной заявки, создаем новую через Go API
     if (!activeRequest) {
       console.log(
         `🆕 Создаем новую заявку для telegramId: ${telegramId}`
       )
 
-      activeRequest = await prisma.skupka.create({
-        data: {
+      activeRequest = await api.create<any>('skupka', {
           telegramId,
           username: initialData?.username || 'Unknown',
           status: 'draft',
@@ -78,7 +71,6 @@ export class RequestManager {
           courier: initialData?.courier || null,
           photoUrls: initialData?.photoUrls || [],
           videoUrls: initialData?.videoUrls || [],
-        },
       })
 
       console.log(
@@ -107,14 +99,9 @@ export class RequestManager {
     console.log(
       `🔄 Обновляем заявку ID: ${activeRequest.id}`
     )
-
-    const updatedRequest = await prisma.skupka.update({
-      where: { id: activeRequest.id },
-      data: {
-        ...updateData,
-        updatedAt: new Date(),
-      },
-    })
+    
+    // В Go API updatedAt обновляется автоматически GORM'ом
+    const updatedRequest = await api.patch<any>('skupka', activeRequest.id, updateData)
 
     console.log(
       `✅ Заявка обновлена ID: ${updatedRequest.id}`
@@ -127,9 +114,7 @@ export class RequestManager {
    * Получить активную заявку по ID
    */
   static async getRequestById(requestId: string) {
-    return await prisma.skupka.findUnique({
-      where: { id: requestId },
-    })
+    return await api.get<any>('skupka', requestId)
   }
 
   /**
@@ -138,15 +123,13 @@ export class RequestManager {
   static async getActiveRequestByTelegramId(
     telegramId: string
   ) {
-    return await prisma.skupka.findFirst({
-      where: {
-        telegramId,
-        status: { in: ['draft', 'submitted'] },
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
+    const requests = await api.list<any>('skupka', {
+      telegramId,
+      status: 'draft,submitted',
+      order_by: 'updatedAt desc',
+      limit: 1,
     })
+    return requests[0] || null
   }
 
   /**
@@ -163,14 +146,10 @@ export class RequestManager {
       `📤 Завершаем заявку ID: ${activeRequest.id}`
     )
 
-    const submittedRequest = await prisma.skupka.update({
-      where: { id: activeRequest.id },
-      data: {
+    const submittedRequest = await api.patch<any>('skupka', activeRequest.id, {
         ...finalData,
         status: 'submitted',
-        submittedAt: new Date(),
-        updatedAt: new Date(),
-      },
+        submittedAt: new Date().toISOString(),
     })
 
     console.log(
@@ -178,5 +157,23 @@ export class RequestManager {
     )
 
     return submittedRequest
+  }
+
+  /**
+   * Очистить все черновики пользователя
+   */
+  static async clearDraft(telegramId: string) {
+    console.log(`🧹 Очищаем черновики для telegramId: ${telegramId}`)
+    
+    const drafts = await api.list<any>('skupka', {
+      telegramId,
+      status: 'draft',
+    })
+
+    for (const draft of drafts) {
+      await api.delete('skupka', draft.id)
+    }
+
+    return { count: drafts.length }
   }
 }

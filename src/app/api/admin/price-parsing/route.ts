@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/core/lib/prisma'
-import { requireAuth } from '@/core/lib/requireAuth'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
+import { requireAuth } from '@/core/lib/requireAuth';
 
 const PYTHON_PARSER_URL =
   process.env.PYTHON_PARSER_URL || 'http://localhost:8001'
@@ -57,15 +57,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Получаем устройство из БД
-    const device = await prisma.device.findUnique({
-      where: { id: deviceId },
-    })
+    const devices = await api.list<any>('devices', { id: deviceId });
+    const device = devices && devices.length > 0 ? devices[0] : null;
 
     if (!device) {
       return NextResponse.json(
         { error: 'Device not found' },
         { status: 404 }
-      )
+      );
     }
 
     let allPrices: ParsedPrice[] = []
@@ -177,16 +176,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Сначала удаляем старые записи для этого устройства (старше 1 часа)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000)
-
-    await prisma.marketPrice.deleteMany({
-      where: {
-        deviceId: device.id,
-        createdAt: {
-          lt: oneHourAgo,
-        },
-      },
-    })
+    const oldPrices = await api.list<any>('market-prices', { deviceId: device.id }); 
+    const nowTimestamp = Date.now();
+    for (const old of (oldPrices || [])) {
+        if (new Date(old.createdAt).getTime() < nowTimestamp - 60 * 60 * 1000) {
+           await api.delete('market-prices', old.id);
+        }
+    }
 
     // Сохраняем новые цены в БД
     const savedPrices = []
@@ -194,36 +190,28 @@ export async function POST(req: NextRequest) {
     for (const priceData of allPrices) {
       try {
         // Проверяем, есть ли уже такая запись
-        const existingPrice =
-          await prisma.marketPrice.findFirst({
-            where: {
+        const existingPrices = await api.list<any>('market-prices', {
               deviceId: device.id,
               source: priceData.source,
               price: priceData.price,
               title: priceData.title || '',
-            },
-          })
+        });
+        const existingPrice = existingPrices && existingPrices.length > 0 ? existingPrices[0] : null;
 
         if (existingPrice) {
           // Обновляем существующую запись
-          const updatedPrice =
-            await prisma.marketPrice.update({
-              where: { id: existingPrice.id },
-              data: {
+          const updatedPrice = await api.patch<any>('market-prices', existingPrice.id, {
                 url: priceData.url,
                 description: priceData.description,
                 location: priceData.location,
                 condition: priceData.condition,
                 sellerType: priceData.sellerType,
-                parsedAt: new Date(),
-              },
-            })
-          savedPrices.push(updatedPrice)
+                parsedAt: new Date().toISOString(),
+          });
+          savedPrices.push(updatedPrice);
         } else {
           // Создаем новую запись
-          const savedPrice =
-            await prisma.marketPrice.create({
-              data: {
+          const savedPrice = await api.create<any>('market-prices', {
                 deviceId: device.id,
                 source: priceData.source,
                 price: priceData.price,
@@ -233,11 +221,12 @@ export async function POST(req: NextRequest) {
                 location: priceData.location,
                 condition: priceData.condition,
                 sellerType: priceData.sellerType,
-              },
-            })
-          savedPrices.push(savedPrice)
+                createdAt: new Date().toISOString()
+          });
+          savedPrices.push(savedPrice);
         }
       } catch (error) {
+
         console.error(
           `Error saving price from ${priceData.source}:`,
           error
@@ -336,63 +325,62 @@ export async function GET(req: NextRequest) {
     }
 
     // Получаем устройство
-    const device = await prisma.device.findUnique({
-      where: { id: deviceId },
-      include: {
-        marketPrices: {
-          orderBy: { parsedAt: 'desc' },
-          take: 50, // Последние 50 записей
-        },
-      },
-    })
+    const latestPrices = await api.list<any>('market-prices', { deviceId: deviceId, _sort: 'parsedAt', _order: 'desc', _limit: 50 });
+    const devices = await api.list<any>('devices', { id: deviceId });
+    const device = devices && devices.length > 0 ? devices[0] : null;
 
     if (!device) {
       return NextResponse.json(
         { error: 'Device not found' },
         { status: 404 }
-      )
+      );
     }
+    
+    device.marketPrices = latestPrices || [];
 
     // Группируем по источникам
     const pricesBySource = device.marketPrices.reduce(
-      (acc, price) => {
+
+      (acc: Record<string, number[]>, price: any) => {
         if (!acc[price.source]) {
-          acc[price.source] = []
+          acc[price.source] = [];
         }
-        acc[price.source].push(price.price)
-        return acc
+        acc[price.source].push(price.price);
+        return acc;
       },
       {} as Record<string, number[]>
-    )
+    );
+
 
     // Вычисляем статистику по источникам
-    const sourceStats = Object.entries(pricesBySource).map(
+    const sourceStats = Object.entries(pricesBySource as Record<string, number[]>).map(
       ([source, prices]) => ({
         source,
         count: prices.length,
         average: Math.round(
-          prices.reduce((sum, p) => sum + p, 0) /
+          prices.reduce((sum: number, p: number) => sum + p, 0) /
             prices.length
         ),
         min: Math.min(...prices),
         max: Math.max(...prices),
         lastParsed: device.marketPrices.find(
-          (p) => p.source === source
+          (p: any) => p.source === source
         )?.parsedAt,
       })
     )
 
     // Общая статистика
     const allPrices = device.marketPrices.map(
-      (p) => p.price
+      (p: any) => p.price
     )
     const avgPrice =
       allPrices.length > 0
         ? Math.round(
-            allPrices.reduce((sum, p) => sum + p, 0) /
+            allPrices.reduce((sum: number, p: number) => sum + p, 0) /
               allPrices.length
           )
         : 0
+
 
     return NextResponse.json({
       success: true,

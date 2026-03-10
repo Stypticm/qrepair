@@ -1,35 +1,31 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/core/lib/prisma'
-import { SkupkaStatus } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
 
 export async function POST(req: NextRequest) {
   try {
-    const { requestId } = await req.json()
+    const { requestId } = await req.json();
 
     if (!requestId) {
       return NextResponse.json(
         { error: 'Request ID is required' },
         { status: 400 }
-      )
+      );
     }
 
-    const updatedRequest = await prisma.skupka.update({
-      where: { id: requestId },
-      data: {
-        assignedMasterId: null,
-        status: SkupkaStatus.submitted,
-      },
-    })
+    const updatedRequest = await api.patch<any>('skupka', requestId, {
+      assignedMasterId: null,
+      status: 'submitted',
+    });
 
     return NextResponse.json({
       success: true,
       request: updatedRequest,
-    })
+    });
   } catch (error) {
-    console.error('Error transferring request:', error)
+    console.error('Error transferring request:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

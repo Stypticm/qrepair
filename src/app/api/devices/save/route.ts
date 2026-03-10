@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/core/lib/prisma'
+import { api } from '@/services/api'
 
 /**
  * API для сохранения данных устройства в БД
@@ -22,14 +22,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Сохраняем в таблицу Skupka
-    const skupka = await prisma.skupka.create({
-      data: {
-        telegramId,
-        sn: serialNumber,
-        deviceData: JSON.stringify(deviceData),
-        status: 'draft',
-        username: username || 'unknown',
-      },
+    const skupka = await api.create<any>('skupkas', {
+      telegramId,
+      sn: serialNumber,
+      deviceData: JSON.stringify(deviceData),
+      status: 'draft',
+      username: username || 'unknown',
     })
 
     console.log('✅ Данные сохранены в БД:', skupka.id)

@@ -1,9 +1,9 @@
-import prisma from '@/core/lib/prisma'
-import { NextResponse } from 'next/server'
+import { RequestManager } from '@/core/lib/requestManager';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await req.json();
     let {
       telegramId,
       username,
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       sn,
       currentStep,
       modelname,
-    } = body
+    } = body;
 
     console.log('🔍 API /choose - получены данные:', {
       telegramId,
@@ -22,69 +22,32 @@ export async function POST(req: Request) {
       sn,
       currentStep,
       modelname,
-    })
+    });
 
-    if (!username) username = 'local_dev'
-    if (!telegramId || !username) {
+    if (!username) username = 'local_dev';
+    if (!telegramId) {
       return NextResponse.json(
         { error: 'Invalid request' },
         { status: 400 }
-      )
+      );
     }
 
-    const existing = await prisma.skupka.findFirst({
-      where: { telegramId, status: 'draft' },
-    })
-
-    if (existing) {
-      const updateData = {
-        price: price !== undefined ? price : existing.price,
-        imei: imei || existing.imei,
-        sn: sn || existing.sn,
-        currentStep: currentStep || existing.currentStep,
-        modelname: modelname || existing.modelname,
-      }
-
-      console.log(
-        '🔄 API /choose - обновляем существующую запись:',
-        {
-          id: existing.id,
-          updateData,
-        }
-      )
-
-      const updated = await prisma.skupka.update({
-        where: { id: existing.id },
-        data: updateData,
-      })
-      return NextResponse.json({ id: updated.id })
-    }
-
-    const createData = {
-      telegramId,
+    // Используем RequestManager (который теперь работает через Go API)
+    const updated = await RequestManager.updateActiveRequest(telegramId, {
       username,
-      status: 'draft' as const,
-      price: price !== undefined ? price : null,
-      imei: imei || null,
-      sn: sn || null,
-      currentStep: currentStep || null,
-      modelname: modelname || null,
-    }
+      price: price !== undefined ? price : undefined,
+      imei,
+      sn,
+      currentStep,
+      modelname,
+    });
 
-    console.log(
-      '🆕 API /choose - создаем новую запись:',
-      createData
-    )
-
-    const created = await prisma.skupka.create({
-      data: createData,
-    })
-
-    return NextResponse.json({ id: created.id })
+    return NextResponse.json({ id: updated.id });
   } catch (error) {
+    console.error('Ошибка в API /choose:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

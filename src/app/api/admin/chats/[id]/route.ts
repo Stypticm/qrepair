@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 
 export async function GET(
   request: NextRequest,
@@ -11,10 +11,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const chat = await prisma.operatorChat.findUnique({
-      where: { id },
-      include: { messages: { orderBy: { createdAt: 'asc' } } },
-    });
+    const chat = await api.get<any>('operator-chats', id);
 
     if (!chat) return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
 
@@ -38,11 +35,14 @@ export async function POST(
 
     if (!message) return NextResponse.json({ error: 'Message required' }, { status: 400 });
 
-    const newMessage = await prisma.operatorMessage.create({
-      data: { chatId: id, senderId: auth.user.telegramId, senderType: 'admin', text: message },
+    const newMessage = await api.create<any>('operator-messages', {
+      chatId: id,
+      senderId: auth.user.telegramId,
+      senderType: 'admin',
+      text: message,
     });
 
-    await prisma.operatorChat.update({ where: { id }, data: { updatedAt: new Date() } });
+    await api.patch('operator-chats', id, { updatedAt: new Date().toISOString() });
 
     return NextResponse.json({ success: true, message: newMessage });
   } catch (error) {

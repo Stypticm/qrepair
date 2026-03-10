@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { verifyToken } from '@/lib/auth/jwt';
 
 export const dynamic = 'force-dynamic';
@@ -29,15 +29,13 @@ export async function GET(req: Request) {
     }
 
     // Получаем актуальные данные пользователя из БД
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-      select: {
-        id: true,
-        telegramId: true,
-        role: true,
-        createdAt: true,
-      },
-    });
+    const userRaw = await api.get<any>('users', payload.userId);
+    const user = userRaw ? {
+      id: userRaw.id,
+      telegramId: userRaw.telegramId,
+      role: userRaw.role,
+      createdAt: userRaw.createdAt,
+    } : null;
 
     if (!user) {
       return NextResponse.json(

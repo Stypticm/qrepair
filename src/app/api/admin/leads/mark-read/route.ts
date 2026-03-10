@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { requireAuth } from '@/core/lib/requireAuth';
 
 export async function POST(request: NextRequest) {
@@ -7,7 +7,15 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    await prisma.quickLead.updateMany({ where: { isRead: false }, data: { isRead: true } });
+    const unreadLeads = await api.list<any>('quick-leads', { isRead: 'false' });
+    
+    for (const lead of unreadLeads) {
+        await api.patch('quick-leads', lead.id, { 
+            isRead: true,
+            updatedAt: new Date().toISOString()
+        });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error marking leads as read:', error);

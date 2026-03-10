@@ -1,43 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
 
 export async function POST(request: NextRequest) {
   try {
-    const { requestId } = await request.json()
+    const { requestId } = await request.json();
 
     if (!requestId) {
       return NextResponse.json(
         { error: 'Request ID required' },
         { status: 400 }
-      )
+      );
     }
 
     // Убираем # из ID если есть
-    const cleanId = requestId.replace('#', '')
+    const cleanId = requestId.replace('#', '');
 
-    // Ищем заявку по ID (последние 4 символа)
-    const skupka = await prisma.skupka.findFirst({
-      where: {
-        id: {
-          endsWith: cleanId,
-        },
-        status: 'submitted',
-      },
-      select: {
-        id: true,
-        modelname: true,
-        price: true,
-        pickupPoint: true,
-        courier: true,
-        deliveryMethod: true,
-      },
-    })
+    // Ищем заявку по ID (последние символы) через Go API с поддержкой LIKE
+    const requests = await api.list<any>('skupka', {
+      'id_like': cleanId,
+      'status': 'submitted',
+    });
+
+    const skupka = requests[0];
 
     if (!skupka) {
       return NextResponse.json(
         { error: 'Заявка не найдена' },
         { status: 404 }
-      )
+      );
     }
 
     return NextResponse.json({
@@ -47,16 +37,15 @@ export async function POST(request: NextRequest) {
         modelname: skupka.modelname,
         price: skupka.price,
         pickupPoint: skupka.pickupPoint,
-        courierAddress:
-          ((skupka as any).courier || {}).address || null,
+        courierAddress: (skupka.courier || {}).address || null,
         deliveryMethod: skupka.deliveryMethod,
       },
-    })
+    });
   } catch (error) {
-    console.error('Error verifying request:', error)
+    console.error('Error verifying request:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

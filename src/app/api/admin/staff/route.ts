@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
-import { prisma } from '@/lib/prisma';
-import { Role } from '@prisma/client';
+import { api } from '@/services/api';
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: { id: true, telegramId: true, role: true, createdAt: true }
-    });
-    return NextResponse.json({ success: true, users });
+    const users = await api.list<any>('users', { _sort: 'createdAt', _order: 'desc' });
+    const mappedUsers = (users || []).map((u: any) => ({
+        id: u.id,
+        telegramId: u.telegramId,
+        role: u.role,
+        createdAt: u.createdAt
+    }));
+    return NextResponse.json({ success: true, users: mappedUsers });
   } catch (error) {
     console.error('Error fetching staff:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -25,15 +27,17 @@ export async function PATCH(request: NextRequest) {
 
   try {
     const { userId, role } = await request.json();
+    const allowedRoles = ['ADMIN', 'MANAGER', 'MASTER', 'COURIER', 'USER'];
 
-    if (!userId || !role || !Object.values(Role).includes(role)) {
+    if (!userId || !role || !allowedRoles.includes(role)) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
 
-    const updatedUser = await prisma.user.update({ where: { id: userId }, data: { role: role as Role } });
+    const updatedUser = await api.patch('users', userId, { role: role });
     return NextResponse.json({ success: true, user: updatedUser });
   } catch (error) {
     console.error('Error updating role:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

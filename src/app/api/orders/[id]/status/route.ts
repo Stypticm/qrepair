@@ -1,109 +1,99 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
-import { notifyUser } from '@/lib/notifications/user-notifications'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
+import { notifyUser } from '@/lib/notifications/user-notifications';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
-    const body = await request.json()
-    const { status, notes, courierName, courierPhone } = body
+    const { id } = await params;
+    const body = await request.json();
+    const { status, notes, courierName, courierPhone } = body;
 
     // Валидация статуса
-    const validStatuses = ['pending', 'confirmed', 'in_delivery', 'completed', 'cancelled']
+    const validStatuses = ['pending', 'confirmed', 'in_delivery', 'completed', 'cancelled'];
     if (status && !validStatuses.includes(status)) {
       return NextResponse.json(
         { error: 'Неверный статус' },
         { status: 400 }
-      )
+      );
     }
 
     // Получаем текущий заказ
-    const currentOrder = await prisma.order.findUnique({
-      where: { id }
-    })
+    const currentOrder = await api.get<any>('orders', id);
 
     if (!currentOrder) {
       return NextResponse.json(
         { error: 'Заказ не найден' },
         { status: 404 }
-      )
+      );
     }
 
     // Подготавливаем данные для обновления
-    const updateData: any = {}
+    const updateData: any = {};
 
     if (status) {
-      updateData.status = status
+      updateData.status = status;
 
       // Автоматически устанавливаем даты при смене статуса
-      const now = new Date()
+      const now = new Date().toISOString();
       if (status === 'confirmed' && !currentOrder.confirmedAt) {
-        updateData.confirmedAt = now
+        updateData.confirmedAt = now;
       }
       if (status === 'in_delivery' && !currentOrder.inDeliveryAt) {
-        updateData.inDeliveryAt = now
+        updateData.inDeliveryAt = now;
       }
       if (status === 'completed' && !currentOrder.completedAt) {
-        updateData.completedAt = now
+        updateData.completedAt = now;
       }
     }
 
     if (notes !== undefined) {
-      updateData.trackingNotes = notes
+      updateData.trackingNotes = notes;
     }
 
     if (courierName !== undefined) {
-      updateData.courierName = courierName
+      updateData.courierName = courierName;
     }
 
     if (courierPhone !== undefined) {
-      updateData.courierPhone = courierPhone
+      updateData.courierPhone = courierPhone;
     }
+
+    // Получаем айтемы заказа
+    const orderItems = await api.list<any>('order-items', { orderId: id });
 
     // Если заказ отменяется — возвращаем лоты в продажу
     if (status === 'cancelled') {
-        const orderItems = await prisma.orderItem.findMany({
-            where: { orderId: id }
-        })
-        
         for (const item of orderItems) {
-            await prisma.marketplaceLot.update({
-                where: { id: item.lotId },
-                data: { status: 'available' }
-            })
+            await api.patch<any>('marketplace-lots', item.lotId, { 
+                status: 'available',
+                updatedAt: new Date().toISOString()
+            });
         }
     }
 
     // Если заказ выполнен — помечаем лоты как проданные
     if (status === 'completed') {
-        const orderItems = await prisma.orderItem.findMany({
-            where: { orderId: id }
-        })
-        
         for (const item of orderItems) {
-            await prisma.marketplaceLot.update({
-                where: { id: item.lotId },
-                data: { status: 'sold', soldAt: new Date() }
-            })
+            await api.patch<any>('marketplace-lots', item.lotId, { 
+                status: 'sold', 
+                soldAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
         }
     }
 
+    updateData.updatedAt = new Date().toISOString();
+
     // Обновляем заказ
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: updateData,
-      include: {
-        items: {
-          include: {
-            lot: true
-          }
-        },
-        pickupPoint: true
-      }
-    })
+    const updatedOrder = await api.patch<any>('orders', id, updateData);
+    
+    // Получаем обновленный заказ с вложенными данными для ответа
+    const fullOrder = await api.get<any>('orders', id, {
+        _embed: 'items.lot,pickupPoint'
+    });
 
     // Отправляем уведомление пользователю об изменении статуса
     if (status && updatedOrder.telegramId) {
@@ -112,28 +102,28 @@ export async function PATCH(
             'in_delivery': 'передан в доставку',
             'completed': 'выполнен',
             'cancelled': 'отменен'
-        }
+        };
         
-        const statusText = statusMap[status]
-        if (statusText) {
+        const statusText = statusMap[status];
+        if (statusText && !updatedOrder.telegramId.startsWith('guest_')) {
             await notifyUser(updatedOrder.telegramId, {
                 title: 'Статус заказа изменен',
                 body: `Ваш заказ ${statusText}.`,
                 url: `/my-devices`
-            })
+            });
         }
     }
 
     return NextResponse.json({
       success: true,
-      order: updatedOrder
-    })
+      order: fullOrder
+    });
   } catch (error) {
-    console.error('Error updating order status:', error)
+    console.error('Error updating order status:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -142,7 +132,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id } = await params;
 
     // Получаем ID пользователя из headers или тела запроса
     let userId: string | null = null;
@@ -167,12 +157,10 @@ export async function DELETE(
     }
 
     // Проверяем существование заказа
-    const order = await prisma.order.findUnique({
-      where: { id }
-    })
+    const order = await api.get<any>('orders', id);
 
     if (!order) {
-      return NextResponse.json({ error: 'Заказ не найден' }, { status: 404 })
+      return NextResponse.json({ error: 'Заказ не найден' }, { status: 404 });
     }
 
     // Проверяем права доступа
@@ -192,30 +180,28 @@ export async function DELETE(
         }
     }
 
-    // Возвращаем лоты в продажу перед удалением
-    const orderItems = await prisma.orderItem.findMany({
-        where: { orderId: id }
-    });
+    const orderItems = await api.list<any>('order-items', { orderId: id });
     
+    // Возвращаем лоты в продажу перед удалением
     for (const item of orderItems) {
-        await prisma.marketplaceLot.update({
-            where: { id: item.lotId },
-            data: { status: 'available' }
+        await api.patch<any>('marketplace-lots', item.lotId, { 
+            status: 'available',
+            updatedAt: new Date().toISOString()
         });
+        
+        // Удаляем orderItem
+        await api.delete('order-items', item.id);
     }
 
     // Удаляем заказ
-    await prisma.$transaction([
-        prisma.orderItem.deleteMany({ where: { orderId: id } }),
-        prisma.order.delete({ where: { id } })
-    ])
+    await api.delete('orders', id);
 
-    return NextResponse.json({ success: true, message: 'Заказ полностью удален' })
+    return NextResponse.json({ success: true, message: 'Заказ полностью удален' });
   } catch (error) {
-    console.error('Error deleting order:', error)
+    console.error('Error deleting order:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
-    )
+    );
   }
 }

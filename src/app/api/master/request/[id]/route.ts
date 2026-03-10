@@ -1,41 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json(
         { error: 'Request ID is required' },
         { status: 400 }
-      )
+      );
     }
 
-    // Получаем заявку по ID
-    const request = await prisma.skupka.findUnique({
-      where: { id },
-      include: {
-        assignedMaster: true,
-      },
-    })
+    // Получаем заявку по ID через Go API с загрузкой мастера
+    const request = await api.get<any>('skupka', id, { preload: 'AssignedMaster' });
 
     if (!request) {
       return NextResponse.json(
         { error: 'Request not found' },
         { status: 404 }
-      )
+      );
     }
 
     console.log('🔍 Master request API - found request:', {
       id: request.id,
-      modelname: request.modelname,
+      modelname: request.deviceModel || request.modelname, // Handle potential field name differences
       status: request.status,
       price: request.price,
-    })
+    });
 
     return NextResponse.json({
       success: true,
@@ -53,14 +48,14 @@ export async function GET(
         aiAnalysis: request.aiAnalysis,
         photoUrls: request.photoUrls,
         deviceData: request.deviceData,
-        assignedMaster: request.assignedMaster,
+        assignedMaster: request.assignedMaster, // Презагружен через Go API
       },
-    })
+    });
   } catch (error) {
-    console.error('Error fetching master request:', error)
+    console.error('Error fetching master request:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

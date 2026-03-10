@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { api } from '@/services/api';
 import { notifyAllAdmins } from '@/lib/notifications/admin-notifications';
 
 export async function GET(req: NextRequest) {
@@ -11,15 +11,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const chat = await prisma.operatorChat.findUnique({
-      where: { telegramId: telegramId },
-      include: {
-        messages: {
-          orderBy: { createdAt: 'asc' },
-        },
-      },
-    });
-
+    const chats = await api.list<any>('operator-chats', { telegramId });
+    const chat = chats && chats.length > 0 ? chats[0] : null;
     return NextResponse.json(chat || { messages: [] });
   } catch (error) {
     console.error('Error fetching chat:', error);
@@ -37,36 +30,33 @@ export async function POST(req: NextRequest) {
     }
 
     // Upsert the chat
-    const chat = await prisma.operatorChat.upsert({
-      where: { telegramId: telegramId },
-      update: { 
+    const existingChats = await api.list<any>('operator-chats', { telegramId });
+    let chat: any;
+    if (existingChats && existingChats.length > 0) {
+      chat = await api.patch('operator-chats', existingChats[0].id, {
         userNickname: username,
         status: 'active',
-        updatedAt: new Date()
-      },
-      create: {
-        telegramId: telegramId,
+        updatedAt: new Date().toISOString(),
+      });
+    } else {
+      chat = await api.create('operator-chats', {
+        telegramId,
         userNickname: username,
-        status: 'active'
-      },
-    });
+        status: 'active',
+      });
+    }
 
     // Create the message
-    const message = await prisma.operatorMessage.create({
-      data: {
-        chatId: chat.id,
-        senderId: telegramId,
-        senderType: 'user',
-        text,
-      },
-      include: {
-        chat: true,
-      }
+    const message = await api.create<any>('operator-messages', {
+      chatId: chat.id,
+      senderId: telegramId,
+      senderType: 'user',
+      text,
     });
 
     // Notify Admins
     if (message) {
-        const nickname = message.chat.userNickname || telegramId;
+        const nickname = chat.userNickname || telegramId;
         await notifyAllAdmins({
             title: `💬 Новое сообщение: ${nickname}`,
             body: text.length > 50 ? text.substring(0, 50) + '...' : text,

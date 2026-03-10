@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { requireAuth } from '@/core/lib/requireAuth';
 
 export async function GET(request: NextRequest) {
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const leads = await prisma.quickLead.findMany({ orderBy: { createdAt: 'desc' } });
+    const leads = await api.list<any>('quick-leads', { _sort: 'createdAt', _order: 'desc' });
     return NextResponse.json(leads);
   } catch (error) {
     console.error('Error fetching leads:', error);
@@ -26,7 +26,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
     }
 
-    const lead = await prisma.quickLead.update({ where: { id }, data: { status } });
+    const lead = await api.patch<any>('quick-leads', id, { 
+      status,
+      updatedAt: new Date().toISOString()
+    });
     return NextResponse.json(lead);
   } catch (error) {
     console.error('Error updating lead:', error);

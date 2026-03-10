@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
-import { Prisma } from '@prisma/client'
+import { NextRequest, NextResponse } from 'next/server';
+import { RequestManager } from '@/core/lib/requestManager';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +8,7 @@ export async function POST(request: NextRequest) {
       username,
       additionalConditions,
       currentStep,
-    } = await request.json()
+    } = await request.json();
 
     console.log(
       '[saveAdditionalConditions] Получены данные:',
@@ -19,123 +18,60 @@ export async function POST(request: NextRequest) {
         additionalConditions,
         currentStep,
       }
-    )
+    );
 
     if (!telegramId || !additionalConditions) {
       console.error(
         '[saveAdditionalConditions] Отсутствуют обязательные поля:',
         { telegramId, additionalConditions }
-      )
+      );
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
-      )
+      );
     }
 
-    // Находим активную заявку пользователя
-    console.log(
-      '[saveAdditionalConditions] Ищем активную заявку для telegramId:',
-      telegramId
-    )
-
-    const currentRequest = await prisma.skupka.findFirst({
-      where: {
-        telegramId: telegramId,
-        status: 'draft',
-      },
-      select: {
-        id: true,
-        additionalConditions: true,
-        deviceConditions: true,
-        telegramId: true,
-        status: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    })
-
-    console.log(
-      '[saveAdditionalConditions] Найденная заявка:',
-      currentRequest
-    )
-
-    if (!currentRequest) {
-      console.log(
-        '[saveAdditionalConditions] Активная заявка не найдена, создаем новую для telegramId:',
-        telegramId
-      )
-
-      // Создаем новую заявку только если действительно нет активной
-      const newRequest = await prisma.skupka.create({
-        data: {
-          telegramId: telegramId,
-          username, // Правильный username
-          modelname: 'Unknown',
-          price: 0,
-          status: 'draft',
-          currentStep:
-            currentStep || 'additional-condition',
-          additionalConditions: additionalConditions,
-          photoUrls: [],
-        },
-      })
-
-      console.log(
-        '[saveAdditionalConditions] Создана новая заявка:',
-        newRequest.id
-      )
-
-      return NextResponse.json({
-        success: true,
-        additionalConditions: additionalConditions,
-        requestId: newRequest.id,
-      })
-    }
+    // Находим или создаем активную заявку пользователя через Go API
+    const activeRequest = await RequestManager.getOrCreateActiveRequest(telegramId, {
+      username: username || 'Unknown',
+      currentStep: currentStep || 'additional-condition',
+    });
 
     // Объединяем в deviceConditions
     const mergedDeviceConditions = {
-      ...((currentRequest?.deviceConditions as any) || {}),
+      ...(activeRequest.deviceConditions || {}),
       ...(additionalConditions || {}),
-    }
+    };
 
     console.log(
-      '[saveAdditionalConditions] Обновляем заявку с данными:',
+      '[saveAdditionalConditions] Обновляем заявку с данными через Go API:',
       {
         telegramId,
         mergedConditions: mergedDeviceConditions,
         currentStep,
       }
-    )
+    );
 
     // Обновляем заявку с новыми условиями (в deviceConditions)
-    const updatedRequest = await prisma.skupka.updateMany({
-      where: {
-        telegramId: telegramId,
-        status: 'draft',
-      },
-      data: {
-        deviceConditions: mergedDeviceConditions as any,
-        additionalConditions: Prisma.DbNull, // чистим legacy (DB NULL)
-        currentStep: currentStep || undefined,
-      },
-    })
-
-    console.log(
-      '[saveAdditionalConditions] Успешно обновлено записей:',
-      updatedRequest.count
-    )
+    const updatedRequest = await RequestManager.updateActiveRequest(telegramId, {
+      deviceConditions: mergedDeviceConditions,
+      additionalConditions: null, // чистим legacy
+      currentStep: currentStep || undefined,
+    });
 
     return NextResponse.json({
       success: true,
       deviceConditions: mergedDeviceConditions,
-    })
+      requestId: updatedRequest.id,
+    });
   } catch (error) {
     console.error(
       '[saveAdditionalConditions] Ошибка при сохранении:',
       error
-    )
+    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

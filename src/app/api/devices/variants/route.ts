@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/core/lib/prisma'
+import { NextRequest, NextResponse } from 'next/server';
+import { api } from '@/services/api';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const model = searchParams.get('model')
+    const { searchParams } = new URL(request.url);
+    const model = searchParams.get('model');
 
     if (!model) {
       return NextResponse.json(
@@ -13,41 +13,25 @@ export async function GET(request: NextRequest) {
           error: 'Model parameter is required',
         },
         { status: 400 }
-      )
+      );
     }
 
-    const variants = await prisma.device.findMany({
-      where: {
-        model: model,
-      },
-      select: {
-        variant: true,
-      },
-      distinct: ['variant'],
-      orderBy: {
-        variant: 'asc',
-      },
-    })
+    const variants = await api.getDistinct('devices', 'variant', { model });
 
     // Фильтруем пустые варианты и показываем их как пустую строку в начале
-    const nonEmptyVariants = variants
-      .map((item: { variant: string }) => item.variant)
-      .filter((variant) => variant !== '')
-
-    const hasEmptyVariant = variants.some(
-      (item) => item.variant === ''
-    )
+    const nonEmptyVariants = variants.filter((variant) => variant !== '');
+    const hasEmptyVariant = variants.some((variant) => variant === '');
 
     const processedVariants = hasEmptyVariant
       ? ['', ...nonEmptyVariants]
-      : nonEmptyVariants
+      : nonEmptyVariants;
 
-    return NextResponse.json(processedVariants)
+    return NextResponse.json(processedVariants);
   } catch (error) {
-    console.error('Error fetching device variants:', error)
+    console.error('Error fetching device variants:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch variants' },
       { status: 500 }
-    )
+    );
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/core/lib/prisma';
+import { api } from '@/services/api';
 import { requireAuth } from '@/core/lib/requireAuth';
 
 export async function POST(req: NextRequest) {
@@ -7,33 +7,39 @@ export async function POST(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const { telegramId, username, name, pointId } = await req.json()
+    const { telegramId, username, name, pointId } = await req.json();
 
     if (!telegramId || !username || !name) {
-      return NextResponse.json({ error: 'Telegram ID, username and name are required' }, { status: 400 })
+      return NextResponse.json({ error: 'Telegram ID, username and name are required' }, { status: 400 });
     }
 
-    const existingMaster = await prisma.master.findUnique({ where: { telegramId } })
+    const existingMasters = await api.list<any>('masters', { telegramId });
 
-    if (existingMaster) {
-      return NextResponse.json({ error: 'Master with this Telegram ID already exists' }, { status: 400 })
+    if (existingMasters && existingMasters.length > 0) {
+      return NextResponse.json({ error: 'Master with this Telegram ID already exists' }, { status: 400 });
     }
 
     if (pointId) {
-      const point = await prisma.point.findUnique({ where: { id: Number(pointId) } })
-      if (!point) {
-        return NextResponse.json({ error: 'Point not found' }, { status: 400 })
+      // Points endpoint needs to exist on Go side
+      const points = await api.list<any>('points', { id: Number(pointId) }); 
+      if (!points || points.length === 0) {
+        return NextResponse.json({ error: 'Point not found' }, { status: 400 });
       }
     }
 
-    const master = await prisma.master.create({
-      data: { telegramId, username, name, isActive: true, pointId: pointId ? Number(pointId) : null },
-      include: { point: true },
-    })
+    const master = await api.create<any>('masters', {
+      telegramId, 
+      username, 
+      name, 
+      isActive: true, 
+      pointId: pointId ? Number(pointId) : null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
 
-    return NextResponse.json({ success: true, master })
+    return NextResponse.json({ success: true, master });
   } catch (error) {
-    console.error('Error creating master:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error creating master:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
