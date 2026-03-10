@@ -16,18 +16,23 @@ export function requireAuth(
   allowedRoles: UserRole[] = ['ADMIN']
 ): AuthResult {
   const authHeader = request.headers.get('authorization');
+  
   if (!authHeader?.startsWith('Bearer ')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.error('[requireAuth] Missing or invalid Authorization header');
+    return NextResponse.json({ error: 'Unauthorized - No token provided' }, { status: 401 });
   }
 
   const token = authHeader.slice(7);
   const user = verifyToken(token);
+  
   if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.error('[requireAuth] Invalid token');
+    return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 });
   }
 
   if (!allowedRoles.includes(user.role as UserRole)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    console.error('[requireAuth] Forbidden role:', user.role);
+    return NextResponse.json({ error: 'Forbidden - Insufficient permissions' }, { status: 403 });
   }
 
   return { user };

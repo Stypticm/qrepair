@@ -24,7 +24,7 @@ interface BlogPost {
 }
 
 export function BlogManagementClient() {
-    const { telegramId } = useAppStore();
+    const { telegramId, authToken } = useAppStore();
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -49,8 +49,11 @@ export function BlogManagementClient() {
 
     const fetchPosts = async () => {
         try {
-            const adminId = telegramId || sessionStorage.getItem('telegramId');
-            const res = await fetch(`/api/admin/blog?adminId=${adminId}`);
+            const res = await fetch(`/api/admin/blog`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                },
+            });
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
             setPosts(data);
@@ -87,9 +90,11 @@ export function BlogManagementClient() {
         if (!confirm('Вы уверены, что хотите удалить эту запись?')) return;
 
         try {
-            const adminId = telegramId || sessionStorage.getItem('telegramId');
-            const res = await fetch(`/api/admin/blog?id=${id}&adminId=${adminId}`, {
-                method: 'DELETE'
+            const res = await fetch(`/api/admin/blog?id=${id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                },
             });
             if (res.ok) {
                 setPosts(posts.filter(p => p.id !== id));
@@ -109,22 +114,39 @@ export function BlogManagementClient() {
 
         setIsSaving(true);
         try {
-            const adminId = telegramId || sessionStorage.getItem('telegramId');
-            const method = editingPost.id ? 'PATCH' : 'POST';
-            const res = await fetch('/api/admin/blog', {
+            console.log('[BlogSave] authToken:', authToken ? 'EXISTS' : 'MISSING');
+            console.log('[BlogSave] telegramId:', telegramId);
+            console.log('[BlogSave] editingPost:', editingPost);
+            console.log('[BlogSave] Has ID?:', !!editingPost.id);
+
+            const method = editingPost.id ? 'PUT' : 'POST';
+            const url = editingPost.id ? `/api/admin/blog?id=${editingPost.id}` : '/api/admin/blog';
+            
+            const res = await fetch(url, {
                 method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...editingPost, adminTelegramId: adminId })
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${authToken}`,
+                },
+                body: JSON.stringify(editingPost)
             });
+
+            console.log('[BlogSave] Response status:', res.status);
+            
+            const responseData = await res.json();
+            console.log('[BlogSave] Response data:', responseData);
 
             if (res.ok) {
                 toast.success(editingPost.id ? 'Статья обновлена' : 'Статья создана');
+                console.log('[BlogSave] Created/Updated post ID:', responseData.data?.id || responseData.id);
                 setIsEditorOpen(false);
                 fetchPosts();
             } else {
+                console.error('[BlogSave] Error:', responseData);
                 throw new Error('Save failed');
             }
         } catch (error) {
+            console.error('[BlogSave] Exception:', error);
             toast.error('Ошибка при сохранении');
         } finally {
             setIsSaving(false);

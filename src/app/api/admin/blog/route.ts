@@ -40,6 +40,43 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
+  if (auth instanceof NextResponse) return auth;
+
+  try {
+    // Пробуем получить ID из URL path или query параметра
+    const url = new URL(request.url);
+    const pathParts = url.pathname.split('/');
+    const idFromPath = pathParts[pathParts.length - 1];
+    const idFromQuery = url.searchParams.get('id');
+    
+    const id = idFromPath !== 'blog' ? idFromPath : idFromQuery;
+    
+    if (!id || id === 'blog') {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    }
+
+    const { title, content, excerpt, image, category, author, published } = await request.json();
+
+    const post = await api.update<any>('blog-posts', id, {
+      id, // Передаём ID явно для Go API
+      title,
+      content,
+      excerpt,
+      image,
+      category,
+      author,
+      published,
+      updatedAt: new Date().toISOString()
+    });
+    return NextResponse.json(post);
+  } catch (error) {
+    console.error('[BlogPUT] Error:', error);
+    return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
   if (auth instanceof NextResponse) return auth;

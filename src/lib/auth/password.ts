@@ -35,5 +35,10 @@ export async function hashPassword(password: string): Promise<string> {
  * @returns true если пароль совпадает
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash);
+  try {
+    return await bcrypt.compare(password, hash);
+  } catch (error) {
+    console.error('[verifyPassword] Error comparing passwords:', error);
+    return false;
+  }
 }
