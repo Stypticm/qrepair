@@ -60,3 +60,7 @@ python-parser/
 .cursor/
 
 .qwen/
+
+# Go API Service
+/api-service
+/qoqos_server
