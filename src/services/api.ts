@@ -32,22 +32,19 @@ const defaultHeaders = {
 };
 
 export interface ApiService {
-  getDistinct(resource: string, field: string, params?: Record<string, string | number>): Promise<string[]>;
-  list<T>(resource: string, params?: Record<string, string | number>): Promise<T[]>;
-  listPaginated<T>(resource: string, params?: Record<string, string | number>): Promise<{ items: T[], total: number }>;
-  get<T>(resource: string, id: string, params?: Record<string, string | number>): Promise<T>;
-  create<T>(resource: string, data: any): Promise<T>;
-  update<T>(resource: string, id: string, data: any): Promise<T>;
-  patch<T>(resource: string, id: string, data: any): Promise<T>;
-  upload(file: File): Promise<{ url: string }>;
-  delete(resource: string, id: string): Promise<void>;
+  getDistinct(resource: string, field: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<string[]>;
+  list<T>(resource: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<T[]>;
+  listPaginated<T>(resource: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<{ items: T[], total: number }>;
+  get<T>(resource: string, id: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<T>;
+  create<T>(resource: string, data: any, headers?: Record<string, string>): Promise<T>;
+  update<T>(resource: string, id: string, data: any, headers?: Record<string, string>): Promise<T>;
+  patch<T>(resource: string, id: string, data: any, headers?: Record<string, string>): Promise<T>;
+  upload(file: File, headers?: Record<string, string>): Promise<{ url: string }>;
+  delete(resource: string, id: string, headers?: Record<string, string>): Promise<void>;
 }
 
 export const api: ApiService = {
-  /**
-   * Получить уникальные значения для поля (GET /api/{resource}/distinct/{field})
-   */
-  async getDistinct(resource: string, field: string, params?: Record<string, string | number>): Promise<string[]> {
+  async getDistinct(resource: string, field: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<string[]> {
     const url = new URL(`${API_URL}/api/${resource}/distinct/${field}`);
     if (params) {
       Object.entries(params).forEach(([key, val]) => {
@@ -56,16 +53,12 @@ export const api: ApiService = {
     }
     
     const res = await fetch(url.toString(), {
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
     });
     return handleResponse<string[]>(res);
   },
 
-  /**
-   * Получить список ресурсов (GET /api/{resource})
-   * Возвращает массив элементов.
-   */
-  async list<T>(resource: string, params?: Record<string, string | number>): Promise<T[]> {
+  async list<T>(resource: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<T[]> {
     const url = new URL(`${API_URL}/api/${resource}`);
     if (params) {
       Object.entries(params).forEach(([key, val]) => {
@@ -74,16 +67,12 @@ export const api: ApiService = {
     }
     
     const res = await fetch(url.toString(), {
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
     });
     return handleResponse<T[]>(res);
   },
 
-  /**
-   * Получить список ресурсов с пагинацией (GET /api/{resource})
-   * Возвращает объект с массивом элементов и общим количеством.
-   */
-  async listPaginated<T>(resource: string, params?: Record<string, string | number>): Promise<{ items: T[], total: number }> {
+  async listPaginated<T>(resource: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<{ items: T[], total: number }> {
     const url = new URL(`${API_URL}/api/${resource}`);
     if (params) {
       Object.entries(params).forEach(([key, val]) => {
@@ -92,7 +81,7 @@ export const api: ApiService = {
     }
     
     const res = await fetch(url.toString(), {
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
     });
     const json = await res.json();
     return {
@@ -101,10 +90,7 @@ export const api: ApiService = {
     };
   },
 
-  /**
-   * Получить один ресурс по ID (GET /api/{resource}/{id})
-   */
-  async get<T>(resource: string, id: string, params?: Record<string, string | number>): Promise<T> {
+  async get<T>(resource: string, id: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<T> {
     const url = new URL(`${API_URL}/api/${resource}/${id}`);
     if (params) {
       Object.entries(params).forEach(([key, val]) => {
@@ -113,52 +99,39 @@ export const api: ApiService = {
     }
     
     const res = await fetch(url.toString(), {
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
     });
     return handleResponse<T>(res);
   },
 
-  /**
-   * Создать новый ресурс (POST /api/{resource})
-   */
-  async create<T>(resource: string, data: any): Promise<T> {
+  async create<T>(resource: string, data: any, headers?: Record<string, string>): Promise<T> {
     const res = await fetch(`${API_URL}/api/${resource}`, {
       method: 'POST',
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
       body: JSON.stringify(data),
     });
     return handleResponse<T>(res);
   },
 
-  /**
-   * Полное обновление ресурса (PUT /api/{resource}/{id})
-   */
-  async update<T>(resource: string, id: string, data: any): Promise<T> {
+  async update<T>(resource: string, id: string, data: any, headers?: Record<string, string>): Promise<T> {
     const res = await fetch(`${API_URL}/api/${resource}/${id}`, {
       method: 'PUT',
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
       body: JSON.stringify(data),
     });
     return handleResponse<T>(res);
   },
 
-  /**
-   * Частичное обновление ресурса (PATCH /api/{resource}/{id})
-   */
-  async patch<T>(resource: string, id: string, data: any): Promise<T> {
+  async patch<T>(resource: string, id: string, data: any, headers?: Record<string, string>): Promise<T> {
     const res = await fetch(`${API_URL}/api/${resource}/${id}`, {
       method: 'PATCH',
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
       body: JSON.stringify(data),
     });
     return handleResponse<T>(res);
   },
 
-  /**
-   * Загрузка файла (POST /api/upload)
-   * Принимает File и возвращает { url: string }
-   */
-  async upload(file: File): Promise<{ url: string }> {
+  async upload(file: File, headers?: Record<string, string>): Promise<{ url: string }> {
     const formData = new FormData();
     formData.append('file', file);
     
@@ -166,6 +139,7 @@ export const api: ApiService = {
       method: 'POST',
       headers: {
         'ngrok-skip-browser-warning': 'true',
+        ...headers
       },
       body: formData,
     });
@@ -173,13 +147,10 @@ export const api: ApiService = {
     return handleResponse<{ url: string }>(res);
   },
 
-  /**
-   * Удаление ресурса (DELETE /api/{resource}/{id})
-   */
-  async delete(resource: string, id: string): Promise<void> {
+  async delete(resource: string, id: string, headers?: Record<string, string>): Promise<void> {
     const res = await fetch(`${API_URL}/api/${resource}/${id}`, {
       method: 'DELETE',
-      headers: defaultHeaders,
+      headers: { ...defaultHeaders, ...headers },
     });
     
     if (!res.ok) {

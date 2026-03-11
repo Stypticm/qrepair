@@ -2,27 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
 import { api } from '@/services/api';
 
-export async function GET(request: NextRequest) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
     const telegramId = request.headers.get('x-telegram-id');
     const authHeader = request.headers.get('authorization');
     const headers: Record<string, string> = {};
     if (telegramId) headers['x-telegram-id'] = telegramId;
     if (authHeader) headers['authorization'] = authHeader;
 
-    const filters: any = { _sort: 'createdAt', _order: 'desc' };
-    if (status) filters.status = status;
-
-    const orders = await api.list<any>('orders', filters, headers);
-
-    return NextResponse.json({ orders });
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const data = await request.json();
+    const updated = await api.update('marketplace-lots', params.id, data, headers);
+    return NextResponse.json({ success: true, lot: updated });
+  } catch (error: any) {
+    console.error('Update lot error:', error);
+    return NextResponse.json({ error: error.message || 'Error updating product' }, { status: 500 });
   }
 }

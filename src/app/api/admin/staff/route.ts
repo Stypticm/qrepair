@@ -7,7 +7,13 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const users = await api.list<any>('users', { _sort: 'createdAt', _order: 'desc' });
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
+    const users = await api.list<any>('users', { _sort: 'createdAt', _order: 'desc' }, headers);
     const mappedUsers = (users || []).map((u: any) => ({
         id: u.id,
         telegramId: u.telegramId,
@@ -26,6 +32,12 @@ export async function PATCH(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const telegramIdHeader = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramIdHeader) headers['x-telegram-id'] = telegramIdHeader;
+    if (authHeader) headers['authorization'] = authHeader;
+
     const { userId, role } = await request.json();
     const allowedRoles = ['ADMIN', 'MANAGER', 'MASTER', 'COURIER', 'USER'];
 
@@ -33,7 +45,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
 
-    const updatedUser = await api.patch('users', userId, { role: role });
+    const updatedUser = await api.patch('users', userId, { role: role }, headers);
     return NextResponse.json({ success: true, user: updatedUser });
   } catch (error) {
     console.error('Error updating role:', error);

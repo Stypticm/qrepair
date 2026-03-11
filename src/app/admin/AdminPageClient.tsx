@@ -95,6 +95,7 @@ export function AdminPageClient() {
     { id: 'requests', title: 'Заявки', description: 'Обработка запросов', icon: BarChart3, color: 'bg-amber-500' },
     { id: 'orders', title: 'Заказы', description: 'Логистика магазина', icon: ShoppingBag, color: 'bg-emerald-500' },
     { id: 'add-lot', title: 'Новый лот', description: 'Публикация товаров', icon: Plus, color: 'bg-rose-500' },
+    { id: 'catalog', title: 'Каталог', description: 'Управление товарами', icon: ShoppingBag, color: 'bg-teal-500' },
     { id: 'chats', title: 'Чат-центр', description: 'Связь с клиентами', icon: MessageCircle, color: 'bg-sky-500' },
     { id: 'leads', title: 'Быстрые заявки', description: 'Лиды «в 1 клик»', icon: ShoppingBag, color: 'bg-pink-500' },
     { id: 'trade-in', title: 'Оценки', description: 'Расчет стоимости устройств', icon: Smartphone, color: 'bg-purple-600' },

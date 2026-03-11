@@ -16,13 +16,19 @@ export async function GET(request: NextRequest) {
     if (deviceId) whereClause.deviceId = deviceId
     if (model) whereClause.device = { model }
 
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     const marketPrices = await api.list<any>('market-prices', {
       ...whereClause,
       _sort: 'parsedAt',
       _order: 'desc',
       _limit: limit,
       _populate: 'device'
-    });
+    }, headers);
 
     const groupedPrices = (marketPrices || []).reduce((acc: any, price: any) => {
       // Go backend may return nested unpopulated device or populated device differently.

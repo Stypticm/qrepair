@@ -8,7 +8,13 @@ export async function GET(request: NextRequest) {
   const isAdmin = !(auth instanceof NextResponse);
 
   try {
-    const posts = await api.list<any>('blog-posts', isAdmin ? {} : { published: 'true' });
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
+    const posts = await api.list<any>('blog-posts', isAdmin ? {} : { published: 'true' }, headers);
     return NextResponse.json(posts);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 });
@@ -20,6 +26,12 @@ export async function POST(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     const { title, content, excerpt, image, category, author, published } = await request.json();
 
     const post = await api.create<any>('blog-posts', {
@@ -32,7 +44,7 @@ export async function POST(request: NextRequest) {
       published: published ?? false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    });
+    }, headers);
     return NextResponse.json(post);
   } catch (error) {
     console.error('[BlogPOST] Error:', error);
@@ -45,6 +57,12 @@ export async function PUT(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     // Пробуем получить ID из URL path или query параметра
     const url = new URL(request.url);
     const pathParts = url.pathname.split('/');
@@ -69,7 +87,7 @@ export async function PUT(request: NextRequest) {
       author,
       published,
       updatedAt: new Date().toISOString()
-    });
+    }, headers);
     return NextResponse.json(post);
   } catch (error) {
     console.error('[BlogPUT] Error:', error);
@@ -82,6 +100,12 @@ export async function PATCH(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     const { id, title, content, excerpt, image, category, author, published } = await request.json();
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
@@ -94,7 +118,7 @@ export async function PATCH(request: NextRequest) {
       author,
       published,
       updatedAt: new Date().toISOString()
-    });
+    }, headers);
     return NextResponse.json(post);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
@@ -106,11 +130,17 @@ export async function DELETE(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const telegramIdHeader = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramIdHeader) headers['x-telegram-id'] = telegramIdHeader;
+    if (authHeader) headers['authorization'] = authHeader;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
-    await api.delete('blog-posts', id);
+    await api.delete('blog-posts', id, headers);
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });

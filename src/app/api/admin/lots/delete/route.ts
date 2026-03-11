@@ -13,8 +13,15 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID лота обязателен' }, { status: 400 })
     }
 
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     // Удаление через наш Go API
-    await api.delete('skupkas', lotId);
+    await api.delete('marketplace-lots', lotId, headers);
 
     return NextResponse.json({ success: true, message: 'Лот успешно удален' })
   } catch (error: any) {

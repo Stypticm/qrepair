@@ -13,6 +13,7 @@ const allSections = [
     { id: 'requests', title: 'Заявки', icon: BarChart3 },
     { id: 'orders', title: 'Заказы', icon: ShoppingBag },
     { id: 'add-lot', title: 'Новый лот', icon: Plus },
+    { id: 'catalog', title: 'Каталог', icon: ShoppingBag },
     { id: 'chats', title: 'Чат-центр', icon: MessageCircle },
     { id: 'leads', title: 'Быстрые заявки', icon: ShoppingBag },
     { id: 'trade-in', title: 'Оценки', icon: Smartphone },
@@ -63,12 +64,12 @@ export function AdminSidebar() {
                         <Link
                             key={section.id || 'dash'}
                             href={href}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive
-                                ? 'bg-gray-900 text-white shadow-md'
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all ${isActive
+                                ? 'bg-gray-100 text-gray-900'
                                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                 }`}
                         >
-                            <section.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400'}`} />
+                            <section.icon className={`w-5 h-5 ${isActive ? 'text-gray-900' : 'text-gray-400'}`} />
                             {section.title}
                         </Link>
                     );

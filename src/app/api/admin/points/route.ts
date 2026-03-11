@@ -7,7 +7,13 @@ export async function GET(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const points = await api.list<any>('points');
+    const telegramId = req.headers.get('x-telegram-id');
+    const authHeader = req.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
+    const points = await api.list<any>('points', {}, headers);
     return NextResponse.json({ points });
   } catch (error) {
     console.error('Error fetching points:', error);

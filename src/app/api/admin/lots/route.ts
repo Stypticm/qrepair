@@ -58,19 +58,28 @@ export async function POST(request: NextRequest) {
       uploadedPhotos.push(publicUrl)
     }
 
+    const telegramIdHeader = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramIdHeader) headers['x-telegram-id'] = telegramIdHeader;
+    if (authHeader) headers['authorization'] = authHeader;
+
     // Сохранение в новую БД через наш Go API
-    const newLot = await api.create('skupkas', {
+    const newLot = await api.create('marketplace-lots', {
       id: lotId,
-      telegramId: auth.user.telegramId,
-      username: 'admin_panel',
-      modelname: modelName,
+      title: modelName,
+      model: model,
+      storage: storage,
+      color: color,
       price: parseInt(price),
-      comment: description || null,
-      photoUrls: uploadedPhotos,
-      status: 'paid',
+      description: description || null,
+      photos: uploadedPhotos,
+      coverPhoto: uploadedPhotos[0],
+      status: 'available',
+      telegramId: auth.user.telegramId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    })
+    }, headers)
 
     return NextResponse.json({ success: true, lot: newLot, message: 'Лот успешно создан' })
   } catch (error) {
@@ -91,10 +100,16 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    // Получение через наш Go API
-    const lots = await api.list('skupkas', { limit: 100 });
+    const telegramIdHeader = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramIdHeader) headers['x-telegram-id'] = telegramIdHeader;
+    if (authHeader) headers['authorization'] = authHeader;
 
-    return NextResponse.json({ success: true, lots })
+    // Получение через наш Go API
+    const items = await api.list<any>('marketplace-lots', { limit: 100 }, headers);
+
+    return NextResponse.json({ success: true, lots: items })
   } catch (error: any) {
     console.error('Get lots error:', error)
     return NextResponse.json({ error: error.message || 'Внутренняя ошибка сервера' }, { status: 500 })

@@ -7,7 +7,13 @@ export async function GET(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
-    const evaluations = await api.list<any>('trade-in-evaluations', { _sort: 'createdAt', _order: 'desc' });
+    const telegramId = req.headers.get('x-telegram-id');
+    const authHeader = req.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
+    const evaluations = await api.list<any>('trade-in-evaluations', { _sort: 'createdAt', _order: 'desc' }, headers);
     return NextResponse.json(evaluations || []);
   } catch (error) {
     console.error('Error fetching trade-in evaluations:', error);

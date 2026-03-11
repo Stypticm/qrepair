@@ -7,13 +7,19 @@ export async function POST(req: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const telegramIdHeader = req.headers.get('x-telegram-id');
+    const authHeader = req.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramIdHeader) headers['x-telegram-id'] = telegramIdHeader;
+    if (authHeader) headers['authorization'] = authHeader;
+
     const { masterId, pointId } = await req.json();
 
     if (!masterId || !pointId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const points = await api.list<any>('points', { id: Number(pointId) }); 
+    const points = await api.list<any>('points', { id: Number(pointId) }, headers); 
 
     if (!points || points.length === 0) {
       return NextResponse.json({ error: 'Point not found' }, { status: 404 });
@@ -22,7 +28,7 @@ export async function POST(req: NextRequest) {
     const master = await api.patch<any>('masters', masterId, {
       pointId: Number(pointId),
       updatedAt: new Date().toISOString()
-    });
+    }, headers);
 
     return NextResponse.json({ success: true, master });
   } catch (error) {
