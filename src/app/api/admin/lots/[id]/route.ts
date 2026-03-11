@@ -4,12 +4,13 @@ import { api } from '@/services/api';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const { id } = await params;
     const telegramId = request.headers.get('x-telegram-id');
     const authHeader = request.headers.get('authorization');
     const headers: Record<string, string> = {};
@@ -17,7 +18,7 @@ export async function PUT(
     if (authHeader) headers['authorization'] = authHeader;
 
     const data = await request.json();
-    const updated = await api.update('marketplace-lots', params.id, data, headers);
+    const updated = await api.update('marketplace-lots', id, data, headers);
     return NextResponse.json({ success: true, lot: updated });
   } catch (error: any) {
     console.error('Update lot error:', error);
