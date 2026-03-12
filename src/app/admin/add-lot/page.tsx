@@ -15,6 +15,7 @@ import { isAdminTelegramId } from '@/core/lib/admin';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface PhotoFile {
   file: File;
@@ -24,11 +25,17 @@ interface PhotoFile {
 
 interface LotFormData {
   photos: PhotoFile[];
+  brand: string;
   model: string;
   storage: string;
   color: string;
   price: string;
+  oldPrice: string;
   description: string;
+  status: 'available' | 'draft';
+  isAccessory: boolean;
+  targetBrand: string;
+  targetModel: string;
 }
 
 export default function AddLotPage() {
@@ -39,11 +46,17 @@ export default function AddLotPage() {
 
   const [formData, setFormData] = useState<LotFormData>({
     photos: [],
+    brand: 'Apple',
     model: '',
     storage: '',
     color: '',
     price: '',
-    description: ''
+    oldPrice: '',
+    description: '',
+    status: 'available',
+    isAccessory: false,
+    targetBrand: '',
+    targetModel: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -148,12 +161,18 @@ export default function AddLotPage() {
       const modelName = `${formData.model} ${formData.storage}GB ${formData.color}`;
 
       // Добавляем остальные данные
+      formDataToSend.append('brand', formData.brand);
       formDataToSend.append('model', formData.model);
       formDataToSend.append('storage', formData.storage);
       formDataToSend.append('color', formData.color);
       formDataToSend.append('modelName', modelName);
       formDataToSend.append('price', formData.price);
+      formDataToSend.append('oldPrice', formData.oldPrice);
       formDataToSend.append('description', formData.description);
+      formDataToSend.append('status', formData.status);
+      formDataToSend.append('isAccessory', String(formData.isAccessory));
+      formDataToSend.append('targetBrand', formData.targetBrand);
+      formDataToSend.append('targetModel', formData.targetModel);
 
       const response = await fetch('/api/admin/lots', {
         method: 'POST',
@@ -166,7 +185,7 @@ export default function AddLotPage() {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success('Лот успешно создан!');
+        toast.success(formData.status === 'draft' ? 'Черновик сохранен!' : 'Лот успешно создан!');
 
         // Отправляем событие для обновления главной страницы
         if (typeof window !== 'undefined') {
@@ -187,17 +206,41 @@ export default function AddLotPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-full bg-gray-50">
+      <div className="min-h-full bg-gray-50 pb-20">
         {/* Apple-style Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 pt-12 sticky top-0 z-10"
         >
-          <div className="max-w-2xl mx-auto px-6 py-6">
-            <div className="text-center">
-              <h1 className="text-2xl font-semibold text-gray-900">Новый лот</h1>
-              <p className="text-sm text-gray-500 mt-1">Добавьте устройство в каталог</p>
+          <div className="max-w-2xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900">Новый лот</h1>
+                <p className="text-sm text-gray-500 mt-0.5">Добавьте устройство в каталог</p>
+              </div>
+              <div className="flex bg-gray-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('status', 'available')}
+                  className={cn(
+                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    formData.status === 'available' ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
+                  )}
+                >
+                  Активен
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('status', 'draft')}
+                  className={cn(
+                    "px-4 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    formData.status === 'draft' ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
+                  )}
+                >
+                  Черновик
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -323,59 +366,148 @@ export default function AddLotPage() {
                   <p className="text-sm text-gray-500">Заполните характеристики устройства</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Model */}
-                  <div className="space-y-2">
-                    <Label htmlFor="model" className="text-sm font-medium text-gray-700">Модель *</Label>
-                    <Input
-                      id="model"
-                      value={formData.model}
-                      onChange={(e) => handleInputChange('model', e.target.value)}
-                      placeholder="Например: iPhone 15 Pro"
-                      className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
-                      required
-                    />
+                  {/* Accessory Switch */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 mb-2">
+                    <div>
+                      <Label className="text-sm font-bold text-gray-900">Это аксессуар?</Label>
+                      <p className="text-xs text-gray-500">Чехлы, стекла, зарядки и т.д.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange('isAccessory', !formData.isAccessory as any)}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-colors relative",
+                        formData.isAccessory ? "bg-teal-500" : "bg-gray-300"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                        formData.isAccessory ? "right-1" : "left-1"
+                      )} />
+                    </button>
                   </div>
-                  {/* Storage */}
+
+                  {/* Brand */}
                   <div className="space-y-2">
-                    <Label htmlFor="storage" className="text-sm font-medium text-gray-700">Объем памяти *</Label>
-                    <Select value={formData.storage} onValueChange={(value) => handleInputChange('storage', value)}>
+                    <Label htmlFor="brand" className="text-sm font-medium text-gray-700">Бренд *</Label>
+                    <Select value={formData.brand} onValueChange={(value) => handleInputChange('brand', value)}>
                       <SelectTrigger className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl">
-                        <SelectValue placeholder="Выберите объем памяти" />
+                        <SelectValue placeholder="Выберите бренд" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-gray-200 bg-white shadow-lg">
-                        <SelectItem value="64">64 ГБ</SelectItem>
-                        <SelectItem value="128">128 ГБ</SelectItem>
-                        <SelectItem value="256">256 ГБ</SelectItem>
-                        <SelectItem value="512">512 ГБ</SelectItem>
-                        <SelectItem value="1024">1 ТБ</SelectItem>
-                        <SelectItem value="2048">2 ТБ</SelectItem>
+                        <SelectItem value="Apple">Apple</SelectItem>
+                        <SelectItem value="Samsung">Samsung</SelectItem>
+                        <SelectItem value="Xiaomi">Xiaomi</SelectItem>
+                        <SelectItem value="Google">Google</SelectItem>
+                        <SelectItem value="OnePlus">OnePlus</SelectItem>
+                        <SelectItem value="Sony">Sony</SelectItem>
+                        <SelectItem value="Asus">Asus</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Color */}
+                  {/* Model */}
                   <div className="space-y-2">
-                    <Label htmlFor="color" className="text-sm font-medium text-gray-700">Цвет *</Label>
+                    <Label htmlFor="model" className="text-sm font-medium text-gray-700">
+                      {formData.isAccessory ? 'Название аксессуара *' : 'Модель *'}
+                    </Label>
                     <Input
-                      id="color"
-                      value={formData.color}
-                      onChange={(e) => handleInputChange('color', e.target.value)}
-                      placeholder="Например: Красный"
+                      id="model"
+                      value={formData.model}
+                      onChange={(e) => handleInputChange('model', e.target.value)}
+                      placeholder={formData.isAccessory ? "Например: Silicone Case (MagSafe)" : "Например: iPhone 15 Pro"}
                       className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="price" className="text-sm font-medium text-gray-700">Цена (₽) *</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) => handleInputChange('price', e.target.value)}
-                      placeholder="Например: 85000"
-                      className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
-                      required
-                    />
+
+                  {/* Accessory Specific Fields */}
+                  {formData.isAccessory && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="space-y-4 pt-2 border-t border-gray-100"
+                    >
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Для какого бренда?</Label>
+                        <Input
+                          value={formData.targetBrand}
+                          onChange={(e) => handleInputChange('targetBrand', e.target.value)}
+                          placeholder="Например: Apple"
+                          className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Для какой модели?</Label>
+                        <Input
+                          value={formData.targetModel}
+                          onChange={(e) => handleInputChange('targetModel', e.target.value)}
+                          placeholder="Например: iPhone 15 Pro"
+                          className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {!formData.isAccessory && (
+                    <>
+                      {/* Storage */}
+                      <div className="space-y-2">
+                        <Label htmlFor="storage" className="text-sm font-medium text-gray-700">Объем памяти *</Label>
+                        <Select value={formData.storage} onValueChange={(value) => handleInputChange('storage', value)}>
+                          <SelectTrigger className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl">
+                            <SelectValue placeholder="Выберите объем памяти" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl border-gray-200 bg-white shadow-lg">
+                            <SelectItem value="64">64 ГБ</SelectItem>
+                            <SelectItem value="128">128 ГБ</SelectItem>
+                            <SelectItem value="256">256 ГБ</SelectItem>
+                            <SelectItem value="512">512 ГБ</SelectItem>
+                            <SelectItem value="1024">1 ТБ</SelectItem>
+                            <SelectItem value="2048">2 ТБ</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Color */}
+                      <div className="space-y-2">
+                        <Label htmlFor="color" className="text-sm font-medium text-gray-700">Цвет *</Label>
+                        <Input
+                          id="color"
+                          value={formData.color}
+                          onChange={(e) => handleInputChange('color', e.target.value)}
+                          placeholder="Например: Красный"
+                          className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
+                          required
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="price" className="text-sm font-medium text-gray-700">Цена (₽) *</Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        value={formData.price}
+                        onChange={(e) => handleInputChange('price', e.target.value)}
+                        placeholder="85000"
+                        className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="oldPrice" className="text-sm font-medium text-gray-400">Старая цена (—) </Label>
+                      <Input
+                        id="oldPrice"
+                        type="number"
+                        value={formData.oldPrice}
+                        onChange={(e) => handleInputChange('oldPrice', e.target.value)}
+                        placeholder="95000"
+                        className="h-12 bg-white/50 border-gray-200 focus:border-gray-300 rounded-xl text-gray-400"
+                      />
+                    </div>
                   </div>
 
                   {/* Description */}
@@ -399,7 +531,7 @@ export default function AddLotPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="flex gap-4 pt-4"
+              className="flex gap-4 pt-4 pb-12"
             >
               <Button
                 type="button"
@@ -417,10 +549,10 @@ export default function AddLotPage() {
                 {isSubmitting ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Создание...
+                    Сохранение...
                   </div>
                 ) : (
-                  'Создать лот'
+                  formData.status === 'draft' ? 'Сохранить черновик' : 'Создать лот'
                 )}
               </Button>
             </motion.div>

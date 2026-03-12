@@ -147,14 +147,18 @@ export const BlogGrid = () => {
                                         </div>
                                     </div>
                                     <div className="space-y-3">
-                                        <div className="flex items-center gap-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                            <span>{new Date(post.createdAt).toLocaleDateString('ru-RU')}</span>
-                                            <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-                                            <span>{post.category}</span>
+                                        <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                            <div className="flex items-center gap-3">
+                                                <span>{new Date(post.createdAt).toLocaleDateString('ru-RU')}</span>
+                                                <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
+                                                <span>{post.category}</span>
+                                            </div>
                                             {post.author && (
                                                 <>
-                                                    <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-                                                    <span className="text-gray-900">{post.author}</span>
+                                                    <span className="hidden md:block w-1 h-1 bg-gray-200 rounded-full"></span>
+                                                    <span className="w-full md:w-auto text-gray-900 border-t md:border-t-0 border-gray-100 pt-2 md:pt-0">
+                                                        {post.author}
+                                                    </span>
                                                 </>
                                             )}
                                         </div>

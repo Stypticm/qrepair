@@ -18,6 +18,17 @@ export async function PUT(
     if (authHeader) headers['authorization'] = authHeader;
 
     const data = await request.json();
+
+    // Fetch current product to compare prices
+    const currentProduct = await api.get<any>('marketplace-lots', id, undefined, headers);
+    
+    // Automatically set oldPrice if price has changed
+    if (currentProduct && currentProduct.price !== undefined && data.price !== undefined) {
+      if (currentProduct.price !== data.price) {
+        data.oldPrice = currentProduct.price;
+      }
+    }
+
     const updated = await api.update('marketplace-lots', id, data, headers);
     return NextResponse.json({ success: true, lot: updated });
   } catch (error: any) {

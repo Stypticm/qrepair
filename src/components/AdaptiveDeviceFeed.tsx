@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Grid, List, Filter, Search, Hammer, Smartphone, X } from "lucide-react";
 import { useSafeArea } from '@/hooks/useSafeArea';
@@ -26,6 +26,7 @@ export interface DeviceCard {
   condition?: string;
   seller?: string;
   location?: string;
+  oldPrice?: number | null;
 }
 
 interface AdaptiveDeviceFeedProps {
@@ -83,11 +84,55 @@ export function AdaptiveDeviceFeed({
     }, 0);
   }, [onViewModeChange]);
 
-  // Используем реальные данные из props (без фильтрации для начала)
+  // Поиск и фильтрация
+  const filteredItems = useMemo(() => {
+    return items.filter((item: DeviceCard) => {
+      const q = searchQuery.toLowerCase();
+      return (
+        item.title.toLowerCase().includes(q) ||
+        (item.description ? item.description.toLowerCase().includes(q) : false) ||
+        (item.model ? item.model.toLowerCase().includes(q) : false) ||
+        (item.color ? item.color.toLowerCase().includes(q) : false)
+      );
+    });
+  }, [items, searchQuery]);
+
+  // Сортировка
+  const sortedItems = useMemo(() => {
+    return [...filteredItems].sort((a, b) => {
+      switch (sortBy) {
+        case 'price':
+          return (b.price || 0) - (a.price || 0);
+        case 'date':
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case 'popularity':
+          // Простая логика популярности на основе ID
+          return parseInt(a.id.split('-')[1] || '0') - parseInt(b.id.split('-')[1] || '0');
+        default:
+          return 0;
+      }
+    });
+  }, [filteredItems, sortBy]);
+
+  // Группировка по модели для Variant Cards
+  const groupedItems = useMemo(() => {
+    if (!sortedItems || sortedItems.length === 0) return [];
+    const groups: Record<string, DeviceCard[]> = {};
+    
+    sortedItems.forEach(item => {
+      // Группируем по модели
+      const key = item.model || item.title.replace(/(\d+GB|\d+TB|Black|White|Silver|Titanium|Blue|Purple)/gi, '').trim();
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+    
+    return Object.values(groups);
+  }, [sortedItems]);
+
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(groupedItems.length / itemsPerPage);
+
   const displayItems = items;
-  const itemsPerPage = 1; // Показываем по 1 карточке за раз (настоящий carousel)
-  const totalPages = Math.ceil(displayItems.length / itemsPerPage);
-  const currentItems = displayItems.slice(currentIndex * itemsPerPage, (currentIndex + 1) * itemsPerPage);
 
   // Устанавливаем режим в зависимости от переданного параметра
   useEffect(() => {
@@ -123,32 +168,6 @@ export function AdaptiveDeviceFeed({
   const goToPage = useCallback((page: number) => {
     setCurrentIndex(page);
   }, []);
-
-  // Фильтрация и поиск
-  const filteredItems = displayItems.filter(item => {
-    const q = searchQuery.toLowerCase();
-    return (
-      item.title.toLowerCase().includes(q) ||
-      (item.description ? item.description.toLowerCase().includes(q) : false) ||
-      (item.model ? item.model.toLowerCase().includes(q) : false) ||
-      (item.color ? item.color.toLowerCase().includes(q) : false)
-    );
-  });
-
-  // Сортировка
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    switch (sortBy) {
-      case 'price':
-        return (b.price || 0) - (a.price || 0);
-      case 'date':
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      case 'popularity':
-        // Простая логика популярности на основе ID
-        return parseInt(a.id.split('-')[1]) - parseInt(b.id.split('-')[1]);
-      default:
-        return 0;
-    }
-  });
 
 
   // Показываем скелетон только при загрузке
@@ -224,8 +243,6 @@ export function AdaptiveDeviceFeed({
               </div>
             )}
 
-
-
             {/* Фильтр (сортировка) */}
             {!hideSorting && (
               <div className="flex gap-2">
@@ -270,8 +287,8 @@ export function AdaptiveDeviceFeed({
               showArrows={true}
               showIndicators={true}
             >
-              {displayItems.map((item) => (
-                <SimpleDeviceCard key={item.id} cards={[item]} isSingle={true} />
+              {groupedItems.map((group: DeviceCard[]) => (
+                <SimpleDeviceCard key={group[0].id} cards={group} isSingle={true} />
               ))}
             </HorizontalScrollCarousel>
 
@@ -291,19 +308,17 @@ export function AdaptiveDeviceFeed({
           /* Сетка */
           <div className="space-y-4 overflow-y-auto max-h-[80vh] pb-20 scrollbar-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {sortedItems.map((item, index) => (
+              {groupedItems.map((group: DeviceCard[], index: number) => (
                 <motion.div
-                  key={item.id}
+                  key={group[0].id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                 >
-                  <SimpleDeviceCard cards={[item]} isSingle={false} />
+                  <SimpleDeviceCard cards={group} isSingle={false} />
                 </motion.div>
               ))}
             </div>
-
-            {/* Нижняя кнопка убрана по требованию */}
           </div>
         )}
 

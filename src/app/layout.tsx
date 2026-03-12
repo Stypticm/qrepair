@@ -12,6 +12,7 @@ import './globals.css';
 import { TelegramInit } from '@/components/TelegramInit';
 
 import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
+import { CookieBanner } from '@/components/common/CookieBanner';
 
 import { type Metadata, type Viewport } from 'next';
 
@@ -83,6 +84,7 @@ export default function RootLayout({
           </ThemeProvider>
         </ReactQueryProvider>
         <Toaster position="top-center" richColors />
+        <CookieBanner />
       </body>
     </html>
   )

@@ -33,6 +33,10 @@ export async function GET(request: NextRequest) {
           color: item.color,
           condition: item.condition || 'Отличное',
           description: item.description,
+          oldPrice: item.oldPrice,
+          isAccessory: item.isAccessory,
+          targetBrand: item.targetBrand,
+          targetModel: item.targetModel,
         }
       })
 

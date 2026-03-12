@@ -3,22 +3,11 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { getPictureUrl } from "@/core/lib/assets";
-import { Heart, ShoppingCart, ShoppingBag, RefreshCcw } from "lucide-react";
-import { PaymentButton } from "./PaymentButton";
+import { Heart, ShoppingCart } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
-import { useCart } from "@/hooks/useCart";
-import { useRouter } from "next/navigation";
-import { DeviceCard } from "./AdaptiveDeviceFeed";
-import { OneClickBuyModal } from "./Market/OneClickBuyModal";
-import OptimizedPhoneSelector from "./OptimizedPhoneSelector";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { DeviceCard } from "./AdaptiveDeviceFeed";
 
 interface SimpleDeviceCardProps {
   cards: DeviceCard[];
@@ -26,25 +15,20 @@ interface SimpleDeviceCardProps {
 }
 
 export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardProps) {
-  const [active, setActive] = useState<DeviceCard | null>(null);
+  const [previewCard, setPreviewCard] = useState<DeviceCard>(cards[0]);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
-  const { addToCart, isInCart, loading: cartLoading } = useCart();
-  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
-  const [isTradeInModalOpen, setIsTradeInModalOpen] = useState(false);
-  const router = useRouter();
+  const { toggleFavorite, isFavorite } = useFavorites();
 
-  const goToNextPhoto = () => {
-    if (active?.photos && active.photos.length > 1) {
-      setCurrentPhotoIndex((prev) => (prev + 1) % active.photos!.length);
+  useEffect(() => {
+    if (cards.length > 0) {
+      setPreviewCard(cards[0]);
+      setCurrentPhotoIndex(0);
     }
-  };
+  }, [cards]);
 
-  const goToPreviousPhoto = () => {
-    if (active?.photos && active.photos.length > 1) {
-      setCurrentPhotoIndex((prev) => (prev - 1 + active.photos!.length) % active.photos!.length);
-    }
-  };
+  const photos = previewCard.photos && previewCard.photos.length > 0 
+    ? previewCard.photos 
+    : [previewCard.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'];
 
   const formatPrice = (price: number | null) => {
     if (price === null) return 'Цена не указана';
@@ -56,267 +40,131 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
     }).format(price);
   };
 
-  // Управление системной кнопкой "Назад" в Telegram
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const tg = (window as any).Telegram?.WebApp;
-    if (!tg?.BackButton) return;
-
-    if (active) {
-      tg.BackButton.show();
-      const handleBack = () => {
-        setActive(null);
-      };
-      tg.BackButton.onClick(handleBack);
-      return () => {
-        tg.BackButton.offClick(handleBack);
-        tg.BackButton.hide();
-      };
-    } else {
-      tg.BackButton.hide();
-    }
-  }, [active]);
-
-  // Обработчик события закрытия карточки после успешной оплаты
-  useEffect(() => {
-    const handleCloseDeviceCard = () => {
-      setActive(null);
-    };
-
-    window.addEventListener('closeDeviceCard', handleCloseDeviceCard);
-    return () => window.removeEventListener('closeDeviceCard', handleCloseDeviceCard);
-  }, []);
+  const handleNextPhoto = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentPhotoIndex((prev) => (prev + 1) % photos.length);
+  };
 
   return (
-    <>
-      <Dialog open={!!active} onOpenChange={() => setActive(null)}>
-        <DialogContent
-          className="max-w-sm h-[90vh] p-0 overflow-hidden"
-          onTouchStart={(e) => e.stopPropagation()}
-          onTouchEnd={(e) => e.stopPropagation()}
-          onTouchMove={(e) => e.stopPropagation()}
-        >
-          <DialogHeader>
-            <div
-              className="w-full h-[35vh] bg-gradient-to-b flex items-center justify-center relative overflow-hidden rounded-2xl"
-              onTouchStart={(e) => {
+    <Link
+      href={`/catalog/${previewCard.id}`}
+      className={cn(
+        "bg-white rounded-[24px] border border-gray-100 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col group h-full",
+        isSingle ? "w-full max-w-[320px] mx-auto" : "w-full"
+      )}
+    >
+      <div className={cn(
+        "bg-gradient-to-b from-gray-50/50 to-white flex items-center justify-center relative overflow-hidden",
+        isSingle ? "h-64" : "h-44"
+      )}>
+        <Image
+          width={300}
+          height={300}
+          src={photos[currentPhotoIndex]}
+          alt={previewCard.title}
+          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+        />
+
+        {photos.length > 1 && (
+          <div 
+            className="absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-between px-2"
+          >
+            <div 
+              className="w-1/2 h-full cursor-pointer" 
+              onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
-                const startX = e.changedTouches[0].clientX;
-                const startY = e.changedTouches[0].clientY;
-                e.currentTarget.setAttribute('data-start-x', startX.toString());
-                e.currentTarget.setAttribute('data-start-y', startY.toString());
+                setCurrentPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
               }}
-              onTouchEnd={(e) => {
-                e.stopPropagation();
-                const startX = parseFloat(e.currentTarget.getAttribute('data-start-x') || '0');
-                const startY = parseFloat(e.currentTarget.getAttribute('data-start-y') || '0');
-                const endX = e.changedTouches[0].clientX;
-                const endY = e.changedTouches[0].clientY;
-                const dx = endX - startX;
-                const dy = Math.abs(endY - startY);
+            />
+            <div 
+              className="w-1/2 h-full cursor-pointer" 
+              onClick={handleNextPhoto}
+            />
+          </div>
+        )}
 
-                if (Math.abs(dx) > Math.max(30, dy)) {
-                  e.preventDefault();
-                  if (dx < 0) goToNextPhoto();
-                  else goToPreviousPhoto();
-                }
-              }}
-            >
-              <Image
-                width={400}
-                height={400}
-                src={active?.photos?.[currentPhotoIndex] || active?.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
-                alt={`${active?.title} - фото ${currentPhotoIndex + 1}`}
-                className="object-contain p-10"
-              />
-
-              {active?.photos && active.photos.length > 1 && (
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1 z-10">
-                  {active.photos.map((_, index) => (
-                    <div
-                      key={index}
-                      className={`w-2 h-2 rounded-full transition-all duration-200 ${index === currentPhotoIndex ? 'bg-white scale-125' : 'bg-gray-400/70'
-                        }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </DialogHeader>
-
-          <div className="flex-1 flex flex-col p-3 overflow-y-auto">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <DialogTitle className="font-semibold text-lg text-gray-900 mb-1">
-                  {active?.title}
-                </DialogTitle>
-                {active?.description && (
-                  <DialogDescription className="text-gray-600 text-sm mb-2">
-                    {active.description}
-                  </DialogDescription>
+        {photos.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1 z-20">
+            {photos.map((_, idx) => (
+              <div 
+                key={idx}
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full transition-all duration-300",
+                  idx === currentPhotoIndex ? "bg-gray-900 w-3" : "bg-gray-300"
                 )}
-                <div className="text-xl font-bold text-gray-900 mt-2">
-                  {formatPrice(active?.price || null)}
-                </div>
-              </div>
-            </div>
+              />
+            ))}
+          </div>
+        )}
 
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Модель</div>
-                <div className="font-semibold text-gray-900 text-sm">{active?.model || 'Не указана'}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Память</div>
-                <div className="font-semibold text-gray-900 text-sm">{active?.storage || 'Не указана'}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Цвет</div>
-                <div className="font-semibold text-gray-900 text-sm">{active?.color || 'Не указан'}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Состояние</div>
-                <div className="font-semibold text-gray-900 text-sm">{active?.condition || 'Не указано'}</div>
-              </div>
-            </div>
+        {/* Sale Badge */}
+        {previewCard.oldPrice && previewCard.price && previewCard.oldPrice > previewCard.price && (
+          <div className="absolute top-3 left-3 bg-[#FF3B30] text-white px-2 py-1 rounded-lg text-[10px] font-black tracking-wider uppercase z-30 shadow-sm animate-in fade-in zoom-in duration-300">
+            -{Math.round((1 - previewCard.price / previewCard.oldPrice) * 100)}%
+          </div>
+        )}
 
-            <div className="flex flex-col gap-2 mt-auto">
-              <div className="grid grid-cols-2 gap-2">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFavorite(previewCard.id);
+          }}
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm z-30"
+        >
+          <Heart className={cn("w-4 h-4", isFavorite(previewCard.id) && "fill-current text-red-500")} />
+        </button>
+      </div>
+
+      <div className="p-4 flex flex-col flex-1">
+        {/* Variants row */}
+        {cards.length > 1 && (
+          <div className="flex flex-wrap gap-1.5 mb-3" onClick={e => { e.preventDefault(); e.stopPropagation(); }}>
+            {Array.from(new Set(cards.map(c => c.storage))).filter(Boolean).slice(0, 3).map(storage => {
+              const isActive = previewCard.storage === storage;
+              const variant = cards.find(c => c.storage === storage && c.color === previewCard.color) || cards.find(c => c.storage === storage);
+              return (
                 <button
-                  onClick={async () => {
-                    if (active && isInCart(active.id)) {
-                      router.push('/cart')
-                    } else if (active) {
-                      await addToCart({
-                        id: active.id,
-                        title: active.title,
-                        price: active.price,
-                        cover: active.cover,
-                        photos: active.photos,
-                        model: active.model,
-                        storage: active.storage,
-                        color: active.color,
-                        condition: active.condition,
-                        description: active.description,
-                        date: new Date().toISOString(),
-                      });
+                  key={storage}
+                  onClick={() => {
+                    if (variant) {
+                      setPreviewCard(variant);
+                      setCurrentPhotoIndex(0);
                     }
                   }}
-                  disabled={cartLoading}
-                  className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+                  className={cn(
+                    "px-2 py-0.5 text-[10px] font-bold rounded-md border transition-all",
+                    isActive ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-400 border-gray-100 hover:border-gray-300"
+                  )}
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>{active && isInCart(active.id) ? 'В корзине' : 'Добавить'}</span>
+                  {storage}
                 </button>
+              );
+            })}
+          </div>
+        )}
 
-                <button
-                  onClick={() => active && toggleFavorite(active.id)}
-                  disabled={favoritesLoading}
-                  className="flex-1 h-12 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
-                >
-                  <Heart className={active && isFavorite(active.id) ? "w-5 h-5 text-red-500 fill-current" : "w-5 h-5"} />
-                  <span>Избранное</span>
-                </button>
-              </div>
+        <div className="flex-1">
+          <h3 className="font-bold text-gray-900 text-[13px] leading-tight mb-2 line-clamp-2 group-hover:text-teal-600 transition-colors">
+            {previewCard.title}
+          </h3>
 
-              <button
-                onClick={() => setIsBuyModalOpen(true)}
-                className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                <span>Купить в 1 клик</span>
-              </button>
-
-              <button
-                onClick={() => setIsTradeInModalOpen(true)}
-                className="w-full h-12 border-2 border-gray-100 hover:border-teal-100 text-gray-700 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
-              >
-                <RefreshCcw className="w-5 h-5 text-teal-600" />
-                <span>Trade-in оценка</span>
-              </button>
-
-              <PaymentButton
-                amount={active?.price || 0}
-                description={active?.title || 'Устройство'}
-                productId={active?.id || ''}
-                productDetails={active ? {
-                  id: active.id,
-                  title: active.title,
-                  price: active.price || 0,
-                  cover: active.cover,
-                  photos: active.photos,
-                  model: active.model,
-                  storage: active.storage,
-                  color: active.color,
-                  condition: active.condition,
-                  description: active.description,
-                } : undefined}
-                className="w-full h-12 bg-gradient-to-r from-[#007AFF] to-[#00C6FF] hover:from-[#005BBF] hover:to-[#0099CC] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
-              >
-                Оплатить заказ
-              </PaymentButton>
-
-              <button
-                onClick={() => {
-                  setActive(null);
-                  const event = new CustomEvent('switchToGrid');
-                  window.dispatchEvent(event);
-                }}
-                className="w-full h-10 bg-gray-50 text-gray-500 text-xs font-medium rounded-xl hover:bg-gray-100 transition-colors"
-              >
-                Все устройства
-              </button>
+          <div className="flex flex-col mt-auto">
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black text-gray-900 tracking-tight">
+                {formatPrice(previewCard.price)}
+              </span>
+              {previewCard.oldPrice && previewCard.price && previewCard.oldPrice > previewCard.price && (
+                <span className="text-[13px] text-gray-300 line-through font-bold decoration-red-500/50">
+                  {formatPrice(previewCard.oldPrice)}
+                </span>
+              )}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <OneClickBuyModal
-        isOpen={isBuyModalOpen}
-        onClose={() => setIsBuyModalOpen(false)}
-        productTitle={active?.title || ''}
-        productPrice={active?.price || null}
-        productId={active?.id}
-      />
-
-      <OptimizedPhoneSelector
-        open={isTradeInModalOpen}
-        onOpenChange={setIsTradeInModalOpen}
-      />
-
-      {/* Превью карточки */}
-      <div className={isSingle ? "grid grid-cols-1 place-items-center" : "grid grid-cols-1"}>
-        {cards.map((card) => (
-          <div
-            key={`card-${card.id}`}
-            onClick={() => setActive(card)}
-            className={`group ${isSingle ? "h-[380px] w-full max-w-sm" : "h-[280px]"} bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
-          >
-            <div className={`${isSingle ? 'h-78' : 'h-48'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden`}>
-              <Image
-                width={400}
-                height={400}
-                src={card.cover || getPictureUrl('display_front_new.png') || '/display_front_new.png'}
-                alt={card.title}
-                className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-700"
-              />
-            </div>
-
-            <div className="p-4 flex flex-col h-full">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
-                  {card.title}
-                </h3>
-                {card.price && (
-                  <p className="text-lg font-bold text-gray-900 mt-auto">
-                    {formatPrice(card.price)}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+        </div>
       </div>
-    </>
+    </Link>
   );
 }

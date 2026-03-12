@@ -9,6 +9,8 @@ export interface Product {
   id: string;
   title: string;
   price: number;
+  oldPrice?: number;
+  brand?: string;
   model?: string;
   storage?: string;
   color?: string;
@@ -16,9 +18,12 @@ export interface Product {
   coverPhoto?: string;
   status: string;
   description?: string;
+  isAccessory?: boolean;
+  targetBrand?: string;
+  targetModel?: string;
 }
 
-export type StatusFilter = 'all' | 'available' | 'reserved' | 'sold' | 'archived';
+export type StatusFilter = 'all' | 'available' | 'draft' | 'reserved' | 'sold' | 'archived';
 
 export function useAdminCatalog() {
   const { telegramId, authToken } = useAppStore();
@@ -101,12 +106,17 @@ export function useAdminCatalog() {
   const handleUpdate = async (product: Product) => {
     setIsUpdating(true);
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-telegram-id': telegramId || '',
+      };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(`/api/admin/lots/${product.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`,
-        },
+        headers,
         body: JSON.stringify(product),
       });
 

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const [unreadLeads, newSkupka, newOrders, newTradeIn] = await Promise.all([
       api.list<any>('quick-leads', { isRead: 'false' }),
-      api.list<any>('skupkas', { status: 'submitted' }),
+      api.list<any>('skupka', { status: 'submitted' }),
       api.list<any>('orders', { status: 'pending' }),
       api.list<any>('trade-in-evaluations', { status: 'pending' }),
     ]);

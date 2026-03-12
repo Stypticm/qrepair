@@ -14,13 +14,18 @@ interface Product {
     id: string;
     title: string;
     price: number | null;
+    oldPrice?: number | null;
     cover: string | null;
     photos: string[];
     model?: string;
     storage?: string;
     color?: string;
     condition?: string;
+    brand?: string;
     date?: string;
+    isAccessory?: boolean;
+    targetBrand?: string;
+    targetModel?: string;
 }
 
 type SortKey = 'popular' | 'cheap' | 'expensive' | 'newest';
@@ -124,7 +129,7 @@ function CatalogContent() {
         // Brand filter
         if (filters.brands.length > 0) {
             result = result.filter(item => {
-                const brand = item.model?.split(' ')[0] || '';
+                const brand = item.brand || item.model?.split(' ')[0] || '';
                 return filters.brands.some(b => brand.toLowerCase().includes(b.toLowerCase()));
             });
         }
@@ -167,6 +172,10 @@ function CatalogContent() {
             storage: item.storage,
             color: item.color,
             inStock: true,
+            oldPrice: item.oldPrice,
+            isAccessory: item.isAccessory,
+            targetBrand: item.targetBrand,
+            targetModel: item.targetModel,
         }));
     }, [products, searchQuery, filters, sortKey]);
 
@@ -232,11 +241,18 @@ function CatalogContent() {
                     {/* Layout: Filters + Grid */}
                     <div className="flex gap-8">
                         {/* Desktop filters */}
-                        <div className="hidden md:block">
+                        <div className="hidden md:block relative group pointer-events-none select-none">
                             <Filters
                                 onFilterChange={handleFilterChange}
-                                className="w-72 flex-shrink-0 border-r border-gray-100 pr-6 h-[calc(100vh-180px)] overflow-y-auto sticky top-24 pb-12"
+                                className="w-72 flex-shrink-0 border-r border-gray-100 pr-6 h-[calc(100vh-180px)] overflow-y-auto sticky top-24 pb-12 blur-[2px] opacity-50 transition-all pointer-events-none"
                             />
+                            {/* Overlay message (optional, for better UX) */}
+                            <div className="absolute inset-x-0 top-32 flex items-center justify-center opacity-100 transition-opacity">
+                                <span className="bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-800 shadow-xl text-center">
+                                    <span className="block text-lg mb-1">🍎</span>
+                                    Пока доступны только<br/> устройства Apple
+                                </span>
+                            </div>
                         </div>
 
                         {/* Mobile filters drawer */}

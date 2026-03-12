@@ -64,18 +64,29 @@ export async function POST(request: NextRequest) {
     if (telegramIdHeader) headers['x-telegram-id'] = telegramIdHeader;
     if (authHeader) headers['authorization'] = authHeader;
 
+    const status = formData.get('status') as string || 'available'
+    const brand = formData.get('brand') as string || (model.split(' ')[0])
+    const oldPrice = formData.get('oldPrice') as string
+    
+    // Генерируем артикул (SKU) автоматически: BRAND-MODEL-STORAGE-COLOR-SHORTID
+    const shortId = uuidv4().split('-')[0].toUpperCase()
+    const sku = `${brand}-${model.replace(/\s+/g, '')}-${storage}-${color.replace(/\s+/g, '')}-${shortId}`.toUpperCase()
+
     // Сохранение в новую БД через наш Go API
     const newLot = await api.create('marketplace-lots', {
       id: lotId,
+      sku: sku,
       title: modelName,
+      brand: brand,
       model: model,
       storage: storage,
       color: color,
       price: parseInt(price),
+      oldPrice: oldPrice ? parseInt(oldPrice) : null,
       description: description || null,
       photos: uploadedPhotos,
       coverPhoto: uploadedPhotos[0],
-      status: 'available',
+      status: status,
       telegramId: auth.user.telegramId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
