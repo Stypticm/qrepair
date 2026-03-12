@@ -11,15 +11,14 @@ import { SkupkaRequest } from '@/core/lib/interfaces';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { QRCodeGenerator } from '@/components/QRCodeGenerator';
-import { ChevronDown, ChevronUp, Smartphone, Calendar, ShoppingBag, Package, ArrowLeft, Hammer, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ShoppingBag, Package, ArrowLeft, Hammer, Trash2, Wrench, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
 import { OrderStatusTracker } from '@/components/OrderStatusTracker';
 import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
-import { Header } from '@/components/layout/Header';
 
-type TabType = 'selling' | 'bought'
+type TabType = 'selling' | 'bought' | 'repair'
 
 interface Order {
   id: string
@@ -65,6 +64,7 @@ const MyDevices = () => {
   const [activeTab, setActiveTab] = useState<TabType>('selling')
   const [myDevices, setMyDevices] = useState<SkupkaRequest[]>([]);
   const [myOrders, setMyOrders] = useState<Order[]>([]);
+  const [myRepairs, setMyRepairs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
@@ -111,6 +111,25 @@ const MyDevices = () => {
           setMyOrders(data.orders || []);
         } catch (e) {
           console.error('Ошибка при загрузке заказов:', e);
+        } finally {
+          setLoading(false);
+        }
+      };
+      getData();
+    }
+  }, [telegramId, activeTab]);
+
+  // Загрузка Repair (Ремонт)
+  useEffect(() => {
+    if (telegramId && activeTab === 'repair') {
+      const getData = async () => {
+        try {
+          setLoading(true);
+          const res = await fetch(`/api/repair/my?telegramId=${telegramId}`);
+          const data = await res.json();
+          setMyRepairs(Array.isArray(data) ? data : []);
+        } catch (e) {
+          console.error('Ошибка при загрузке ремонтных заявок:', e);
         } finally {
           setLoading(false);
         }
@@ -193,7 +212,7 @@ const MyDevices = () => {
   const formatPrice = (price: number) => `${price.toLocaleString('ru-RU')} ₽`
 
   return (
-    <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
+    <Page back={true}>
       <div className="min-h-screen bg-gray-50 md:pt-4">
         <div className="max-w-7xl mx-auto pt-16 md:pt-4 px-6 pb-32">
           <div className="mb-6 px-2">
@@ -232,10 +251,10 @@ const MyDevices = () => {
             </div>
 
             {/* Вкладки */}
-            <div className="flex gap-2 justify-center mb-4">
+            <div className="flex gap-2 justify-center mb-4 flex-wrap">
               <button
                 onClick={() => setActiveTab('selling')}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'selling'
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'selling'
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
@@ -245,13 +264,23 @@ const MyDevices = () => {
               </button>
               <button
                 onClick={() => setActiveTab('bought')}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'bought'
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'bought'
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
               >
                 <ShoppingBag className="w-5 h-5" />
                 Купил
+              </button>
+              <button
+                onClick={() => setActiveTab('repair')}
+                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-200 ${activeTab === 'repair'
+                  ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+              >
+                <Wrench className="w-5 h-5" />
+                Ремонт
               </button>
             </div>
 
@@ -264,6 +293,12 @@ const MyDevices = () => {
             {!loading && activeTab === 'bought' && myOrders.length > 0 && (
               <div className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                 Всего заказов: {myOrders.length}
+              </div>
+            )}
+
+            {!loading && activeTab === 'repair' && myRepairs.length > 0 && (
+              <div className="inline-flex items-center px-4 py-2 bg-violet-100 text-violet-800 rounded-full text-sm font-medium">
+                Всего заявок: {myRepairs.length}
               </div>
             )}
           </div>
@@ -281,9 +316,12 @@ const MyDevices = () => {
           ) : activeTab === 'selling' ? (
             /* Вкладка "Продаю" (Skupka) */
             myDevices.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-blue-500" />
+                </div>
                 <div className="text-gray-600 text-lg mb-2">У вас пока нет устройств</div>
-                <div className="text-gray-500">Создайте заявку на выкуп, чтобы начать</div>
+                <div className="text-gray-500 text-sm">Создайте заявку на выкуп, чтобы начать</div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -424,12 +462,108 @@ const MyDevices = () => {
                 })}
               </div>
             )
+          ) : activeTab === 'repair' ? (
+            /* Вкладка "Ремонт" */
+            myRepairs.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Wrench className="w-8 h-8 text-violet-500" />
+                </div>
+                <div className="text-gray-600 text-lg mb-2">Нет заявок на ремонт</div>
+                <div className="text-gray-500 text-sm">Оставьте заявку через раздел «Ремонт»</div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {myRepairs.map((repair: any) => {
+                  const isExpanded = expandedCards.has(repair.id);
+                  return (
+                    <Card key={repair.id} className="bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+                      <CardHeader
+                        className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                        onClick={() => toggleCard(repair.id)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 pr-4">
+                            <CardTitle className="text-base font-semibold text-gray-900">
+                              {repair.deviceName || repair.category || 'Заявка на ремонт'}
+                            </CardTitle>
+                            <p className="text-sm text-gray-500 mt-1">
+                              #{repair.id?.slice(0, 8)} · {repair.issue || repair.description || ''}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge className={`${
+                              repair.status === 'completed' ? 'bg-green-500' :
+                              repair.status === 'in_progress' ? 'bg-yellow-500' :
+                              repair.status === 'cancelled' ? 'bg-red-500' :
+                              'bg-violet-500'
+                            } text-white px-3 py-1 text-sm font-medium`}>
+                              {repair.status === 'created' ? 'Создана' :
+                               repair.status === 'diagnosing' ? 'Диагностика' :
+                               repair.status === 'in_progress' ? 'В ремонте' :
+                               repair.status === 'completed' ? 'Завершён' :
+                               repair.status === 'cancelled' ? 'Отменена' :
+                               repair.status === 'courier_assigned' ? 'Курьер назначен' :
+                               repair.status === 'in_transit' ? 'В пути' :
+                               repair.status || 'Неизвестно'}
+                            </Badge>
+                            <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
+                              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <CardContent className="pt-0 space-y-3">
+                              {repair.estimatedCost && (
+                                <div className="bg-violet-50 p-3 rounded-lg">
+                                  <span className="text-sm font-semibold text-violet-700">Стоимость: </span>
+                                  <span className="text-sm text-violet-900 font-bold">{repair.estimatedCost} ₽</span>
+                                </div>
+                              )}
+                              {repair.assignedMaster && (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                  <span className="text-sm font-semibold text-gray-600">Мастер: </span>
+                                  <span className="text-sm text-gray-900">{repair.assignedMaster?.name || 'Назначается'}</span>
+                                </div>
+                              )}
+                              {repair.notes && (
+                                <div className="bg-yellow-50 p-3 rounded-lg">
+                                  <p className="text-sm font-semibold text-gray-700 mb-1">Комментарий мастера:</p>
+                                  <p className="text-sm text-gray-800">{repair.notes}</p>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-2 text-xs text-gray-400 pt-1">
+                                <Clock className="w-3 h-3" />
+                                {repair.createdAt ? new Date(repair.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
+                              </div>
+                            </CardContent>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </Card>
+                  );
+                })}
+              </div>
+            )
           ) : (
             /* Вкладка "Купил" (Orders) */
             myOrders.length === 0 ? (
-              <div className="text-center py-8">
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <ShoppingBag className="w-8 h-8 text-emerald-500" />
+                </div>
                 <div className="text-gray-600 text-lg mb-2">У вас пока нет заказов</div>
-                <div className="text-gray-500">Купите товары в магазине</div>
+                <div className="text-gray-500 text-sm">Купите товары в магазине</div>
               </div>
             ) : (
               <div className="space-y-4">

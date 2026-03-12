@@ -11,6 +11,13 @@ export async function PATCH(
     const body = await request.json();
     const { status, notes, courierName, courierPhone } = body;
 
+    // Прокидываем авторизацию в Go API
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     // Валидация статуса
     const validStatuses = ['pending', 'confirmed', 'in_delivery', 'completed', 'cancelled'];
     if (status && !validStatuses.includes(status)) {
@@ -21,7 +28,7 @@ export async function PATCH(
     }
 
     // Получаем текущий заказ
-    const currentOrder = await api.get<any>('orders', id);
+    const currentOrder = await api.get<any>('orders', id, undefined, headers);
 
     if (!currentOrder) {
       return NextResponse.json(
@@ -62,7 +69,7 @@ export async function PATCH(
     }
 
     // Получаем айтемы заказа
-    const orderItems = await api.list<any>('order-items', { orderId: id });
+    const orderItems = await api.list<any>('order-items', { orderId: id }, headers);
 
     // Если заказ отменяется — возвращаем лоты в продажу
     if (status === 'cancelled') {
@@ -70,7 +77,7 @@ export async function PATCH(
             await api.patch<any>('marketplace-lots', item.lotId, { 
                 status: 'available',
                 updatedAt: new Date().toISOString()
-            });
+            }, headers);
         }
     }
 
@@ -81,19 +88,19 @@ export async function PATCH(
                 status: 'sold', 
                 soldAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
-            });
+            }, headers);
         }
     }
 
     updateData.updatedAt = new Date().toISOString();
 
     // Обновляем заказ
-    const updatedOrder = await api.patch<any>('orders', id, updateData);
+    const updatedOrder = await api.patch<any>('orders', id, updateData, headers);
     
     // Получаем обновленный заказ с вложенными данными для ответа
     const fullOrder = await api.get<any>('orders', id, {
         _embed: 'items.lot,pickupPoint'
-    });
+    }, headers);
 
     // Отправляем уведомление пользователю об изменении статуса
     if (status && updatedOrder.telegramId) {
@@ -156,6 +163,13 @@ export async function DELETE(
         userId = request.headers.get('x-telegram-id');
     }
 
+    // Прокидываем авторизацию в Go API
+    const telegramId = request.headers.get('x-telegram-id') || userId;
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     // Проверяем существование заказа
     const order = await api.get<any>('orders', id);
 
@@ -180,21 +194,21 @@ export async function DELETE(
         }
     }
 
-    const orderItems = await api.list<any>('order-items', { orderId: id });
+    const orderItems = await api.list<any>('order-items', { orderId: id }, headers);
     
     // Возвращаем лоты в продажу перед удалением
     for (const item of orderItems) {
         await api.patch<any>('marketplace-lots', item.lotId, { 
             status: 'available',
             updatedAt: new Date().toISOString()
-        });
+        }, headers);
         
         // Удаляем orderItem
-        await api.delete('order-items', item.id);
+        await api.delete('order-items', item.id, headers);
     }
 
     // Удаляем заказ
-    await api.delete('orders', id);
+    await api.delete('orders', id, headers);
 
     return NextResponse.json({ success: true, message: 'Заказ полностью удален' });
   } catch (error) {

@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server';
-import { api } from '@/services/api';
-import { hashPassword } from '@/lib/auth/password';
-import { createToken } from '@/lib/auth/jwt';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://sirena-eriophyllous-melisa.ngrok-free.dev';
 
 export async function POST(req: Request) {
   try {
-    const { login, password } = await req.json();
+    let login: string | undefined;
+    let password: string | undefined;
+
+    try {
+      const body = await req.json();
+      login = body?.login;
+      password = body?.password;
+    } catch (parseError) {
+      console.error('[AUTH] Register: invalid JSON body', parseError);
+      return NextResponse.json(
+        { error: 'Некорректное тело запроса' },
+        { status: 400 }
+      );
+    }
 
     if (!login || !password) {
       return NextResponse.json(
@@ -14,7 +26,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate password length
     if (password.length < 6) {
       return NextResponse.json(
         { error: 'Пароль должен быть не менее 6 символов' },
@@ -22,40 +33,47 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if user already exists
-    const existingUsers = await api.list<any>('users', { telegramId: login });
+    // Прокидываем регистрацию напрямую в Go API
+    const res = await fetch(`${API_URL}/api/users/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: JSON.stringify({ login, password }),
+    });
 
-    if (existingUsers && existingUsers.length > 0) {
+    const text = await res.text();
+    let data: any = {};
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('[AUTH] Register: failed to parse Go response as JSON, raw:', text);
+        // Если ответ не JSON, но статус успешный — всё равно считаем регистрацию успешной
+      }
+    }
+
+    if (!res.ok) {
       return NextResponse.json(
-        { error: 'Пользователь с таким логином уже существует' },
-        { status: 409 }
+        { error: data.error || 'Не удалось создать пользователя' },
+        { status: res.status }
       );
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(password);
+    // Если Go не вернул токен/пользователя (например, 201 без тела),
+    // просто сообщаем фронту, что регистрация прошла успешно.
+    if (!data.token || !data.user) {
+      return NextResponse.json(
+        { success: true },
+        { status: 201 },
+      );
+    }
 
-    // Create new user
-    const newUser = await api.create<any>('users', {
-        telegramId: login,
-        passwordHash: passwordHash,
-        role: 'USER', // Default role
-    });
-
-    // Generate JWT token
-    const token = await createToken({
-      userId: newUser.id,
-      telegramId: newUser.telegramId,
-      role: newUser.role,
-    });
-
+    // Ожидаемый сценарий: Go вернул token и user так же, как в /api/users/login
     return NextResponse.json({
-      token,
-      user: {
-        id: newUser.id,
-        telegramId: newUser.telegramId,
-        role: newUser.role,
-      },
+      token: data.token,
+      user: data.user,
     });
 
   } catch (error: any) {
@@ -66,3 +84,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

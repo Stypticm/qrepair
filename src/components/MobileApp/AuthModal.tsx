@@ -98,16 +98,34 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                     body: JSON.stringify({ login, password }),
                 });
 
-                const data = await res.json();
+                const text = await res.text();
+                let data: any = {};
+                if (text) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch {
+                        // Если тело не JSON, просто оставляем data пустым
+                    }
+                }
 
                 if (!res.ok) {
                     setError(data.error || 'Ошибка');
                     return;
                 }
 
-                // Update store
-                const { setAuthData } = await import('@/stores/authStore').then(m => m.useAppStore.getState());
-                setAuthData({ user: data.user, token: data.token });
+                // Если бэкенд вернул token + user — логиним сразу
+                if (data.user && data.token) {
+                    const { setAuthData } = await import('@/stores/authStore').then(m => m.useAppStore.getState());
+                    setAuthData({ user: data.user, token: data.token });
+                } else {
+                    // Если только зарегистрировали без токена — выполняем обычный логин
+                    const { login: loginAction } = await import('@/stores/authStore').then(m => ({ login: m.useAppStore.getState().login }));
+                    const success = await loginAction(login, password);
+                    if (!success) {
+                        setError('Регистрация прошла, но войти не удалось. Попробуйте войти ещё раз.');
+                        return;
+                    }
+                }
 
                 // Попытка привязать пуш-подписку к новому пользователю
                 try {

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const sectionTitles: Record<string, string> = {
     'staff': 'Персонал',
     'masters': 'Мастера',
-    'requests': 'Заявки',
+    // 'requests': 'Заявки',
     'orders': 'Заказы',
     'add-lot': 'Новый лот',
     'chats': 'Чат-центр',

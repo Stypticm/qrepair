@@ -101,7 +101,7 @@ export function AdminPageClient() {
   const allSections = [
     { id: 'staff', title: 'Персонал', description: 'Управление командой', icon: Users, color: 'bg-indigo-500' },
     { id: 'masters', title: 'Мастера', description: 'Специалисты сервиса', icon: Wrench, color: 'bg-blue-600' },
-    { id: 'requests', title: 'Заявки', description: 'Обработка запросов', icon: BarChart3, color: 'bg-amber-500' },
+    // { id: 'requests', title: 'Заявки', description: 'Обработка запросов', icon: BarChart3, color: 'bg-amber-500' },
     { id: 'orders', title: 'Заказы', description: 'Логистика магазина', icon: ShoppingBag, color: 'bg-emerald-500' },
     { id: 'add-lot', title: 'Новый лот', description: 'Публикация товаров', icon: Plus, color: 'bg-rose-500' },
     { id: 'catalog', title: 'Каталог', description: 'Управление товарами', icon: ShoppingBag, color: 'bg-teal-500' },

@@ -56,7 +56,12 @@ export function BlogManagementClient() {
             });
             if (!res.ok) throw new Error('Failed to fetch');
             const data = await res.json();
-            setPosts(data);
+            const sorted = Array.isArray(data)
+                ? [...data].sort(
+                    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                  )
+                : [];
+            setPosts(sorted);
         } catch (error) {
             toast.error('Ошибка при загрузке блога');
         } finally {

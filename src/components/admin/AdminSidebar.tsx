@@ -6,18 +6,29 @@ import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, Smartphone, Wrench,
 import { useUserRole, getSectionsForRole } from '@/hooks/useUserRole';
 import { useAppStore } from '@/stores/authStore';
 
+// Порядок: дашборд → операционные разделы → каталог/товары → коммуникации → команда → контент
 const allSections = [
+    // Общее
     { id: '', title: 'Дашборд', icon: BarChart3 },
-    { id: 'staff', title: 'Персонал', icon: Users },
-    { id: 'masters', title: 'Мастера', icon: Wrench },
-    { id: 'requests', title: 'Заявки', icon: BarChart3 },
+
+    // Операционный блок
     { id: 'orders', title: 'Заказы', icon: ShoppingBag },
-    { id: 'add-lot', title: 'Новый лот', icon: Plus },
-    { id: 'catalog', title: 'Каталог', icon: ShoppingBag },
-    { id: 'chats', title: 'Чат-центр', icon: MessageCircle },
     { id: 'leads', title: 'Быстрые заявки', icon: ShoppingBag },
     { id: 'trade-in', title: 'Оценки', icon: Smartphone },
     { id: 'repair', title: 'Ремонт', icon: Wrench },
+
+    // Товары
+    { id: 'catalog', title: 'Каталог', icon: ShoppingBag },
+    { id: 'add-lot', title: 'Новый лот', icon: Plus },
+
+    // Коммуникации
+    { id: 'chats', title: 'Чат-центр', icon: MessageCircle },
+
+    // Команда
+    { id: 'staff', title: 'Персонал', icon: Users },
+    { id: 'masters', title: 'Мастера', icon: Wrench },
+
+    // Контент
     { id: 'blog', title: 'Блог', icon: Newspaper },
 ];
 

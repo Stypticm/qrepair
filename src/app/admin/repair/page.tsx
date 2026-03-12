@@ -7,12 +7,15 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, Loader2, Smartphone, MapPin, Truck } from 'lucide-react'
 import { useAppStore } from '@/stores/authStore'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 export default function AdminRepairPage() {
     const router = useRouter()
     const { telegramId } = useAppStore()
     const [requests, setRequests] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [priceDraft, setPriceDraft] = useState<Record<string, string>>({})
+    const [priceNotified, setPriceNotified] = useState<Record<string, boolean>>({})
 
     useEffect(() => {
         fetchRequests()
@@ -80,6 +83,87 @@ export default function AdminRepairPage() {
         }
         const mapped = statusMap[status] || { label: status, color: 'bg-gray-100 text-gray-800' }
         return <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${mapped.color}`}>{mapped.label}</span>
+    }
+
+    const canSetStatus = (current: string, target: string) => {
+        if (current === target) return false
+
+        // Линейный сценарий для мастера внутри сервиса
+        switch (target) {
+            case 'received':
+                return ['created', 'courier_assigned', 'in_transit'].includes(current)
+            case 'diagnosing':
+                return current === 'received'
+            case 'price_approval':
+                return current === 'diagnosing'
+            case 'repairing':
+                return current === 'price_approval'
+            case 'ready_for_pickup':
+                return current === 'repairing'
+            case 'delivered':
+                return current === 'ready_for_pickup'
+            default:
+                return false
+        }
+    }
+
+    const statusButtonClass = (current: string, target: string, accent?: 'green' | 'final') => {
+        const isActive = current === target
+        const enabled = canSetStatus(current, target)
+
+        if (!enabled) {
+            return 'border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed opacity-50'
+        }
+
+        if (isActive) {
+            if (accent === 'green') {
+                return 'bg-emerald-500 text-white border-emerald-500 shadow-md ring-2 ring-emerald-100 cursor-pointer hover:bg-emerald-600 active:scale-95 transition-colors'
+            }
+            if (accent === 'final') {
+                return 'bg-gray-900 text-white border-gray-900 shadow-md ring-2 ring-gray-200 cursor-pointer hover:bg-black active:scale-95 transition-colors'
+            }
+            return 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-100 cursor-pointer hover:bg-blue-700 active:scale-95 transition-colors'
+        }
+
+        // enabled, not active
+        if (accent === 'green') {
+            return 'border-emerald-300 text-emerald-700 bg-emerald-50 cursor-pointer hover:bg-emerald-100 active:scale-95 transition-colors'
+        }
+        if (accent === 'final') {
+            return 'border-gray-300 text-gray-700 bg-gray-50 cursor-pointer hover:bg-gray-100 active:scale-95 transition-colors'
+        }
+        return 'border-gray-200 text-gray-700 bg-blue-50 cursor-pointer hover:bg-blue-100 active:scale-95 transition-colors'
+    }
+
+    const handleSavePriceAndNotify = async (id: string, currentStatus: string, currentPrice?: number | null) => {
+        const raw = priceDraft[id] ?? (currentPrice != null ? currentPrice.toString() : '')
+        const value = raw ? Number(raw) : NaN
+        if (Number.isNaN(value) || value <= 0) {
+            toast.error('Укажите корректную стоимость ремонта')
+            return
+        }
+
+        try {
+            const tid = telegramId || sessionStorage.getItem('telegramId')
+            const res = await fetch(`/api/repair/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-telegram-id': tid?.toString() || '',
+                },
+                body: JSON.stringify({ finalPrice: value }),
+            })
+
+            if (res.ok) {
+                toast.success('Стоимость сохранена, клиент уведомлён')
+                setPriceNotified(prev => ({ ...prev, [id]: true }))
+                fetchRequests()
+            } else {
+                toast.error('Не удалось сохранить стоимость')
+            }
+        } catch {
+            toast.error('Ошибка сети при сохранении стоимости')
+        }
     }
 
     return (
@@ -169,13 +253,115 @@ export default function AdminRepairPage() {
                                             <div>
                                                 <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Действия / Смена статуса</div>
                                                 <div className="flex flex-wrap gap-2">
-                                                    <Button size="sm" variant="outline" onClick={() => updateStatus(req.id, 'received')}>В СЦ</Button>
-                                                    <Button size="sm" variant="outline" onClick={() => updateStatus(req.id, 'diagnosing')}>Диагностика</Button>
-                                                    <Button size="sm" variant="outline" onClick={() => updateStatus(req.id, 'price_approval')}>Согласование</Button>
-                                                    <Button size="sm" variant="outline" onClick={() => updateStatus(req.id, 'repairing')}>В ремонте</Button>
-                                                    <Button size="sm" variant="outline" className="border-green-200 text-green-700 hover:bg-green-50" onClick={() => updateStatus(req.id, 'ready_for_pickup')}>Готово к выдаче</Button>
-                                                    <Button size="sm" variant="outline" className="text-gray-500" onClick={() => updateStatus(req.id, 'delivered')}>Завершить (Выдано)</Button>
+                                                    {/* В СЦ */}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className={cn(statusButtonClass(req.status, 'received'))}
+                                                        disabled={!canSetStatus(req.status, 'received')}
+                                                        onClick={() => updateStatus(req.id, 'received')}
+                                                    >
+                                                        В СЦ
+                                                    </Button>
+
+                                                    {/* Диагностика */}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className={cn(statusButtonClass(req.status, 'diagnosing'))}
+                                                        disabled={!canSetStatus(req.status, 'diagnosing')}
+                                                        onClick={() => updateStatus(req.id, 'diagnosing')}
+                                                    >
+                                                        Диагностика
+                                                    </Button>
+
+                                                    {/* Согласование */}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className={cn(statusButtonClass(req.status, 'price_approval'))}
+                                                        disabled={!canSetStatus(req.status, 'price_approval')}
+                                                        onClick={() => updateStatus(req.id, 'price_approval')}
+                                                    >
+                                                        Согласование
+                                                    </Button>
+
+                                                    {/* В ремонте */}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className={cn(statusButtonClass(req.status, 'repairing'))}
+                                                        disabled={!canSetStatus(req.status, 'repairing')}
+                                                        onClick={() => updateStatus(req.id, 'repairing')}
+                                                    >
+                                                        В ремонте
+                                                    </Button>
+
+                                                    {/* Готово к выдаче */}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className={cn(statusButtonClass(req.status, 'ready_for_pickup', 'green'))}
+                                                        disabled={!canSetStatus(req.status, 'ready_for_pickup')}
+                                                        onClick={() => updateStatus(req.id, 'ready_for_pickup')}
+                                                    >
+                                                        Готово к выдаче
+                                                    </Button>
+
+                                                    {/* Завершить (Выдано) — только после ready_for_pickup */}
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className={cn(statusButtonClass(req.status, 'delivered', 'final'))}
+                                                        disabled={!canSetStatus(req.status, 'delivered')}
+                                                        onClick={() => updateStatus(req.id, 'delivered')}
+                                                    >
+                                                        Завершить (Выдано)
+                                                    </Button>
                                                 </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Итоговая стоимость ремонта</div>
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <input
+                                                        type="number"
+                                                        value={priceDraft[req.id] ?? (req.finalPrice != null ? req.finalPrice.toString() : '')}
+                                                        onChange={(e) => {
+                                                            if (priceNotified[req.id]) return
+                                                            const v = e.target.value
+                                                            setPriceDraft(prev => ({ ...prev, [req.id]: v }))
+                                                        }}
+                                                        disabled={priceNotified[req.id]}
+                                                        className={cn(
+                                                            'w-32 h-9 px-3 rounded-lg border text-sm focus:outline-none',
+                                                            priceNotified[req.id]
+                                                                ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                                : 'border-gray-200 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500'
+                                                        )}
+                                                        placeholder="0"
+                                                    />
+                                                    <span className="text-sm text-gray-500">₽</span>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        disabled={priceNotified[req.id]}
+                                                        className={cn(
+                                                            'ml-2 cursor-pointer active:scale-95 transition-colors shadow-sm',
+                                                            priceNotified[req.id]
+                                                                ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                                : 'border-blue-500 bg-blue-500 text-white hover:bg-blue-600 hover:border-blue-600'
+                                                        )}
+                                                        onClick={() => !priceNotified[req.id] && handleSavePriceAndNotify(req.id, req.status, req.finalPrice)}
+                                                    >
+                                                        {priceNotified[req.id] ? 'Уведомление отправлено' : 'Оповестить клиента'}
+                                                    </Button>
+                                                </div>
+                                                {req.finalPrice && (
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        Текущая цена: <span className="font-semibold text-gray-900">{req.finalPrice.toLocaleString('ru-RU')} ₽</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { api } from '@/services/api';
 import { checkAdminAccessFromDB } from '@/core/lib/admin-server';
+import { notifyUser } from '@/lib/notifications/user-notifications';
 
 export async function GET(
   request: NextRequest,
@@ -66,6 +67,41 @@ export async function PATCH(
     updates.updatedAt = new Date().toISOString();
 
     const result = await api.patch<any>('repair-requests', id, updates);
+
+    // Уведомляем клиента о смене статуса или финальной цене
+    try {
+      if (result.telegramId) {
+        let body = 'Статус вашей заявки на ремонт обновлён.';
+
+        if (updates.status) {
+          const statusMap: Record<string, string> = {
+            created: 'Заявка создана',
+            courier_assigned: 'Назначен курьер',
+            in_transit: 'Устройство в пути в сервис',
+            received: 'Устройство принято в сервисе',
+            diagnosing: 'Идёт диагностика устройства',
+            price_approval: 'Требуется подтверждение стоимости ремонта',
+            repairing: 'Устройство в ремонте',
+            ready_for_pickup: 'Ремонт завершён, устройство готово к выдаче',
+            delivered: 'Ремонт завершён, устройство выдано',
+          };
+          const statusText = statusMap[updates.status] || updates.status;
+          body = `Статус вашей заявки на ремонт: ${statusText}.`;
+        }
+
+        if (typeof updates.finalPrice === 'number') {
+          body = `Итоговая стоимость ремонта: ${updates.finalPrice.toLocaleString('ru-RU')} ₽.`;
+        }
+
+        await notifyUser(result.telegramId, {
+          title: 'Обновление по ремонту устройства',
+          body,
+          url: `/repair/status/${id}`,
+        });
+      }
+    } catch (notifyError) {
+      console.error('[Repair] Failed to send status notification:', notifyError);
+    }
 
     return NextResponse.json({ success: true, request: result });
   } catch (error) {

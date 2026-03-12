@@ -2,6 +2,7 @@ import { create } from 'zustand'
 
 interface RepairState {
   category: string
+  selectedIssues: string[]
   deviceModel: string
   issueDescription: string
   issuePhotos: string[]
@@ -10,6 +11,7 @@ interface RepairState {
   appointmentTime: string | null
   
   setCategory: (cat: string) => void
+  setSelectedIssues: (issues: string[]) => void
   setDeviceModel: (model: string) => void
   setIssueDescription: (desc: string) => void
   addIssuePhoto: (photoBase64: string) => void
@@ -21,6 +23,7 @@ interface RepairState {
 
 const initialState = {
   category: '',
+  selectedIssues: [] as string[],
   deviceModel: '',
   issueDescription: '',
   issuePhotos: [],
@@ -33,6 +36,7 @@ export const useRepairStore = create<RepairState>((set) => ({
   ...initialState,
   
   setCategory: (category) => set({ category }),
+  setSelectedIssues: (selectedIssues) => set({ selectedIssues }),
   setDeviceModel: (deviceModel) => set({ deviceModel }),
   setIssueDescription: (issueDescription) => set({ issueDescription }),
   addIssuePhoto: (photoBase64) => 

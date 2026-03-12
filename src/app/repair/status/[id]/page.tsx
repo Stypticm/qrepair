@@ -91,12 +91,20 @@ export default function RepairStatusPage() {
                     <span className="text-gray-500">Проблема</span>
                     <span className="font-medium text-right">{request.category}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Пред. стоимость</span>
+                <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+                    <span className="text-gray-500">Предварительная оценка</span>
                     <span className="font-bold text-blue-600">
                         {request.estimatedMin?.toLocaleString('ru')} – {request.estimatedMax?.toLocaleString('ru')} ₽
                     </span>
                 </div>
+                {typeof request.finalPrice === 'number' && (
+                    <div className="flex justify-between items-center pt-2">
+                        <span className="text-gray-500">Согласованная стоимость</span>
+                        <span className="font-bold text-emerald-600">
+                            {request.finalPrice.toLocaleString('ru-RU')} ₽
+                        </span>
+                    </div>
+                )}
             </div>
 
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">

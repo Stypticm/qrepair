@@ -11,8 +11,9 @@ export default function RepairEstimatePage() {
     const { category, deviceModel } = useRepairStore()
 
     // Временная заглушка-оценка
-    const estimateMin = category === 'Разбито стекло / экран' ? 4500 : 2500
-    const estimateMax = category === 'Разбито стекло / экран' ? 12000 : 8000
+    const hasScreenIssue = category.includes('Разбито стекло / экран')
+    const estimateMin = hasScreenIssue ? 4500 : 2500
+    const estimateMax = hasScreenIssue ? 12000 : 8000
 
     const handleNext = () => {
         router.push('/repair/delivery')

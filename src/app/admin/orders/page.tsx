@@ -517,12 +517,16 @@ function AdminOrdersContent() {
                                                                                 <div className="grid grid-cols-2 gap-3">
                                                                                     <div className="space-y-1.5">
                                                                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider ml-1">Дата</label>
-                                                                                        <input
-                                                                                            type="date"
-                                                                                            className="w-full h-11 bg-white border border-gray-200 rounded-2xl px-4 text-sm outline-none shadow-sm"
-                                                                                            value={editingDate[order.id] !== undefined ? editingDate[order.id] : (order.deliveryDate || '')}
-                                                                                            onChange={(e) => setEditingDate(prev => ({ ...prev, [order.id]: e.target.value }))}
-                                                                                        />
+                                                                                    <input
+                                                                                        type="date"
+                                                                                        className="w-full h-11 bg-white border border-gray-200 rounded-2xl px-4 text-sm outline-none shadow-sm"
+                                                                                        value={
+                                                                                            editingDate[order.id] !== undefined
+                                                                                                ? editingDate[order.id]
+                                                                                                : (order.deliveryDate ? order.deliveryDate.slice(0, 10) : '')
+                                                                                        }
+                                                                                        onChange={(e) => setEditingDate(prev => ({ ...prev, [order.id]: e.target.value }))}
+                                                                                    />
                                                                                     </div>
                                                                                     <div className="space-y-1.5">
                                                                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider ml-1">Время</label>
