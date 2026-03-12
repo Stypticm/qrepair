@@ -2,16 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/core/lib/requireAuth';
 import { api } from '@/services/api';
 import { v4 as uuidv4 } from 'uuid';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request, ['ADMIN', 'MANAGER']);
   if (auth instanceof NextResponse) return auth;
 
-  let lotId: string = ''
+  let lotId: string = uuidv4()
   let uploadedPhotos: string[] = []
   let photoFiles: File[] = []
 
@@ -22,12 +18,18 @@ export async function POST(request: NextRequest) {
     const color = formData.get('color') as string
     const price = formData.get('price') as string
     const description = formData.get('description') as string
+    const isAccessory = formData.get('isAccessory') as string === 'true'
+    const targetBrand = formData.get('targetBrand') as string
+    const targetModel = formData.get('targetModel') as string
+    const modelName = formData.get('modelName') as string || (isAccessory ? model : `${model} ${storage}GB ${color}`)
 
-    if (!model || !storage || !color || !price) {
-      return NextResponse.json({ error: 'Заполните все обязательные поля' }, { status: 400 })
+    if (!model || !price) {
+      return NextResponse.json({ error: 'Заполните обязательные поля (Модель и Цена)' }, { status: 400 })
     }
 
-    const modelName = `${model} ${storage}GB ${color}`
+    if (!isAccessory && (!storage || !color)) {
+      return NextResponse.json({ error: 'Для смартфона нужны память и цвет' }, { status: 400 })
+    }
 
     photoFiles = []
     let photoIndex = 0
@@ -41,68 +43,70 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Добавьте хотя бы одно фото' }, { status: 400 })
     }
 
-    // Фото пока загружаем в Supabase Storage (как просил пользователь - оставить Auth/Storage)
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
-    lotId = uuidv4()
-    uploadedPhotos = []
-
-    for (let i = 0; i < photoFiles.length; i++) {
-      const photo = photoFiles[i]
-      const fileExt = photo.name.split('.').pop() || 'jpg'
-      const fileName = `${lotId}_${i}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage.from('items').upload(fileName, photo)
-      if (uploadError) return NextResponse.json({ error: 'Ошибка загрузки фото' }, { status: 500 })
-
-      const { data: { publicUrl } } = supabase.storage.from('items').getPublicUrl(fileName)
-      uploadedPhotos.push(publicUrl)
-    }
-
     const telegramIdHeader = request.headers.get('x-telegram-id');
     const authHeader = request.headers.get('authorization');
-    const headers: Record<string, string> = {};
+    const headers: Record<string, string> = {
+      'ngrok-skip-browser-warning': 'true'
+    };
     if (telegramIdHeader) headers['x-telegram-id'] = telegramIdHeader;
     if (authHeader) headers['authorization'] = authHeader;
+
+    // Загружаем фото напрямую в наш Go API (локальное хранилище)
+    uploadedPhotos = []
+    for (const file of photoFiles) {
+      // Используем метод upload из нашего сервиса
+      const uploadResult = await api.upload(file, { 
+        ...headers,
+        'folder': 'lots' 
+      });
+      if (uploadResult && uploadResult.url) {
+        uploadedPhotos.push(uploadResult.url)
+      }
+    }
 
     const status = formData.get('status') as string || 'available'
     const brand = formData.get('brand') as string || (model.split(' ')[0])
     const oldPrice = formData.get('oldPrice') as string
     
-    // Генерируем артикул (SKU) автоматически: BRAND-MODEL-STORAGE-COLOR-SHORTID
+    // Генерируем артикул (SKU) автоматически
     const shortId = uuidv4().split('-')[0].toUpperCase()
-    const sku = `${brand}-${model.replace(/\s+/g, '')}-${storage}-${color.replace(/\s+/g, '')}-${shortId}`.toUpperCase()
+    const safeModel = model.replace(/\s+/g, '').toUpperCase()
+    const sku = `${brand.toUpperCase()}-${safeModel}-${storage || 'ACC'}-${shortId}`.toUpperCase()
 
-    // Сохранение в новую БД через наш Go API
-    const newLot = await api.create('marketplace-lots', {
+    const payload = {
       id: lotId,
       sku: sku,
       title: modelName,
       brand: brand,
       model: model,
-      storage: storage,
-      color: color,
-      price: parseInt(price),
-      oldPrice: oldPrice ? parseInt(oldPrice) : null,
+      storage: isAccessory ? '0' : storage,
+      color: isAccessory ? 'Accessory' : color,
+      price: parseFloat(price),
+      oldPrice: oldPrice ? parseFloat(oldPrice) : null,
       description: description || null,
       photos: uploadedPhotos,
-      coverPhoto: uploadedPhotos[0],
+      coverPhoto: uploadedPhotos[0] || '',
       status: status,
       telegramId: auth.user.telegramId,
+      isAccessory: isAccessory,
+      targetBrand: targetBrand || null,
+      targetModel: targetModel || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    }, headers)
+    }
+
+    console.log('Sending creation payload to Go API (Local Storage):', JSON.stringify(payload, null, 2))
+
+    // Сохранение в новую БД через наш Go API
+    const newLot = await api.create('marketplace-lots', payload, headers)
 
     return NextResponse.json({ success: true, lot: newLot, message: 'Лот успешно создан' })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create lot error:', error)
-    if (uploadedPhotos.length > 0) {
-      const supabase = createClient(supabaseUrl, supabaseServiceKey)
-      for (let i = 0; i < photoFiles.length; i++) {
-        const fileName = `${lotId}_${i}.${photoFiles[i].name.split('.').pop() || 'jpg'}`
-        await supabase.storage.from('items').remove([fileName])
-      }
-    }
-    return NextResponse.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Внутренняя ошибка сервера', 
+      details: error.message || String(error) 
+    }, { status: 500 })
   }
 }
 

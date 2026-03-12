@@ -129,8 +129,8 @@ export default function ProductDetailPage() {
     const accessories = useMemo(() => {
         if (!product || !allProducts.length) return [];
         return allProducts.filter(p => p.isAccessory && (
-            p.targetModel?.toLowerCase() === product.model?.toLowerCase() ||
-            p.targetBrand?.toLowerCase() === product.brand?.toLowerCase()
+            (p.targetModel && product.model && p.targetModel.toLowerCase().trim() === product.model.toLowerCase().trim()) ||
+            (p.targetBrand && product.brand && p.targetBrand.toLowerCase().trim() === product.brand.toLowerCase().trim())
         )).slice(0, 4);
     }, [product, allProducts]);
 

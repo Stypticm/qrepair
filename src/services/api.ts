@@ -66,10 +66,15 @@ export const api: ApiService = {
       });
     }
     
-    const res = await fetch(url.toString(), {
-      headers: { ...defaultHeaders, ...headers },
-    });
-    return handleResponse<T[]>(res);
+    try {
+      const res = await fetch(url.toString(), {
+        headers: { ...defaultHeaders, ...headers },
+      });
+      return handleResponse<T[]>(res);
+    } catch (error: any) {
+      console.error(`API List error [${url.toString()}]:`, error.message || error);
+      throw error;
+    }
   },
 
   async listPaginated<T>(resource: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<{ items: T[], total: number }> {
@@ -80,14 +85,19 @@ export const api: ApiService = {
       });
     }
     
-    const res = await fetch(url.toString(), {
-      headers: { ...defaultHeaders, ...headers },
-    });
-    const json = await res.json();
-    return {
-      items: json.data || [],
-      total: json.total || 0,
-    };
+    try {
+      const res = await fetch(url.toString(), {
+        headers: { ...defaultHeaders, ...headers },
+      });
+      const json = await res.json();
+      return {
+        items: json.data || [],
+        total: json.total || 0,
+      };
+    } catch (error: any) {
+      console.error(`API ListPaginated error [${url.toString()}]:`, error.message || error);
+      throw error;
+    }
   },
 
   async get<T>(resource: string, id: string, params?: Record<string, string | number>, headers?: Record<string, string>): Promise<T> {
@@ -98,64 +108,106 @@ export const api: ApiService = {
       });
     }
     
-    const res = await fetch(url.toString(), {
-      headers: { ...defaultHeaders, ...headers },
-    });
-    return handleResponse<T>(res);
+    try {
+      const res = await fetch(url.toString(), {
+        headers: { ...defaultHeaders, ...headers },
+      });
+      return handleResponse<T>(res);
+    } catch (error: any) {
+      console.error(`API Get error [${url.toString()}]:`, error.message || error);
+      throw error;
+    }
   },
 
   async create<T>(resource: string, data: any, headers?: Record<string, string>): Promise<T> {
-    const res = await fetch(`${API_URL}/api/${resource}`, {
-      method: 'POST',
-      headers: { ...defaultHeaders, ...headers },
-      body: JSON.stringify(data),
-    });
-    return handleResponse<T>(res);
+    const url = `${API_URL}/api/${resource}`;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { ...defaultHeaders, ...headers },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<T>(res);
+    } catch (error: any) {
+      console.error(`API Create error [${url}]:`, error.message || error);
+      throw error;
+    }
   },
 
   async update<T>(resource: string, id: string, data: any, headers?: Record<string, string>): Promise<T> {
-    const res = await fetch(`${API_URL}/api/${resource}/${id}`, {
-      method: 'PUT',
-      headers: { ...defaultHeaders, ...headers },
-      body: JSON.stringify(data),
-    });
-    return handleResponse<T>(res);
+    const url = `${API_URL}/api/${resource}/${id}`;
+    try {
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: { ...defaultHeaders, ...headers },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<T>(res);
+    } catch (error: any) {
+      console.error(`API Update error [${url}]:`, error.message || error);
+      throw error;
+    }
   },
 
   async patch<T>(resource: string, id: string, data: any, headers?: Record<string, string>): Promise<T> {
-    const res = await fetch(`${API_URL}/api/${resource}/${id}`, {
-      method: 'PATCH',
-      headers: { ...defaultHeaders, ...headers },
-      body: JSON.stringify(data),
-    });
-    return handleResponse<T>(res);
+    const url = `${API_URL}/api/${resource}/${id}`;
+    try {
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { ...defaultHeaders, ...headers },
+        body: JSON.stringify(data),
+      });
+      return handleResponse<T>(res);
+    } catch (error: any) {
+      console.error(`API Patch error [${url}]:`, error.message || error);
+      throw error;
+    }
   },
 
   async upload(file: File, headers?: Record<string, string>): Promise<{ url: string }> {
+    const url = `${API_URL}/api/upload`;
     const formData = new FormData();
     formData.append('file', file);
     
-    const res = await fetch(`${API_URL}/api/upload`, {
-      method: 'POST',
-      headers: {
-        'ngrok-skip-browser-warning': 'true',
-        ...headers
-      },
-      body: formData,
-    });
+    // Передаем папку если она есть в заголовках (прокидываем из API роута)
+    const cleanHeaders = { ...headers };
+    if (cleanHeaders['folder']) {
+      formData.append('folder', cleanHeaders['folder']);
+      delete cleanHeaders['folder'];
+    }
     
-    return handleResponse<{ url: string }>(res);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          ...cleanHeaders
+        },
+        body: formData,
+      });
+      
+      return handleResponse<{ url: string }>(res);
+    } catch (error: any) {
+      console.error(`API Upload error [${url}]:`, error.message || error);
+      throw error;
+    }
   },
 
   async delete(resource: string, id: string, headers?: Record<string, string>): Promise<void> {
-    const res = await fetch(`${API_URL}/api/${resource}/${id}`, {
-      method: 'DELETE',
-      headers: { ...defaultHeaders, ...headers },
-    });
-    
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      throw new Error(json.error || `HTTP error! status: ${res.status}`);
+    const url = `${API_URL}/api/${resource}/${id}`;
+    try {
+      const res = await fetch(url, {
+        method: 'DELETE',
+        headers: { ...defaultHeaders, ...headers },
+      });
+      
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error || `HTTP error! status: ${res.status}`);
+      }
+    } catch (error: any) {
+      console.error(`API Delete error [${url}]:`, error.message || error);
+      throw error;
     }
   },
 };

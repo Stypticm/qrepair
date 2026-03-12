@@ -64,9 +64,9 @@ export const DesktopHome = () => {
                             <p className="text-gray-500 mt-2 font-medium">Самые свежие поступления в нашем каталоге</p>
                         </div>
                         <AdaptiveDeviceFeed
-                            items={marketplaceItems}
+                            items={marketplaceItems.slice(0, 8)}
                             isLoading={marketplaceLoading}
-                            hasMore={marketplaceHasMore}
+                            hasMore={false}
                             onLoadMore={loadMoreMarketplaceItems}
                             mode="grid"
                             showRecommendationsButton={false}

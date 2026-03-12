@@ -3,7 +3,14 @@ import { api } from '@/services/api';
 
 export async function POST(request: NextRequest) {
   try {
-    const { telegramId } = await request.json();
+    const text = await request.text();
+    if (!text) {
+      return NextResponse.json(
+        { error: 'Empty body' },
+        { status: 400 }
+      );
+    }
+    const { telegramId } = JSON.parse(text);
 
     if (!telegramId) {
       return NextResponse.json(
