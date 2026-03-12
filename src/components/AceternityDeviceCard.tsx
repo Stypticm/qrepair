@@ -189,8 +189,9 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={async () => {
-                            if (isInCart(active.id)) router.push('/cart');
-                            else {
+                            if (isInCart(active.id)) {
+                              router.push('/cart')
+                            } else {
                               await addToCart({
                                 id: active.id,
                                 title: active.title,
@@ -203,7 +204,8 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                                 condition: active.condition,
                                 description: active.description,
                                 date: new Date().toISOString(),
-                              });
+                              })
+                              // остаёмся на странице, чтобы можно было продолжить выбор
                             }
                           }}
                           className="flex-1 h-12 bg-blue-50 text-blue-600 font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-colors"

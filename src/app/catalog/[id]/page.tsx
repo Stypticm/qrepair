@@ -149,14 +149,14 @@ export default function ProductDetailPage() {
         }
     };
 
-    const handleCartClick = (e: React.MouseEvent) => {
+    const handleCartClick = async (e: React.MouseEvent) => {
         e.preventDefault();
         if (!product) return;
 
         if (isInCart(product.id)) {
             router.push('/cart');
         } else {
-            addToCart({
+            await addToCart({
                 id: product.id,
                 title: product.name,
                 price: product.price,
@@ -168,6 +168,7 @@ export default function ProductDetailPage() {
                 storage: product.storage,
                 color: product.color,
             });
+            // остаёмся на карточке, чтобы можно было добавить что-то ещё
         }
     };
 

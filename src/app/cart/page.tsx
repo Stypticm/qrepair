@@ -26,18 +26,18 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <Page back={true}>
-        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center md:pt-40">
-          <div className="max-w-7xl w-full mx-auto px-6">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShoppingCart className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
-              <p className="text-gray-600 mb-6 md:mb-0">Добавьте товары в корзину, <br />чтобы они появились здесь</p>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+          <div className="max-w-md w-full flex flex-col items-center text-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+              <ShoppingCart className="w-12 h-12 text-gray-400" />
             </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
+            <p className="text-gray-600 mb-6">
+              Добавьте товары в корзину, <br />чтобы они появились здесь
+            </p>
             <button
               onClick={() => router.push('/')}
-              className="mt-6 px-8 py-3 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors font-semibold flex items-center justify-center gap-2 mx-auto shadow-lg shadow-teal-500/20 active:scale-[0.98]"
+              className="mt-2 px-8 py-3 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors font-semibold flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 active:scale-[0.98]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
