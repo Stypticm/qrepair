@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useAdminCatalog, Product } from '@/hooks/useAdminCatalog';
 
 interface PhotoFile {
   file: File;
@@ -30,7 +31,6 @@ interface LotFormData {
   storage: string;
   color: string;
   price: string;
-  oldPrice: string;
   description: string;
   status: 'available' | 'draft';
   isAccessory: boolean;
@@ -40,7 +40,7 @@ interface LotFormData {
 
 export default function AddLotPage() {
   const router = useRouter();
-  const { telegramId } = useAppStore();
+  const { telegramId, authToken } = useAppStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -51,7 +51,6 @@ export default function AddLotPage() {
     storage: '',
     color: '',
     price: '',
-    oldPrice: '',
     description: '',
     status: 'available',
     isAccessory: false,
@@ -60,6 +59,33 @@ export default function AddLotPage() {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Достаем все товары для выбора в аксессуарах
+  const { allProducts } = useAdminCatalog();
+  const [accessorySearch, setAccessorySearch] = useState('');
+
+  // Группируем товары по модели, чтобы не было дублей в списке выбора аксессуаров
+  const uniqueProducts = useMemo(() => {
+    const seen = new Set<string>();
+    return allProducts
+      .filter((p: Product) => !p.isAccessory)
+      .filter((p: Product) => {
+        const key = `${p.brand}-${p.model}`.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((p: Product) => ({
+        id: p.id,
+        brand: p.brand || '',
+        model: p.model || '',
+        label: `${p.brand || ''} ${p.model || ''}`.trim()
+      }));
+  }, [allProducts]);
+
+  const filteredUniqueProducts = uniqueProducts.filter(p => 
+    p.label.toLowerCase().includes(accessorySearch.toLowerCase())
+  );
 
   // Проверка прав доступа
   const isAdmin = isAdminTelegramId(telegramId);
@@ -127,7 +153,7 @@ export default function AddLotPage() {
     cameraInputRef.current?.click();
   };
 
-  const handleInputChange = (field: keyof LotFormData, value: string) => {
+  const handleInputChange = (field: keyof LotFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -142,7 +168,7 @@ export default function AddLotPage() {
       return;
     }
 
-    if (!formData.model || !formData.storage || !formData.color || !formData.price) {
+    if (!formData.model || (!formData.isAccessory && (!formData.storage || !formData.color)) || !formData.price) {
       toast.error('Заполните все обязательные поля');
       return;
     }
@@ -158,27 +184,34 @@ export default function AddLotPage() {
       });
 
       // Формируем полное название модели
-      const modelName = `${formData.model} ${formData.storage}GB ${formData.color}`;
+      const modelName = formData.isAccessory 
+        ? formData.model 
+        : `${formData.model} ${formData.storage}GB ${formData.color}`;
 
       // Добавляем остальные данные
       formDataToSend.append('brand', formData.brand);
       formDataToSend.append('model', formData.model);
-      formDataToSend.append('storage', formData.storage);
-      formDataToSend.append('color', formData.color);
+      formDataToSend.append('storage', formData.isAccessory ? '0' : formData.storage);
+      formDataToSend.append('color', formData.isAccessory ? 'Accessory' : formData.color);
       formDataToSend.append('modelName', modelName);
       formDataToSend.append('price', formData.price);
-      formDataToSend.append('oldPrice', formData.oldPrice);
-      formDataToSend.append('description', formData.description);
+      formDataToSend.append('description', formData.description || '');
       formDataToSend.append('status', formData.status);
       formDataToSend.append('isAccessory', String(formData.isAccessory));
-      formDataToSend.append('targetBrand', formData.targetBrand);
-      formDataToSend.append('targetModel', formData.targetModel);
+      formDataToSend.append('targetBrand', formData.targetBrand || '');
+      formDataToSend.append('targetModel', formData.targetModel || '');
+
+      const headers: Record<string, string> = {
+        'x-telegram-id': telegramId || '',
+      };
+      
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
 
       const response = await fetch('/api/admin/lots', {
         method: 'POST',
-        headers: {
-          'x-telegram-id': telegramId || '',
-        },
+        headers,
         body: formDataToSend,
       });
 
@@ -374,7 +407,7 @@ export default function AddLotPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => handleInputChange('isAccessory', !formData.isAccessory as any)}
+                      onClick={() => handleInputChange('isAccessory', !formData.isAccessory)}
                       className={cn(
                         "w-12 h-6 rounded-full transition-colors relative",
                         formData.isAccessory ? "bg-teal-500" : "bg-gray-300"
@@ -429,22 +462,74 @@ export default function AddLotPage() {
                       className="space-y-4 pt-2 border-t border-gray-100"
                     >
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Для какого бренда?</Label>
-                        <Input
-                          value={formData.targetBrand}
-                          onChange={(e) => handleInputChange('targetBrand', e.target.value)}
-                          placeholder="Например: Apple"
-                          className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-gray-700">Для какой модели?</Label>
-                        <Input
-                          value={formData.targetModel}
-                          onChange={(e) => handleInputChange('targetModel', e.target.value)}
-                          placeholder="Например: iPhone 15 Pro"
-                          className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
-                        />
+                        <Label className="text-sm font-medium text-gray-700">Подходит для товара:</Label>
+                        <div className="space-y-3">
+                          <Input
+                            placeholder="Поиск товара для привязки..."
+                            value={accessorySearch}
+                            onChange={(e) => setAccessorySearch(e.target.value)}
+                            className="h-10 bg-gray-50 border-gray-200 rounded-xl text-xs"
+                          />
+                          <div className="max-h-40 overflow-y-auto border border-gray-100 rounded-xl p-1 bg-gray-50/30">
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleInputChange('targetBrand', '');
+                                  handleInputChange('targetModel', '');
+                                  setAccessorySearch('');
+                                }}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all",
+                                  !formData.targetModel && !formData.targetBrand 
+                                    ? "bg-blue-600 text-white" 
+                                    : "bg-white text-gray-500 hover:bg-gray-100"
+                                )}
+                              >
+                                Для всех
+                              </button>
+                              {filteredUniqueProducts.map(p => (
+                                <button
+                                  key={`${p.brand}-${p.model}`}
+                                  type="button"
+                                  onClick={() => {
+                                    handleInputChange('targetBrand', p.brand);
+                                    handleInputChange('targetModel', p.model);
+                                    setAccessorySearch(p.label);
+                                  }}
+                                  className={cn(
+                                    "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all",
+                                    formData.targetModel === p.model 
+                                      ? "bg-blue-600 text-white" 
+                                      : "bg-white text-gray-500 hover:bg-gray-100 border border-gray-100"
+                                  )}
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          {formData.targetModel && (
+                            <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                              <div className="w-2 h-2 rounded-full bg-blue-500" />
+                              <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
+                                Привязано к: {formData.targetBrand} {formData.targetModel}
+                              </span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  handleInputChange('targetBrand', '');
+                                  handleInputChange('targetModel', '');
+                                  setAccessorySearch('');
+                                }}
+                                className="ml-auto h-6 w-6 p-0 text-blue-400"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -484,30 +569,17 @@ export default function AddLotPage() {
                     </>
                   )}
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="price" className="text-sm font-medium text-gray-700">Цена (₽) *</Label>
-                      <Input
-                        id="price"
-                        type="number"
-                        value={formData.price}
-                        onChange={(e) => handleInputChange('price', e.target.value)}
-                        placeholder="85000"
-                        className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="oldPrice" className="text-sm font-medium text-gray-400">Старая цена (—) </Label>
-                      <Input
-                        id="oldPrice"
-                        type="number"
-                        value={formData.oldPrice}
-                        onChange={(e) => handleInputChange('oldPrice', e.target.value)}
-                        placeholder="95000"
-                        className="h-12 bg-white/50 border-gray-200 focus:border-gray-300 rounded-xl text-gray-400"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="text-sm font-medium text-gray-700">Цена (₽) *</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      value={formData.price}
+                      onChange={(e) => handleInputChange('price', e.target.value)}
+                      placeholder="85000"
+                      className="h-12 bg-white/50 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl"
+                      required
+                    />
                   </div>
 
                   {/* Description */}
