@@ -74,18 +74,12 @@ export default function CheckoutPickupPage() {
 
 
             if (response.ok) {
-                const { orderId } = await response.json()
-
-                // Показываем загрузку и переходим
+                // Показываем окошко успеха и через несколько секунд уводим на главную
                 setIsNavigating(true)
-
-                // Очищаем корзину и переходим одновременно
-                Promise.all([
-                    clearCart(),
-                    new Promise(resolve => setTimeout(resolve, 200))
-                ]).then(() => {
-                    router.push(`/cart/success?orderId=${orderId}`)
-                })
+                clearCart()
+                setTimeout(() => {
+                    router.replace('/')
+                }, 3000)
             } else {
                 const error = await response.json()
                 console.error('Ошибка создания заказа:', error)
@@ -235,9 +229,12 @@ export default function CheckoutPickupPage() {
             </Page>
             {isNavigating && (
                 <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
-                    <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                        <p className="mt-4 text-lg font-semibold text-gray-700">Оформляем заказ…</p>
+                    <div className="flex flex-col items-center text-center px-6">
+                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                            <span className="text-2xl">✅</span>
+                        </div>
+                        <p className="text-lg font-semibold text-gray-900">Заказ оформлен</p>
+                        <p className="mt-2 text-sm text-gray-500">Через пару секунд вы будете перенаправлены на главную страницу.</p>
                     </div>
                 </div>
             )}

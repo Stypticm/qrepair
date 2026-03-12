@@ -57,6 +57,7 @@ interface Order {
 
 function AdminOrdersContent() {
     const authToken = useAppStore(state => state.authToken)
+    const telegramId = useAppStore(state => state.telegramId)
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
@@ -129,11 +130,26 @@ function AdminOrdersContent() {
     const loadOrders = async (silent = false) => {
         try {
             if (!silent) setLoading(true)
-            const res = await fetch('/api/admin/orders', {
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            })
+
+            const headers: Record<string, string> = {}
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`
+            }
+            if (telegramId) {
+                headers['x-telegram-id'] = telegramId.toString()
+            }
+
+            const res = await fetch('/api/admin/orders', { headers })
             const data = await res.json()
-            setOrders(data.orders || [])
+
+            const rawOrders = (data && data.orders) || []
+            const normalized = rawOrders.map((o: any) => ({
+                ...o,
+                // Гарантируем, что items всегда есть и это массив
+                items: o.items || o.orderItems || [],
+            }))
+
+            setOrders(normalized)
         } catch (e) {
             console.error('Ошибка при загрузке заказов:', e)
         } finally {
@@ -305,6 +321,18 @@ function AdminOrdersContent() {
     const formatPrice = (price: number) => `${price.toLocaleString('ru-RU')} ₽`
     const formatDate = (date: string) => new Date(date).toLocaleString('ru-RU')
 
+    // Подсчёт количества заказов по статусам
+    const statusCounts: Record<OrderStatus, number> = orders.reduce((acc, o) => {
+        acc[o.status] = (acc[o.status] || 0) + 1
+        return acc
+    }, {
+        pending: 0,
+        confirmed: 0,
+        in_delivery: 0,
+        completed: 0,
+        cancelled: 0,
+    } as Record<OrderStatus, number>)
+
     const filteredOrders = filterStatus === 'all'
         ? orders
         : orders.filter(o => o.status === filterStatus)
@@ -348,7 +376,9 @@ function AdminOrdersContent() {
                                     : 'text-gray-400 hover:text-gray-600'
                                     }`}
                             >
-                                {status === 'all' ? `Все (${orders.length})` : getStatusText(status as any)}
+                                {status === 'all'
+                                    ? `Все (${orders.length})`
+                                    : `${getStatusText(status as any)} (${statusCounts[status as OrderStatus] || 0})`}
                             </button>
                         ))}
                     </div>
@@ -389,7 +419,7 @@ function AdminOrdersContent() {
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-medium">
                                                         <span className="text-blue-600 font-bold">{formatPrice(order.totalPrice)}</span>
                                                         <span className="text-gray-300">•</span>
-                                                        <span className="text-gray-400">{order.items.length} товар(а)</span>
+                                                        <span className="text-gray-400">{(order.items || []).length} товар(а)</span>
                                                         <span className="text-gray-300 hidden sm:inline">•</span>
                                                         <span className="text-gray-400 text-xs">{formatDate(order.createdAt)}</span>
                                                     </div>
@@ -438,7 +468,7 @@ function AdminOrdersContent() {
 
                                                                 <h4 className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] px-1 mt-6">Товары</h4>
                                                                 <div className="space-y-3">
-                                                                    {order.items.map((item) => (
+                                                                    {(order.items || []).map((item) => (
                                                                         <div key={item.id} className="bg-gray-50/80 p-4 rounded-2xl flex justify-between items-center group hover:bg-blue-50/50 transition-colors">
                                                                             <div>
                                                                                 <p className="font-bold text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{item.title}</p>

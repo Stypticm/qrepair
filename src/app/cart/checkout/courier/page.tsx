@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Page } from '@/components/Page'
 import { Button } from '@/components/ui/button'
@@ -16,25 +16,25 @@ export default function CheckoutCourierPage() {
     const { telegramId } = useAppStore()
 
     const [address, setAddress] = useState('')
-    const [date, setDate] = useState('')
-    const [time, setTime] = useState('')
     const [name, setName] = useState('')
     const [phone, setPhone] = useState('')
 
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isSuccess, setIsSuccess] = useState(false)
 
     // Если корзина пуста, редиректим (защита от прямого захода)
-    if (cartItems.length === 0 && !isSubmitting) {
-        if (typeof window !== 'undefined') {
-            router.replace('/cart')
+    useEffect(() => {
+        if (cartItems.length === 0 && !isSubmitting && !isSuccess) {
+            if (typeof window !== 'undefined') {
+                router.replace('/cart')
+            }
         }
-        return null
-    }
+    }, [cartItems.length, isSubmitting, isSuccess, router])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (!address || !date || !time || !name || !phone) {
+        if (!address || !name || !phone) {
             toast.error('Пожалуйста, заполните все поля')
             return
         }
@@ -61,16 +61,18 @@ export default function CheckoutCourierPage() {
                     customerName: name,
                     customerPhone: phone,
                     deliveryAddress: address,
-                    deliveryDate: date,
-                    deliveryTime: time,
+                    // Дату и время не просим у клиента — согласуем отдельно
                 }),
             })
 
             const data = await response.json()
 
             if (response.ok) {
-                clearCart() // очищаем корзину после успешного заказа
-                router.push(`/cart/checkout/success?orderId=${data.orderId}`)
+                clearCart()
+                setIsSuccess(true)
+                setTimeout(() => {
+                    router.replace('/')
+                }, 3000)
             } else {
                 toast.error(data.error || 'Произошла ошибка при оформлении')
             }
@@ -141,26 +143,9 @@ export default function CheckoutCourierPage() {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Дата</label>
-                                    <input
-                                        type="date"
-                                        value={date}
-                                        onChange={(e) => setDate(e.target.value)}
-                                        className="w-full px-4 h-12 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all font-medium text-gray-900"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-gray-400 tracking-wider uppercase ml-1">Время</label>
-                                    <input
-                                        type="time"
-                                        value={time}
-                                        onChange={(e) => setTime(e.target.value)}
-                                        className="w-full px-4 h-12 bg-gray-50 border border-transparent rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all font-medium text-gray-900"
-                                    />
-                                </div>
-                            </div>
+                            <p className="text-xs text-gray-500 mt-2">
+                                Дату и время доставки мы уточним с вами после оформления заказа.
+                            </p>
                         </div>
 
                         <div className="pt-4">
@@ -179,6 +164,17 @@ export default function CheckoutCourierPage() {
                     </form>
                 </div>
             </div>
+            {isSuccess && (
+                <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-[9999]">
+                    <div className="flex flex-col items-center text-center px-6">
+                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                            <span className="text-2xl">✅</span>
+                        </div>
+                        <p className="text-lg font-semibold text-gray-900">Заказ оформлен</p>
+                        <p className="mt-2 text-sm text-gray-500">Через пару секунд вы будете перенаправлены на главную страницу.</p>
+                    </div>
+                </div>
+            )}
         </Page>
     )
 }

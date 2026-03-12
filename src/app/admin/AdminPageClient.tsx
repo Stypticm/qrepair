@@ -46,7 +46,16 @@ export function AdminPageClient() {
           const res = await fetch('/api/admin/stats', {
             headers: { 'x-telegram-id': id?.toString() || '' }
           });
-          const data = await res.json();
+
+          const text = await res.text();
+          let data: any;
+          try {
+            data = text ? JSON.parse(text) : {};
+          } catch (parseError) {
+            console.error('Error parsing admin stats JSON', parseError, 'raw:', text);
+            return;
+          }
+
           if (data.metrics) {
             setMetrics(data.metrics);
           }

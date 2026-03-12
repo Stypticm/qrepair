@@ -105,33 +105,34 @@ export default function ProductDetailPage() {
     }, [id]);
 
     const handleVariantChange = (newVariant: Product) => {
-        if (!product) return;
-
-        // Change URL without full reload using History API or Next.js router
-        // Use shallow routing to just update the URL and trigger params change
-        // We'll update state directly for instant animation
-
-        // Randomly slide left or right for visual effect
-        setSlideDirection(Math.random() > 0.5 ? 1 : -1);
-        setCurrentPhotoIndex(0);
-        setProduct(newVariant);
-
-        // Update URL quietly
-        window.history.pushState({}, '', `/catalog/${newVariant.id}`);
+        // Update URL and trigger Next.js navigation
+        router.push(`/catalog/${newVariant.id}`, { scroll: false });
     };
 
     const currentVariants = useMemo(() => {
         if (!product || !allProducts.length) return [];
-        const modelName = product.model || product.name;
-        return allProducts.filter(p => (p.model || p.name) === modelName && !p.isAccessory);
+        // Standardize comparison by lowering case and trimming
+        const modelName = (product.model || product.name || '').toLowerCase().trim();
+        return allProducts.filter(p => {
+            const pModel = (p.model || p.name || '').toLowerCase().trim();
+            return pModel === modelName && !p.isAccessory;
+        });
     }, [product, allProducts]);
 
     const accessories = useMemo(() => {
         if (!product || !allProducts.length) return [];
-        return allProducts.filter(p => p.isAccessory && (
-            (p.targetModel && product.model && p.targetModel.toLowerCase().trim() === product.model.toLowerCase().trim()) ||
-            (p.targetBrand && product.brand && p.targetBrand.toLowerCase().trim() === product.brand.toLowerCase().trim())
-        )).slice(0, 4);
+        const modelName = (product.model || '').toLowerCase().trim();
+        const brandName = (product.brand || '').toLowerCase().trim();
+
+        return allProducts.filter(p => {
+            if (!p.isAccessory) return false;
+            
+            const targetModel = (p.targetModel || '').toLowerCase().trim();
+            const targetBrand = (p.targetBrand || '').toLowerCase().trim();
+
+            return (targetModel && modelName.includes(targetModel)) || 
+                   (targetBrand && brandName === targetBrand);
+        }).slice(0, 4);
     }, [product, allProducts]);
 
     const goToNextPhoto = () => {

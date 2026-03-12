@@ -9,10 +9,16 @@ export async function GET(request: NextRequest) {
   if (auth instanceof NextResponse) return auth;
 
   try {
+    const telegramId = request.headers.get('x-telegram-id');
+    const authHeader = request.headers.get('authorization');
+    const headers: Record<string, string> = {};
+    if (telegramId) headers['x-telegram-id'] = telegramId;
+    if (authHeader) headers['authorization'] = authHeader;
+
     const [repairs, skupkas, orders] = await Promise.all([
-      api.list<any>('repair-requests', { status: 'created' }),
-      api.list<any>('skupkas', { status: 'draft' }),
-      api.list<any>('orders', { status: 'pending' }),
+      api.list<any>('repair-requests', { status: 'created' }, headers),
+      api.list<any>('skupkas', { status: 'draft' }, headers),
+      api.list<any>('orders', { status: 'pending' }, headers),
     ]);
 
     const newRepairs = (repairs || []).length;
