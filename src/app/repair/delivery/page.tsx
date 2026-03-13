@@ -18,9 +18,15 @@ export default function RepairDeliveryPage() {
     const [address, setAddress] = useState('')
     const [date, setDate] = useState('')
     const [time, setTime] = useState('')
+    const [contact, setContact] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleSubmit = async () => {
+        if (!contact) {
+            toast.error('Контакт для связи обязателен')
+            return
+        }
+
         if (deliveryMethod === 'courier' && (!address || !date || !time)) {
             toast.error('Пожалуйста, заполните все поля для курьера')
             return
@@ -44,6 +50,8 @@ export default function RepairDeliveryPage() {
                     appointmentDate: deliveryMethod === 'courier' ? date : undefined,
                     appointmentTime: deliveryMethod === 'courier' ? time : undefined,
                     courierNotes: deliveryMethod === 'courier' ? address : undefined,
+                    clientContact: contact,
+                    clientAddress: address,
                     estimatedMin: repairState.category === 'Разбито стекло / экран' ? 4500 : 2500,
                     estimatedMax: repairState.category === 'Разбито стекло / экран' ? 12000 : 8000,
                 }),
@@ -111,6 +119,16 @@ export default function RepairDeliveryPage() {
                                 Вы можете приехать в любое удобное время. Заявка будет ожидать вас в системе.
                             </p>
                         </div>
+                        
+                        <div className="pt-2">
+                            <input
+                                type="text"
+                                placeholder="Ваш телефон или Telegram для связи"
+                                value={contact}
+                                onChange={(e) => setContact(e.target.value)}
+                                className="w-full h-12 px-4 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            />
+                        </div>
                     </motion.div>
                 ) : (
                     <motion.div
@@ -120,7 +138,14 @@ export default function RepairDeliveryPage() {
                     >
                         <input
                             type="text"
-                            placeholder="Полный адрес (улица, дом, кв)"
+                            placeholder="Ваш телефон или Telegram для связи"
+                            value={contact}
+                            onChange={(e) => setContact(e.target.value)}
+                            className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Полный адрес (улица, дом, кв) для курьера"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"

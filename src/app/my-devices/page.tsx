@@ -493,18 +493,21 @@ const MyDevices = () => {
                           </div>
                           <div className="flex flex-col items-end gap-2">
                             <Badge className={`${
-                              repair.status === 'completed' ? 'bg-green-500' :
-                              repair.status === 'in_progress' ? 'bg-yellow-500' :
+                              ['completed', 'delivered', 'ready_for_pickup'].includes(repair.status) ? 'bg-green-500' :
+                              ['in_progress', 'repairing', 'diagnosing', 'price_approval'].includes(repair.status) ? 'bg-yellow-500' :
                               repair.status === 'cancelled' ? 'bg-red-500' :
                               'bg-violet-500'
                             } text-white px-3 py-1 text-sm font-medium`}>
                               {repair.status === 'created' ? 'Создана' :
                                repair.status === 'diagnosing' ? 'Диагностика' :
-                               repair.status === 'in_progress' ? 'В ремонте' :
-                               repair.status === 'completed' ? 'Завершён' :
+                               repair.status === 'price_approval' ? 'Согласование' :
+                               repair.status === 'in_progress' || repair.status === 'repairing' ? 'В ремонте' :
+                               repair.status === 'ready_for_pickup' ? 'Готово к выдаче' :
+                               repair.status === 'completed' || repair.status === 'delivered' ? 'Завершён' :
                                repair.status === 'cancelled' ? 'Отменена' :
                                repair.status === 'courier_assigned' ? 'Курьер назначен' :
                                repair.status === 'in_transit' ? 'В пути' :
+                               repair.status === 'received' ? 'В сервисе' :
                                repair.status || 'Неизвестно'}
                             </Badge>
                             <Button variant="ghost" size="sm" className="p-1 h-8 w-8">
@@ -524,24 +527,63 @@ const MyDevices = () => {
                             className="overflow-hidden"
                           >
                             <CardContent className="pt-0 space-y-3">
-                              {repair.estimatedCost && (
-                                <div className="bg-violet-50 p-3 rounded-lg">
-                                  <span className="text-sm font-semibold text-violet-700">Стоимость: </span>
+                              {repair.returnMethod && (
+                                <div className="bg-blue-50 p-3 rounded-lg flex items-center gap-2 border border-blue-100">
+                                  <Package className="w-4 h-4 text-blue-600" />
+                                  <span className="text-sm text-blue-900 font-medium">
+                                    Способ возврата: {repair.returnMethod === 'self_pickup' ? 'Забрать самостоятельно' : 'Отправка курьером'}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {repair.finalPrice && (
+                                <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100 flex flex-col">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-sm font-semibold text-emerald-700">Итоговая стоимость: </span>
+                                    <span className="text-sm text-emerald-900 font-bold">{repair.finalPrice.toLocaleString('ru')} ₽</span>
+                                  </div>
+                                  {repair.clientPriceChoice && (
+                                    <div className="text-xs text-emerald-600 mt-1">
+                                      Выбранные запчасти: <b>{repair.clientPriceChoice === 'original' ? 'Оригинал' : 'Аналог'}</b>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {!repair.finalPrice && repair.estimatedCost && (
+                                <div className="bg-violet-50 p-3 rounded-lg border border-violet-100">
+                                  <span className="text-sm font-semibold text-violet-700">Предварительная оценка: </span>
                                   <span className="text-sm text-violet-900 font-bold">{repair.estimatedCost} ₽</span>
                                 </div>
                               )}
+                              
                               {repair.assignedMaster && (
-                                <div className="bg-gray-50 p-3 rounded-lg">
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                                   <span className="text-sm font-semibold text-gray-600">Мастер: </span>
                                   <span className="text-sm text-gray-900">{repair.assignedMaster?.name || 'Назначается'}</span>
                                 </div>
                               )}
+                              
                               {repair.notes && (
-                                <div className="bg-yellow-50 p-3 rounded-lg">
-                                  <p className="text-sm font-semibold text-gray-700 mb-1">Комментарий мастера:</p>
-                                  <p className="text-sm text-gray-800">{repair.notes}</p>
+                                <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                  <p className="text-sm font-semibold text-orange-800 mb-1">Комментарий мастера:</p>
+                                  <p className="text-sm text-orange-900 leading-relaxed">{repair.notes}</p>
                                 </div>
                               )}
+                              
+                              <div className="pt-2 border-t border-gray-100">
+                                <Button
+                                  variant="outline"
+                                  className="w-full justify-between hover:bg-violet-50 hover:text-violet-700 hover:border-violet-200 transition-colors"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(`/repair/status/${repair.id}`);
+                                  }}
+                                >
+                                  Детали и трекинг заявки
+                                  <ArrowLeft className="w-4 h-4 rotate-180" />
+                                </Button>
+                              </div>
                               <div className="flex items-center gap-2 text-xs text-gray-400 pt-1">
                                 <Clock className="w-3 h-3" />
                                 {repair.createdAt ? new Date(repair.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}

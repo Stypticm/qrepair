@@ -13,6 +13,7 @@ const STATUS_STEPS = [
     { id: 'in_transit', label: 'В пути в СЦ', icon: Truck },
     { id: 'received', label: 'В сервисном центре', icon: Package },
     { id: 'diagnosing', label: 'Диагностика', icon: Loader2 },
+    { id: 'price_approval', label: 'Согласование', icon: CheckCircle }, // <--- Добавили
     { id: 'repairing', label: 'В ремонте', icon: Hammer },
     { id: 'ready_for_pickup', label: 'Готово к выдаче', icon: CheckCircle },
     { id: 'delivered', label: 'Выдано клиенту', icon: CheckCircle },
@@ -25,33 +26,57 @@ export default function RepairStatusPage() {
     const { telegramId } = useAppStore()
     const [request, setRequest] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [approving, setApproving] = useState(false)
+
+    const fetchStatus = async () => {
+        try {
+            const id = telegramId || sessionStorage.getItem('telegramId')
+            if (!id || !idParam) return
+
+            const res = await fetch(`/api/repair/${idParam}`, {
+                headers: { 'x-telegram-id': id.toString() }
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                setRequest(data.request)
+            }
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     useEffect(() => {
-        const fetchStatus = async () => {
-            try {
-                const id = telegramId || sessionStorage.getItem('telegramId')
-                if (!id || !idParam) return
-
-                const res = await fetch(`/api/repair/${idParam}`, {
-                    headers: { 'x-telegram-id': id.toString() }
-                })
-
-                if (res.ok) {
-                    const data = await res.json()
-                    setRequest(data.request)
-                }
-            } catch (e) {
-                console.error(e)
-            } finally {
-                setLoading(false)
-            }
-        }
-
         fetchStatus()
         // Poll every 30s
         const interval = setInterval(fetchStatus, 30000)
         return () => clearInterval(interval)
     }, [idParam, telegramId])
+
+    const handleApprovePrice = async (choice: 'original' | 'non_original') => {
+        setApproving(true)
+        try {
+            const id = telegramId || sessionStorage.getItem('telegramId')
+            const res = await fetch(`/api/repair/${idParam}/approve-price`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-telegram-id': id?.toString() || '' 
+                },
+                body: JSON.stringify({ choice })
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setRequest(data.request)
+            }
+        } catch (e) {
+            console.error(e)
+        } finally {
+            setApproving(false)
+        }
+    }
 
     if (loading) {
         return (
@@ -97,15 +122,65 @@ export default function RepairStatusPage() {
                         {request.estimatedMin?.toLocaleString('ru')} – {request.estimatedMax?.toLocaleString('ru')} ₽
                     </span>
                 </div>
+                {request.clientPriceChoice && (
+                    <div className="flex justify-between items-center pb-2 border-b border-gray-50">
+                        <span className="text-gray-500">Запчасти</span>
+                        <span className="font-bold text-gray-900">
+                            {request.clientPriceChoice === 'original' ? 'Оригинал' : 'Аналог'}
+                        </span>
+                    </div>
+                )}
                 {typeof request.finalPrice === 'number' && (
-                    <div className="flex justify-between items-center pt-2">
-                        <span className="text-gray-500">Согласованная стоимость</span>
+                    <div className="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span className="text-gray-500">Итоговая стоимость</span>
                         <span className="font-bold text-emerald-600">
                             {request.finalPrice.toLocaleString('ru-RU')} ₽
                         </span>
                     </div>
                 )}
+                {request.returnMethod && (
+                    <div className="flex justify-between items-center pt-2">
+                        <span className="text-gray-500">Способ возврата</span>
+                        <span className="font-bold text-gray-900 text-right">
+                            {request.returnMethod === 'self_pickup' ? 'Забрать в сервисе' : 'Доставка курьером'}
+                        </span>
+                    </div>
+                )}
             </div>
+
+            {request.status === 'price_approval' && !request.clientPriceChoice && (
+                <div className="bg-orange-50 p-4 rounded-3xl border border-orange-200 mt-2 space-y-4">
+                    <h4 className="font-bold text-orange-800 tracking-tight">Согласование стоимости ремонта</h4>
+                    <p className="text-sm text-orange-700">Мастер провел диагностику. Пожалуйста, выберите вариант ремонта:</p>
+                    
+                    {request.masterNotes && (
+                        <div className="bg-white p-3 rounded-xl text-sm text-gray-700 border border-orange-100 italic">
+                            <b>Комментарий мастера:</b> {request.masterNotes}
+                        </div>
+                    )}
+
+                    <div className="grid gap-3 pt-2">
+                        <Button 
+                            onClick={() => handleApprovePrice('original')}
+                            disabled={approving}
+                            className="w-full justify-between h-auto py-3 px-4 bg-white hover:bg-orange-100 text-gray-900 border-2 border-orange-200 shadow-sm rounded-xl transition-all"
+                            variant="outline"
+                        >
+                            <span className="font-semibold text-left">Оригинальные запчасти</span>
+                            <span className="font-bold text-orange-600">{request.priceOriginal?.toLocaleString('ru')} ₽</span>
+                        </Button>
+                        <Button 
+                            onClick={() => handleApprovePrice('non_original')}
+                            disabled={approving}
+                            className="w-full justify-between h-auto py-3 px-4 bg-white hover:bg-orange-100 text-gray-900 border-2 border-orange-200 shadow-sm rounded-xl transition-all"
+                            variant="outline"
+                        >
+                            <span className="font-semibold text-left">Неоригинальные (аналог)</span>
+                            <span className="font-bold text-orange-600">{request.priceNonOriginal?.toLocaleString('ru')} ₽</span>
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                 <h3 className="font-bold text-gray-900 mb-6 tracking-tight">Отслеживание</h3>

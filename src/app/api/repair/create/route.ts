@@ -30,12 +30,39 @@ export async function POST(request: NextRequest) {
       estimatedMin: data.estimatedMin || null,
       estimatedMax: data.estimatedMax || null,
       deliveryMethod: data.deliveryMethod,
+      clientContact: data.clientContact || null,
+      clientAddress: data.clientAddress || null,
       appointmentDate: data.appointmentDate ? new Date(data.appointmentDate).toISOString() : null,
       appointmentTime: data.appointmentTime || null,
       status: 'created',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+
+    // После успешного создания отправляем уведомления всем админам и мастерам
+    try {
+        const { notifyUser } = await import('@/lib/notifications/user-notifications');
+        const users = await api.list<any>('users');
+        if (users && users.length > 0) {
+            const staff = users.filter((u: any) => u.role === 'ADMIN' || u.role === 'MASTER');
+            
+            const title = 'Новая заявка на ремонт';
+            const body = `${data.deviceModel} - ${data.issueDescription}`;
+            
+            // Отправляем всем параллельно
+            await Promise.allSettled(
+                staff.map((employee: any) => 
+                   notifyUser(employee.telegramId, {
+                       title,
+                       body,
+                       url: '/admin/repair' // общая админка
+                   })
+                )
+            );
+        }
+    } catch (notifyErr) {
+        console.error('[Repair Create] Failed to notify staff:', notifyErr);
+    }
 
     return NextResponse.json({ success: true, id: repairRequest.id });
   } catch (error) {

@@ -72,8 +72,10 @@ export async function PATCH(
     try {
       if (result.telegramId) {
         let body = 'Статус вашей заявки на ремонт обновлён.';
+        let needsNotification = false;
 
         if (updates.status) {
+          needsNotification = true;
           const statusMap: Record<string, string> = {
             created: 'Заявка создана',
             courier_assigned: 'Назначен курьер',
@@ -82,23 +84,47 @@ export async function PATCH(
             diagnosing: 'Идёт диагностика устройства',
             price_approval: 'Требуется подтверждение стоимости ремонта',
             repairing: 'Устройство в ремонте',
-            ready_for_pickup: 'Ремонт завершён, устройство готово к выдаче',
+            ready_for_pickup: 'Ремонт завершён, устройство готово к возврату',
             delivered: 'Ремонт завершён, устройство выдано',
           };
-          const statusText = statusMap[updates.status] || updates.status;
-          body = `Статус вашей заявки на ремонт: ${statusText}.`;
-        }
-
-        if (typeof updates.finalPrice === 'number') {
+          
+          if (updates.status === 'price_approval') {
+             body = `Оценили ремонт. Оригинал: ${updates.priceOriginal} ₽, Не оригинал: ${updates.priceNonOriginal} ₽. Выберите вариант.`;
+          } else if (updates.status === 'ready_for_pickup') {
+             body = updates.returnMethod === 'courier_return' 
+                ? 'Ремонт завершён! Ожидайте звонка курьера для доставки.'
+                : 'Ремонт завершён! Заберите устройство в нашем сервисном центре.';
+          } else {
+             const statusText = statusMap[updates.status] || updates.status;
+             body = `Статус вашей заявки на ремонт: ${statusText}.`;
+          }
+        } else if (typeof updates.finalPrice === 'number' && !updates.status) {
+          needsNotification = true;
           body = `Итоговая стоимость ремонта: ${updates.finalPrice.toLocaleString('ru-RU')} ₽.`;
         }
 
-        await notifyUser(result.telegramId, {
-          title: 'Обновление по ремонту устройства',
-          body,
-          url: `/repair/status/${id}`,
-        });
+        if (needsNotification) {
+          await notifyUser(result.telegramId, {
+            title: 'Обновление по ремонту устройства',
+            body,
+            url: `/repair/status/${id}`,
+          });
+        }
       }
+
+      // Если обновился статус и есть назначенный мастер - уведомить его
+      if (result.assignedMasterId && updates.status === 'repairing') {
+          // Ищем telegramId мастера (предполагаем, что master.telegramId это строка)
+          const master = await api.get<any>('masters', result.assignedMasterId);
+          if (master && master.telegramId) {
+              await notifyUser(master.telegramId, {
+                  title: `Заявка #${String(id).slice(-6)}: Клиент подтвердил цену`,
+                  body: `Можете приступать к ремонту. Клиент выбрал: ${result.clientPriceChoice || 'стандарт'}`,
+                  url: `/admin/repair`
+              });
+          }
+      }
+
     } catch (notifyError) {
       console.error('[Repair] Failed to send status notification:', notifyError);
     }
