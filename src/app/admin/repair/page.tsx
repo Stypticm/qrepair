@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Loader2, Smartphone, MapPin, Truck } from 'lucide-react'
+import { ArrowLeft, Loader2, Smartphone, MapPin, Truck, X, User } from 'lucide-react'
 import { useAppStore } from '@/stores/authStore'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function AdminRepairPage() {
     const router = useRouter()
@@ -19,8 +20,9 @@ export default function AdminRepairPage() {
     const [priceNotified, setPriceNotified] = useState<Record<string, boolean>>({})
     const [masterNotes, setMasterNotes] = useState<Record<string, string>>({})
     
-    // Стейт модалки для выбора способа возврата
+    // Стейты UI
     const [returnMethodModal, setReturnMethodModal] = useState<{ isOpen: boolean; requestId: string | null }>({ isOpen: false, requestId: null })
+    const [selectedRequest, setSelectedRequest] = useState<any | null>(null)
 
     useEffect(() => {
         fetchRequests()
@@ -64,6 +66,12 @@ export default function AdminRepairPage() {
             if (res.ok) {
                 toast.success('Успешно обновлено')
                 fetchRequests() // Refresh list
+                
+                // Если мы обновили статус для открытой карточки, то обновим и локально чтобы UI не моргал
+                if (selectedRequest && selectedRequest.id === id) {
+                    setSelectedRequest({ ...selectedRequest, status: newStatus, ...additionalData })
+                }
+                
                 if (newStatus === 'ready_for_pickup') {
                     setReturnMethodModal({ isOpen: false, requestId: null })
                 }
@@ -94,7 +102,7 @@ export default function AdminRepairPage() {
                 const data = await res.json()
                 toast.error(data.error || 'Ошибка при взятии заявки')
             }
-        } catch(e) {
+        } catch (e) {
             console.error(e)
             toast.error('Ошибка сети')
         }
@@ -170,12 +178,12 @@ export default function AdminRepairPage() {
     const handleSavePriceAndNotify = async (id: string, req: any) => {
         const rawOrig = priceDraftOriginal[id] ?? (req.priceOriginal != null ? req.priceOriginal.toString() : '')
         const rawNonOrig = priceDraftNonOriginal[id] ?? (req.priceNonOriginal != null ? req.priceNonOriginal.toString() : '')
-        
-        const valOrig = rawOrig ? Number(rawOrig) : NaN
-        const valNonOrig = rawNonOrig ? Number(rawNonOrig) : NaN
 
-        if (Number.isNaN(valOrig) || valOrig <= 0 || Number.isNaN(valNonOrig) || valNonOrig <= 0) {
-            toast.error('Укажите обе стоимости корректно')
+        const valOrig = rawOrig ? Number(rawOrig) : null
+        const valNonOrig = rawNonOrig ? Number(rawNonOrig) : null
+
+        if (valOrig === null && valNonOrig === null) {
+            toast.error('Укажите хотя бы одну цену')
             return
         }
 
@@ -191,13 +199,25 @@ export default function AdminRepairPage() {
                     priceOriginal: valOrig,
                     priceNonOriginal: valNonOrig,
                     masterNotes: masterNotes[id] || req.masterNotes || '',
-                    status: 'price_approval' // Сразу переводим в статус ожидания ответа
+                    status: 'price_approval' 
                 }),
             })
 
             if (res.ok) {
                 toast.success('Отправлено клиенту на согласование')
                 setPriceNotified(prev => ({ ...prev, [id]: true }))
+                
+                // локально обновляем UI
+                if (selectedRequest && selectedRequest.id === id) {
+                    setSelectedRequest((prev: any) => ({
+                        ...prev,
+                        priceOriginal: valOrig,
+                        priceNonOriginal: valNonOrig,
+                        masterNotes: masterNotes[id] || req.masterNotes || '',
+                        status: 'price_approval'
+                    }))
+                }
+
                 fetchRequests()
             } else {
                 const data = await res.json()
@@ -209,7 +229,7 @@ export default function AdminRepairPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-24 pb-12 overflow-x-hidden">
+        <div className="min-h-screen bg-[#f8f9fa] flex flex-col pt-5 pb-5 overflow-x-hidden">
             <div className="max-w-[1200px] mx-auto px-6 w-full">
                 <div className="flex items-center gap-4 mb-8">
                     <Button
@@ -230,7 +250,8 @@ export default function AdminRepairPage() {
                     </Button>
                 </div>
 
-                {loading ? (
+                {/* Индикатор начальной загрузки */}
+                {loading && requests.length === 0 ? (
                     <div className="flex justify-center py-20">
                         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
                     </div>
@@ -241,232 +262,269 @@ export default function AdminRepairPage() {
                         <p className="text-gray-500 mt-1">Новые заявки появятся здесь.</p>
                     </div>
                 ) : (
-                    <div className="grid gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
                         {requests.map(req => (
-                            <Card key={req.id} className="overflow-hidden border-gray-100 shadow-sm hover:shadow-md transition-all">
-                                <CardHeader className="bg-gray-50/50 pb-4">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <CardTitle className="text-xl font-bold">{req.deviceModel}</CardTitle>
-                                                {getStatusBadge(req.status)}
-                                                {!req.assignedMasterId && (
-                                                    <Button 
-                                                        size="sm" 
-                                                        variant="default"
-                                                        onClick={() => takeJob(req.id)}
-                                                        className="h-7 text-xs bg-indigo-600 hover:bg-indigo-700"
-                                                    >
-                                                        Взять в работу
-                                                    </Button>
-                                                )}
-                                                {req.assignedMasterId && (
-                                                    <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-md border border-gray-300">
-                                                        Мастер назначен
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="text-sm text-gray-500 font-mono">#{req.id}</p>
+                            <motion.div key={req.id} layout>
+                                <Card 
+                                    className="overflow-hidden border-gray-200 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all active:scale-[0.98]"
+                                    onClick={() => setSelectedRequest(req)}
+                                >
+                                    <CardContent className="p-3">
+                                        {/* Строка 1: Модель и номер */}
+                                        <div className="flex items-center justify-between mb-2 mt-1">
+                                            <h3 className="font-bold text-gray-900 text-sm truncate leading-tight pr-2">{req.deviceModel}</h3>
+                                            <span className="text-[10px] text-gray-400 font-mono shrink-0">#{req.id.slice(-8)}</span>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-sm font-semibold text-gray-900">{req.category}</div>
-                                            <div className="text-xs text-gray-500 mt-1">Создана: {new Date(req.createdAt).toLocaleString('ru')}</div>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-6">
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <div className="space-y-4">
-                                            {req.issueDescription && (
-                                                <div>
-                                                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Описание</div>
-                                                    <p className="text-sm text-gray-700">{req.issueDescription}</p>
-                                                </div>
+                                        
+                                        {/* Строка 2: Статус и Кнопка */}
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            {getStatusBadge(req.status)}
+                                            {req.assignedMasterId ? (
+                                                <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                                                    Взят в работу
+                                                </span>
+                                            ) : (
+                                                <Button 
+                                                    size="sm"
+                                                    className="h-6 text-[10px] bg-indigo-600 hover:bg-indigo-700 font-semibold px-2 py-0"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        takeJob(req.id);
+                                                    }}
+                                                >
+                                                    Взять в работу
+                                                </Button>
                                             )}
-                                            {(req.clientContact || req.clientAddress) && (
-                                                <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
-                                                    <div className="text-xs font-bold text-blue-800 uppercase tracking-wider mb-2">Клиент</div>
-                                                    {req.clientContact && (
-                                                        <div className="text-sm text-gray-700 mb-1">
-                                                            <span className="text-gray-500 mr-2">Контакт:</span>
-                                                            <span className="font-semibold">{req.clientContact}</span>
-                                                        </div>
-                                                    )}
-                                                    {req.clientAddress && (
-                                                        <div className="text-sm text-gray-700">
-                                                            <span className="text-gray-500 mr-2">Адрес:</span>
-                                                            <span>{req.clientAddress}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Логистика (при заборе)</div>
-                                                <div className="flex items-center gap-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                                    {req.deliveryMethod === 'courier' ? (
-                                                        <>
-                                                            <Truck className="w-4 h-4 text-orange-500" />
-                                                            <span>Курьерская: {req.appointmentDate && new Date(req.appointmentDate).toISOString().split('T')[0]} в {req.appointmentTime}</span>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <MapPin className="w-4 h-4 text-blue-500" />
-                                                            <span>Привезет клиент (самовывоз)</span>
-                                                        </>
-                                                    )}
-                                                </div>
-                                                {req.courierNotes && (
-                                                    <div className="text-xs text-gray-500 mt-2 bg-yellow-50 p-2 rounded">
-                                                        <b>Доп. инфо курьера/адрес:</b> {req.courierNotes}
-                                                    </div>
-                                                )}
-                                            </div>
                                         </div>
-
-                                        <div className="space-y-4">
-                                            <div>
-                                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Действия / Смена статуса</div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {/* В СЦ */}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={cn(statusButtonClass(req.status, 'received'))}
-                                                        disabled={!canSetStatus(req.status, 'received')}
-                                                        onClick={() => updateStatus(req.id, 'received')}
-                                                    >
-                                                        В СЦ
-                                                    </Button>
-
-                                                    {/* Диагностика */}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={cn(statusButtonClass(req.status, 'diagnosing'))}
-                                                        disabled={!canSetStatus(req.status, 'diagnosing')}
-                                                        onClick={() => updateStatus(req.id, 'diagnosing')}
-                                                    >
-                                                        Диагностика
-                                                    </Button>
-
-                                                    {/* Согласование цены (через форму ниже, кнопку тут отключаем или делаем просто статусом) */}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={cn(statusButtonClass(req.status, 'price_approval'))}
-                                                        disabled={true} // Переход в согласование только при отправке цен
-                                                    >
-                                                        Согласование
-                                                    </Button>
-
-                                                    {/* В ремонте */}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={cn(statusButtonClass(req.status, 'repairing'))}
-                                                        disabled={!canSetStatus(req.status, 'repairing')}
-                                                        onClick={() => updateStatus(req.id, 'repairing')}
-                                                    >
-                                                        В ремонте
-                                                    </Button>
-
-                                                    {/* Готово к выдаче - открываем модалку */}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={cn(statusButtonClass(req.status, 'ready_for_pickup', 'green'))}
-                                                        disabled={!canSetStatus(req.status, 'ready_for_pickup')}
-                                                        onClick={() => setReturnMethodModal({ isOpen: true, requestId: req.id })}
-                                                    >
-                                                        Готово к выдаче
-                                                    </Button>
-
-                                                    {/* Завершить (Выдано) — только после ready_for_pickup */}
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className={cn(statusButtonClass(req.status, 'delivered', 'final'))}
-                                                        disabled={!canSetStatus(req.status, 'delivered')}
-                                                        onClick={() => updateStatus(req.id, 'delivered')}
-                                                    >
-                                                        Завершить (Выдано)
-                                                    </Button>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Оценка ремонта</div>
-                                                
-                                                {/* Инфо от клиента */}
-                                                {req.clientPriceChoice && (
-                                                    <div className="mb-4 bg-green-50 p-3 rounded-xl border border-green-100 flex flex-col gap-1">
-                                                        <div className="text-sm font-semibold text-green-800">Клиент подтвердил цену!</div>
-                                                        <div className="text-xs text-green-700">Выбор: <b>{req.clientPriceChoice === 'original' ? 'Оригинал' : 'Неоригинал'}</b></div>
-                                                        <div className="text-xs text-green-700">Итоговая сумма: <b>{req.finalPrice?.toLocaleString('ru-RU')} ₽</b></div>
-                                                    </div>
-                                                )}
-
-                                                <div className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                                    <div className="flex gap-4">
-                                                        <div className="flex-1">
-                                                            <label className="text-xs font-semibold text-gray-600 block mb-1">Оригинал</label>
-                                                            <input
-                                                                type="number"
-                                                                value={priceDraftOriginal[req.id] ?? (req.priceOriginal != null ? req.priceOriginal.toString() : '')}
-                                                                onChange={(e) => setPriceDraftOriginal(prev => ({ ...prev, [req.id]: e.target.value }))}
-                                                                disabled={req.status === 'price_approval' || req.clientPriceChoice}
-                                                                className="w-full h-9 px-3 text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
-                                                                placeholder="Цена"
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <label className="text-xs font-semibold text-gray-600 block mb-1">Неоригинал</label>
-                                                            <input
-                                                                type="number"
-                                                                value={priceDraftNonOriginal[req.id] ?? (req.priceNonOriginal != null ? req.priceNonOriginal.toString() : '')}
-                                                                onChange={(e) => setPriceDraftNonOriginal(prev => ({ ...prev, [req.id]: e.target.value }))}
-                                                                disabled={req.status === 'price_approval' || req.clientPriceChoice}
-                                                                className="w-full h-9 px-3 text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400"
-                                                                placeholder="Цена"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div>
-                                                        <label className="text-xs font-semibold text-gray-600 block mb-1">Заметки для клиента</label>
-                                                        <textarea 
-                                                            value={masterNotes[req.id] ?? (req.masterNotes || '')}
-                                                            onChange={(e) => setMasterNotes(prev => ({...prev, [req.id]: e.target.value}))}
-                                                            disabled={req.status === 'price_approval' || req.clientPriceChoice}
-                                                            className="w-full h-16 px-3 py-2 text-sm rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 resize-none"
-                                                            placeholder="Что сломалось, что будем чинить..."
-                                                        />
-                                                    </div>
-
-                                                    {!req.clientPriceChoice && req.status !== 'price_approval' && (
-                                                        <Button
-                                                            size="sm"
-                                                            className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white"
-                                                            onClick={() => handleSavePriceAndNotify(req.id, req)}
-                                                        >
-                                                            Отправить 2 цены клиенту на выбор
-                                                        </Button>
-                                                    )}
-                                                    {req.status === 'price_approval' && !req.clientPriceChoice && (
-                                                        <div className="text-sm text-orange-600 font-semibold text-center w-full py-2 bg-orange-50 rounded-lg">
-                                                            Ожидаем решение клиента
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                        
+                                        {/* Строка 3: Поломка и дата */}
+                                        <div className="text-[11px] text-gray-600 truncate flex items-center justify-between mt-1">
+                                            <span className="truncate pr-2">{req.issueDescription || req.category}</span>
+                                            <span className="text-[10px] text-gray-400 shrink-0">
+                                                {new Date(req.createdAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}
+                                            </span>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Мобильная подробная карточка заявки (BottomSheet) */}
+            <AnimatePresence>
+                {selectedRequest && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedRequest(null)}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+                        />
+                        
+                        {/* Sheet */}
+                        <motion.div 
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] md:max-h-[85vh] max-w-[800px] mx-auto md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:rounded-3xl"
+                        >
+                            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+                                <div>
+                                    <div className="text-xs text-gray-400 font-mono mb-0.5">#{selectedRequest.id}</div>
+                                    <h2 className="text-xl font-bold text-gray-900 leading-tight">{selectedRequest.deviceModel}</h2>
+                                </div>
+                                <Button variant="ghost" size="icon" className="rounded-full bg-gray-50 shrink-0" onClick={() => setSelectedRequest(null)}>
+                                    <X className="w-5 h-5 text-gray-500" />
+                                </Button>
+                            </div>
+                            
+                            {/* Контент модалки с прокруткой */}
+                            <div className="p-5 overflow-y-auto space-y-6 pb-24">
+                                {/* Статус и Категория */}
+                                <div className="flex items-center justify-between bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Категория</span>
+                                        <span className="text-sm font-semibold text-gray-800">{selectedRequest.category}</span>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Текущий status</span>
+                                        {getStatusBadge(selectedRequest.status)}
+                                    </div>
+                                </div>
+
+                                {/* Действия / Статусы */}
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Управление статусом</h3>
+                                    <div className="flex flex-col gap-2">
+                                        <Button
+                                            className={cn("justify-start h-11", statusButtonClass(selectedRequest.status, 'received'))}
+                                            disabled={!canSetStatus(selectedRequest.status, 'received')}
+                                            onClick={() => updateStatus(selectedRequest.id, 'received')}
+                                        >
+                                            1. Принято в СЦ
+                                        </Button>
+                                        <Button
+                                            className={cn("justify-start h-11", statusButtonClass(selectedRequest.status, 'diagnosing'))}
+                                            disabled={!canSetStatus(selectedRequest.status, 'diagnosing')}
+                                            onClick={() => updateStatus(selectedRequest.id, 'diagnosing')}
+                                        >
+                                            2. Начать диагностику
+                                        </Button>
+                                        <Button
+                                            className={cn("justify-start h-11", statusButtonClass(selectedRequest.status, 'repairing'))}
+                                            disabled={!canSetStatus(selectedRequest.status, 'repairing')}
+                                            onClick={() => updateStatus(selectedRequest.id, 'repairing')}
+                                        >
+                                            3. Начать ремонт (после согласия)
+                                        </Button>
+                                        <Button
+                                            className={cn("justify-start h-11", statusButtonClass(selectedRequest.status, 'ready_for_pickup', 'green'))}
+                                            disabled={!canSetStatus(selectedRequest.status, 'ready_for_pickup')}
+                                            onClick={() => {
+                                                setReturnMethodModal({ isOpen: true, requestId: selectedRequest.id });
+                                                setSelectedRequest(null); 
+                                            }}
+                                        >
+                                            4. Готово к выдаче
+                                        </Button>
+                                        <Button
+                                            className={cn("justify-start h-11", statusButtonClass(selectedRequest.status, 'delivered', 'final'))}
+                                            disabled={!canSetStatus(selectedRequest.status, 'delivered')}
+                                            onClick={() => updateStatus(selectedRequest.id, 'delivered')}
+                                        >
+                                            5. Завершить (Выдано)
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                {/* Клиент и логистика */}
+                                <div className="space-y-3">
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Клиент и Логистика</h3>
+                                    
+                                    {(selectedRequest.clientContact || selectedRequest.clientAddress) && (
+                                        <div className="bg-blue-50/60 p-4 rounded-2xl border border-blue-100 space-y-2">
+                                            {selectedRequest.clientContact && (
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-blue-500 font-bold uppercase">Связь</span>
+                                                    <span className="text-sm font-semibold text-blue-900">{selectedRequest.clientContact}</span>
+                                                </div>
+                                            )}
+                                            {selectedRequest.clientAddress && (
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-blue-500 font-bold uppercase">Адрес клиента</span>
+                                                    <span className="text-sm font-medium text-blue-800 leading-tight">{selectedRequest.clientAddress}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                                        <div className="h-10 w-10 shrink-0 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                                            {selectedRequest.deliveryMethod === 'courier' ? <Truck className="w-5 h-5 text-orange-500" /> : <MapPin className="w-5 h-5 text-blue-500" />}
+                                        </div>
+                                        <div className="text-sm text-gray-700 leading-tight">
+                                            {selectedRequest.deliveryMethod === 'courier' ? (
+                                                <>Забор курьером: <span className="font-semibold">{selectedRequest.appointmentDate && new Date(selectedRequest.appointmentDate).toLocaleDateString('ru')} в {selectedRequest.appointmentTime}</span></>
+                                            ) : (
+                                                <span className="font-medium">Самовывоз клиентом</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {selectedRequest.courierNotes && (
+                                        <div className="bg-yellow-50 p-3 rounded-xl border border-yellow-100 text-sm italic text-yellow-800">
+                                            {selectedRequest.courierNotes}
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Описание поломки */}
+                                {selectedRequest.issueDescription && (
+                                    <div>
+                                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Жалоба клиента</h3>
+                                        <p className="text-sm text-gray-700 bg-gray-50 p-4 rounded-2xl border border-gray-100 leading-relaxed">
+                                            {selectedRequest.issueDescription}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Цены и запчасти */}
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Финансовый блок</h3>
+                                    
+                                    {selectedRequest.clientPriceChoice && (
+                                        <div className="mb-4 bg-emerald-50 p-4 rounded-2xl border border-emerald-100 flex flex-col gap-1 shadow-sm">
+                                            <div className="flex items-center gap-2 text-sm font-bold text-emerald-800 mb-1">
+                                                <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                Клиент подтвердил цену
+                                            </div>
+                                            <div className="text-sm text-emerald-900">Запчасти: <b>{selectedRequest.clientPriceChoice === 'original' ? 'Оригинал' : 'Аналог'}</b></div>
+                                            <div className="text-lg font-black text-emerald-700">{selectedRequest.finalPrice?.toLocaleString('ru-RU')} ₽</div>
+                                        </div>
+                                    )}
+
+                                    <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Цена (Оригинал)</label>
+                                                <input
+                                                    type="number"
+                                                    value={priceDraftOriginal[selectedRequest.id] ?? (selectedRequest.priceOriginal != null ? selectedRequest.priceOriginal.toString() : '')}
+                                                    onChange={(e) => setPriceDraftOriginal(prev => ({ ...prev, [selectedRequest.id]: e.target.value }))}
+                                                    disabled={selectedRequest.status === 'price_approval' || selectedRequest.clientPriceChoice}
+                                                    className="w-full h-11 px-3 text-sm font-semibold rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                                                    placeholder="₽"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Цена (Аналог)</label>
+                                                <input
+                                                    type="number"
+                                                    value={priceDraftNonOriginal[selectedRequest.id] ?? (selectedRequest.priceNonOriginal != null ? selectedRequest.priceNonOriginal.toString() : '')}
+                                                    onChange={(e) => setPriceDraftNonOriginal(prev => ({ ...prev, [selectedRequest.id]: e.target.value }))}
+                                                    disabled={selectedRequest.status === 'price_approval' || selectedRequest.clientPriceChoice}
+                                                    className="w-full h-11 px-3 text-sm font-semibold rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                                                    placeholder="₽"
+                                                />
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Комментарий мастера</label>
+                                            <textarea 
+                                                value={masterNotes[selectedRequest.id] ?? (selectedRequest.masterNotes || '')}
+                                                onChange={(e) => setMasterNotes(prev => ({...prev, [selectedRequest.id]: e.target.value}))}
+                                                disabled={selectedRequest.status === 'price_approval' || selectedRequest.clientPriceChoice}
+                                                className="w-full h-20 px-4 py-3 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 disabled:opacity-60 resize-none leading-relaxed"
+                                                placeholder="Детали поломки..."
+                                            />
+                                        </div>
+
+                                        {!selectedRequest.clientPriceChoice && selectedRequest.status !== 'price_approval' && (
+                                            <Button
+                                                size="lg"
+                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl shadow-lg shadow-blue-600/20"
+                                                onClick={() => handleSavePriceAndNotify(selectedRequest.id, selectedRequest)}
+                                            >
+                                                Отправить цены клиенту
+                                            </Button>
+                                        )}
+                                        {selectedRequest.status === 'price_approval' && !selectedRequest.clientPriceChoice && (
+                                            <div className="w-full py-3 bg-orange-50 border border-orange-100 rounded-xl text-center">
+                                                <span className="text-sm font-bold text-orange-600 animate-pulse">Ожидание ответа клиента</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Модалка для выбора способа возврата */}
             {returnMethodModal.isOpen && returnMethodModal.requestId && (
@@ -474,25 +532,25 @@ export default function AdminRepairPage() {
                     <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6">
                         <h3 className="text-xl font-bold text-gray-900 mb-2">Способ возврата</h3>
                         <p className="text-sm text-gray-500 mb-6">Как клиент получит устройство?</p>
-                        
+
                         <div className="space-y-3">
-                            <button 
+                            <button
                                 className="w-full flex items-center justify-center gap-2 border-2 border-blue-600 bg-blue-50 text-blue-700 py-3 rounded-xl font-semibold hover:bg-blue-100 transition-colors"
                                 onClick={() => updateStatus(returnMethodModal.requestId!, 'ready_for_pickup', { returnMethod: 'self_pickup' })}
                             >
                                 🏪 Заберут в сервисе
                             </button>
-                            <button 
+                            <button
                                 className="w-full flex items-center justify-center gap-2 border-2 border-indigo-600 bg-indigo-50 text-indigo-700 py-3 rounded-xl font-semibold hover:bg-indigo-100 transition-colors"
                                 onClick={() => updateStatus(returnMethodModal.requestId!, 'ready_for_pickup', { returnMethod: 'courier_return' })}
                             >
                                 🚚 Отправить курьером
                             </button>
                         </div>
-                        
+
                         <div className="mt-6 pt-4 border-t border-gray-100">
-                            <Button 
-                                variant="ghost" 
+                            <Button
+                                variant="ghost"
                                 className="w-full text-gray-500 hover:text-gray-900"
                                 onClick={() => setReturnMethodModal({ isOpen: false, requestId: null })}
                             >

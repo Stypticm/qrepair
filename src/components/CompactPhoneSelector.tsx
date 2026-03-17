@@ -7,6 +7,7 @@ import { useAppStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useDevices } from '@/hooks/useDevices';
+import { IPHONE_COLOR_MAP, getDeviceColor } from '@/config/colors';
 
 // Компонент выбора модели
 interface ModelPickerProps {
@@ -182,31 +183,13 @@ interface ColorPickerProps {
 }
 
 function ColorPicker({ colors, selectedColor, onColorChange }: ColorPickerProps) {
-  const colorMap: { [key: string]: { name: string; hex: string } } = {
-    'G': { name: 'Золотой', hex: '#FFD700' },
-    'R': { name: 'Красный', hex: '#FF0000' },
-    'Bl': { name: 'Синий', hex: '#007AFF' },
-    'Wh': { name: 'Белый', hex: '#FFFFFF' },
-    'C': { name: 'Чёрный', hex: '#000000' },
-    'Gold': { name: 'Золотой', hex: '#FFD700' },
-    'Red': { name: 'Красный', hex: '#FF0000' },
-    'Blue': { name: 'Синий', hex: '#007AFF' },
-    'White': { name: 'Белый', hex: '#FFFFFF' },
-    'Black': { name: 'Чёрный', hex: '#000000' },
-    'Space Gray': { name: 'Серый космос', hex: '#1C1C1E' },
-    'Silver': { name: 'Серебряный', hex: '#C0C0C0' },
-    'Natural Titanium': { name: 'Натуральный титан', hex: '#8E8E93' },
-    'Blue Titanium': { name: 'Синий титан', hex: '#007AFF' },
-    'White Titanium': { name: 'Белый титан', hex: '#F2F2F7' },
-  };
-
   return (
     <div className="space-y-2">
       <h3 className="text-base font-semibold text-gray-900 text-center">Цвет</h3>
       
       <div className="grid grid-cols-2 gap-2">
         {colors.map((color) => {
-          const colorInfo = colorMap[color] || { name: color, hex: '#808080' };
+          const colorInfo = getDeviceColor(color);
           
           return (
             <motion.button
