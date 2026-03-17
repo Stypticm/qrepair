@@ -19,8 +19,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Создаем заявку на ремонт
+    // Создаем заявку на ремонт с явным ID
+    const newId = crypto.randomUUID();
     const repairRequest = await api.create<any>('repair-requests', {
+      id: newId,
       telegramId,
       deviceModel: data.deviceModel,
       serialNumber: data.serialNumber || null,
@@ -47,7 +49,7 @@ export async function POST(request: NextRequest) {
             const staff = users.filter((u: any) => u.role === 'ADMIN' || u.role === 'MASTER');
             
             const title = 'Новая заявка на ремонт';
-            const body = `${data.deviceModel} - ${data.issueDescription}`;
+            const body = `${data.deviceModel} - ${data.issueDescription || 'Без описания'}`;
             
             // Отправляем всем параллельно
             await Promise.allSettled(
@@ -64,7 +66,7 @@ export async function POST(request: NextRequest) {
         console.error('[Repair Create] Failed to notify staff:', notifyErr);
     }
 
-    return NextResponse.json({ success: true, id: repairRequest.id });
+    return NextResponse.json({ success: true, id: newId });
   } catch (error) {
     console.error('Error creating repair request:', error);
     return NextResponse.json(

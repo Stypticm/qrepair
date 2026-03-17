@@ -7,6 +7,7 @@ import {
   useRef,
 } from 'react'
 import { useAppStore } from '@/stores/authStore'
+import { requestService } from '@/services/requestService'
 
 interface PersistentStateOptions<T> {
   key: string
@@ -385,65 +386,29 @@ export function useFormData() {
     if (!telegramId) return
 
     try {
-      // Получаем существующий requestId из sessionStorage
       const existingRequestId =
         typeof window !== 'undefined'
           ? sessionStorage.getItem('currentRequestId')
           : null
 
-      const response = await fetch(
-        '/api/request/saveDraft',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            telegramId,
-            requestId: existingRequestId, // ✅ Передаем существующий ID
-            modelname: phoneSelection.state.model,
-            deviceConditions: deviceConditions.state,
-            wearValues: wearValues.state,
-            imei: imei.state,
-            sn: serialNumber.state,
-            price: price.state,
-            priceRange: priceRange.state,
-            currentStep: 'form', // или текущий шаг
-          }),
-        }
-      )
+      const result = await requestService.saveDraft({
+        telegramId,
+        requestId: existingRequestId,
+        modelname: phoneSelection.state.model,
+        deviceConditions: deviceConditions.state,
+        wearValues: wearValues.state,
+        imei: imei.state,
+        sn: serialNumber.state,
+        price: price.state,
+        priceRange: priceRange.state,
+        currentStep: 'form',
+      })
 
-      if (response.ok) {
-        const result = await response.json()
-        console.log('✅ Данные сохранены в БД:', {
-          requestId: result.requestId,
-          currentStep: result.currentStep,
-          isNewDraft: !existingRequestId,
-        })
-
-        // Сохраняем requestId для следующих обновлений
-        if (
-          result.requestId &&
-          typeof window !== 'undefined'
-        ) {
-          sessionStorage.setItem(
-            'currentRequestId',
-            result.requestId
-          )
-          console.log(
-            '💾 RequestId сохранен в sessionStorage:',
-            result.requestId
-          )
-        }
-
-        return result
-      } else {
-        const errorData = await response.json()
-        console.error(
-          '❌ Ошибка сохранения в БД:',
-          errorData
-        )
+      if (result.requestId && typeof window !== 'undefined') {
+        sessionStorage.setItem('currentRequestId', result.requestId)
       }
+
+      return result
     } catch (error) {
       console.error('Ошибка при сохранении в БД:', error)
     }

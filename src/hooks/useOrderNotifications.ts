@@ -16,7 +16,7 @@ export function useOrderNotifications() {
         }
 
         try {
-            const response = await fetch('/api/orders/my');
+            const response = await fetch(`/api/orders/my?telegramId=${telegramId}`);
             
             if (response.status === 401) {
                 // Если не авторизован, запоминаем это и больше не опрашиваем

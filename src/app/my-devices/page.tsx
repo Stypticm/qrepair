@@ -303,7 +303,8 @@ const MyDevices = () => {
             )}
           </div>
 
-          {loading ? (
+          {/* Индикатор начальной загрузки или пустого состояния */}
+          {loading && myDevices.length === 0 && myOrders.length === 0 && myRepairs.length === 0 ? (
             <div className="flex justify-center items-center h-64">
               <Image
                 src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
