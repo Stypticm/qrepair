@@ -6,6 +6,7 @@
     "dev": "next dev",
     "dev:https": "next dev --experimental-https",
     "build": "next build",
+    "build:cf": "opennextjs-cloudflare",
     "start": "next start",
     "lint": "next lint",
     "update-version": "node scripts/update-version.js",
