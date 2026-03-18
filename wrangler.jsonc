@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"main": "worker.js",
+	"main": "_worker.js",
 	"name": "qrepair",
 	"compatibility_date": "2026-03-18",
 	"compatibility_flags": [
