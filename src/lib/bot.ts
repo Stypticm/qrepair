@@ -2,7 +2,9 @@ import { Bot } from 'grammy';
 import { api } from '@/services/api';
 import { generatePassword, hashPassword } from '@/lib/auth/password';
 
-export const bot = new Bot(process.env.BOT_TOKEN!);
+// Используем заглушку для токена во время сборки, чтобы Bot не выбрасывал ошибку
+const token = process.env.BOT_TOKEN || '000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+export const bot = new Bot(token);
 
 // Middleware: Проверка пароля
 bot.use(async (ctx, next) => {

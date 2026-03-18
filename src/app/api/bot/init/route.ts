@@ -3,7 +3,8 @@ import { initializeBot } from '@/lib/bot'
 
 export async function POST() {
   try {
-    if (process.env.NODE_ENV === 'production') {
+    // Инициализируем только если есть реальный токен (пропускаем во время билда без секретов)
+    if (process.env.NODE_ENV === 'production' && process.env.BOT_TOKEN && !process.env.BOT_TOKEN.includes('AAA')) {
       await initializeBot()
       console.log('✅ Бот Qoqos инициализирован через API')
     }
