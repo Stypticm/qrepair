@@ -103,6 +103,24 @@ const versionData = {
 fs.writeFileSync(versionJsonPath, JSON.stringify(versionData, null, 2))
 console.log(`📝 version.json обновлен: ${versionJsonPath} (Version: ${newVersion})`)
 
+// -----------------------------------------------------------------------------
+// Обновляем wrangler.jsonc (compatibility_date)
+// -----------------------------------------------------------------------------
+const wranglerPath = path.join(__dirname, '../wrangler.jsonc')
+if (fs.existsSync(wranglerPath)) {
+  let wranglerContent = fs.readFileSync(wranglerPath, 'utf8')
+  const today = new Date().toISOString().split('T')[0]
+  
+  if (wranglerContent.includes('"compatibility_date"')) {
+    wranglerContent = wranglerContent.replace(
+      /"compatibility_date":\s*"[^"]+"/,
+      `"compatibility_date": "${today}"`
+    )
+    fs.writeFileSync(wranglerPath, wranglerContent)
+    console.log(`📝 wrangler.jsonc обновлен: ${wranglerPath} (Date: ${today})`)
+  }
+}
+
 console.log(`📝 Файл обновлен: ${configPath}`)
 console.log(`\n📋 Использование:`)
 console.log(

@@ -1,8 +1,8 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
-	"name": "nextjs-template",
-	"compatibility_date": "2026-03-17",
+	"name": "qrepair",
+	"compatibility_date": "2026-03-18",
 	"compatibility_flags": [
 		"nodejs_compat",
 		"global_fetch_strictly_public"
