@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
 
     // Получаем лоты через Go API
     // Примечание: Если API не поддерживает фильтрацию, фильтруем на стороне Next.js
-    const items = await api.list<any>('marketplace-lots', { limit: 100, offset: 0 });
+    const items = await api.list<any>('marketplace-lots', { limit: 100, offset: 0 }).catch((error) => {
+      console.warn('Backend unavailable or table missing:', error.message);
+      return []; // Возвращаем пустой массив, чтобы фронт не падал
+    });
 
     const feed = items
       .filter((item: any) => item.status === 'available') // Только доступные лоты
