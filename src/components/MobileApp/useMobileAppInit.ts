@@ -22,6 +22,7 @@ export const useMobileAppInit = () => {
     const [isInTelegram, setIsInTelegram] = useState<boolean | null>(null);
     const [isDesktopLike, setIsDesktopLike] = useState(false);
     const [screenHeight, setScreenHeight] = useState(0);
+    const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
 
     // Marketplace Feed state
     const [marketplaceItems, setMarketplaceItems] = useState<any[]>([]);
@@ -75,8 +76,8 @@ export const useMobileAppInit = () => {
                     const platform = wa?.platform;
                     const isMobilePlatform = platform === 'android' || platform === 'ios';
                     const isDesktopPlatform = !isMobilePlatform && (
-                        platform === 'tdesktop' || platform === 'macos' || 
-                        platform === 'web' || platform === 'weba' || 
+                        platform === 'tdesktop' || platform === 'macos' ||
+                        platform === 'web' || platform === 'weba' ||
                         platform === 'windows' || platform === 'linux'
                     );
 
@@ -174,9 +175,11 @@ export const useMobileAppInit = () => {
     // 6. Marketplace loading
     const loadMoreMarketplaceItems = useCallback(async () => {
         setMarketplaceLoading(true);
+        setHasAttemptedFetch(true);
         try {
             const limit = 12;
             const currentOffset = marketplaceOffsetRef.current;
+            console.trace("ВЫЗОВ ИЗ MobileAppInit!");
             const res = await fetch(`/api/market/feed?limit=${limit}&offset=${currentOffset}`, { cache: 'no-store' });
             const data = await res.json();
             if (!res.ok) throw new Error(data?.error || 'Failed to load feed');
@@ -198,6 +201,7 @@ export const useMobileAppInit = () => {
     const refreshMarketplaceItems = useCallback(async () => {
         setMarketplaceLoading(true);
         try {
+            console.trace("ВЫЗОВ ИЗ MobileAppInit!");
             const res = await fetch(`/api/market/feed?limit=12&offset=0`, { cache: 'no-store' });
             const data = await res.json();
             if (!res.ok) throw new Error(data?.error || 'Failed to refresh feed');
@@ -215,10 +219,10 @@ export const useMobileAppInit = () => {
     }, []);
 
     useEffect(() => {
-        if (!isLoading && marketplaceItems.length === 0 && marketplaceOffsetRef.current === 0 && !marketplaceLoading) {
+        if (!hasAttemptedFetch && !isLoading && marketplaceItems.length === 0 && marketplaceOffsetRef.current === 0 && !marketplaceLoading) {
             loadMoreMarketplaceItems();
         }
-    }, [isLoading, marketplaceItems.length, marketplaceLoading, loadMoreMarketplaceItems]);
+    }, [hasAttemptedFetch, isLoading, marketplaceItems.length, marketplaceLoading, loadMoreMarketplaceItems]);
 
     useEffect(() => {
         const handleLotAdded = () => refreshMarketplaceItems();
