@@ -8,20 +8,15 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-
-interface Message {
-    id: string;
-    senderId: string;
-    senderType: 'user' | 'admin';
-    text: string;
-    createdAt: string;
-    requestId?: string;
-}
+import { Message } from '@/types/chat';
+import { useChatStore } from '@/stores/chatStore';
 
 export function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
-    const [messages, setMessages] = useState<Message[]>([]);
+    const messages = useChatStore(state => state.messages);
+    const addMessage = useChatStore(state => state.addMessage);
+    const clearMessages = useChatStore(state => state.clearMessages);
     const [isLoading, setIsLoading] = useState(false);
     const telegramId = useAppStore(state => state.telegramId);
     const username = useAppStore(state => state.username);
@@ -79,7 +74,7 @@ export function ChatWidget() {
             text,
             createdAt: new Date().toISOString(),
         };
-        setMessages(prev => [...prev, userMsg]);
+        addMessage(userMsg);
         setIsLoading(true);
 
         try {
@@ -89,8 +84,17 @@ export function ChatWidget() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId: activeId,
-                    text,
                     requestId: reqId,
+                    messages: [
+                        ...messages.map(m => ({
+                            role: m.senderType === 'user' ? 'user' : 'assistant',
+                            content: m.text,
+                        })),
+                        {
+                            role: 'user',
+                            content: text,
+                        },
+                    ],
                 }),
             });
 
@@ -104,7 +108,7 @@ export function ChatWidget() {
                 createdAt: new Date().toISOString(),
                 requestId: data.requestId || reqId,
             };
-            setMessages(prev => [...prev, botMsg]);
+            addMessage(botMsg);
         } catch (error) {
             console.error('Failed to send message:', error);
             const errorMsg: Message = {
@@ -114,7 +118,7 @@ export function ChatWidget() {
                 text: "Не удалось отправить сообщение. Проверьте подключение к сети.",
                 createdAt: new Date().toISOString(),
             };
-            setMessages(prev => [...prev, errorMsg]);
+            addMessage(errorMsg);
         } finally {
             setIsLoading(false);
         }

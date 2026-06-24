@@ -179,7 +179,6 @@ export const useMobileAppInit = () => {
         try {
             const limit = 12;
             const currentOffset = marketplaceOffsetRef.current;
-            console.trace("ВЫЗОВ ИЗ MobileAppInit!");
             const res = await fetch(`/api/market/feed?limit=${limit}&offset=${currentOffset}`, { cache: 'no-store' });
             const data = await res.json();
             if (!res.ok) throw new Error(data?.error || 'Failed to load feed');
@@ -201,7 +200,6 @@ export const useMobileAppInit = () => {
     const refreshMarketplaceItems = useCallback(async () => {
         setMarketplaceLoading(true);
         try {
-            console.trace("ВЫЗОВ ИЗ MobileAppInit!");
             const res = await fetch(`/api/market/feed?limit=12&offset=0`, { cache: 'no-store' });
             const data = await res.json();
             if (!res.ok) throw new Error(data?.error || 'Failed to refresh feed');

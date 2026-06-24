@@ -24,8 +24,12 @@ export const escalationSchema = z.object({
 
 export const chatProxyRequestSchema = z.object({
   userId: z.string().min(1, 'userId is required'),
-  text: z.string().min(1, 'text is required').max(2000, 'text is too long'),
+  text: z.string().min(1, 'text is required').max(2000, 'text is too long').optional(),
   requestId: z.string().optional(),
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant', 'system']),
+    content: z.string()
+  }))
 });
 
 export const chatProxyResponseSchema = z.object({

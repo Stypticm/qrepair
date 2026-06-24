@@ -12,7 +12,7 @@ export async function sendTelegramMessage(
     options,
   })
 
-  const BOT_TOKEN = process.env.BOT_TOKEN
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
   if (!BOT_TOKEN) {
     console.error('❌ BOT_TOKEN is not defined')
     throw new Error('BOT_TOKEN is not defined')
