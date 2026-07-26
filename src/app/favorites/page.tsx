@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { Page } from '@/components/Page'
 import { useFavorites } from '@/hooks/useFavorites'
-import { Heart, ShoppingCart, ChevronDown, ChevronUp } from 'lucide-react'
+import { Heart, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 import { getPictureUrl } from '@/core/lib/assets'
 import { sendTon } from '@/core/ton/tonconnect'
+import { useRouter } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 
 interface FavoriteLot {
@@ -24,6 +25,7 @@ interface FavoriteLot {
 }
 
 export default function FavoritesPage() {
+  const router = useRouter()
   const { favorites, removeFromFavorites, loading } = useFavorites()
   const [favoriteLots, setFavoriteLots] = useState<FavoriteLot[]>([])
   const [loadingLots, setLoadingLots] = useState(true)
@@ -105,8 +107,8 @@ export default function FavoritesPage() {
 
   if (loadingLots) {
     return (
-      <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center md:pt-20">
+      <Page back={true}>
+        <div className="min-h-screen bg-surface flex items-center justify-center lg:pt-20">
           <div className="text-center">
             {/* ... */}
           </div>
@@ -116,12 +118,21 @@ export default function FavoritesPage() {
   }
 
   return (
-    <Page back={true} header={<div className="hidden md:block"><Header /></div>}>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto pt-16 md:pt-24 px-6">
-          <div className="mb-8">
+    <Page back={true}>
+      <div className="min-h-screen bg-surface">
+        <div className="max-w-7xl mx-auto pt-16 lg:pt-24 px-6">
+            <div className="lg:hidden mb-4">
+                <button
+                    onClick={() => router.back()}
+                    className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-white/5 px-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 shadow-sm active:scale-95 transition-all"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    Назад
+                </button>
+            </div>
+            <div className="mb-8">
             {favoriteLots.length > 0 && (
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 {`${favoriteLots.length} заявк${favoriteLots.length === 1 ? 'а' : favoriteLots.length < 5 ? 'и' : ''} в избранном`}
               </p>
             )}
@@ -129,14 +140,14 @@ export default function FavoritesPage() {
 
           {favoriteLots.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Heart className="w-12 h-12 text-gray-400" />
+              <div className="w-24 h-24 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Heart className="w-12 h-12 text-gray-400 dark:text-gray-500" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Избранное пусто</h3>
-              <p className="text-gray-600 mb-6 md:mb-0">Добавьте товары в избранное, чтобы они появились здесь</p>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Избранное пусто</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6 lg:mb-0">Добавьте товары в избранное, чтобы они появились здесь</p>
               <button
-                onClick={() => window.history.back()}
-                className="md:hidden px-6 py-3 bg-[#2dc2c6] text-white rounded-xl hover:bg-[#25a8ac] transition-colors"
+                onClick={() => router.back()}
+                className="lg:hidden px-6 py-3 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors"
               >
                 Вернуться к заявкам
               </button>
@@ -146,12 +157,12 @@ export default function FavoritesPage() {
               {favoriteLots.map((lot) => {
                 const isExpanded = expandedCards.has(lot.id)
                 return (
-                  <div key={lot.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                  <div key={lot.id} className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden hover:shadow-md transition-shadow">
                     {/* Минимизированная карточка */}
                     <div className="p-4">
                       <div className="flex items-center gap-4">
                         {/* Мини-изображение */}
-                        <div className="relative w-16 h-16 bg-gray-100 rounded-xl flex-shrink-0">
+                        <div className="relative w-16 h-16 bg-gray-100 dark:bg-white/10 rounded-xl flex-shrink-0">
                           {lot.cover ? (
                             <Image
                               src={lot.cover}
@@ -181,14 +192,14 @@ export default function FavoritesPage() {
 
                         {/* Основная информация */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">
+                          <h3 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1">
                             {lot.title}
                           </h3>
                           <div className="flex items-center justify-between">
-                            <div className="text-lg font-bold text-gray-900">
+                            <div className="text-lg font-bold text-gray-900 dark:text-white">
                               {formatPrice(lot.price)}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               {formatDate(lot.date)}
                             </div>
                           </div>
@@ -199,20 +210,20 @@ export default function FavoritesPage() {
                           <button
                             onClick={() => handleRemoveFromFavorites(lot.id)}
                             disabled={loading}
-                            className="p-2 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
+                            className="p-2 bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition-colors"
                             title="Удалить из избранного"
                           >
                             <Heart className="w-4 h-4 text-red-500 fill-current" />
                           </button>
                           <button
                             onClick={() => toggleCardExpansion(lot.id)}
-                            className="p-2 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                            className="p-2 bg-gray-50 dark:bg-white/10 hover:bg-gray-100 dark:hover:bg-white/20 rounded-xl transition-colors"
                             title={isExpanded ? "Свернуть" : "Подробнее"}
                           >
                             {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-gray-600" />
+                              <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                             ) : (
-                              <ChevronDown className="w-4 h-4 text-gray-600" />
+                              <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                             )}
                           </button>
                         </div>
@@ -221,11 +232,11 @@ export default function FavoritesPage() {
 
                     {/* Развернутая информация */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 border-t border-gray-100">
+                      <div className="px-4 pb-4 border-t border-gray-100 dark:border-white/10">
                         <div className="pt-4 space-y-4">
                           {/* Описание */}
                           {lot.description && (
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
                               {lot.description}
                             </p>
                           )}
@@ -233,40 +244,40 @@ export default function FavoritesPage() {
                           {/* Характеристики */}
                           <div className="grid grid-cols-2 gap-3">
                             {lot.model && (
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Модель</div>
-                                <div className="font-semibold text-gray-900 text-sm">{lot.model}</div>
+                              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
+                                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Модель</div>
+                                <div className="font-semibold text-gray-900 dark:text-white text-sm">{lot.model}</div>
                               </div>
                             )}
                             {lot.storage && (
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Память</div>
-                                <div className="font-semibold text-gray-900 text-sm">{lot.storage}</div>
+                              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
+                                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Память</div>
+                                <div className="font-semibold text-gray-900 dark:text-white text-sm">{lot.storage}</div>
                               </div>
                             )}
                             {lot.color && (
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Цвет</div>
-                                <div className="font-semibold text-gray-900 text-sm">{lot.color}</div>
+                              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
+                                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Цвет</div>
+                                <div className="font-semibold text-gray-900 dark:text-white text-sm">{lot.color}</div>
                               </div>
                             )}
                             {lot.condition && (
-                              <div className="bg-gray-50 rounded-lg p-3">
-                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Состояние</div>
-                                <div className="font-semibold text-gray-900 text-sm">{lot.condition}</div>
+                              <div className="bg-gray-50 dark:bg-white/5 rounded-lg p-3">
+                                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Состояние</div>
+                                <div className="font-semibold text-gray-900 dark:text-white text-sm">{lot.condition}</div>
                               </div>
                             )}
                           </div>
 
                           {/* Кнопки покупки */}
                           <div className="flex gap-3">
-                            <button className="flex-1 px-4 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
+                            <button className="flex-1 px-4 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2">
                               <ShoppingCart className="w-4 h-4" />
                               Купить
                             </button>
                             <button
                               onClick={() => handleBuyWithTon(lot.id)}
-                              className="flex-1 px-4 py-3 bg-[#2dc2c6] hover:bg-[#25a8ac] text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                              className="flex-1 px-4 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"

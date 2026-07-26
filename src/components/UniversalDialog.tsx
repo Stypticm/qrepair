@@ -70,7 +70,7 @@ export function UniversalDialog({
           <Button
             onClick={onContinue}
             disabled={isDisabled}
-            className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-80 disabled:cursor-not-allowed"
+            className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg disabled:opacity-80 disabled:cursor-not-allowed"
           >
             {buttonText}
           </Button>

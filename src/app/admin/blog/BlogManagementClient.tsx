@@ -169,13 +169,13 @@ export function BlogManagementClient() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                        <Newspaper className="w-6 h-6" />
-                        Управление Блогом
-                    </h2>
-                    <p className="text-sm text-gray-500 mt-1">Создавайте и редактируйте статьи для ваших клиентов</p>
-                </div>
+                 <div>
+                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                         <Newspaper className="w-6 h-6" />
+                         Управление Блогом
+                     </h2>
+                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Создавайте и редактируйте статьи для ваших клиентов</p>
+                 </div>
                 <Button
                     onClick={handleCreate}
                     className="bg-gray-900 hover:bg-black text-white rounded-xl px-6 h-12 shadow-lg transition-all active:scale-95 flex items-center gap-2"
@@ -187,19 +187,19 @@ export function BlogManagementClient() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {posts.length === 0 ? (
-                    <div className="col-span-full py-20 text-center bg-white rounded-[32px] border border-dashed border-gray-200">
-                        <Newspaper className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 font-medium">Статей пока нет</p>
-                        <p className="text-sm text-gray-400 mt-1">Самое время написать что-нибудь интересное</p>
+                    <div className="col-span-full py-20 text-center bg-white dark:bg-[#1a1a1a] rounded-[32px] border border-dashed border-gray-200 dark:border-white/10">
+                        <Newspaper className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400 font-medium">Статей пока нет</p>
+                        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Самое время написать что-нибудь интересное</p>
                     </div>
                 ) : (
                     posts.map((post) => (
-                        <Card key={post.id} className="bg-white border-gray-100 rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
-                            <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                        <Card key={post.id} className="bg-white dark:bg-[#1a1a1a] border-gray-100 dark:border-white/10 rounded-[32px] overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+                            <div className="aspect-video bg-gray-100 dark:bg-white/5 relative overflow-hidden">
                                 {post.image ? (
                                     <img src={post.image} alt={post.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                    <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
                                         <Newspaper className="w-10 h-10" />
                                     </div>
                                 )}
@@ -209,24 +209,24 @@ export function BlogManagementClient() {
                             </div>
                             <CardContent className="p-6">
                                 <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest block mb-2">{post.category}</span>
-                                <h3 className="font-bold text-gray-900 line-clamp-2 mb-3 leading-snug group-hover:text-blue-600 transition-colors">{post.title}</h3>
-                                <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed">{post.excerpt || post.content}</p>
+                                <h3 className="font-bold text-gray-900 dark:text-white line-clamp-2 mb-3 leading-snug group-hover:text-blue-600 transition-colors">{post.title}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 leading-relaxed">{post.excerpt || post.content}</p>
 
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                                    <span className="text-[11px] text-gray-400 font-medium">
+                                <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-white/5">
+                                    <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
                                         {new Date(post.createdAt).toLocaleDateString('ru-RU')}
                                     </span>
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={() => handleEdit(post)}
-                                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                            className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
                                             title="Редактировать"
                                         >
                                             <Pencil className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(post.id)}
-                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                            className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
                                             title="Удалить"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -254,50 +254,50 @@ export function BlogManagementClient() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col"
+                            className="bg-white dark:bg-[#0a0a0a] w-full max-w-2xl max-h-[90vh] rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col"
                         >
-                            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
-                                <h3 className="text-xl font-bold text-gray-900">
+                            <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-white dark:bg-[#0a0a0a] sticky top-0 z-10">
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                                     {editingPost?.id ? 'Редактирование' : 'Новое сообщение'}
                                 </h3>
-                                <button onClick={() => setIsEditorOpen(false)} className="p-2 hover:bg-gray-50 rounded-full transition-colors">
-                                    <X className="w-5 h-5 text-gray-400" />
+                                <button onClick={() => setIsEditorOpen(false)} className="p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-full transition-colors">
+                                    <X className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                                 </button>
                             </div>
 
                             <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-8 space-y-6">
                                 <div className="space-y-4">
                                     <div className="grid gap-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase ml-1">Заголовок</label>
+                                        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase ml-1">Заголовок</label>
                                         <Input
                                             value={editingPost?.title}
                                             onChange={(e) => setEditingPost(prev => ({ ...prev!, title: e.target.value }))}
                                             placeholder="О чем статья?"
-                                            className="h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all"
+                                            className="h-12 rounded-xl border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 focus:bg-white dark:focus:bg-white/10 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
                                             required
                                         />
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="grid gap-2">
-                                            <label className="text-xs font-bold text-gray-400 uppercase ml-1">Категория</label>
+                                            <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase ml-1">Категория</label>
                                             <Input
                                                 value={editingPost?.category}
                                                 onChange={(e) => setEditingPost(prev => ({ ...prev!, category: e.target.value }))}
                                                 placeholder="Новости, Обзоры..."
-                                                className="h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all"
+                                                className="h-12 rounded-xl border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 focus:bg-white dark:focus:bg-white/10 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
                                             />
                                         </div>
                                         <div className="grid gap-2 text-right">
-                                            <label className="text-xs font-bold text-gray-400 uppercase mr-1">Статус</label>
+                                            <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase mr-1">Статус</label>
                                             <div className="flex items-center justify-end gap-2 h-12">
-                                                <span className={`text-xs font-bold ${editingPost?.published ? 'text-green-600' : 'text-gray-400'}`}>
+                                                <span className={`text-xs font-bold ${editingPost?.published ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'}`}>
                                                     {editingPost?.published ? 'Опубликовано' : 'Черновик'}
                                                 </span>
                                                 <button
                                                     type="button"
                                                     onClick={() => setEditingPost(prev => ({ ...prev!, published: !prev?.published }))}
-                                                    className={`w-12 h-6 rounded-full relative transition-colors ${editingPost?.published ? 'bg-green-500' : 'bg-gray-200'}`}
+                                                    className={`w-12 h-6 rounded-full relative transition-colors ${editingPost?.published ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}`}
                                                 >
                                                     <motion.div
                                                         animate={{ x: editingPost?.published ? 26 : 2 }}
@@ -309,29 +309,29 @@ export function BlogManagementClient() {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase ml-1">Автор статьи</label>
+                                        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase ml-1">Автор статьи</label>
                                         <div className="relative group">
                                             <Input
                                                 value={editingPost?.author || ''}
                                                 onChange={(e) => setEditingPost(prev => ({ ...prev!, author: e.target.value }))}
                                                 placeholder="Имя автора или название сайта..."
-                                                className="h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all pl-10"
+                                                className="h-12 rounded-xl border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 focus:bg-white dark:focus:bg-white/10 focus:ring-blue-500 transition-all pl-10 text-gray-900 dark:text-white"
                                             />
-                                            <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                                            <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors" />
                                         </div>
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase ml-1">Изображение (URL или загрузка)</label>
+                                        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase ml-1">Изображение (URL или загрузка)</label>
                                         <div className="flex gap-2">
                                             <div className="relative group flex-1">
                                                 <Input
                                                     value={editingPost?.image || ''}
                                                     onChange={(e) => setEditingPost(prev => ({ ...prev!, image: e.target.value }))}
                                                     placeholder="/static/blogs/image.jpg"
-                                                    className="h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all pl-10"
+                                                    className="h-12 rounded-xl border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 focus:bg-white dark:focus:bg-white/10 focus:ring-blue-500 transition-all pl-10 text-gray-900 dark:text-white"
                                                 />
-                                                <ExternalLink className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                                                <ExternalLink className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 group-hover:text-blue-500 transition-colors" />
                                             </div>
                                             <div className="relative">
                                                 <input
@@ -343,7 +343,7 @@ export function BlogManagementClient() {
                                                 />
                                                 <label
                                                     htmlFor="blog-image-upload"
-                                                    className="h-12 px-4 rounded-xl border border-gray-200 bg-white flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-all text-gray-600"
+                                                    className="h-12 px-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] flex items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-all text-gray-600 dark:text-gray-300"
                                                     title="Загрузить с компьютера"
                                                 >
                                                     <Upload className="w-5 h-5" />
@@ -351,7 +351,7 @@ export function BlogManagementClient() {
                                             </div>
                                         </div>
                                         {editingPost?.image && (
-                                            <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 aspect-video bg-gray-50">
+                                            <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 dark:border-white/10 aspect-video bg-gray-50 dark:bg-white/5">
                                                 <img
                                                     src={editingPost.image.startsWith('/') ? `${process.env.NEXT_PUBLIC_API_URL}${editingPost.image}` : editingPost.image}
                                                     alt="Preview"
@@ -363,33 +363,33 @@ export function BlogManagementClient() {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase ml-1">Краткое описание (экстракт)</label>
+                                        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase ml-1">Краткое описание (экстракт)</label>
                                         <Input
                                             value={editingPost?.excerpt || ''}
                                             onChange={(e) => setEditingPost(prev => ({ ...prev!, excerpt: e.target.value }))}
                                             placeholder="Коротко о чем статья..."
-                                            className="h-12 rounded-xl border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all"
+                                            className="h-12 rounded-xl border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 focus:bg-white dark:focus:bg-white/10 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
                                         />
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase ml-1">Текст статьи</label>
+                                        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase ml-1">Текст статьи</label>
                                         <Textarea
                                             value={editingPost?.content}
                                             onChange={(e) => setEditingPost(prev => ({ ...prev!, content: e.target.value }))}
                                             placeholder="Напишите вашу статью здесь..."
-                                            className="min-h-[200px] rounded-[20px] border-gray-100 bg-gray-50 focus:bg-white focus:ring-blue-500 transition-all resize-none p-4"
+                                            className="min-h-[200px] rounded-[20px] border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 focus:bg-white dark:focus:bg-white/10 focus:ring-blue-500 transition-all resize-none p-4 text-gray-900 dark:text-white"
                                             required
                                         />
                                     </div>
                                 </div>
                             </form>
 
-                            <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex gap-3">
+                            <div className="p-6 bg-gray-50/50 dark:bg-white/5 border-t border-gray-100 dark:border-white/5 flex gap-3">
                                 <Button
                                     type="button"
                                     onClick={() => setIsEditorOpen(false)}
-                                    className="flex-1 h-12 rounded-xl bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold"
+                                    className="flex-1 h-12 rounded-xl bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 font-bold"
                                 >
                                     Отмена
                                 </Button>

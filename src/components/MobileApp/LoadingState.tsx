@@ -4,13 +4,13 @@ import { getPictureUrl } from '@/core/lib/assets';
 
 export const LoadingState = () => {
     return (
-        <div className="fixed inset-0 z-[20000] flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white to-gray-50">
+        <div className="fixed inset-0 z-[20000] flex flex-col items-center justify-center p-6 bg-gradient-to-b from-background to-surface">
             <img
-                src={getPictureUrl('coconut-dancing.gif') || '/coconut-dancing.gif'}
+                src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
                 alt="Загрузка"
-                className="w-24 h-24 object-contain"
+                className="w-32 h-32 object-contain"
             />
-            <p className="text-gray-600 mt-4 font-medium animate-pulse">Инициализация...</p>
+            <p className="text-muted mt-6 font-medium animate-pulse text-lg">Загрузка...</p>
         </div>
     );
 };

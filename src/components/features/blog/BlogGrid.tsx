@@ -62,28 +62,28 @@ export const BlogGrid = () => {
 
     return (
         <section
-            className="pb-20 bg-white border-t border-gray-100 relative"
+            className="pb-20 bg-background border-t border-border relative"
         >
             {/* Background elements container with overflow-hidden to prevent clipping of cards while containing blurs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/30 rounded-full blur-[120px] -mr-64 -mt-64" />
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-teal-50/20 rounded-full blur-[120px] -ml-64 -mb-64" />
+            <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
+                <div className="absolute top-0 right-0 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-blue-50/30 dark:bg-blue-900/10 rounded-full blur-[120px] -mr-64 -mt-64" />
+                <div className="absolute bottom-0 left-0 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-teal-50/20 dark:bg-teal-900/10 rounded-full blur-[120px] -ml-64 -mb-64" />
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-                    <div className="flex flex-col md:flex-row md:items-end gap-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 relative">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-8 sm:mb-12">
+                    <div className="flex flex-col md:flex-row md:items-end gap-4 sm:gap-6">
                         <div>
-                            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">Блог</h2>
-                            <p className="text-gray-500 mt-2 font-medium">Новости, обзоры и полезные советы</p>
+                            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Блог</h2>
+                            <p className="text-muted mt-2 font-medium text-sm sm:text-base">Новости, обзоры и полезные советы</p>
                         </div>
                         {!loading && (
                             <Link
                                 href="/blog"
-                                className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 !text-black rounded-full font-bold text-sm transition-all active:scale-95 shadow-lg shadow-blue-500/25 w-fit min-w-[140px] relative z-10"
+                                className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-xs sm:text-sm transition-all active:scale-95 shadow-lg shadow-blue-500/25 w-fit min-w-[120px] sm:min-w-[140px] relative z-10"
                             >
-                                <span className="text-black">Читать все</span>
-                                <ArrowRight className="w-4 h-4 text-black" />
+                                <span>Читать все</span>
+                                <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </Link>
                         )}
                     </div>
@@ -93,29 +93,29 @@ export const BlogGrid = () => {
                     <div className="grid md:grid-cols-3 gap-10">
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="group">
-                                <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden bg-gray-50 mb-6">
+                                <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden bg-gray-50 dark:bg-white/5 mb-6">
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-shimmer" />
-                                    <div className="w-full h-full bg-gray-100 animate-pulse" />
+                                    <div className="w-full h-full bg-gray-100 dark:bg-white/10 animate-pulse" />
                                 </div>
                                 <div className="space-y-4 px-1">
-                                    <div className="h-3 bg-gray-100 rounded-full w-1/3 animate-pulse" />
-                                    <div className="h-6 bg-gray-100 rounded-full w-3/4 animate-pulse" />
+                                    <div className="h-3 bg-gray-100 dark:bg-white/10 rounded-full w-1/3 animate-pulse" />
+                                    <div className="h-6 bg-gray-100 dark:bg-white/10 rounded-full w-3/4 animate-pulse" />
                                     <div className="space-y-2">
-                                        <div className="h-4 bg-gray-50 rounded-full w-full animate-pulse" />
-                                        <div className="h-4 bg-gray-50 rounded-full w-2/3 animate-pulse" />
+                                        <div className="h-4 bg-gray-50 dark:bg-white/5 rounded-full w-full animate-pulse" />
+                                        <div className="h-4 bg-gray-50 dark:bg-white/5 rounded-full w-2/3 animate-pulse" />
                                     </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 ) : posts.length === 0 ? (
-                    <div className="bg-gray-50/50 rounded-[2.5rem] border border-dashed border-gray-200 py-20 text-center">
-                        <Newspaper className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-gray-900">Блог находится в разработке</h3>
-                        <p className="text-gray-500 mt-1 max-w-xs mx-auto">Совсем скоро здесь появятся интересные обзоры и новости мира технологий.</p>
+                    <div className="bg-gray-50/50 dark:bg-white/5 rounded-[2.5rem] border border-dashed border-gray-200 dark:border-white/10 py-20 text-center">
+                        <Newspaper className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Блог находится в разработке</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mt-1 max-w-xs mx-auto">Совсем скоро здесь появятся интересные обзоры и новости мира технологий.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 md:gap-10">
                         <AnimatePresence>
                             {posts.map((post, index) => (
                                 <motion.div
@@ -127,7 +127,7 @@ export const BlogGrid = () => {
                                     className="group cursor-pointer"
                                     onClick={() => setSelectedPost(post)}
                                 >
-                                    <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden bg-white/40 backdrop-blur-xl border border-white/50 mb-6 shadow-sm group-hover:shadow-xl transition-all duration-500">
+                                    <div className="relative aspect-[16/10] rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 mb-4 sm:mb-6 shadow-sm group-hover:shadow-xl transition-all duration-500">
                                         {post.image ? (
                                             <Image
                                                 src={post.image}
@@ -136,39 +136,39 @@ export const BlogGrid = () => {
                                                 className="object-cover group-hover:scale-110 transition-transform duration-700"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 italic text-gray-400">
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/10 italic text-gray-400 dark:text-gray-500">
                                                 <Newspaper className="w-10 h-10 opacity-20" />
                                             </div>
                                         )}
                                         <div className="absolute top-4 left-4">
-                                            <span className="px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-bold text-gray-900 uppercase tracking-widest shadow-sm">
+                                            <span className="px-4 py-1.5 bg-white/90 dark:bg-white/10 backdrop-blur-md rounded-full text-[10px] font-bold text-gray-900 dark:text-white uppercase tracking-widest shadow-sm">
                                                 {post.category}
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="space-y-3">
-                                        <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                            <div className="flex items-center gap-3">
-                                                <span>{new Date(post.createdAt).toLocaleDateString('ru-RU')}</span>
-                                                <span className="w-1 h-1 bg-gray-200 rounded-full"></span>
-                                                <span>{post.category}</span>
+                                        <div className="space-y-2 sm:space-y-3 px-4 sm:px-5 pb-4 sm:pb-5">
+                                            <div className="flex flex-wrap items-center gap-y-2 gap-x-3 text-[10px] sm:text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                                                <div className="flex items-center gap-2 sm:gap-3">
+                                                    <span>{new Date(post.createdAt).toLocaleDateString('ru-RU')}</span>
+                                                    <span className="w-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full"></span>
+                                                    <span>{post.category}</span>
+                                                </div>
+                                                {post.author && (
+                                                    <>
+                                                        <span className="hidden md:block w-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full"></span>
+                                                        <span className="w-full md:w-auto text-gray-900 dark:text-white border-t md:border-t-0 border-gray-100 dark:border-white/5 pt-2 md:pt-0">
+                                                            {post.author}
+                                                        </span>
+                                                    </>
+                                                )}
                                             </div>
-                                            {post.author && (
-                                                <>
-                                                    <span className="hidden md:block w-1 h-1 bg-gray-200 rounded-full"></span>
-                                                    <span className="w-full md:w-auto text-gray-900 border-t md:border-t-0 border-gray-100 pt-2 md:pt-0">
-                                                        {post.author}
-                                                    </span>
-                                                </>
-                                            )}
+                                            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
+                                                {post.title}
+                                            </h3>
+                                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
+                                                {post.excerpt || (post.content ? post.content.substring(0, 100) + '...' : '')}
+                                            </p>
                                         </div>
-                                        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
-                                            {post.title}
-                                        </h3>
-                                        <p className="text-gray-500 text-sm line-clamp-2 leading-relaxed">
-                                            {post.excerpt || (post.content ? post.content.substring(0, 100) + '...' : '')}
-                                        </p>
-                                    </div>
                                 </motion.div>
                             ))}
                         </AnimatePresence>
@@ -185,20 +185,20 @@ export const BlogGrid = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedPost(null)}
-                            className="absolute inset-0 bg-white/40 backdrop-blur-[32px]"
+                            className="absolute inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-[32px]"
                         />
                         <motion.div
                             layoutId={selectedPost.id}
                             initial={{ opacity: 0, scale: 0.95, y: 40 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 40 }}
-                            className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[48px] shadow-2xl relative overflow-hidden flex flex-col border border-gray-100"
+                            className="bg-background w-full max-w-4xl max-h-[90vh] rounded-[48px] shadow-2xl relative overflow-hidden flex flex-col border border-border"
                         >
                             {!isDesktop ? (
                                 <div className="absolute top-6 left-0 right-0 flex justify-center z-20">
                                     <button
                                         onClick={() => setSelectedPost(null)}
-                                        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white/80 backdrop-blur-md px-5 py-2 rounded-full border border-gray-100 shadow-sm active:scale-95 transition-all"
+                                        className="flex items-center gap-1.5 text-sm font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-white/80 dark:bg-white/10 backdrop-blur-md px-5 py-2 rounded-full border border-gray-100 dark:border-white/10 shadow-sm active:scale-95 transition-all"
                                     >
                                         <ArrowLeft className="w-4 h-4" />
                                         Назад
@@ -207,18 +207,18 @@ export const BlogGrid = () => {
                             ) : (
                                 <button
                                     onClick={() => setSelectedPost(null)}
-                                    className="absolute top-8 right-8 p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-20"
+                                    className="absolute top-8 right-8 p-3 bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 rounded-full transition-colors z-20"
                                 >
-                                    <X className="w-5 h-5 text-gray-900" />
+                                    <X className="w-5 h-5 text-gray-900 dark:text-white" />
                                 </button>
                             )}
 
                             <div className="flex-1 overflow-y-auto scrollbar-hide">
-                                <div className="w-full aspect-[21/9] bg-gray-100 relative">
+                                <div className="w-full aspect-[21/9] bg-gray-100 dark:bg-white/5 relative">
                                     {selectedPost.image && (
                                         <img src={selectedPost.image} alt={selectedPost.title} className="w-full h-full object-cover" />
                                     )}
-                                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent"></div>
+                                    <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent"></div>
                                 </div>
 
                                 <div className="px-8 md:px-16 pb-16 -mt-20 relative z-10">
@@ -226,23 +226,23 @@ export const BlogGrid = () => {
                                         <div className="px-4 py-1.5 bg-blue-600 text-white rounded-full text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-blue-500/20">
                                             {selectedPost.category}
                                         </div>
-                                        <div className="text-gray-400 text-sm flex items-center gap-2">
+                                        <div className="text-gray-400 dark:text-gray-500 text-sm flex items-center gap-2">
                                             <Calendar className="w-4 h-4" />
                                             {new Date(selectedPost.createdAt).toLocaleDateString('ru-RU')}
                                         </div>
                                         {selectedPost.author && (
-                                            <div className="text-gray-400 text-sm flex items-center gap-2">
+                                            <div className="text-gray-400 dark:text-gray-500 text-sm flex items-center gap-2">
                                                 <User className="w-4 h-4" />
                                                 <span>{selectedPost.author}</span>
                                             </div>
                                         )}
                                     </div>
 
-                                    <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-8 leading-[1.15] tracking-tight">
+                                    <h2 className="text-3xl md:text-5xl font-bold text-gray-900 dark:text-white mb-8 leading-[1.15] tracking-tight">
                                         {selectedPost.title}
                                     </h2>
 
-                                    <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed space-y-4 whitespace-pre-wrap">
+                                    <div className="prose prose-lg max-w-none text-gray-600 dark:text-gray-300 leading-relaxed space-y-4 whitespace-pre-wrap">
                                         {selectedPost.content}
                                     </div>
                                 </div>

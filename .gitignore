@@ -65,3 +65,6 @@ python-parser/
 # Go API Service
 /api-service
 /qoqos_server
+
+/RULES
+AGENTS.md

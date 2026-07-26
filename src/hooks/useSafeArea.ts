@@ -196,17 +196,17 @@ export function useSafeArea() {
           }
 
           if (webApp.isVersionAtLeast?.('6.1')) {
-            webApp.headerColor = '#2dc2c6'
+            webApp.headerColor = '#7ec8dc'
             webApp.backgroundColor = '#ffffff'
           }
 
           if (webApp.MainButton) {
-            webApp.MainButton.color = '#2dc2c6'
+            webApp.MainButton.color = '#7ec8dc'
             webApp.MainButton.textColor = '#ffffff'
           }
 
           if (webApp.themeParams) {
-            webApp.themeParams.button_color = '#2dc2c6'
+            webApp.themeParams.button_color = '#7ec8dc'
             webApp.themeParams.button_text_color = '#ffffff'
             webApp.themeParams.bg_color = '#ffffff'
             webApp.themeParams.text_color = '#000000'

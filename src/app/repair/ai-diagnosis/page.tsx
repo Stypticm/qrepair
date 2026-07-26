@@ -48,27 +48,27 @@ export default function RepairAiDiagnosisPage() {
     return (
         <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
             <div className="space-y-2 mt-4 text-center">
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900 flex items-center justify-center gap-2">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center justify-center gap-2">
                     <BrainCircuit className="w-6 h-6 text-purple-600" />
                     AI Диагностика
                 </h1>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                     Искусственный интеллект проанализирует симптомы
                 </p>
             </div>
 
             <div className="flex-1 space-y-6 mt-6">
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                    <div className="text-sm font-semibold text-gray-700">Входные данные:</div>
+                <div className="bg-surface-elevated p-6 rounded-3xl border border-border shadow-sm space-y-4">
+                    <div className="text-sm font-semibold text-foreground">Входные данные:</div>
 
-                    <div className="flex gap-3 items-center p-3 bg-gray-50 rounded-xl">
-                        <Smartphone className="w-5 h-5 text-gray-400" />
+                    <div className="flex gap-3 items-center p-3 bg-surface rounded-xl">
+                        <Smartphone className="w-5 h-5 text-muted" />
                         <span className="text-sm font-medium">{deviceModel || 'Устройство не выбрано'}</span>
                     </div>
 
-                    <div className="flex gap-3 items-start p-3 bg-gray-50 rounded-xl">
-                        <ImageIcon className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-600 leading-relaxed italic">
+                    <div className="flex gap-3 items-start p-3 bg-surface rounded-xl">
+                        <ImageIcon className="w-5 h-5 text-muted shrink-0 mt-0.5" />
+                        <span className="text-sm text-muted leading-relaxed italic">
                             {issueDescription || '«Описания проблемы нет»'}
                         </span>
                     </div>
@@ -120,7 +120,7 @@ export default function RepairAiDiagnosisPage() {
                 <Button
                     onClick={() => router.back()}
                     variant="outline"
-                    className="w-full h-14 rounded-2xl font-bold border-2 border-gray-200 bg-white/80 backdrop-blur-md hover:bg-gray-50 text-gray-700 transition-all active:scale-[0.98]"
+                    className="w-full h-14 rounded-2xl font-bold border-2 border-border bg-surface-elevated/80 backdrop-blur-md hover:bg-surface text-foreground transition-all active:scale-[0.98]"
                 >
                     <ChevronLeft className="w-5 h-5 mr-2" />
                     Вернуться к оформлению

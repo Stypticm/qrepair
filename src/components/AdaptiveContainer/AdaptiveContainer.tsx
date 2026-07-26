@@ -75,10 +75,8 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
 
   const getContainerStyles = () => {
-    // We remove all "frame" and "nested scroll" logic. 
-    // The browser handles the scroll on the main document.
     return {
-      container: 'w-full min-h-screen flex flex-col bg-white',
+      container: 'w-full min-h-screen flex flex-col bg-background',
       main: 'w-full flex-1 flex flex-col',
       wrapper: 'w-full flex-1 flex flex-col',
       fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
@@ -89,13 +87,13 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
   if (isTelegram && !isReady) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-white p-6 text-center">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background p-6 text-center">
         <img
           src="/coconut-dancing.gif"
           alt="Загрузка"
           className="w-32 h-32 object-contain"
         />
-        <p className="mt-4 text-gray-500 font-medium animate-pulse">Загрузка интерфейса...</p>
+        <p className="mt-4 text-gray-500 dark:text-gray-400 font-medium animate-pulse">Загрузка интерфейса...</p>
       </div>
     );
   }

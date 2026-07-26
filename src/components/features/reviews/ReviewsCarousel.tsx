@@ -53,21 +53,21 @@ const REVIEWS = [
 
 export const ReviewsCarousel = () => {
     return (
-        <section className="py-24 bg-white relative overflow-hidden">
+        <section className="py-24 bg-background relative overflow-hidden">
             <div className="max-w-7xl mx-auto px-6 relative">
                 <div className="flex items-center gap-4 mb-12">
-                    <h2 className="text-4xl font-bold text-gray-900 tracking-tight">Мнение наших клиентов</h2>
-                    <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-bold uppercase tracking-widest border border-amber-200 shadow-sm animate-pulse">
+                    <h2 className="text-4xl font-bold text-gray-900 dark:text-white tracking-tight">Мнение наших клиентов</h2>
+                    <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-widest border border-amber-200 dark:border-amber-700 shadow-sm animate-pulse">
                         Скоро
                     </span>
                 </div>
 
                 <div className="relative group">
                     {/* Blur Overlay */}
-                    <div className="absolute inset-0 z-20 backdrop-blur-[8px] bg-white/40 rounded-[3rem] flex items-center justify-center border border-white/50">
-                        <div className="bg-white/80 backdrop-blur-xl px-10 py-6 rounded-3xl shadow-2xl border border-gray-100 text-center transform group-hover:scale-105 transition-transform duration-500">
-                            <p className="text-gray-900 font-bold text-xl tracking-tight mb-1">Раздел в разработке</p>
-                            <p className="text-gray-500 font-medium">Мы собираем лучшие отзывы для вас</p>
+                    <div className="absolute inset-0 z-20 backdrop-blur-[8px] bg-white/40 dark:bg-background/40 rounded-[3rem] flex items-center justify-center border border-white/50 dark:border-white/10">
+                        <div className="bg-white/80 dark:bg-white/10 backdrop-blur-xl px-10 py-6 rounded-3xl shadow-2xl border border-gray-100 dark:border-white/10 text-center transform group-hover:scale-105 transition-transform duration-500">
+                            <p className="text-gray-900 dark:text-white font-bold text-xl tracking-tight mb-1">Раздел в разработке</p>
+                            <p className="text-gray-500 dark:text-gray-400 font-medium">Мы собираем лучшие отзывы для вас</p>
                         </div>
                     </div>
 
@@ -75,25 +75,25 @@ export const ReviewsCarousel = () => {
                     <div className="opacity-40 grayscale-[0.5] pointer-events-none select-none">
                         {/* Aggregate Rating Badge */}
                         <div className="flex items-center gap-6 mb-8 text-sm font-medium">
-                            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                                <span className="text-xl font-bold text-gray-900">5.0</span>
+                            <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-white/10">
+                                <span className="text-xl font-bold text-gray-900 dark:text-white">5.0</span>
                                 <div className="flex text-yellow-400">
                                     <Star className="w-4 h-4 fill-current" />
                                 </div>
-                                <span className="text-gray-400">3697 отзывов</span>
+                                <span className="text-gray-400 dark:text-gray-500">3697 отзывов</span>
                             </div>
 
-                            <div className="flex gap-4 text-gray-500">
-                                <span className="flex items-center gap-1"><span className="font-bold text-gray-900">Яндекс</span> 5.0</span>
-                                <span className="flex items-center gap-1"><span className="font-bold text-gray-900">2Gis</span> 5.0</span>
-                                <span className="flex items-center gap-1"><span className="font-bold text-gray-900">Авито</span> 4.9</span>
+                            <div className="flex gap-4 text-gray-500 dark:text-gray-400">
+                                <span className="flex items-center gap-1"><span className="font-bold text-gray-900 dark:text-white">Яндекс</span> 5.0</span>
+                                <span className="flex items-center gap-1"><span className="font-bold text-gray-900 dark:text-white">2Gis</span> 5.0</span>
+                                <span className="flex items-center gap-1"><span className="font-bold text-gray-900 dark:text-white">Авито</span> 4.9</span>
                             </div>
                         </div>
 
                         {/* Filters (Visual Only) */}
                         <div className="flex flex-wrap gap-2 mb-8">
                             {['цена', 'сервис', 'доставка', 'магазин', 'продукт', 'товар', 'персонал'].map((tag) => (
-                                <button key={tag} className="px-4 py-1.5 rounded-full border border-gray-200 text-sm text-gray-600">
+                                <button key={tag} className="px-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 text-sm text-gray-600 dark:text-gray-400">
                                     {tag}
                                 </button>
                             ))}
@@ -101,15 +101,15 @@ export const ReviewsCarousel = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {REVIEWS.slice(0, 3).map((review) => (
-                                <Card key={review.id} className="border-gray-100 shadow-sm rounded-[2rem]">
+                                <Card key={review.id} className="border-border shadow-sm rounded-[2rem] bg-card">
                                     <CardContent className="p-8">
                                         <div className="flex items-center gap-3 mb-6">
                                             <div className={cn("w-12 h-12 rounded-full flex items-center justify-center text-white font-bold", review.avatarColor)}>
                                                 {review.author[0]}
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-gray-900 leading-none mb-1 text-lg">{review.author}</h4>
-                                                <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">{review.date}</span>
+                                                <h4 className="font-bold text-gray-900 dark:text-white leading-none mb-1 text-lg">{review.author}</h4>
+                                                <span className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider">{review.date}</span>
                                             </div>
                                         </div>
                                         <div className="flex mb-4 gap-0.5">
@@ -117,7 +117,7 @@ export const ReviewsCarousel = () => {
                                                 <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
                                             ))}
                                         </div>
-                                        <p className="text-gray-500 leading-relaxed font-medium line-clamp-3">
+                                        <p className="text-gray-500 dark:text-gray-400 leading-relaxed font-medium line-clamp-3">
                                             {review.text}
                                         </p>
                                     </CardContent>

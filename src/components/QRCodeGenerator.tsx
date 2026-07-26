@@ -113,7 +113,7 @@ export function QRCodeGenerator({ skupkaId, pointId, showHeader = true, showId =
           <div className="space-y-4">
             <div className="relative w-48 h-48 mx-auto">
               {/* Круглая рамка с более мягкой тенью */}
-              <div className="absolute inset-0 rounded-full border-2 border-[#2dc2c6] shadow-[0_6px_16px_rgba(45,194,198,0.25),0_2px_8px_rgba(0,0,0,0.12)] pointer-events-none z-20"></div>
+              <div className="absolute inset-0 rounded-full border-2 border-teal-500 shadow-[0_6px_16px_rgba(126,200,220,0.25),0_2px_8px_rgba(0,0,0,0.12)] pointer-events-none z-20"></div>
               {/* Тонкая внутренняя белая окантовка */}
               <div className="absolute inset-[6px] rounded-full border border-white/85 pointer-events-none z-20"></div>
 

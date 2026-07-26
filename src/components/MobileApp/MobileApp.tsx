@@ -66,7 +66,7 @@ export const MobileApp = () => {
                 setViewMode={setViewMode}
                 screenHeight={screenHeight}
             />
-            <div className="pb-24 bg-white">
+            <div className="pb-24 bg-background">
                 <FAQAccordion />
             </div>
         </AdaptiveContainer >

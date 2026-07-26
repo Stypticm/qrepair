@@ -5,7 +5,7 @@ import { LocationBlock } from '@/components/features/contacts/LocationBlock';
 export default function AboutPage() {
     return (
         <div className="min-h-screen bg-white">
-            <Header />
+            {/* <Header /> */}
 
             <main className="pt-12 pb-16">
                 <div className="container mx-auto px-4">

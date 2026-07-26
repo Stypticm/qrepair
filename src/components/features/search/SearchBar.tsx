@@ -32,12 +32,12 @@ export const SearchBar = () => {
 
   return (
     <div className={cn(
-      "relative flex items-center w-full h-12 bg-gray-100 rounded-apple-lg border-2 transition-all duration-200",
-      isFocused ? "border-teal-500 bg-white ring-4 ring-teal-500/10" : "border-transparent hover:bg-gray-50"
+      "relative flex items-center w-full h-12 bg-input rounded-apple-lg border-2 border-transparent transition-all duration-200 dark:bg-transparent",
+      isFocused ? "border-accent bg-surface-elevated dark:bg-transparent ring-4 ring-accent/15" : "hover:bg-surface dark:hover:bg-white/5"
     )}>
       <Search className={cn(
         "w-5 h-5 ml-4 mr-3 transition-colors",
-        isFocused ? "text-teal-500" : "text-gray-400"
+        isFocused ? "text-accent-deep" : "text-muted"
       )} />
 
       <input
@@ -46,18 +46,18 @@ export const SearchBar = () => {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyPress={handleKeyPress}
-        className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400 h-full"
+        className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-foreground placeholder:text-muted h-full"
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
       />
 
-      <div className="hidden lg:block h-6 w-[1px] bg-gray-300 mx-2"></div>
+      <div className="hidden lg:block h-6 w-px bg-border mx-2"></div>
 
       <div className="hidden lg:block relative h-full">
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           onBlur={() => setTimeout(() => setIsDropdownOpen(false), 200)}
-          className="flex items-center gap-2 px-4 h-full text-xs font-semibold text-gray-600 hover:text-teal-600 sm:w-[140px] justify-between transition-colors"
+          className="flex items-center gap-2 px-4 h-full text-xs font-semibold text-muted hover:text-accent-deep sm:w-[140px] justify-between transition-colors"
         >
           <span>{scope === 'all' ? 'По всему сайту' : 'По каталогу'}</span>
           <ChevronDown className={cn(
@@ -67,7 +67,7 @@ export const SearchBar = () => {
         </button>
 
         {isDropdownOpen && (
-          <div className="absolute top-full right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
+          <div className="absolute top-full right-0 mt-2 w-40 bg-surface-elevated border border-border rounded-xl shadow-lg overflow-hidden z-50">
             <button
               onClick={() => {
                 setScope('all');
@@ -75,7 +75,7 @@ export const SearchBar = () => {
               }}
               className={cn(
                 "w-full px-4 py-2.5 text-left text-sm font-medium transition-colors",
-                scope === 'all' ? "bg-teal-50 text-teal-600" : "text-gray-700 hover:bg-gray-50"
+                scope === 'all' ? "bg-accent/15 text-accent-deep" : "text-foreground hover:bg-surface"
               )}
             >
               По всему сайту
@@ -87,7 +87,7 @@ export const SearchBar = () => {
               }}
               className={cn(
                 "w-full px-4 py-2.5 text-left text-sm font-medium transition-colors",
-                scope === 'catalog' ? "bg-teal-50 text-teal-600" : "text-gray-700 hover:bg-gray-50"
+                scope === 'catalog' ? "bg-accent/15 text-accent-deep" : "text-foreground hover:bg-surface"
               )}
             >
               По каталогу

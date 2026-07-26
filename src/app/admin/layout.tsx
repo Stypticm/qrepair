@@ -9,7 +9,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const { isDesktop } = useSafeArea();
 
   return (
-    <div className={`flex w-full h-screen overflow-hidden ${isDesktop ? 'bg-[#f8f9fa]' : 'bg-white'}`}>
+    <div className={`flex w-full h-screen overflow-hidden ${isDesktop ? 'bg-[#f8f9fa] dark:bg-[#0a0a0a]' : 'bg-white dark:bg-[#0a0a0a]'}`}>
       <AdminSidebar />
       <div className="flex-1 w-full h-full flex flex-col overflow-y-auto overflow-x-hidden">
         <AdminHeader />

@@ -26,7 +26,7 @@ export default function RepairEstimatePage() {
     return (
         <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
             <div className="space-y-2 mb-4 text-center">
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted">
                     Ориентировочная стоимость ремонта для {deviceModel}
                 </p>
             </div>
@@ -35,20 +35,20 @@ export default function RepairEstimatePage() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center space-y-2"
+                    className="bg-surface-elevated p-6 rounded-3xl border border-border shadow-sm text-center space-y-2"
                 >
                     <div className="flex justify-center mb-4">
                         <div className="p-4 bg-green-50 text-green-600 rounded-full">
                             <Wallet className="w-8 h-8" />
                         </div>
                     </div>
-                    <div className="text-sm font-semibold text-gray-500 uppercase tracking-widest">
+                    <div className="text-sm font-semibold text-muted uppercase tracking-widest">
                         Диапазон цен
                     </div>
-                    <div className="text-3xl font-black text-gray-900">
+                    <div className="text-3xl font-black text-foreground">
                         {estimateMin.toLocaleString('ru-RU')} – {estimateMax.toLocaleString('ru-RU')} ₽
                     </div>
-                    <p className="text-xs text-gray-400 mt-4 px-4 leading-relaxed">
+                    <p className="text-xs text-muted mt-4 px-4 leading-relaxed">
                         *Точная стоимость будет определена после бесплатной диагностики мастером.
                     </p>
                 </motion.div>
@@ -86,7 +86,7 @@ export default function RepairEstimatePage() {
             <div className="fixed bottom-6 left-0 right-0 px-4 max-w-md mx-auto z-10">
                 <Button
                     onClick={handleNext}
-                    className="w-full h-14 rounded-2xl font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20"
+                    className="w-full h-14 rounded-2xl font-bold text-base bg-accent hover:bg-accent-hover text-primary-foreground shadow-xl shadow-accent/20"
                 >
                     К оформлению заявки
                     <ChevronRight className="w-5 h-5 ml-2" />

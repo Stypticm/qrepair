@@ -67,14 +67,14 @@ export function Page({ children, title, header, back = true }: PropsWithChildren
     // Actually, let's just make it full width if it's NOT a modal-like page.
     // But Page is used everywhere.
     // Let's modify Page to accept a prop 'isDesktopFullWidth'.
-    ? 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto'
+    ? 'w-[414px] max-w-full bg-surface-elevated rounded-2xl shadow-xl overflow-y-auto'
     : 'w-full h-full';
 
   const isWidePage = pathname?.includes('/cart') || pathname?.includes('/favorites') || pathname?.includes('/my-devices') || pathname?.includes('/buyback') || pathname?.includes('/repair') || pathname?.startsWith('/request') || pathname?.includes('/blog');
   const isAdminPath = pathname?.startsWith('/admin');
 
   const finalOuterClass = isDesktop
-    ? 'w-full min-h-screen flex flex-col bg-gray-50/50'
+    ? 'w-full min-h-screen flex flex-col bg-surface/50'
     : 'w-full min-h-full flex flex-col';
 
   const finalInnerClass = isDesktop
@@ -85,7 +85,7 @@ export function Page({ children, title, header, back = true }: PropsWithChildren
 
   const desktopContentClass = (isWidePage || isAdminPath)
     ? 'w-full max-w-7xl mx-auto'
-    : 'w-[414px] max-w-full bg-white rounded-2xl shadow-xl overflow-y-auto max-h-[90vh]';
+    : 'w-[414px] max-w-full bg-surface-elevated rounded-2xl shadow-xl overflow-y-auto max-h-[90vh]';
 
   return (
     <div className={finalOuterClass}>

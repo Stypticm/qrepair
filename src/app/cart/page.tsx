@@ -26,15 +26,15 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <Page back={true}>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-surface flex items-center justify-center px-6">
           <div className="max-w-md w-full flex flex-col items-center text-center">
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-              <ShoppingCart className="w-12 h-12 text-gray-400" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Корзина пуста</h3>
-            <p className="text-gray-600 mb-6">
+              <div className="w-24 h-24 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mb-6">
+              <ShoppingCart className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Корзина пуста</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
               Добавьте товары в корзину, <br />чтобы они появились здесь
-            </p>
+              </p>
             <button
               onClick={() => router.push('/')}
               className="mt-2 px-8 py-3 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-colors font-semibold flex items-center justify-center gap-2 shadow-lg shadow-teal-500/20 active:scale-[0.98]"
@@ -61,12 +61,12 @@ export default function CartPage() {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50 md:pt-2">
+      <div className="min-h-screen bg-surface md:pt-2">
         {/* md:pt-2 because Header is fixed and takes ~80px space. */}
         <div className="max-w-7xl mx-auto pt-6 md:pt-12 px-6 pb-32">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Корзина</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Корзина</h1>
+            <p className="text-gray-600 dark:text-gray-400">
               {getTotalItems()} товар{getTotalItems() === 1 ? '' : getTotalItems() < 5 ? 'а' : 'ов'} на сумму {formatPrice(getTotalPrice())}
             </p>
           </div>
@@ -74,11 +74,11 @@ export default function CartPage() {
           <div className="flex flex-col lg:flex-row gap-8 mb-8">
             <div className="flex-1 space-y-4">
               {cartItems.map((item) => (
-                <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div key={item.id} className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
                   <div className="p-4">
                     <div className="flex items-center gap-4">
                       {/* Мини-изображение */}
-                      <div className="relative w-20 h-20 bg-gray-100 rounded-xl flex-shrink-0">
+                      <div className="relative w-20 h-20 bg-gray-100 dark:bg-white/10 rounded-xl flex-shrink-0">
                         {item.cover ? (
                           <Image
                             src={item.cover}
@@ -108,15 +108,15 @@ export default function CartPage() {
 
                       {/* Основная информация */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">
+                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2">
                           {item.title}
                         </h3>
                         {item.model && (
-                          <p className="text-sm text-gray-500 mb-1">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                             {item.model} {item.storage && `· ${item.storage}`} {item.color && `· ${item.color}`}
                           </p>
                         )}
-                        <div className="text-xl font-bold text-gray-900">
+                        <div className="text-xl font-bold text-gray-900 dark:text-white">
                           {formatPrice(item.price)}
                         </div>
                       </div>
@@ -125,7 +125,7 @@ export default function CartPage() {
                       <button
                         onClick={() => removeFromCart(item.id)}
                         disabled={loading}
-                        className="p-3 bg-red-50 hover:bg-red-100 rounded-xl transition-colors disabled:opacity-50"
+                        className="p-3 bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-xl transition-colors disabled:opacity-50"
                         title="Удалить из корзины"
                       >
                         <Trash2 className="w-5 h-5 text-red-500" />
@@ -138,13 +138,13 @@ export default function CartPage() {
 
             {/* Desktop Checkout Section */}
             <div className="hidden md:block w-[380px] flex-shrink-0">
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sticky top-28">
-                <h2 className="text-xl font-bold text-gray-900 mb-6">Ваш заказ</h2>
+              <div className="bg-white dark:bg-[#1a1a1a] rounded-3xl shadow-sm border border-gray-100 dark:border-white/10 p-6 sticky top-28">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Ваш заказ</h2>
 
-                <div className="space-y-4 mb-6 text-sm text-gray-600">
+                <div className="space-y-4 mb-6 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex justify-between">
                     <span>Товары ({getTotalItems()})</span>
-                    <span className="font-medium text-gray-900">{formatPrice(getTotalPrice())}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{formatPrice(getTotalPrice())}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Скидка</span>
@@ -152,10 +152,10 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-100 pt-4 mb-6">
+                <div className="border-t border-gray-100 dark:border-white/10 pt-4 mb-6">
                   <div className="flex justify-between items-baseline mb-2">
-                    <span className="text-base font-semibold text-gray-900">Итого</span>
-                    <span className="text-2xl font-bold text-gray-900">{formatPrice(getTotalPrice())}</span>
+                    <span className="text-base font-semibold text-gray-900 dark:text-white">Итого</span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(getTotalPrice())}</span>
                   </div>
                 </div>
 
@@ -193,11 +193,11 @@ export default function CartPage() {
               </div>
             </div>
           </div>
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 safe-area-bottom md:hidden">
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#1a1a1a] border-t border-gray-200 dark:border-white/10 p-4 safe-area-bottom md:hidden">
             <div className="max-w-md mx-auto">
               <div className="flex justify-between items-center mb-4">
-                <span className="text-lg font-semibold text-gray-900">Итого:</span>
-                <span className="text-2xl font-bold text-gray-900">{formatPrice(getTotalPrice())}</span>
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">Итого:</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-white">{formatPrice(getTotalPrice())}</span>
               </div>
 
               <div className="space-y-3">
@@ -222,11 +222,11 @@ export default function CartPage() {
                   Оформить заказ
                 </button>
 
-                <button
-                  onClick={clearCart}
-                  disabled={loading}
-                  className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
+                  <button
+                    onClick={clearCart}
+                    disabled={loading}
+                    className="w-full h-12 bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 rounded-2xl font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"

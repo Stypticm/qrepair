@@ -61,6 +61,35 @@ export function ChatWidget() {
         scrollToBottom();
     }, [messages, isLoading, scrollToBottom]);
 
+    // Polling for Operator Replies
+    useEffect(() => {
+        if (!isOpen || !guestId) return;
+
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`/api/agents/poll?guestId=${guestId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach((msg: any) => {
+                        addMessage({
+                            id: msg.id || crypto.randomUUID(),
+                            senderId: 'admin',
+                            senderType: 'admin',
+                            text: msg.text,
+                            createdAt: msg.createdAt || new Date().toISOString(),
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error('Polling error:', err);
+            }
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [isOpen, guestId, addMessage]);
+
     const handleSendMessage = async () => {
         if (!input.trim() || !activeId || isLoading) return;
 
@@ -178,7 +207,7 @@ export function ChatWidget() {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-md h-full max-h-[85dvh] bg-white/80 backdrop-blur-2xl border border-white/40 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
+                        className="relative w-full max-w-md h-full max-h-[85dvh] bg-white/80 dark:bg-background/80 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
                         <div className="p-4 bg-gray-900 text-white flex items-center justify-between">
@@ -216,10 +245,10 @@ export function ChatWidget() {
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
                             {messages.length === 0 ? (
                                 <div className="flex flex-col items-start max-w-[80%] mr-auto">
-                                    <div className="px-4 py-2.5 rounded-2xl text-sm shadow-sm bg-gray-100 text-gray-900 rounded-tl-none">
+                                    <div className="px-4 py-2.5 rounded-2xl text-sm shadow-sm bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none">
                                         Здравствуйте! Я на связи и готов помочь. Какой у вас вопрос?
                                     </div>
-                                    <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
                                         Администратор
                                     </span>
                                 </div>
@@ -237,12 +266,12 @@ export function ChatWidget() {
                                                 "px-4 py-2.5 rounded-2xl text-sm shadow-sm",
                                                 msg.senderType === 'user'
                                                     ? "bg-blue-600 text-white rounded-tr-none"
-                                                    : "bg-gray-100 text-gray-900 rounded-tl-none"
+                                                    : "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none"
                                             )}
                                         >
                                             {msg.text}
                                         </div>
-                                        <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                        <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
                                             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
@@ -250,12 +279,12 @@ export function ChatWidget() {
                             )}
                             {isLoading && (
                                 <div className="flex flex-col items-start max-w-[80%] mr-auto">
-                                    <div className="px-4 py-3 rounded-2xl text-sm shadow-sm bg-gray-100 text-gray-900 rounded-tl-none flex items-center gap-1.5 h-10 w-16">
-                                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
+                                    <div className="px-4 py-3 rounded-2xl text-sm shadow-sm bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none flex items-center gap-1.5 h-10 w-16">
+                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" />
                                     </div>
-                                    <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
                                         Ассистент печатает...
                                     </span>
                                 </div>
@@ -264,12 +293,12 @@ export function ChatWidget() {
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 bg-white/50 border-t border-gray-100">
+                        <div className="p-4 bg-white/50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
                             <div className="relative flex items-center gap-2">
                                 <input
                                     type="text"
                                     placeholder="Напишите сообщение..."
-                                    className="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                    className="flex-1 bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-gray-900 dark:text-white"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -299,7 +328,7 @@ export function ChatWidget() {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="mb-4 w-[calc(100vw-32px)] md:w-[380px] h-[70vh] md:h-[550px] bg-white/80 backdrop-blur-2xl border border-white/40 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
+                        className="mb-4 w-[calc(100vw-32px)] md:w-[380px] h-[70vh] md:h-[550px] bg-white/80 dark:bg-background/80 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
                         <div className="p-4 bg-gray-900 text-white flex items-center justify-between">
@@ -328,10 +357,10 @@ export function ChatWidget() {
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
                             {messages.length === 0 ? (
                                 <div className="flex flex-col items-start max-w-[80%] mr-auto">
-                                    <div className="px-4 py-2.5 rounded-2xl text-sm shadow-sm bg-gray-100 text-gray-900 rounded-tl-none">
+                                    <div className="px-4 py-2.5 rounded-2xl text-sm shadow-sm bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none">
                                         Здравствуйте! Я на связи и готов помочь. Какой у вас вопрос?
                                     </div>
-                                    <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
                                         Администратор
                                     </span>
                                 </div>
@@ -349,27 +378,39 @@ export function ChatWidget() {
                                                 "px-4 py-2.5 rounded-2xl text-sm shadow-sm",
                                                 msg.senderType === 'user'
                                                     ? "bg-blue-600 text-white rounded-tr-none"
-                                                    : "bg-gray-100 text-gray-900 rounded-tl-none"
+                                                    : "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none"
                                             )}
                                         >
                                             {msg.text}
                                         </div>
-                                        <span className="text-[10px] text-gray-400 mt-1 px-1">
+                                        <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
                                             {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
                                 ))
                             )}
+                            {isLoading && (
+                                <div className="flex flex-col items-start max-w-[80%] mr-auto">
+                                    <div className="px-4 py-3 rounded-2xl text-sm shadow-sm bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none flex items-center gap-1.5 h-10 w-16">
+                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" />
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
+                                        Ассистент печатает...
+                                    </span>
+                                </div>
+                            )}
                             <div ref={messagesEndRef} />
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 bg-white/50 border-t border-gray-100">
+                        <div className="p-4 bg-white/50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
                             <div className="relative flex items-center gap-2">
                                 <input
                                     type="text"
                                     placeholder="Напишите сообщение..."
-                                    className="flex-1 bg-gray-100 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                    className="flex-1 bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-gray-900 dark:text-white"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -395,7 +436,7 @@ export function ChatWidget() {
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
                     "h-16 w-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300",
-                    isOpen ? "bg-white text-gray-900 rotate-90" : "bg-gray-900 text-white"
+                    isOpen ? "bg-white dark:bg-white/10 text-foreground rotate-90" : "bg-gray-900 dark:bg-white text-white dark:text-background"
                 )}
                 aria-label={isOpen ? "Close chat" : "Open chat"}
             >

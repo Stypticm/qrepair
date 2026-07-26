@@ -159,7 +159,7 @@ export const useMobileAppInit = () => {
                 setupTelegramFeatures();
             }
 
-            const detectDesktop = () => setIsDesktopLike(window.innerWidth >= 768);
+            const detectDesktop = () => setIsDesktopLike(window.innerWidth >= 1024);
             detectDesktop();
             window.addEventListener('resize', detectDesktop);
             return () => window.removeEventListener('resize', detectDesktop);

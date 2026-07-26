@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chatProxyRequestSchema } from '@/lib/agents/schema';
-import { askAI } from '@/lib/agents/ollamaService';
 import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage';
 
 export async function POST(req: NextRequest) {
@@ -13,38 +12,84 @@ export async function POST(req: NextRequest) {
     }
 
     const { userId, messages, requestId } = parsed.data;
+    // Берем только последнее сообщение пользователя для передачи Валере
+    const lastMessage = messages?.[messages.length - 1]?.content || "";
 
-    // Системный промпт — это то, как ИИ себя воспринимает
-    const systemPrompt = `Ты дружелюбный ассистент сервиса Qoqos (выкуп и ремонт техники). 
-Отвечай кратко, вежливо и по-русски. 
-Если ты не знаешь ответ, сомневаешься, или клиент хочет поговорить с живым человеком, напиши ровно одно слово: [ESCALATE]`;
+    let reply = "";
+    let shouldEscalate = false;
 
-    // Вызываем нашу локальную Ollama!
-    const result = await askAI({
-      messages: messages || [],
-      systemPrompt: systemPrompt
-    });
+    // Таймаут 45 секунд на ответ ИИ
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
 
-    // Обрабатываем результат
-    if (result.shouldEscalate) {
-      // TODO (Этап 3): Здесь мы добавим отправку сообщения тебе в Telegram
-      // Ищем твой ID админа в .env
-      const adminId = process.env.ADMIN_CHAT_ID || "ТВОЙ_ТЕЛЕГРАМ_ID_ЕСЛИ_НЕТ_В_ENV";
+    try {
+      // Стучимся к нашему умному Python-бэкенду (Валера на порту 8001)
+      const response = await fetch("http://localhost:8001/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: lastMessage }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
 
-      await sendTelegramMessage(adminId, `🚨 Новый вопрос в чате от пользователя ${userId}\n\n${messages[messages.length - 1]?.content}`);
+      if (!response.ok) throw new Error("Python backend returned " + response.status);
+      const data = await response.json();
+      reply = data.response || "Пустой ответ от ИИ";
+
+      const lowerReply = reply.toLowerCase();
+
+      // Паттерны эскалации — расширенный список
+      const hasEscalateTag = /<ESCALATE_REASON>|<ESCALATE_REASON\s*:/i.test(reply);
+      const noInfoPatterns = [
+        'нет данных', 'нет информации', 'не найдено', 'не найден',
+        'не знаю', 'не могу ответить', 'не могу помочь',
+        'в нашей базе', 'в базе нет', 'базов знаний нет',
+        'уточните у оператора', 'пожалуйста, уточните',
+        'оператор поможет', 'подключим оператора',
+        'escalate', 'оператор', 'в моей базе знаний нет информации',
+      ];
+      const hasNoInfo = noInfoPatterns.some(p => lowerReply.includes(p));
+      shouldEscalate = hasEscalateTag || hasNoInfo;
+
+      // Очищаем служебные теги из ответа
+      reply = reply
+        .replace(/<ESCALATE_REASON>.*?<\/ESCALATE_REASON>\s*/i, '')
+        .replace(/ESCALATE_REASON\s*:[^\n]*\n?/i, '')
+        .trim();
+    } catch (e) {
+      clearTimeout(timeout);
+      console.error("Valera Brain is unreachable:", e);
+      reply = "Мой ИИ-помощник временно недоступен. Сейчас позову живого оператора!";
+      shouldEscalate = true;
+    }
+
+    // Логика эскалации — отправляем в Telegram
+    if (shouldEscalate) {
+      const adminChatId = process.env.TELEGRAM_CHAT_ID_misha;
+      if (adminChatId) {
+        try {
+          // userId используется как guestId для обратной связи через бота
+          await sendTelegramMessage(
+            adminChatId,
+            `🚨 Новый вопрос в чате от пользователя ${userId}\n\n${lastMessage}\n\n💬 Ответьте на это сообщение чтобы клиент увидел ваш ответ`
+          );
+        } catch (e) {
+          console.error('[SiteChatProxy] Telegram notify failed:', e);
+        }
+      }
 
       return NextResponse.json({
         ok: true,
-        reply: "Я передал ваш вопрос оператору. Он подключится к чату с минуты на минуту!",
+        reply: "Я передал ваш вопрос оператору. Он подключится к чату в ближайшее время!",
         route: 'escalate',
         requestId: requestId,
       });
     }
 
-    // Обычный ответ от ИИ
+    // Отправляем умный ответ клиенту
     return NextResponse.json({
       ok: true,
-      reply: result.reply,
+      reply: reply,
       route: 'chat',
       requestId: requestId,
     });

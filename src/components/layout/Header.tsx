@@ -1,12 +1,11 @@
 'use client';
 
-import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, User, Settings, Smartphone, Hammer, Coins } from 'lucide-react';
-import OptimizedPhoneSelector from '@/components/OptimizedPhoneSelector';
+import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, Settings, Smartphone, Hammer, Coins, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
 import { MegaMenu } from '@/components/layout/MegaMenu';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
 import { useAppStore } from '@/stores/authStore';
@@ -20,6 +19,7 @@ import { useEffect } from 'react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
+import { useTheme } from 'next-themes';
 
 const CATEGORIES = [
   { name: 'Смартфоны', slug: 'smartphones', active: true },
@@ -41,8 +41,8 @@ export const Header = () => {
   const { count: orderNotifs } = useOrderNotifications();
   const { needsUpdate, performUpdate } = useVersionCheck();
   const { isStandalone } = useSafeArea();
+  const { resolvedTheme, setTheme } = useTheme();
   const sourceParam = isStandalone ? '?source=pwa' : '';
-  const router = useRouter();
   const pathname = usePathname();
 
   // Force check for LH admin if store seems empty but we are on LH
@@ -52,11 +52,13 @@ export const Header = () => {
     }
   }, [telegramId]);
 
+  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+
   return (
-    <header className="w-full bg-white z-50 sticky top-0 shadow-sm">
+    <header className="w-full bg-background z-50 sticky top-0 shadow-sm dark:shadow-black/30 border-b border-transparent dark:border-border/50 transition-colors duration-300">
       {/* Top Bar */}
-      <div className="border-b border-gray-100 bg-gray-50/50">
-        <div className="container mx-auto px-4 h-9 flex items-center justify-between text-xs text-gray-500 font-medium relative">
+      <div className="border-b border-border bg-surface/50 dark:bg-white/[0.02]">
+        <div className="container mx-auto px-4 h-9 flex items-center justify-between text-xs text-muted font-medium relative">
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-1.5 hover:text-teal-600 transition-colors">
               <MapPin className="w-3.5 h-3.5" />
@@ -79,30 +81,38 @@ export const Header = () => {
               </button>
             </div>
           )}
-          <div className="flex items-center gap-6">
-            <a href="tel:+79998887766" className="flex items-center gap-1.5 hover:text-teal-600 transition-colors">
+          <div className="flex items-center gap-4">
+            <a href="tel:+79998887766" className="hidden sm:flex items-center gap-1.5 hover:text-teal-600 transition-colors">
               <Phone className="w-3.5 h-3.5" />
               <span>+7 (999) 888-77-66</span>
             </a>
             <div className="hidden sm:flex gap-4">
-              <Link href="/about" className="hover:text-teal-600">О компании</Link>
+              <Link href="/about" className="hover:text-teal-600 dark:hover:text-teal-400">О компании</Link>
             </div>
+            {/* Кнопка смены темы в топ-баре */}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+              title="Сменить тему"
+            >
+              {resolvedTheme === 'dark' ? <Sun className="w-3.5 h-3.5 text-yellow-400" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
           </div>
         </div>
       </div>
 
       {/* Main Header */}
       <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center gap-4 lg:gap-6 xl:gap-8">
+        <div className="flex items-center gap-3 md:gap-4 lg:gap-6 xl:gap-8">
           {/* Logo */}
           <Link href={`/${sourceParam}`} className="flex-shrink-0">
-            <div className="text-2xl lg:text-3xl font-bold tracking-tighter text-gray-900 select-none">
+            <div className="text-2xl lg:text-3xl font-bold tracking-tighter text-foreground select-none">
               QOQOS
               <span className="text-teal-500">.</span>
             </div>
           </Link>
 
-          {/* Catalog Button */}
+          {/* Catalog Button — показываем с md, текст только на lg */}
           <div
             className="relative"
             onMouseEnter={() => setIsCatalogOpen(true)}
@@ -112,17 +122,17 @@ export const Header = () => {
               variant="default"
               size="lg"
               className={cn(
-                "hidden lg:flex items-center gap-2 font-medium rounded-apple-lg px-6 h-12 transition-all",
+                "hidden md:flex items-center gap-2 font-medium rounded-apple-lg px-3 lg:px-6 h-10 lg:h-12 transition-all",
                 isCatalogOpen ? "bg-gray-900 hover:bg-gray-800 text-white" : "bg-teal-500 hover:bg-teal-600 text-white"
               )}
             >
               {isCatalogOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              <span>Каталог</span>
+              <span className="hidden lg:inline">Каталог</span>
             </Button>
           </div>
 
-          {/* Search Bar */}
-          <div className="flex-1 max-w-xl xl:max-w-2xl">
+          {/* Search Bar — показываем с md */}
+          <div className="hidden md:flex flex-1 max-w-xl xl:max-w-2xl">
             <SearchBar />
           </div>
 
@@ -130,7 +140,7 @@ export const Header = () => {
           <div className="hidden lg:flex items-center ml-1">
             {telegramId ? (
               <div
-                className="flex items-center gap-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200"
+                className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 pl-3 pr-2 py-1.5 rounded-full border border-gray-200 dark:border-white/10"
               >
                 {userPhotoUrl ? (
                   <Image
@@ -141,11 +151,11 @@ export const Header = () => {
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="w-6 h-6 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-xs font-bold">
+                  <div className="w-6 h-6 bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex items-center justify-center text-xs font-bold">
                     {(username?.[0] || telegramId?.[0] || 'U').toUpperCase()}
                   </div>
                 )}
-                <span className="text-sm font-medium text-gray-900 truncate max-w-[120px]">
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-[120px]">
                   {username || telegramId || 'Пользователь'}
                 </span>
                 <button
@@ -154,7 +164,7 @@ export const Header = () => {
                     e.stopPropagation();
                     logout();
                   }}
-                  className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                  className="ml-1 p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
                   title="Выйти"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -193,9 +203,9 @@ export const Header = () => {
       </div>
 
       {/* Navigation */}
-      <div className="border-t border-gray-100 hidden lg:block relative z-30 bg-white">
+      <div className="border-t border-border hidden lg:block relative z-30 bg-background">
         <div className="container mx-auto px-4">
-          <nav className="flex items-center gap-8 h-12 text-sm font-medium text-gray-700">
+          <nav className="flex items-center gap-8 h-12 text-sm font-medium text-gray-700 dark:text-gray-300">
             {CATEGORIES.map((category) => (
               category.active ? (
                 <Link
@@ -289,7 +299,7 @@ const ActionButton = ({ icon: Icon, label, count, badge, disabled, details, tool
         <div className="relative">
           <Icon className={cn(
             "w-6 h-6 transition-colors",
-            disabled ? "text-gray-400" : "text-gray-700 group-hover/btn:text-teal-600"
+            disabled ? "text-gray-400" : "text-gray-700 dark:text-gray-200 group-hover/btn:text-teal-600 dark:group-hover/btn:text-teal-400"
           )} strokeWidth={1.5} />
           {count !== undefined && count > 0 && (
             <span className={cn(
@@ -302,7 +312,7 @@ const ActionButton = ({ icon: Icon, label, count, badge, disabled, details, tool
         </div>
         <span className={cn(
           "text-[10px] font-medium transition-colors",
-          disabled ? "text-gray-400" : "text-gray-500 group-hover/btn:text-teal-600"
+          disabled ? "text-gray-400" : "text-gray-500 dark:text-gray-400 group-hover/btn:text-teal-600 dark:group-hover/btn:text-teal-400"
         )}>{label}</span>
       </div>
 

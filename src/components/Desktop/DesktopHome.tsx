@@ -32,10 +32,10 @@ export const DesktopHome = () => {
     const CoconutBanner = dynamic(() => import('@/components/CoconutBanner'), { ssr: false });
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <main className="">
+        <div className="min-h-screen bg-surface">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6">
                 {/* Intro / Filter Header */}
-                <div className="max-w-7xl mx-auto px-6 mb-12">
+                <div className="mb-8 sm:mb-12">
                     {/* Banners */}
                     {/* <div className="mt-8 mb-12 max-w-2xl mx-auto">
                         <RotatingBanner
@@ -57,22 +57,20 @@ export const DesktopHome = () => {
                 </div>
 
                 {/* Marketplace Feed Section */}
-                <section className="min-h-[600px]" id="marketplace">
-                    <div className="max-w-7xl mx-auto px-4 md:px-6">
-                        <div className="mb-8">
-                            <h2 className="text-4xl font-bold text-gray-900 tracking-tight">Новинки</h2>
-                            <p className="text-gray-500 mt-2 font-medium">Самые свежие поступления в нашем каталоге</p>
-                        </div>
-                        <AdaptiveDeviceFeed
-                            items={marketplaceItems.slice(0, 8)}
-                            isLoading={marketplaceLoading}
-                            hasMore={false}
-                            onLoadMore={loadMoreMarketplaceItems}
-                            mode="grid"
-                            showRecommendationsButton={false}
-                            hideSorting={true}
-                        />
+                <section className="min-h-[600px] mb-12" id="marketplace">
+                    <div className="mb-6 sm:mb-8">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">Новинки</h2>
+                        <p className="text-muted mt-2 font-medium text-sm sm:text-base">Самые свежие поступления в нашем каталоге</p>
                     </div>
+                    <AdaptiveDeviceFeed
+                        items={marketplaceItems.slice(0, 8)}
+                        isLoading={marketplaceLoading}
+                        hasMore={false}
+                        onLoadMore={loadMoreMarketplaceItems}
+                        mode="grid"
+                        showRecommendationsButton={false}
+                        hideSorting={true}
+                    />
                 </section>
 
                 <BlogGrid />

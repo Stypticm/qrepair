@@ -76,7 +76,7 @@ export default function RepairDeliveryPage() {
     return (
         <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
             <div className="space-y-2 mb-4">
-                <p className="text-sm text-gray-500">Выберите удобный способ передачи в сервис</p>
+                <p className="text-sm text-muted">Выберите удобный способ передачи в сервис</p>
             </div>
 
             <div className="flex-1 space-y-4">
@@ -84,21 +84,21 @@ export default function RepairDeliveryPage() {
                     <button
                         onClick={() => setDeliveryMethod('self')}
                         className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all border-2 gap-2 h-32 ${deliveryMethod === 'self'
-                            ? 'border-blue-600 bg-blue-50 text-blue-700'
-                            : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                            ? 'border-accent bg-accent/15 text-accent-deep'
+                            : 'border-border bg-surface-elevated text-muted hover:border-accent/50'
                             }`}
                     >
-                        <MapPin className={`w-8 h-8 ${deliveryMethod === 'self' ? 'text-blue-600' : 'text-gray-400'}`} />
+                        <MapPin className={`w-8 h-8 ${deliveryMethod === 'self' ? 'text-accent-deep' : 'text-muted'}`} />
                         <span className="text-sm font-bold">Привезу сам</span>
                     </button>
                     <button
                         onClick={() => setDeliveryMethod('courier')}
                         className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all border-2 gap-2 h-32 ${deliveryMethod === 'courier'
-                            ? 'border-blue-600 bg-blue-50 text-blue-700'
-                            : 'border-gray-100 bg-white text-gray-500 hover:border-gray-200'
+                            ? 'border-accent bg-accent/15 text-accent-deep'
+                            : 'border-border bg-surface-elevated text-muted hover:border-accent/50'
                             }`}
                     >
-                        <Truck className={`w-8 h-8 ${deliveryMethod === 'courier' ? 'text-blue-600' : 'text-gray-400'}`} />
+                        <Truck className={`w-8 h-8 ${deliveryMethod === 'courier' ? 'text-accent-deep' : 'text-muted'}`} />
                         <span className="text-sm font-bold">Вызвать курьера</span>
                     </button>
                 </div>
@@ -107,11 +107,11 @@ export default function RepairDeliveryPage() {
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
-                        className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3"
+                        className="bg-surface rounded-2xl p-6 border border-border space-y-3"
                     >
-                        <h3 className="font-bold text-gray-900">Адрес сервисного центра</h3>
-                        <p className="text-sm text-gray-600">ул. Примерная, д. 10, оф. 1</p>
-                        <p className="text-sm text-gray-600">Ежедневно с 10:00 до 22:00</p>
+                        <h3 className="font-bold text-foreground">Адрес сервисного центра</h3>
+                        <p className="text-sm text-muted">ул. Примерная, д. 10, оф. 1</p>
+                        <p className="text-sm text-muted">Ежедневно с 10:00 до 22:00</p>
 
                         <div className="bg-blue-50/50 rounded-xl p-3 flex gap-2 items-start mt-4">
                             <AlertCircle className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
@@ -126,7 +126,7 @@ export default function RepairDeliveryPage() {
                                 placeholder="Ваш телефон или Telegram для связи"
                                 value={contact}
                                 onChange={(e) => setContact(e.target.value)}
-                                className="w-full h-12 px-4 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            className="w-full h-12 px-4 rounded-xl bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm text-foreground placeholder:text-muted"
                             />
                         </div>
                     </motion.div>
@@ -141,27 +141,27 @@ export default function RepairDeliveryPage() {
                             placeholder="Ваш телефон или Telegram для связи"
                             value={contact}
                             onChange={(e) => setContact(e.target.value)}
-                            className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            className="w-full h-12 px-4 rounded-xl bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm text-foreground placeholder:text-muted"
                         />
                         <input
                             type="text"
                             placeholder="Полный адрес (улица, дом, кв) для курьера"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            className="w-full h-12 px-4 rounded-xl bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm text-foreground placeholder:text-muted"
                         />
                         <div className="flex gap-3">
                             <input
                                 type="date"
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
-                                className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full h-12 px-4 rounded-xl bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm text-foreground"
                             />
                             <input
                                 type="time"
                                 value={time}
                                 onChange={(e) => setTime(e.target.value)}
-                                className="w-full h-12 px-4 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full h-12 px-4 rounded-xl bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm text-foreground"
                             />
                         </div>
                     </motion.div>
@@ -172,7 +172,7 @@ export default function RepairDeliveryPage() {
                 <Button
                     disabled={isSubmitting}
                     onClick={handleSubmit}
-                    className="w-full h-14 rounded-2xl font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20"
+                    className="w-full h-14 rounded-2xl font-bold text-base bg-accent hover:bg-accent-hover text-primary-foreground shadow-xl shadow-accent/20"
                 >
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Подтвердить'}
                 </Button>

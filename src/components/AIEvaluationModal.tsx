@@ -116,15 +116,15 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-apple-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#1a1a1a] rounded-apple-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Заголовок */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 font-sf-pro">ИИ-оценка устройства</h2>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white font-sf-pro">ИИ-оценка устройства</h2>
           <Button
             onClick={handleClose}
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -135,14 +135,14 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
             <div className="space-y-6">
               {/* Загрузка фото */}
               <div>
-                <Label className="text-gray-700 font-sf-pro mb-3 block">
+                <Label className="text-gray-700 dark:text-gray-200 font-sf-pro mb-3 block">
                   Фотографии устройства (3-5 шт.)
                 </Label>
                 <div className="space-y-3">
                   {photos.map((photo, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-apple">
-                      <Camera className="w-5 h-5 text-gray-400" />
-                      <span className="flex-1 text-sm text-gray-600 font-sf-pro truncate">
+                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-white/5 rounded-apple">
+                      <Camera className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                      <span className="flex-1 text-sm text-gray-600 dark:text-gray-300 font-sf-pro truncate">
                         {photo.name}
                       </span>
                       <Button
@@ -159,7 +159,7 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
                   {photos.length < 5 && (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-teal-500 rounded-apple p-6 text-center cursor-pointer hover:bg-teal-50 transition-colors"
+                      className="border-2 border-dashed border-teal-500 rounded-apple p-6 text-center cursor-pointer hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors"
                     >
                       <Upload className="w-8 h-8 text-teal-500 mx-auto mb-2" />
                       <p className="text-teal-500 font-sf-pro">Добавить фото</p>
@@ -179,7 +179,7 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
 
               {/* Модель устройства */}
               <div>
-                <Label htmlFor="model" className="text-gray-700 font-sf-pro">
+                <Label htmlFor="model" className="text-gray-700 dark:text-gray-200 font-sf-pro">
                   Модель устройства
                 </Label>
                 <Input
@@ -187,13 +187,13 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
                   placeholder="Например, iPhone 15 Pro"
-                  className="mt-1 text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-apple font-sf-pro"
+                  className="mt-1 text-gray-900 dark:text-white bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 placeholder-gray-400 dark:placeholder-gray-500 rounded-apple font-sf-pro"
                 />
               </div>
 
               {/* Серийный номер */}
               <div>
-                <Label htmlFor="serialNumber" className="text-gray-700 font-sf-pro">
+                <Label htmlFor="serialNumber" className="text-gray-700 dark:text-gray-200 font-sf-pro">
                   Серийный номер
                 </Label>
                 <Input
@@ -201,7 +201,7 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
                   value={serialNumber}
                   onChange={(e) => setSerialNumber(e.target.value)}
                   placeholder="Введите SN"
-                  className="mt-1 text-gray-900 bg-white border border-gray-200 placeholder-gray-400 rounded-apple font-sf-pro"
+                  className="mt-1 text-gray-900 dark:text-white bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-white/10 placeholder-gray-400 dark:placeholder-gray-500 rounded-apple font-sf-pro"
                 />
               </div>
 
@@ -217,11 +217,11 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
 
           {step === 'processing' && (
             <div className="text-center py-12">
-              <ClipLoader color="#2dc2c6" size={50} />
-              <h3 className="text-lg font-semibold text-gray-900 mt-4 font-sf-pro">
+              <ClipLoader color="#7ec8dc" size={50} />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mt-4 font-sf-pro">
                 Анализ устройства
               </h3>
-              <p className="text-gray-600 mt-2 font-sf-pro">
+              <p className="text-gray-600 dark:text-gray-400 mt-2 font-sf-pro">
                 ИИ анализирует фотографии... 10-20 секунд
               </p>
             </div>
@@ -230,37 +230,37 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
           {step === 'result' && evaluation && (
             <div className="space-y-6">
               {/* Результат оценки */}
-              <Card className="bg-green-50 border-green-200">
+              <Card className="bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-800 font-sf-pro">
+                  <CardTitle className="flex items-center gap-2 text-green-800 dark:text-green-300 font-sf-pro">
                     <CheckCircle className="w-5 h-5" />
                     Результат оценки
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="text-center">
-                    <p className="text-2xl font-bold text-green-800 font-sf-pro">
+                    <p className="text-2xl font-bold text-green-800 dark:text-green-300 font-sf-pro">
                       Готовы купить за {evaluation.finalPrice.toLocaleString()} RUB
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700 font-sf-pro">Состояние:</p>
-                    <p className="text-gray-600 font-sf-pro">{evaluation.condition}</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-sf-pro">Состояние:</p>
+                    <p className="text-gray-600 dark:text-gray-300 font-sf-pro">{evaluation.condition}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700 font-sf-pro">Заметки:</p>
-                    <p className="text-gray-600 font-sf-pro">{evaluation.inspectionNotes}</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-sf-pro">Заметки:</p>
+                    <p className="text-gray-600 dark:text-gray-300 font-sf-pro">{evaluation.inspectionNotes}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700 font-sf-pro">Рекомендации:</p>
-                    <p className="text-gray-600 font-sf-pro italic">{evaluation.recommendations}</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200 font-sf-pro">Рекомендации:</p>
+                    <p className="text-gray-600 dark:text-gray-300 font-sf-pro italic">{evaluation.recommendations}</p>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Отзыв мастера */}
               <div>
-                <Label htmlFor="feedback" className="text-gray-700 font-sf-pro">
+                <Label htmlFor="feedback" className="text-gray-700 dark:text-gray-200 font-sf-pro">
                   Отзыв о состоянии (необязательно)
                 </Label>
                 <Textarea
@@ -269,7 +269,7 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
                   onChange={(e) => setFeedback(e.target.value)}
                   placeholder="Дополнительные замечания о состоянии устройства"
                   rows={4}
-                  className="mt-1 text-gray-900 bg-white border border-gray-300 placeholder-gray-400 rounded-apple font-sf-pro"
+                  className="mt-1 text-gray-900 dark:text-white bg-white dark:bg-[#1a1a1a] border border-gray-300 dark:border-white/10 placeholder-gray-400 dark:placeholder-gray-500 rounded-apple font-sf-pro"
                 />
               </div>
 
@@ -284,7 +284,7 @@ export function AIEvaluationModal({ isOpen, onClose }: AIEvaluationModalProps) {
                 <Button
                   onClick={() => setStep('upload')}
                   variant="outline"
-                  className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50 rounded-apple font-sf-pro"
+                  className="flex-1 border-gray-300 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 rounded-apple font-sf-pro"
                 >
                   Повторить
                 </Button>

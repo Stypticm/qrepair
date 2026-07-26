@@ -30,7 +30,7 @@ export default function RepairDevicePage() {
     return (
         <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
             <div className="space-y-2 mb-4">
-                <p className="text-sm text-gray-500">Выберите ваше устройство из списка</p>
+                <p className="text-sm text-muted">Выберите ваше устройство из списка</p>
             </div>
 
             <div className="flex-1 overflow-y-auto pb-20">
@@ -43,8 +43,8 @@ export default function RepairDevicePage() {
                             transition={{ delay: idx * 0.02 }}
                             onClick={() => setDeviceModel(m === "Другая модель" ? "iPhone (Другая)" : `iPhone ${m}`)}
                             className={`p-4 rounded-2xl text-sm font-semibold transition-all border-2 text-left ${deviceModel === `iPhone ${m}` || (m === "Другая модель" && deviceModel === "iPhone (Другая)")
-                                ? 'border-blue-600 bg-blue-50 text-blue-700'
-                                : 'border-gray-100 bg-white text-gray-700 hover:border-gray-200'
+                                ? 'border-accent bg-accent/15 text-accent-deep'
+                                : 'border-border bg-surface-elevated text-foreground hover:border-accent/50'
                                 }`}
                         >
                             {m}
@@ -57,7 +57,7 @@ export default function RepairDevicePage() {
                 <Button
                     disabled={!deviceModel}
                     onClick={handleNext}
-                    className="w-full h-14 rounded-2xl font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20"
+                    className="w-full h-14 rounded-2xl font-bold text-base bg-accent hover:bg-accent-hover text-primary-foreground shadow-xl shadow-accent/20"
                 >
                     Далее
                     <ChevronRight className="w-5 h-5 ml-2" />

@@ -83,16 +83,16 @@ export const MegaMenu = ({ isOpen, onClose }: MegaMenuProps) => {
 
     return (
         <>
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[40]" onClick={onClose} />
+            <div className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-[40]" onClick={onClose} />
             <div className="absolute top-[140px] left-0 right-0 z-[41] container mx-auto px-4">
                 <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="bg-white rounded-apple-xl shadow-2xl border border-gray-100 overflow-hidden flex min-h-[500px]"
+                    className="bg-background rounded-apple-xl shadow-2xl border border-border overflow-hidden flex min-h-[500px]"
                 >
                     {/* Sidebar */}
-                    <div className="w-[300px] border-r border-gray-100 bg-gray-50/50 py-4">
+                    <div className="w-[300px] border-r border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5 py-4">
                         {CATEGORIES.map((category) => (
                             <button
                                 key={category.id}
@@ -100,8 +100,8 @@ export const MegaMenu = ({ isOpen, onClose }: MegaMenuProps) => {
                                 className={cn(
                                     "w-full flex items-center justify-between px-6 py-3 text-sm font-medium transition-all relative group",
                                     activeCategory === category.id
-                                        ? "bg-white text-teal-600 shadow-sm border-r-2 border-teal-500 transform scale-105 origin-left"
-                                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/50"
+                                        ? "bg-white dark:bg-white/10 text-teal-600 dark:text-teal-400 shadow-sm border-r-2 border-teal-500 transform scale-105 origin-left"
+                                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-white/5"
                                 )}
                             >
                                 <div className="flex items-center gap-3">
@@ -112,7 +112,7 @@ export const MegaMenu = ({ isOpen, onClose }: MegaMenuProps) => {
                                     <ChevronRight className="w-4 h-4" />
                                 )}
                                 {category.comingSoon && (
-                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-gray-900 dark:bg-white text-white dark:text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                                         Скоро
                                     </div>
                                 )}
@@ -125,10 +125,10 @@ export const MegaMenu = ({ isOpen, onClose }: MegaMenuProps) => {
                         {currentCategory && (
                             <>
                                 <div className="col-span-2">
-                                    <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                                    <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-white flex items-center gap-3">
                                         {currentCategory.label}
                                         {currentCategory.comingSoon && (
-                                            <span className="text-xs font-normal bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                                            <span className="text-xs font-normal bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 px-2 py-1 rounded-full">
                                                 Скоро в продаже
                                             </span>
                                         )}
@@ -137,18 +137,18 @@ export const MegaMenu = ({ isOpen, onClose }: MegaMenuProps) => {
                                     <div className="grid grid-cols-2 gap-4">
                                         {currentCategory.items.map((item, index) => (
                                             item.comingSoon ? (
-                                                <div key={index} className="text-gray-400 flex items-center gap-2 cursor-not-allowed group">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-200"></span>
+                                                <div key={index} className="text-gray-400 dark:text-gray-500 flex items-center gap-2 cursor-not-allowed group">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700"></span>
                                                     {item.label}
-                                                    <span className="text-[10px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">Скоро</span>
+                                                    <span className="text-[10px] bg-gray-100 dark:bg-white/10 text-gray-400 dark:text-gray-500 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">Скоро</span>
                                                 </div>
                                             ) : (
                                                 <Link
                                                     key={index}
                                                     href={`/catalog?q=${item.label}`}
-                                                    className="text-gray-600 hover:text-teal-600 hover:translate-x-1 transition-all flex items-center gap-2"
+                                                    className="text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 hover:translate-x-1 transition-all flex items-center gap-2"
                                                 >
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-200 group-hover:bg-teal-500"></span>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 group-hover:bg-teal-500"></span>
                                                     {item.label}
                                                 </Link>
                                             )
@@ -159,17 +159,17 @@ export const MegaMenu = ({ isOpen, onClose }: MegaMenuProps) => {
                                 {/* Promo Column */}
                                 <div className="col-span-1">
                                     {currentCategory.items.some(i => !i.comingSoon) ? (
-                                        <div className="bg-teal-50 rounded-apple-lg p-6 h-full flex flex-col justify-center items-center text-center">
-                                            <span className="text-teal-600 font-bold mb-2">Хит продаж</span>
-                                            <h4 className="text-lg font-bold text-gray-900 mb-4">iPhone 15 Pro Max</h4>
-                                            <Button variant="outline" className="border-teal-200 text-teal-700 hover:bg-teal-100">
+                                        <div className="bg-teal-50 dark:bg-teal-900/30 rounded-apple-lg p-6 h-full flex flex-col justify-center items-center text-center">
+                                            <span className="text-teal-600 dark:text-teal-400 font-bold mb-2">Хит продаж</span>
+                                            <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">iPhone 15 Pro Max</h4>
+                                            <Button variant="outline" className="border-teal-200 dark:border-teal-700 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/50">
                                                 Перейти в каталог
                                             </Button>
                                         </div>
                                     ) : (
-                                        <div className="bg-gray-50 rounded-apple-lg p-6 h-full flex flex-col justify-center items-center text-center border border-dashed border-gray-200">
-                                            <span className="text-gray-400 font-bold mb-2">Раздел в разработке</span>
-                                            <p className="text-sm text-gray-400">
+                                        <div className="bg-gray-50 dark:bg-white/5 rounded-apple-lg p-6 h-full flex flex-col justify-center items-center text-center border border-dashed border-gray-200 dark:border-white/10">
+                                            <span className="text-gray-400 dark:text-gray-500 font-bold mb-2">Раздел в разработке</span>
+                                            <p className="text-sm text-gray-400 dark:text-gray-500">
                                                 Мы работаем над наполнением этого раздела.
                                                 <br />Загляните позже!
                                             </p>

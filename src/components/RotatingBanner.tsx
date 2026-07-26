@@ -114,10 +114,10 @@ export function RotatingBanner({
         willChange: 'opacity'
       }}
     >
-      <div
+      {/* <div
         className={`w-full h-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center ${desktopMode ? '' : 'absolute inset-0'}`}
-      >
-        <AnimatePresence>
+      > */}
+        {/* <AnimatePresence>
           <motion.div
             key={currentIndex}
             initial={{ opacity: 0 }}
@@ -152,7 +152,6 @@ export function RotatingBanner({
               quality={90}
             />
 
-            {/* Индикатор прогресса */}
             {banners.length > 1 && !isHovered && isVisible && (
               <motion.div
                 className="absolute bottom-1 left-1 right-1 h-0.5 bg-white/20 rounded-full overflow-hidden"
@@ -173,7 +172,6 @@ export function RotatingBanner({
               </motion.div>
             )}
 
-            {/* Точки индикации */}
             {banners.length > 1 && (
               <div className="absolute top-1 right-1 flex space-x-1">
                 {banners.map((_, index) => (
@@ -186,8 +184,8 @@ export function RotatingBanner({
               </div>
             )}
           </motion.div>
-        </AnimatePresence>
-      </div>
+        </AnimatePresence> */}
+      {/* </div> */}
     </div>
   );
 }

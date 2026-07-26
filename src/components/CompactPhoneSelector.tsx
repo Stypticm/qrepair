@@ -20,9 +20,9 @@ interface ModelPickerProps {
 function ModelPicker({ models, selectedModel, onModelChange, isLoading }: ModelPickerProps) {
   return (
     <div className="space-y-2">
-      <h3 className="text-base font-semibold text-gray-900 text-center">Модель</h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white text-center">Модель</h3>
       
-      <div className="max-h-48 overflow-y-auto scrollbar-hide border border-gray-200 rounded-lg bg-white">
+      <div className="max-h-48 overflow-y-auto scrollbar-hide border border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-[#1a1a1a]">
         <div className="space-y-1 p-1">
           {models.map((model) => (
             <motion.button
@@ -30,20 +30,20 @@ function ModelPicker({ models, selectedModel, onModelChange, isLoading }: ModelP
               onClick={() => onModelChange(model)}
               className={`w-full flex items-center justify-center space-x-2 p-3 rounded-md transition-all duration-200 ${
                 selectedModel === model
-                  ? 'bg-[#2dc2c6]/10 border border-[#2dc2c6]'
-                  : 'hover:bg-gray-50'
+                  ? 'bg-teal-500/10 border border-teal-500'
+                  : 'hover:bg-gray-50 dark:hover:bg-white/5'
               }`}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <div className="w-6 h-6 bg-gradient-to-br from-[#2dc2c6] to-[#4fd1d5] rounded-md flex items-center justify-center">
+              <div className="w-6 h-6 bg-gradient-to-br from-teal-500 to-teal-400 rounded-md flex items-center justify-center">
                 <Smartphone className="w-3 h-3 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium text-gray-900 dark:text-white">
                 iPhone {model}
               </span>
               {selectedModel === model && (
-                <Check className="w-4 h-4 text-[#2dc2c6]" />
+                <Check className="w-4 h-4 text-teal-500" />
               )}
             </motion.button>
           ))}
@@ -51,7 +51,7 @@ function ModelPicker({ models, selectedModel, onModelChange, isLoading }: ModelP
       </div>
       
       {isLoading && (
-        <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
+        <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
           <Loader2 className="w-3 h-3 animate-spin" />
           <span>Загружаем варианты...</span>
         </div>
@@ -73,7 +73,7 @@ function VariantPicker({ variants, selectedVariant, onVariantChange, isLoading }
 
   return (
     <div className="space-y-2">
-      <h3 className="text-base font-semibold text-gray-900 text-center">Вариант</h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white text-center">Вариант</h3>
       
       <div className="grid grid-cols-2 gap-2">
         {variants.map((variant) => (
@@ -82,14 +82,14 @@ function VariantPicker({ variants, selectedVariant, onVariantChange, isLoading }
             onClick={() => onVariantChange(variant)}
             className={`p-3 rounded-lg border transition-all duration-200 ${
               selectedVariant === variant
-                ? 'border-[#2dc2c6] bg-[#2dc2c6]/10'
-                : 'border-gray-200 bg-white hover:border-gray-300'
+                ? 'border-teal-500 bg-teal-500/10'
+                : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] hover:border-gray-300 dark:hover:border-white/20'
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <div className="text-center">
-              <div className="text-sm font-medium text-gray-900">
+              <div className="text-sm font-medium text-gray-900 dark:text-white">
                 {variant}
               </div>
               {selectedVariant === variant && (
@@ -98,7 +98,7 @@ function VariantPicker({ variants, selectedVariant, onVariantChange, isLoading }
                   animate={{ scale: 1 }}
                   className="mt-1"
                 >
-                  <Check className="w-4 h-4 text-[#2dc2c6] mx-auto" />
+                  <Check className="w-4 h-4 text-teal-500 mx-auto" />
                 </motion.div>
               )}
             </div>
@@ -107,7 +107,7 @@ function VariantPicker({ variants, selectedVariant, onVariantChange, isLoading }
       </div>
       
       {isLoading && (
-        <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
+        <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
           <Loader2 className="w-3 h-3 animate-spin" />
           <span>Загружаем память...</span>
         </div>
@@ -127,7 +127,7 @@ interface StoragePickerProps {
 function StoragePicker({ storages, selectedStorage, onStorageChange, isLoading }: StoragePickerProps) {
   return (
     <div className="space-y-2">
-      <h3 className="text-base font-semibold text-gray-900 text-center">Память</h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white text-center">Память</h3>
       
       <div className="grid grid-cols-2 gap-2">
         {storages.map((storage) => (
@@ -136,19 +136,19 @@ function StoragePicker({ storages, selectedStorage, onStorageChange, isLoading }
             onClick={() => onStorageChange(storage)}
             className={`p-3 rounded-lg border transition-all duration-200 ${
               selectedStorage === storage
-                ? 'border-[#2dc2c6] bg-[#2dc2c6]/10'
-                : 'border-gray-200 bg-white hover:border-gray-300'
+                ? 'border-teal-500 bg-teal-500/10'
+                : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] hover:border-gray-300 dark:hover:border-white/20'
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <div className="text-center">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#2dc2c6] to-[#4fd1d5] rounded-lg flex items-center justify-center mx-auto mb-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-400 rounded-lg flex items-center justify-center mx-auto mb-2">
                 <div className="text-white text-xs font-bold">
                   {storage.split(' ')[0]}
                 </div>
               </div>
-              <div className="text-sm font-medium text-gray-900">
+              <div className="text-sm font-medium text-gray-900 dark:text-white">
                 {storage}
               </div>
               {selectedStorage === storage && (
@@ -157,7 +157,7 @@ function StoragePicker({ storages, selectedStorage, onStorageChange, isLoading }
                   animate={{ scale: 1 }}
                   className="mt-1"
                 >
-                  <Check className="w-4 h-4 text-[#2dc2c6] mx-auto" />
+                  <Check className="w-4 h-4 text-teal-500 mx-auto" />
                 </motion.div>
               )}
             </div>
@@ -166,7 +166,7 @@ function StoragePicker({ storages, selectedStorage, onStorageChange, isLoading }
       </div>
       
       {isLoading && (
-        <div className="flex items-center justify-center space-x-2 text-xs text-gray-500">
+        <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
           <Loader2 className="w-3 h-3 animate-spin" />
           <span>Загружаем цвета...</span>
         </div>
@@ -185,7 +185,7 @@ interface ColorPickerProps {
 function ColorPicker({ colors, selectedColor, onColorChange }: ColorPickerProps) {
   return (
     <div className="space-y-2">
-      <h3 className="text-base font-semibold text-gray-900 text-center">Цвет</h3>
+      <h3 className="text-base font-semibold text-gray-900 dark:text-white text-center">Цвет</h3>
       
       <div className="grid grid-cols-2 gap-2">
         {colors.map((color) => {
@@ -197,18 +197,18 @@ function ColorPicker({ colors, selectedColor, onColorChange }: ColorPickerProps)
               onClick={() => onColorChange(color)}
               className={`p-3 rounded-lg border transition-all duration-200 ${
                 selectedColor === color
-                  ? 'border-[#2dc2c6] bg-[#2dc2c6]/10'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-teal-500 bg-teal-500/10'
+                  : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#1a1a1a] hover:border-gray-300 dark:hover:border-white/20'
               }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="text-center">
                 <div 
-                  className="w-12 h-12 rounded-lg mx-auto mb-2 border-2 border-white shadow-sm"
+                  className="w-12 h-12 rounded-lg mx-auto mb-2 border-2 border-white dark:border-gray-700 shadow-sm"
                   style={{ backgroundColor: colorInfo.hex }}
                 />
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-sm font-medium text-gray-900 dark:text-white">
                   {colorInfo.name}
                 </div>
                 {selectedColor === color && (
@@ -217,7 +217,7 @@ function ColorPicker({ colors, selectedColor, onColorChange }: ColorPickerProps)
                     animate={{ scale: 1 }}
                     className="mt-1"
                   >
-                    <Check className="w-4 h-4 text-[#2dc2c6] mx-auto" />
+                    <Check className="w-4 h-4 text-teal-500 mx-auto" />
                   </motion.div>
                 )}
               </div>
@@ -286,10 +286,10 @@ export default function CompactPhoneSelector() {
 
   if (devicesLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-background dark:to-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-6 h-6 border-2 border-[#2dc2c6] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Загружаем модели...</p>
+          <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-600 dark:text-gray-400">Загружаем модели...</p>
         </div>
       </div>
     );
@@ -297,7 +297,7 @@ export default function CompactPhoneSelector() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-background dark:to-background flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-4 text-sm">Ошибка загрузки моделей</p>
           <Button onClick={() => window.location.reload()} size="sm">
@@ -309,14 +309,14 @@ export default function CompactPhoneSelector() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-background dark:to-background">
       <div className="max-w-md mx-auto px-4 py-4">
         {/* Заголовок */}
         <div className="text-center mb-6">
-          <h1 className="text-xl font-bold text-gray-900 mb-1">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
             Выберите iPhone
           </h1>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             Все модели из базы данных
           </p>
         </div>
@@ -390,13 +390,13 @@ export default function CompactPhoneSelector() {
 
         {/* Итоговая информация */}
         {selectedDevice && (
-          <div className="mt-6 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="mt-6 p-3 bg-white dark:bg-[#1a1a1a] rounded-lg border border-gray-200 dark:border-white/10 shadow-sm">
             <div className="text-center">
-              <div className="text-xs text-gray-600 mb-1">Выбранная конфигурация</div>
-              <div className="text-sm font-semibold text-gray-900">
+              <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Выбранная конфигурация</div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-white">
                 iPhone {selectedOptions.model}{selectedOptions.variant ? ` ${selectedOptions.variant}` : ''} • {selectedOptions.storage}
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Цена будет рассчитана после оценки состояния
               </div>
             </div>
@@ -409,7 +409,7 @@ export default function CompactPhoneSelector() {
             <Button
               onClick={handleContinue}
               disabled={isLoading}
-              className="w-full h-12 bg-gradient-to-r from-[#2dc2c6] to-[#4fd1d5] hover:from-[#25a8ac] hover:to-[#39c4c8] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-12 bg-gradient-to-r from-teal-500 to-teal-400 hover:from-teal-600 hover:to-teal-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">

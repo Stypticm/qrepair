@@ -60,12 +60,12 @@ export const FAQAccordion = () => {
     };
 
     return (
-        <section className="py-16 bg-white overflow-hidden">
+        <section className="py-16 bg-background overflow-hidden">
             <div className="max-w-4xl mx-auto px-6 flex flex-col md:flex-row gap-12">
 
                 {/* Заголовок */}
                 <div className="md:w-1/3">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white leading-tight">
                         Вопросы<br />и ответы
                     </h2>
                 </div>
@@ -73,18 +73,18 @@ export const FAQAccordion = () => {
                 {/* Список вопросов */}
                 <div className="md:w-2/3 space-y-2">
                     {FAQ_ITEMS.map((item, index) => (
-                        <div key={index} className="border-b border-gray-200 last:border-0">
+                        <div key={index} className="border-b border-gray-200 dark:border-white/10 last:border-0">
                             <button
                                 onClick={() => toggleItem(index)}
-                                className={`w-full py-6 flex items-start justify-between text-left group transition-colors duration-200 ${openIndex === index ? 'bg-teal-50/50 -mx-4 px-4 rounded-lg' : ''
+                                className={`w-full py-6 flex items-start justify-between text-left group transition-colors duration-200 ${openIndex === index ? 'bg-teal-50/50 dark:bg-teal-900/20 -mx-4 px-4 rounded-lg' : ''
                                     }`}
                             >
-                                <span className="text-lg font-medium text-gray-900 group-hover:text-teal-600 transition-colors pr-8">
+                                <span className="text-lg font-medium text-gray-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors pr-8">
                                     {item.question}
                                 </span>
                                 <span className={`flex-shrink-0 transition-transform duration-300 transform ${openIndex === index ? 'rotate-45' : 'rotate-0'
                                     }`}>
-                                    <Plus className={`w-6 h-6 ${openIndex === index ? 'text-teal-600' : 'text-teal-300'
+                                    <Plus className={`w-6 h-6 ${openIndex === index ? 'text-teal-600 dark:text-teal-400' : 'text-teal-300 dark:text-teal-700'
                                         }`} />
                                 </span>
                             </button>
@@ -98,7 +98,7 @@ export const FAQAccordion = () => {
                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                         className="overflow-hidden"
                                     >
-                                        <div className={`pb-6 text-gray-600 leading-relaxed ${openIndex === index ? 'px-4' : ''}`}>
+                                        <div className={`pb-6 text-gray-600 dark:text-gray-300 leading-relaxed ${openIndex === index ? 'px-4' : ''}`}>
                                             {item.answer}
                                         </div>
                                     </motion.div>

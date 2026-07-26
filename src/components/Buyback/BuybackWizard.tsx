@@ -135,24 +135,24 @@ const CONDITIONS = [
 ];
 
 const BinaryToggle = ({ label, value, onChange, desc, icon: Icon }: { label: string, value: boolean, onChange: (val: boolean) => void, desc?: string, icon?: any }) => (
-    <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:border-gray-200 transition-all group">
+    <div className="flex items-center justify-between p-4 bg-surface rounded-2xl border border-border hover:border-accent/50 transition-all group">
         <div className="flex gap-3 items-center">
             {Icon && (
-                <div className={cn("p-2 rounded-xl transition-colors", value ? "bg-blue-100 text-blue-600" : "bg-gray-200 text-gray-400")}>
+                <div className={cn("p-2 rounded-xl transition-colors", value ? "bg-accent/15 text-accent-deep" : "bg-input text-muted")}>
                     <Icon className="w-5 h-5" />
                 </div>
             )}
             <div className="flex flex-col">
-                <span className="text-sm font-bold text-gray-900 leading-tight">{label}</span>
-                {desc && <span className="text-[10px] text-gray-400 mt-0.5 leading-relaxed">{desc}</span>}
+                <span className="text-sm font-bold text-foreground leading-tight">{label}</span>
+                {desc && <span className="text-[10px] text-muted mt-0.5 leading-relaxed">{desc}</span>}
             </div>
         </div>
-        <div className="flex p-1 bg-gray-200 rounded-xl">
+        <div className="flex p-1 bg-input rounded-xl">
             <button
                 onClick={() => onChange(true)}
                 className={cn(
                     "px-4 py-1.5 rounded-lg text-xs font-black transition-all",
-                    value ? "bg-white text-blue-600 shadow-sm" : "text-gray-500"
+                    value ? "bg-surface-elevated text-accent-deep shadow-sm" : "text-muted"
                 )}
             >
                 Да
@@ -161,7 +161,7 @@ const BinaryToggle = ({ label, value, onChange, desc, icon: Icon }: { label: str
                 onClick={() => onChange(false)}
                 className={cn(
                     "px-4 py-1.5 rounded-lg text-xs font-black transition-all",
-                    !value ? "bg-white text-red-600 shadow-sm" : "text-gray-500"
+                    !value ? "bg-surface-elevated text-red-600 shadow-sm" : "text-muted"
                 )}
             >
                 Нет
@@ -176,22 +176,22 @@ const ConditionCard = ({ title, desc, selected, onClick }: { title: string, desc
         className={cn(
             "w-full text-left p-4 rounded-2xl border-2 transition-all duration-200 relative overflow-hidden",
             selected
-                ? "border-blue-500 bg-blue-50/30 ring-4 ring-blue-500/5"
-                : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-md"
+                ? "border-accent bg-accent/15 ring-4 ring-accent/10"
+                : "border-border bg-surface-elevated hover:border-accent/50 hover:shadow-md"
         )}
     >
         <div className="flex justify-between items-center mb-1">
-            <span className={cn("text-base font-black truncate", selected ? "text-blue-700" : "text-gray-900")}>
+            <span className={cn("text-base font-black truncate", selected ? "text-accent-deep" : "text-foreground")}>
                 {title}
             </span>
             <div className={cn(
                 "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
-                selected ? "border-blue-500 bg-blue-500 text-white" : "border-gray-200"
+                selected ? "border-accent bg-accent text-primary-foreground" : "border-border"
             )}>
                 {selected && <Check className="w-3 h-3 stroke-[3]" />}
             </div>
         </div>
-        <p className={cn("text-[11px] leading-tight line-clamp-2", selected ? "text-blue-600/80" : "text-gray-500")}>
+        <p className={cn("text-[11px] leading-tight line-clamp-2", selected ? "text-accent-deep" : "text-muted")}>
             {desc}
         </p>
     </button>
@@ -262,19 +262,19 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                                 className={cn(
                                     "flex flex-col items-center justify-center p-6 rounded-[28px] border-2 transition-all relative group h-40",
                                     cat.active
-                                        ? "bg-white border-gray-100 hover:border-blue-500 hover:shadow-lg active:scale-95"
-                                        : "bg-gray-50 border-transparent opacity-50 grayscale cursor-not-allowed"
+                                        ? "bg-surface-elevated border-border hover:border-accent hover:shadow-lg active:scale-95"
+                                        : "bg-surface border-transparent opacity-50 grayscale cursor-not-allowed"
                                 )}
                             >
                                 <div className={cn(
                                     "w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-colors",
-                                    cat.active ? "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white" : "bg-gray-200 text-gray-400"
+                                    cat.active ? "bg-accent/15 text-accent-deep group-hover:bg-accent group-hover:text-primary-foreground" : "bg-input text-muted"
                                 )}>
                                     <cat.icon className="w-6 h-6" />
                                 </div>
-                                <span className="font-black text-sm text-gray-900 tracking-tight">{cat.name}</span>
+                                <span className="font-black text-sm text-foreground tracking-tight">{cat.name}</span>
                                 {!cat.active && (
-                                    <span className="absolute top-2 right-2 bg-gray-200 text-gray-500 text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase">
+                                    <span className="absolute top-2 right-2 bg-input text-muted text-[8px] font-black px-1.5 py-0.5 rounded-full uppercase">
                                         Скоро
                                     </span>
                                 )}
@@ -292,7 +292,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                                 <select
                                     value={state.model}
                                     onChange={(e) => updateState({ model: e.target.value })}
-                                    className="w-full h-12 bg-gray-100 border-none rounded-xl px-4 font-bold text-gray-900 focus:ring-2 focus:ring-blue-500 transition-all appearance-none text-sm"
+                                    className="w-full h-12 bg-input border border-border rounded-xl px-4 font-bold text-foreground focus:ring-2 focus:ring-accent transition-all appearance-none text-sm"
                                 >
                                     <option value="">Выберите модель</option>
                                     {[
@@ -317,7 +317,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                                             onClick={() => updateState({ storage: s })}
                                             className={cn(
                                                 "px-4 py-2 rounded-xl text-xs font-bold transition-all border-2",
-                                                state.storage === s ? "border-blue-600 bg-blue-600 text-white" : "border-gray-100 bg-gray-50 text-gray-600 hover:border-gray-200"
+                                                state.storage === s ? "border-accent bg-accent text-primary-foreground" : "border-border bg-surface text-muted hover:border-accent/50"
                                             )}
                                         >
                                             {s === "1TB" ? "1 ТБ" : s + " ГБ"}
@@ -352,7 +352,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                             <Button
                                 disabled={!state.model || !state.storage || !state.color}
                                 onClick={() => nextStep('check-primary')}
-                                className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600 hover:bg-blue-700"
+                                className="flex-[2] h-12 rounded-xl font-black text-xs bg-accent hover:bg-accent-hover text-primary-foreground"
                             >
                                 Далее
                             </Button>
@@ -379,7 +379,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                         />
                         <div className="flex gap-2 pt-4">
                             <Button variant="outline" onClick={() => prevStep('specs')} className="flex-1 h-12 rounded-xl font-black text-xs">Назад</Button>
-                            <Button onClick={() => nextStep('screen-condition')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600">Далее</Button>
+                            <Button onClick={() => nextStep('screen-condition')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-accent hover:bg-accent-hover text-primary-foreground">Далее</Button>
                         </div>
                     </div>
                 );
@@ -405,7 +405,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                             <Button
                                 disabled={!(isScreen ? state.screenCondition : state.bodyCondition)}
                                 onClick={() => nextStep(isScreen ? 'body-condition' : 'rostest')}
-                                className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600"
+                                className="flex-[2] h-12 rounded-xl font-black text-xs bg-accent hover:bg-accent-hover text-primary-foreground"
                             >
                                 Далее
                             </Button>
@@ -430,7 +430,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                         />
                         <div className="flex gap-2 pt-4">
                             <Button variant="outline" onClick={() => prevStep('body-condition')} className="flex-1 h-12 rounded-xl font-black text-xs">Назад</Button>
-                            <Button onClick={() => nextStep('health')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600">Далее</Button>
+                            <Button onClick={() => nextStep('health')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-accent hover:bg-accent-hover text-primary-foreground">Далее</Button>
                         </div>
                     </div>
                 );
@@ -439,12 +439,12 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                 return (
                     <div className="space-y-6">
                         <div className="space-y-4">
-                            <div className="p-4 bg-gray-50 rounded-2xl">
-                                <label className="text-[11px] font-black text-gray-400 mb-2 block uppercase tracking-tighter">Состояние АКБ (%)</label>
+                            <div className="p-4 bg-surface rounded-2xl border border-border">
+                                <label className="text-[11px] font-black text-muted mb-2 block uppercase tracking-tighter">Состояние АКБ (%)</label>
                                 <select
                                     value={state.batteryHealth}
                                     onChange={(e) => updateState({ batteryHealth: e.target.value })}
-                                    className="w-full bg-white border-none rounded-xl h-10 px-3 font-bold text-blue-600 text-sm"
+                                    className="w-full bg-input border border-border rounded-xl h-10 px-3 font-bold text-accent-deep text-sm"
                                 >
                                     {["100", "95-99", "90-94", "85-89", "80-84", "Ниже 80"].map(v => (
                                         <option key={v} value={v === "100" ? "100%" : v + "%"}>{v === "100" ? "100%" : v + "%"}</option>
@@ -461,7 +461,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                         </div>
                         <div className="flex gap-2 pt-2">
                             <Button variant="outline" onClick={() => prevStep('rostest')} className="flex-1 h-12 rounded-xl font-black text-xs">Назад</Button>
-                            <Button onClick={() => nextStep('functional-checks')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600">Далее</Button>
+                            <Button onClick={() => nextStep('functional-checks')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-accent hover:bg-accent-hover text-primary-foreground">Далее</Button>
                         </div>
                     </div>
                 );
@@ -469,7 +469,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
             case 'functional-checks':
                 return (
                     <div className="space-y-3">
-                        <p className="text-[11px] font-black text-gray-400 uppercase ml-1">Подтвердите исправность</p>
+                        <p className="text-[11px] font-black text-muted uppercase ml-1">Подтвердите исправность</p>
                         <BinaryToggle
                             label="Включается и заряжается?"
                             value={state.isFunctional}
@@ -498,7 +498,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                             <Button variant="outline" onClick={() => prevStep('health')} className="flex-1 h-12 rounded-xl font-black text-xs">Назад</Button>
                             <Button
                                 onClick={() => nextStep('history')}
-                                className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600"
+                                className="flex-[2] h-12 rounded-xl font-black text-xs bg-accent hover:bg-accent-hover text-primary-foreground"
                             >
                                 Далее
                             </Button>
@@ -523,7 +523,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                         />
                         <div className="flex gap-2 pt-4">
                             <Button variant="outline" onClick={() => prevStep('functional-checks')} className="flex-1 h-12 rounded-xl font-black text-xs">Назад</Button>
-                            <Button onClick={() => nextStep('summary')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-blue-600">Далее</Button>
+                            <Button onClick={() => nextStep('summary')} className="flex-[2] h-12 rounded-xl font-black text-xs bg-accent hover:bg-accent-hover text-primary-foreground">Далее</Button>
                         </div>
                     </div>
                 );
@@ -552,14 +552,14 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                             <Button
                                 variant="outline"
                                 onClick={() => prevStep('history')}
-                                className="flex-1 h-14 rounded-2xl font-black border-2 border-gray-100"
+                                className="flex-1 h-14 rounded-2xl font-black border-2 border-border"
                             >
                                 <Undo2 className="w-5 h-5" />
                             </Button>
                             <Button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="flex-[4] h-14 rounded-2xl font-black text-sm bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/30"
+                                className="flex-[4] h-14 rounded-2xl font-black text-sm bg-accent hover:bg-accent-hover text-primary-foreground shadow-xl shadow-accent/30"
                             >
                                 {isSubmitting ? <Loader2 className="animate-spin w-5 h-5" /> : 'Получить предложение'}
                             </Button>
@@ -572,7 +572,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
     return (
         <div className="w-full">
             <div className="flex flex-col items-center justify-center gap-4 mb-8">
-                <h2 className="text-2xl font-black tracking-tight text-center text-gray-900">
+                <h2 className="text-2xl font-black tracking-tight text-center text-foreground">
                     {step === 'summary' ? 'Проверьте данные' : 'Оценка устройства'}
                 </h2>
 
@@ -584,7 +584,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                             prevStep(STEPS[STEPS.indexOf(step) - 1]);
                         }
                     }}
-                    className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 bg-white hover:bg-gray-50 px-4 py-1.5 rounded-full border border-gray-200 shadow-sm active:scale-95 transition-all"
+                    className="flex items-center gap-1.5 text-sm font-medium text-muted hover:text-foreground bg-surface hover:bg-input px-4 py-1.5 rounded-full border border-border shadow-sm active:scale-95 transition-all"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     Назад
@@ -597,7 +597,7 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                                 key={s}
                                 className={cn(
                                     "h-1.5 rounded-full transition-all duration-500",
-                                    step === s ? "w-8 bg-blue-600" : (STEPS.indexOf(step) > idx ? "w-2 bg-blue-200" : "w-1.5 bg-gray-100")
+                                    step === s ? "w-8 bg-accent" : (STEPS.indexOf(step) > idx ? "w-2 bg-accent/40" : "w-1.5 bg-border")
                                 )}
                             />
                         ))}

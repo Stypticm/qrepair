@@ -51,7 +51,7 @@ export function FeatureExplanation({ type, isWorking, onSelect }: FeatureExplana
         <h3 className="text-lg font-semibold text-gray-800">{info.title}</h3>
         <button
           onClick={() => setShowDetails(!showDetails)}
-          className="text-[#2dc2c6] hover:text-[#25a8ac] transition-colors"
+          className="text-[#7ec8dc] hover:text-[#6bb8cc] transition-colors"
         >
           <span className="text-sm">ℹ️</span>
         </button>
@@ -67,7 +67,7 @@ export function FeatureExplanation({ type, isWorking, onSelect }: FeatureExplana
         transition={{ duration: 0.3 }}
         className="overflow-hidden"
       >
-        <div className="bg-[#2dc2c6]/5 rounded-lg p-3 border border-[#2dc2c6]/20">
+        <div className="bg-[#7ec8dc]/5 rounded-lg p-3 border border-[#7ec8dc]/20">
           <p className="text-sm text-gray-700 mb-2">
             <strong>Как проверить:</strong> Попробуйте разблокировать телефон
           </p>
@@ -85,7 +85,7 @@ export function FeatureExplanation({ type, isWorking, onSelect }: FeatureExplana
           onClick={() => onSelect(true)}
           className={`p-3 rounded-lg border-2 transition-all duration-200 ${
             isWorking === true
-              ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6]'
+              ? 'border-[#7ec8dc] bg-[#7ec8dc]/10 text-[#7ec8dc]'
               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
           }`}
         >
@@ -102,7 +102,7 @@ export function FeatureExplanation({ type, isWorking, onSelect }: FeatureExplana
           onClick={() => onSelect(false)}
           className={`p-3 rounded-lg border-2 transition-all duration-200 ${
             isWorking === false
-              ? 'border-[#2dc2c6] bg-[#2dc2c6]/10 text-[#2dc2c6]'
+              ? 'border-[#7ec8dc] bg-[#7ec8dc]/10 text-[#7ec8dc]'
               : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
           }`}
         >

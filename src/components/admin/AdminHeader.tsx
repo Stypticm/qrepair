@@ -29,7 +29,7 @@ export function AdminHeader() {
     if (isDesktop) return null;
 
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-gray-100 px-4 h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
                 <AnimatePresence mode="wait">
                     {!isMainAdminPage && (
@@ -38,7 +38,7 @@ export function AdminHeader() {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
                             onClick={() => router.push('/admin')}
-                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-900 active:scale-90 transition-transform"
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 dark:bg-white/10 text-gray-900 dark:text-white active:scale-90 transition-transform"
                         >
                             <ChevronLeft className="w-6 h-6" />
                         </motion.button>
@@ -49,7 +49,7 @@ export function AdminHeader() {
                     key={title}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-lg font-bold text-gray-900 tracking-tight"
+                    className="text-lg font-bold text-gray-900 dark:text-white tracking-tight"
                 >
                     {title}
                 </motion.h2>
@@ -58,7 +58,7 @@ export function AdminHeader() {
             {isMainAdminPage && (
                 <button
                     onClick={() => router.push('/')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-500 text-xs font-bold"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-300 text-xs font-bold"
                 >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     Сайт

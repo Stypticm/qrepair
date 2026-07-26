@@ -181,26 +181,26 @@ export function AdaptiveDeviceFeed({
               <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse opacity-60" style={{ animationDelay: '0.2s' }} />
               <div className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-pulse opacity-30" style={{ animationDelay: '0.4s' }} />
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Загрузка каталога...</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Загрузка каталога...</span>
           </div>
 
           <div className="relative flex justify-center w-full mx-auto">
-            <div className="w-full max-w-sm aspect-[4/5] bg-white rounded-[2.5rem] shadow-xl border border-gray-100 p-6 flex flex-col animate-pulse overflow-hidden relative">
+            <div className="w-full max-w-sm aspect-[4/5] bg-card rounded-[2.5rem] shadow-xl border border-border p-6 flex flex-col animate-pulse overflow-hidden relative">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer" />
 
-              <div className="aspect-square w-full bg-gray-50 rounded-3xl flex items-center justify-center mb-8 relative overflow-hidden">
-                <div className="w-32 h-32 bg-gray-100/80 rounded-2xl flex items-center justify-center">
-                  <Smartphone className="w-12 h-12 text-gray-200" />
+              <div className="aspect-square w-full bg-gray-50 dark:bg-white/5 rounded-3xl flex items-center justify-center mb-8 relative overflow-hidden">
+                <div className="w-32 h-32 bg-gray-100 dark:bg-white/10 rounded-2xl flex items-center justify-center">
+                  <Smartphone className="w-12 h-12 text-gray-200 dark:text-gray-700" />
                 </div>
               </div>
 
               <div className="space-y-4 px-2">
-                <div className="h-6 bg-gray-100 rounded-full w-3/4" />
-                <div className="h-4 bg-gray-50 rounded-full w-1/2" />
+                <div className="h-6 bg-gray-100 dark:bg-white/10 rounded-full w-3/4" />
+                <div className="h-4 bg-gray-50 dark:bg-white/5 rounded-full w-1/2" />
 
                 <div className="pt-4 mt-auto flex justify-between items-center">
-                  <div className="h-8 bg-gray-100 rounded-full w-1/3" />
-                  <div className="h-12 bg-gray-100 rounded-2xl w-12" />
+                  <div className="h-8 bg-gray-100 dark:bg-white/10 rounded-full w-1/3" />
+                  <div className="h-12 bg-gray-100 dark:bg-white/10 rounded-2xl w-12" />
                 </div>
               </div>
             </div>
@@ -213,7 +213,7 @@ export function AdaptiveDeviceFeed({
   // Если нет данных и не загружается - показываем сообщение
   if (displayItems.length === 0) {
     return (
-      <div className="w-full text-center py-10 text-gray-500">
+      <div className="w-full text-center py-10 text-gray-500 dark:text-gray-400">
         Пока нет новых объявлений
       </div>
     );
@@ -230,13 +230,13 @@ export function AdaptiveDeviceFeed({
         transition={{ duration: 0.3 }}
       >
         {viewMode === 'grid' && (
-          <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+          <div className="bg-surface rounded-xl p-4 space-y-3">
             {/* Кнопка возврата к рекомендациям по центру (вверху) */}
             {showRecommendationsButton && (
               <div className="w-full flex justify-center">
                 <button
                   onClick={switchToCarousel}
-                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+                  className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 text-sm"
                 >
                   ← На главную
                 </button>
@@ -246,14 +246,14 @@ export function AdaptiveDeviceFeed({
             {/* Фильтр (сортировка) */}
             {!hideSorting && (
               <div className="flex gap-2">
-                <span className="text-sm text-gray-600 self-center">Сортировка:</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400 self-center">Сортировка:</span>
                 {(['date', 'price', 'popularity'] as const).map((sort) => (
                   <button
                     key={sort}
                     onClick={() => setSortBy(sort)}
                     className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${sortBy === sort
-                      ? 'bg-[#2dc2c6] text-white'
-                      : 'bg-white text-gray-600 hover:bg-gray-100'
+                      ? 'bg-teal-500 text-white'
+                      : 'bg-card text-muted hover:bg-surface'
                       }`}
                   >
                     {sort === 'date' ? 'По дате' : sort === 'price' ? 'По цене' : 'По популярности'}
@@ -264,7 +264,7 @@ export function AdaptiveDeviceFeed({
 
             {/* Результаты поиска */}
             {searchQuery && (
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
                 Найдено: {filteredItems.length} из {displayItems.length} товаров
               </div>
             )}
@@ -274,7 +274,7 @@ export function AdaptiveDeviceFeed({
         {/* Контент */}
         {viewMode === 'carousel' ? (
           <motion.div
-            className="space-y-2"
+            className="w-full space-y-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -282,10 +282,10 @@ export function AdaptiveDeviceFeed({
           >
             {/* Горизонтальный скролл с карточками */}
             <HorizontalScrollCarousel
-              itemWidth="85vw"
-              gap={16}
-              showArrows={true}
-              showIndicators={true}
+                itemWidth="85%"
+                gap={16}
+                showArrows={true}
+                showIndicators={true}
             >
               {groupedItems.map((group: DeviceCard[]) => (
                 <SimpleDeviceCard key={group[0].id} cards={group} isSingle={true} />
@@ -307,7 +307,7 @@ export function AdaptiveDeviceFeed({
         ) : (
           /* Сетка */
           <div className="space-y-4 pb-10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
               {groupedItems.map((group: DeviceCard[], index: number) => (
                 <motion.div
                   key={group[0].id}
@@ -325,8 +325,8 @@ export function AdaptiveDeviceFeed({
         {/* Индикатор обновления данных */}
         {isLoading && displayItems.length > 0 && (
           <div className="flex justify-center items-center py-2">
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
-              <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
+              <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 border-t-gray-600 dark:border-t-gray-300 rounded-full animate-spin"></div>
               Обновляем данные...
             </div>
           </div>

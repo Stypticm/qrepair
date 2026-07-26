@@ -32,7 +32,7 @@ export function ProgressBar({ currentStep, totalSteps, steps = [] }: ProgressBar
         {/* Полоса прогресса */}
         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-[#2dc2c6] to-[#25a8ac] rounded-full"
+            className="h-full bg-gradient-to-r from-teal-500 to-teal-600 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -46,7 +46,7 @@ export function ProgressBar({ currentStep, totalSteps, steps = [] }: ProgressBar
           transition={{ delay: 0.2 }}
           className="text-center mt-2"
         >
-          <span className="text-sm font-semibold text-[#2dc2c6]">
+          <span className="text-sm font-semibold text-teal-500">
             {currentStepName}
           </span>
         </motion.div>

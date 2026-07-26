@@ -9,10 +9,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: '#fef7e0',
+        brand: '#faf7f2',
         teal: {
-          500: '#2dc2c6', // Бирюзовый из кода
-          600: '#25a8ac', // Hover цвет
+          500: '#7ec8dc',
+          600: '#6bb8cc',
         },
       },
       fontFamily: {

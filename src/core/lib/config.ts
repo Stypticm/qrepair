@@ -225,7 +225,7 @@ export function useSafeArea() {
           }
 
           // Устанавливаем цвета
-          webApp.headerColor = '#2dc2c6'
+          webApp.headerColor = '#7ec8dc'
           webApp.backgroundColor = '#ffffff'
 
           // Получаем тему

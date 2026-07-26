@@ -50,12 +50,12 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
     <Link
       href={`/catalog/${previewCard.id}`}
       className={cn(
-        "bg-white rounded-[24px] border border-gray-100 overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col group h-full",
+        "bg-card rounded-[24px] border border-border overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 flex flex-col group h-full",
         isSingle ? "w-full max-w-[320px] mx-auto" : "w-full"
       )}
     >
       <div className={cn(
-        "bg-gradient-to-b from-gray-50/50 to-white flex items-center justify-center relative overflow-hidden",
+        "bg-gradient-to-b from-surface/50 to-card flex items-center justify-center relative overflow-hidden",
         isSingle ? "h-64" : "h-44"
       )}>
         <Image
@@ -92,7 +92,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                 key={idx}
                 className={cn(
                   "w-1.5 h-1.5 rounded-full transition-all duration-300",
-                  idx === currentPhotoIndex ? "bg-gray-900 w-3" : "bg-gray-300"
+                  idx === currentPhotoIndex ? "bg-gray-900 dark:bg-white w-3" : "bg-gray-300 dark:bg-gray-600"
                 )}
               />
             ))}
@@ -112,7 +112,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
             e.stopPropagation();
             toggleFavorite(previewCard.id);
           }}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors shadow-sm z-30"
+          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/80 dark:bg-white/10 backdrop-blur-sm flex items-center justify-center text-gray-400 dark:text-gray-400 hover:text-red-500 transition-colors shadow-sm z-30"
         >
           <Heart className={cn("w-4 h-4", isFavorite(previewCard.id) && "fill-current text-red-500")} />
         </button>
@@ -136,7 +136,7 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
                   }}
                   className={cn(
                     "px-2 py-0.5 text-[10px] font-bold rounded-md border transition-all",
-                    isActive ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-400 border-gray-100 hover:border-gray-300"
+                    isActive ? "bg-gray-900 dark:bg-white text-white dark:text-background border-gray-900 dark:border-white" : "bg-card text-muted border-border hover:border-border"
                   )}
                 >
                   {storage}
@@ -147,17 +147,17 @@ export function SimpleDeviceCard({ cards, isSingle = false }: SimpleDeviceCardPr
         )}
 
         <div className="flex-1">
-          <h3 className="font-bold text-gray-900 text-[13px] leading-tight mb-2 line-clamp-2 group-hover:text-teal-600 transition-colors">
+          <h3 className="font-bold text-gray-900 dark:text-white text-[13px] leading-tight mb-2 line-clamp-2 group-hover:text-teal-600 transition-colors">
             {previewCard.title}
           </h3>
 
           <div className="flex flex-col mt-auto">
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-black text-gray-900 tracking-tight">
+              <span className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
                 {formatPrice(previewCard.price)}
               </span>
               {previewCard.oldPrice && previewCard.price && previewCard.oldPrice > previewCard.price && (
-                <span className="text-[13px] text-gray-300 line-through font-bold decoration-red-500/50">
+                <span className="text-[13px] text-gray-300 dark:text-gray-600 line-through font-bold decoration-red-500/50">
                   {formatPrice(previewCard.oldPrice)}
                 </span>
               )}

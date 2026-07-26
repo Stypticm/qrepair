@@ -37,7 +37,7 @@ export function SelectionFeedback({
       case 'warning':
         return 'bg-yellow-500 text-white'
       case 'info':
-        return 'bg-[#2dc2c6] text-white'
+        return 'bg-teal-500 text-white'
       default:
         return 'bg-green-500 text-white'
     }

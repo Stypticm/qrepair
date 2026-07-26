@@ -8,12 +8,12 @@ import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
 const CATEGORIES = [
-  { id: 'screen', name: 'Разбито стекло / экран', icon: MonitorSmartphone, color: 'text-blue-500', bg: 'bg-blue-50' },
-  { id: 'battery', name: 'Быстро садится АКБ', icon: BatteryCharging, color: 'text-green-500', bg: 'bg-green-50' },
-  { id: 'camera', name: 'Не работает камера', icon: Camera, color: 'text-purple-500', bg: 'bg-purple-50' },
-  { id: 'board', name: 'Не включается', icon: Cpu, color: 'text-red-500', bg: 'bg-red-50' },
-  { id: 'body', name: 'Разбит корпус', icon: Smartphone, color: 'text-orange-500', bg: 'bg-orange-50' },
-  { id: 'diagnostics', name: 'Сложная поломка', icon: Settings2, color: 'text-gray-500', bg: 'bg-gray-50' },
+  { id: 'screen', name: 'Разбито стекло / экран', icon: MonitorSmartphone, color: 'text-sky-700 dark:text-sky-300', bg: 'bg-sky-100/80 dark:bg-sky-400/15' },
+  { id: 'battery', name: 'Быстро садится АКБ', icon: BatteryCharging, color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-100/80 dark:bg-emerald-400/15' },
+  { id: 'camera', name: 'Не работает камера', icon: Camera, color: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-100/80 dark:bg-violet-400/15' },
+  { id: 'board', name: 'Не включается', icon: Cpu, color: 'text-rose-700 dark:text-rose-300', bg: 'bg-rose-100/80 dark:bg-rose-400/15' },
+  { id: 'body', name: 'Разбит корпус', icon: Smartphone, color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-100/80 dark:bg-amber-400/15' },
+  { id: 'diagnostics', name: 'Сложная поломка', icon: Settings2, color: 'text-slate-700 dark:text-slate-300', bg: 'bg-slate-100/80 dark:bg-slate-400/15' },
 ]
 
 export default function RepairCategoriesPage() {
@@ -41,45 +41,44 @@ export default function RepairCategoriesPage() {
   }
 
   return (
-    <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
-      <div className="text-center space-y-2 mb-6 mt-2">
-        <p className="text-sm text-gray-500">Выберите одну или несколько проблем для предварительной оценки</p>
+    <div className="flex flex-col gap-6">
+      <div className="text-center space-y-2 mt-2">
+        <p className="text-sm text-muted">Выберите одну или несколько проблем для предварительной оценки</p>
       </div>
 
-      <div className="flex-1">
-        <div className="grid grid-cols-2 gap-3">
-          {CATEGORIES.map((cat, idx) => {
-            const isActive = selectedIssues.includes(cat.name)
-            return (
-              <motion.button
-                key={cat.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                onClick={() => toggleIssue(cat.name)}
-                className={`flex flex-col items-center justify-center p-6 rounded-3xl border transition-all active:scale-[0.98] gap-3 ${
-                  isActive
-                    ? 'bg-blue-50 border-blue-500 shadow-md'
-                    : 'bg-white border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200'
-                }`}
-              >
-                <div className={`p-4 rounded-full ${cat.bg} ${cat.color}`}>
-                  <cat.icon className="w-8 h-8" />
-                </div>
-                <span className="text-sm font-semibold text-gray-800 text-center leading-tight">
-                  {cat.name}
-                </span>
-              </motion.button>
-            )
-          })}
-        </div>
+      <div className="grid grid-cols-2 gap-3">
+        {CATEGORIES.map((cat, idx) => {
+          const isActive = selectedIssues.includes(cat.name)
+          return (
+            <motion.button
+              key={cat.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              onClick={() => toggleIssue(cat.name)}
+              className={`flex flex-col items-center justify-center p-6 rounded-3xl border transition-all active:scale-[0.98] gap-3 ${
+                isActive
+                  ? 'bg-accent/15 border-accent shadow-md shadow-accent/10'
+                  : 'bg-surface-elevated border-border shadow-sm hover:shadow-md hover:border-accent/50'
+              }`}
+            >
+              <div className={`p-4 rounded-full ${cat.bg} ${cat.color}`}>
+                <cat.icon className="w-8 h-8" />
+              </div>
+              <span className="text-sm font-semibold text-foreground text-center leading-tight">
+                {cat.name}
+              </span>
+            </motion.button>
+          )
+        })}
       </div>
 
-      <div className="fixed bottom-6 left-0 right-0 px-4 max-w-md mx-auto z-10">
+      {/* Кнопка после сетки, не перекрывает плитки */}
+      <div className="pb-4">
         <Button
           disabled={!selectedIssues.length}
           onClick={handleContinue}
-          className="w-full h-14 rounded-2xl font-bold text-base bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20 disabled:opacity-40 disabled:shadow-none"
+          className="w-full h-14 rounded-2xl font-bold text-base bg-accent hover:bg-accent-hover text-primary-foreground shadow-xl shadow-accent/20 disabled:opacity-40 disabled:shadow-none"
         >
           Продолжить
           <ChevronRight className="w-5 h-5 ml-2" />

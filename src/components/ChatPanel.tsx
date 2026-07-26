@@ -78,7 +78,7 @@ export function ChatPanel({ placeholder = 'Спросите что угодно 
 
   return (
     <div className="w-full max-w-screen-sm mx-auto px-4">
-      <div className="rounded-3xl border border-gray-200 bg-white/95 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] overflow-hidden">
+      <div className="rounded-3xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-[#1a1a1a]/95 backdrop-blur-md shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] dark:shadow-[0_10px_30px_-10px_rgba(255,255,255,0.1)] overflow-hidden">
         <div ref={listRef} className="max-h-[46vh] overflow-y-auto p-4 space-y-3">
           {messages.map((m) => (
             <div key={m.id} className="flex">
@@ -86,7 +86,7 @@ export function ChatPanel({ placeholder = 'Спросите что угодно 
                 className={
                   m.role === 'user'
                     ? 'ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-blue-600 text-white px-3 py-2 text-sm shadow-sm'
-                    : 'mr-auto max-w-[85%] rounded-2xl rounded-tl-sm bg-gray-100 text-gray-900 px-3 py-2 text-sm shadow-sm'
+                    : 'mr-auto max-w-[85%] rounded-2xl rounded-tl-sm bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white px-3 py-2 text-sm shadow-sm'
                 }
               >
                 {m.content}
@@ -94,18 +94,18 @@ export function ChatPanel({ placeholder = 'Спросите что угодно 
             </div>
           ))}
         </div>
-        <div className="border-t border-gray-200 p-2.5 flex items-center gap-2">
+        <div className="border-t border-gray-200 dark:border-white/10 p-2.5 flex items-center gap-2">
           <button
             aria-label="Record voice"
             onClick={toggleRecord}
             className={`h-11 w-11 rounded-full flex items-center justify-center transition-colors ${
-              isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700'
+              isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300'
             }`}
           >
             <Mic className="w-5 h-5" />
           </button>
           {isRecording ? (
-            <div className="flex items-center gap-2 px-3 text-sm text-gray-600">
+            <div className="flex items-center gap-2 px-3 text-sm text-gray-600 dark:text-gray-300">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
@@ -115,7 +115,7 @@ export function ChatPanel({ placeholder = 'Спросите что угодно 
           ) : null}
           <input
             type="text"
-            className="flex-1 h-11 rounded-full border border-gray-200 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="flex-1 h-11 rounded-full border border-gray-200 dark:border-white/10 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
             placeholder={placeholder}
             value={input}
             onChange={(e) => setInput(e.target.value)}

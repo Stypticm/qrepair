@@ -95,12 +95,12 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
             <motion.div
               layoutId={`card-${active.id}-${id}`}
               ref={ref}
-              className="w-full max-w-sm max-h-[90vh] flex flex-col bg-white rounded-3xl overflow-hidden shadow-2xl"
+               className="w-full max-w-sm max-h-[90vh] flex flex-col bg-white dark:bg-[#1a1a1a] rounded-3xl overflow-hidden shadow-2xl"
             >
               <div className="overflow-y-auto flex flex-col h-full scrollbar-hide">
                 <motion.div layoutId={`image-${active.id}-${id}`} className="relative h-[35vh] shrink-0">
                   <div
-                    className="w-full h-full bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden"
+                     className="w-full h-full bg-gradient-to-b from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/10 flex items-center justify-center relative overflow-hidden"
                     onTouchStart={(e) => {
                       touchStartX.current = e.changedTouches[0].clientX;
                       touchStartY.current = e.changedTouches[0].clientY;
@@ -140,8 +140,8 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                         {active.photos.map((_, index) => (
                           <div
                             key={index}
-                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${index === currentPhotoIndex ? 'bg-gray-900 w-3' : 'bg-gray-300'
-                              }`}
+                             className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${index === currentPhotoIndex ? 'bg-gray-900 dark:bg-white w-3' : 'bg-gray-300 dark:bg-gray-600'}
+                               }`}
                           />
                         ))}
                       </div>
@@ -153,29 +153,29 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                   <div className="mb-4">
                     <motion.h3
                       layoutId={`title-${active.id}-${id}`}
-                      className="font-bold text-xl text-gray-900 leading-tight mb-1"
+                       className="font-bold text-xl text-gray-900 dark:text-white leading-tight mb-1"
                     >
                       {active.title}
                     </motion.h3>
                     <motion.div
                       layoutId={`price-${active.id}-${id}`}
-                      className="text-lg font-medium text-gray-500"
+                       className="text-lg font-medium text-gray-500 dark:text-gray-400"
                     >
                       {formatPrice(active.price)}
                     </motion.div>
                   </div>
 
                   <div className="space-y-4 flex-1">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                        <div className="text-gray-400 mb-0.5 uppercase tracking-tighter font-bold">Память</div>
-                        <div className="font-semibold text-gray-800">{active.storage || '—'}</div>
-                      </div>
-                      <div className="bg-gray-50 p-2.5 rounded-xl border border-gray-100">
-                        <div className="text-gray-400 mb-0.5 uppercase tracking-tighter font-bold">Состояние</div>
-                        <div className="font-semibold text-teal-600">{active.condition || '—'}</div>
-                      </div>
-                    </div>
+                     <div className="grid grid-cols-2 gap-2 text-xs">
+                       <div className="bg-gray-50 dark:bg-white/5 p-2.5 rounded-xl border border-gray-100 dark:border-white/10">
+                         <div className="text-gray-400 dark:text-gray-500 mb-0.5 uppercase tracking-tighter font-bold">Память</div>
+                         <div className="font-semibold text-gray-800 dark:text-gray-200">{active.storage || '—'}</div>
+                       </div>
+                       <div className="bg-gray-50 dark:bg-white/5 p-2.5 rounded-xl border border-gray-100 dark:border-white/10">
+                         <div className="text-gray-400 dark:text-gray-500 mb-0.5 uppercase tracking-tighter font-bold">Состояние</div>
+                         <div className="font-semibold text-teal-600 dark:text-teal-400">{active.condition || '—'}</div>
+                       </div>
+                     </div>
 
                     <div className="flex flex-col gap-2.5 pt-2">
                       <button
@@ -208,7 +208,7 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
                               // остаёмся на странице, чтобы можно было продолжить выбор
                             }
                           }}
-                          className="flex-1 h-12 bg-blue-50 text-blue-600 font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-colors"
+                          className="flex-1 h-12 bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-colors"
                         >
                           <ShoppingCart className="w-4 h-4" />
                           <span>{isInCart(active.id) ? 'В корзине' : 'В корзину'}</span>
@@ -216,7 +216,7 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
 
                         <button
                           onClick={() => toggleFavorite(active.id)}
-                          className="flex-1 h-12 bg-gray-50 text-gray-600 font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-colors"
+                           className="flex-1 h-12 bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 font-bold rounded-2xl flex items-center justify-center gap-2 active:scale-[0.98] transition-colors"
                         >
                           <Heart className={isFavorite(active.id) ? "w-4 h-4 text-red-500 fill-current" : "w-4 h-4"} />
                           <span>Избранное</span>
@@ -225,7 +225,7 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
 
                       <button
                         onClick={() => setIsTradeInModalOpen(true)}
-                        className="w-full h-12 border-2 border-gray-100 hover:border-teal-100 text-gray-700 font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all"
+                         className="w-full h-12 border-2 border-gray-100 dark:border-white/10 hover:border-teal-100 dark:hover:border-teal-800 text-gray-700 dark:text-gray-200 font-semibold rounded-2xl flex items-center justify-center gap-2 transition-all"
                       >
                         <RefreshCcw className="w-4 h-4 text-teal-500" />
                         <span>Trade-in оценка</span>
@@ -235,7 +235,7 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
 
                   <button
                     onClick={() => setActive(null)}
-                    className="mt-6 text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"
+                     className="mt-6 text-gray-400 dark:text-gray-500 text-sm font-medium hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
                     Закрыть
                   </button>
@@ -265,10 +265,10 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
             layoutId={`card-${card.id}-${id}`}
             key={`card-${card.id}-${id}`}
             onClick={() => setActive(card)}
-            className={`group ${isSingle ? "h-[380px] w-full max-w-md" : "h-[280px]"} bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
+             className={`group ${isSingle ? "h-[380px] w-full max-w-md" : "h-[280px]"} bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-lg overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300`}
           >
             <motion.div layoutId={`image-${card.id}-${id}`}>
-              <div className={`${isSingle ? 'h-72' : 'h-44'} bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden`}>
+               <div className={`${isSingle ? 'h-72' : 'h-44'} bg-gradient-to-b from-gray-50 to-gray-100 dark:from-white/5 dark:to-white/10 flex items-center justify-center relative overflow-hidden`}>
                 <Image
                   width={400}
                   height={400}
@@ -283,14 +283,14 @@ export function AceternityDeviceCard({ cards, isSingle = false }: AceternityDevi
               <div className="flex-1">
                 <motion.h3
                   layoutId={`title-${card.id}-${id}`}
-                  className="font-bold text-gray-900 text-sm mb-1 line-clamp-2"
+                   className="font-bold text-gray-900 dark:text-white text-sm mb-1 line-clamp-2"
                 >
                   {card.title}
                 </motion.h3>
                 {card.price && (
                   <motion.div
                     layoutId={`price-${card.id}-${id}`}
-                    className="text-lg font-bold text-gray-900 mt-auto"
+                    className="text-lg font-bold text-gray-900 dark:text-white mt-auto"
                   >
                     {formatPrice(card.price)}
                   </motion.div>

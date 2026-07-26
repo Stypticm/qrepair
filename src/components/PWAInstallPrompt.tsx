@@ -123,7 +123,7 @@ export const PWAInstallPrompt = () => {
             {!isIOS && (
               <button
                 onClick={handleInstallClick}
-                className="w-full py-2.5 bg-[#2dc2c6] text-white text-[13px] font-bold rounded-2xl active:scale-95 transition-all shadow-[0_4px_12px_rgba(45,194,198,0.2)] hover:bg-[#28b1b5]"
+                className="w-full py-2.5 bg-teal-500 text-white text-[13px] font-bold rounded-2xl active:scale-95 transition-all shadow-[0_4px_12px_rgba(126,200,220,0.2)] hover:bg-teal-600"
               >
                 Установить сейчас
               </button>

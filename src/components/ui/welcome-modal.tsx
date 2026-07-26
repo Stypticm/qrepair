@@ -71,7 +71,7 @@ export function WelcomeModal({ isOpen, onClose, onStart }: WelcomeModalProps) {
               >
                 <Button
                   onClick={onStart}
-                  className="w-full bg-[#2dc2c6] hover:bg-[#25a8ac] text-white font-semibold py-4 rounded-2xl text-lg transition-all duration-200 hover:shadow-lg"
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-4 rounded-2xl text-lg transition-all duration-200 hover:shadow-lg"
                 >
                   Начать оценку
                 </Button>

@@ -13,12 +13,12 @@ const HomeContent = () => {
       */}
 
       {/* Mobile App View */}
-      <div className="block md:hidden">
+      <div className="block lg:hidden">
         <MobileApp />
       </div>
 
       {/* Desktop Landing Page */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <DesktopHome />
       </div>
     </>

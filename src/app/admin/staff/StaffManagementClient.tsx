@@ -90,19 +90,19 @@ export default function StaffManagementPage() {
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <UserCog className="w-6 h-6" />
                     Управление персоналом
                 </h2>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
                     {/* Filter Tabs */}
-                    <div className="flex p-1 bg-gray-100 rounded-xl">
+                    <div className="flex p-1 bg-gray-100 dark:bg-white/10 rounded-xl">
                         <button
                             onClick={() => setFilterType('staff')}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${filterType === 'staff'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-blue-400 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                 }`}
                         >
                             Персонал
@@ -110,8 +110,8 @@ export default function StaffManagementPage() {
                         <button
                             onClick={() => setFilterType('clients')}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${filterType === 'clients'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white dark:bg-white/10 text-blue-600 dark:text-blue-400 shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                                 }`}
                         >
                             Клиенты
@@ -119,43 +119,43 @@ export default function StaffManagementPage() {
                     </div>
 
                     <div className="relative max-w-sm w-full">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
                         <input
                             type="text"
                             placeholder="Поиск по Telegram ID..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-[32px] shadow-sm border border-gray-100 dark:border-white/10 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm font-medium">
+                        <thead className="bg-gray-50 dark:bg-white/5 border-b border-gray-100 dark:border-white/5 text-gray-500 dark:text-gray-400 text-sm font-medium">
                             <tr>
                                 <th className="px-3 sm:px-6 py-4">ID</th>
                                 <th className="px-3 sm:px-6 py-4">Роль</th>
                                 <th className="px-3 sm:px-6 py-4 text-right">Действие</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-gray-50 dark:divide-white/5">
                             {filteredUsers.map((user) => {
                                 const Icon = ROLE_ICONS[user.role] || User;
                                 return (
-                                    <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                                    <tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                                         <td className="px-3 sm:px-6 py-4">
                                             <div
                                                 className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none"
                                                 title={user.telegramId}
                                                 onClick={() => setExpandedId(expandedId === user.id ? null : user.id)}
                                             >
-                                                <div className="w-8 h-8 rounded-lg bg-blue-50 flex-shrink-0 flex items-center justify-center text-blue-600 hidden sm:flex">
+                                                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/40 flex-shrink-0 flex items-center justify-center text-blue-600 dark:text-blue-400 hidden sm:flex">
                                                     <Icon className="w-4 h-4" />
                                                 </div>
-                                                <span className="font-medium text-gray-900">
+                                                <span className="font-medium text-gray-900 dark:text-white">
                                                     <span className="sm:hidden">
                                                         {expandedId === user.id
                                                             ? user.telegramId
@@ -170,10 +170,10 @@ export default function StaffManagementPage() {
                                         </td>
                                         <td className="px-3 sm:px-6 py-4">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                        ${user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                                                    user.role === 'COURIER' ? 'bg-orange-100 text-orange-800' :
-                                                        user.role === 'MASTER' ? 'bg-blue-100 text-blue-800' :
-                                                            'bg-gray-100 text-gray-800'}`}>
+                        ${user.role === 'ADMIN' ? 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300' :
+                                                    user.role === 'COURIER' ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-300' :
+                                                        user.role === 'MASTER' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300' :
+                                                            'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300'}`}>
                                                 {user.role}
                                             </span>
                                         </td>
@@ -181,7 +181,7 @@ export default function StaffManagementPage() {
                                             <select
                                                 value={user.role}
                                                 onChange={(e) => updateRole(user.id, e.target.value)}
-                                                className="p-1 sm:p-2 text-xs sm:text-sm border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                                className="p-1 sm:p-2 text-xs sm:text-sm border border-gray-200 dark:border-white/10 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
                                             >
                                                 <option value="USER">USER</option>
                                                 <option value="COURIER">COURIER</option>

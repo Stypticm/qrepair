@@ -16,7 +16,8 @@ import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { QRModal } from './QRModal';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
-import { LogIn, Hammer, Coins } from 'lucide-react';
+import { LogIn, Hammer, Coins, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 export const DesktopHeader = () => {
     const username = useAppStore(state => state.username);
@@ -30,6 +31,8 @@ export const DesktopHeader = () => {
     const { count: adminNotifs, leads, skupka, orders, tradeIn } = useAdminNotifications();
     const { count: orderNotifs } = useOrderNotifications();
     const { needsUpdate, performUpdate } = useVersionCheck();
+    const { theme, setTheme } = useTheme();
+    const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
     // Force check for LH admin if store seems empty but we are on LH
     useEffect(() => {
@@ -43,14 +46,14 @@ export const DesktopHeader = () => {
     const navLinkClass = (path: string) => `
         px-4 py-2 rounded-xl text-base font-medium transition-all duration-200
         ${isActive(path)
-            ? 'bg-gray-100 text-gray-900 shadow-sm'
-            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}
+            ? 'bg-surface text-foreground shadow-sm'
+            : 'text-muted hover:text-foreground hover:bg-surface/60'}
     `;
 
     return (
         <>
             <header className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-                <div className="w-full max-w-7xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-lg shadow-black/5 rounded-2xl h-20 flex items-center justify-between px-6 pointer-events-auto transition-all duration-300">
+                <div className="w-full max-w-7xl bg-background/70 dark:bg-background/70 backdrop-blur-xl border border-border/40 shadow-lg shadow-black/5 dark:shadow-black/30 rounded-2xl h-20 flex items-center justify-between px-6 pointer-events-auto transition-all duration-300">
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group mr-8">
                         <div className="w-9 h-9 relative overflow-hidden rounded-xl shadow-sm">
@@ -61,7 +64,7 @@ export const DesktopHeader = () => {
                                 className="object-cover"
                             />
                         </div>
-                        <span className="font-bold text-2xl tracking-tight text-gray-900 group-hover:opacity-80 transition-opacity">
+                        <span className="font-bold text-2xl tracking-tight text-foreground group-hover:opacity-80 transition-opacity">
                             Qoqos
                         </span>
                     </Link>
@@ -126,18 +129,29 @@ export const DesktopHeader = () => {
                         <Link href="/#blog" className={navLinkClass('/#blog')}>
                             Блог
                         </Link>
-
-                        <div className="w-px h-6 bg-gray-200 mx-2"></div>
+                        {/* Nav separator */}
+                        <div className="w-px h-6 bg-gray-200 dark:bg-white/10 mx-2"></div>
 
                         <span
-                            className="px-4 py-2 rounded-xl text-base font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 cursor-pointer transition-all duration-200"
+                            className="px-4 py-2 rounded-xl text-base font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition-all duration-200"
                         >
                             Контакты
                         </span>
                     </nav>
 
                     {/* CTA & Auth */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={toggleTheme}
+                            className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-all"
+                            title="Сменить тему"
+                        >
+                            {theme === 'dark'
+                                ? <Sun className="w-4 h-4 text-yellow-400" />
+                                : <Moon className="w-4 h-4" />
+                            }
+                        </button>
                         {/* Auth Status */}
                         {telegramId ? (
                             <div className="hidden md:flex items-center gap-3 mr-2 bg-gray-50 pl-3 pr-2 py-1.5 rounded-full border border-gray-200 dark:bg-zinc-900 dark:border-white/10">

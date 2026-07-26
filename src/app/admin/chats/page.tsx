@@ -187,29 +187,29 @@ function AdminChatsContent() {
 
   const renderSidebar = () => (
     <div className={cn(
-      "bg-white border-r flex flex-col h-full transition-all duration-300",
+      "bg-white dark:bg-[#0a0a0a] border-r border-gray-100 dark:border-white/5 flex flex-col h-full transition-all duration-300",
       isMobileView ? "w-full" : "w-80"
     )}>
       <div className={cn(
-        "p-4 border-b flex flex-col gap-4 bg-white/80 backdrop-blur-md sticky top-0 z-20",
+        "p-4 border-b border-gray-100 dark:border-white/5 flex flex-col gap-4 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md sticky top-0 z-20",
         isMobileView && "pt-[calc(1rem+env(safe-area-inset-top,0px))]"
       )}>
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-lg">Чаты</h2>
+          <h2 className="font-bold text-lg text-gray-900 dark:text-white">Чаты</h2>
           <Link href="/admin">
-            <Button variant="ghost" size="sm" className="h-8 px-2 text-blue-600 font-bold">
+            <Button variant="ghost" size="sm" className="h-8 px-2 text-blue-600 dark:text-blue-400 font-bold">
               <ArrowLeft size={16} className="mr-1" /> Админ панель
             </Button>
           </Link>
         </div>
 
         {/* Status Tabs */}
-        <div className="flex bg-gray-100 p-1 rounded-xl translate-z-0">
+        <div className="flex bg-gray-100 dark:bg-white/10 p-1 rounded-xl translate-z-0">
           <button
             onClick={() => setActiveTab('active')}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-lg transition-all",
-              activeTab === 'active' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              activeTab === 'active' ? "bg-white dark:bg-white/10 text-blue-600 dark:text-blue-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             )}
           >
             <Inbox size={14} />
@@ -219,7 +219,7 @@ function AdminChatsContent() {
             onClick={() => setActiveTab('archived')}
             className={cn(
               "flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-bold rounded-lg transition-all",
-              activeTab === 'archived' ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              activeTab === 'archived' ? "bg-white dark:bg-white/10 text-blue-600 dark:text-blue-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             )}
           >
             <Archive size={14} />
@@ -230,7 +230,7 @@ function AdminChatsContent() {
 
       <div className="flex-1 overflow-y-auto">
         {chats.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 text-sm">
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400 text-sm">
             {activeTab === 'active' ? 'Нет активных чатов' : 'Архив пуст'}
           </div>
         ) : (
@@ -239,23 +239,23 @@ function AdminChatsContent() {
               key={chat.id}
               onClick={() => handleSelect(chat.id)}
               className={cn(
-                "w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors border-b",
-                selectedChat?.id === chat.id && !isMobileView && "bg-blue-50 hover:bg-blue-50 border-r-4 border-r-blue-600"
+                "w-full p-4 flex items-start gap-3 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border-b border-gray-100 dark:border-white/5",
+                selectedChat?.id === chat.id && !isMobileView && "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-r-4 border-r-blue-600"
               )}
             >
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-                <User size={20} className="text-gray-400" />
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center shrink-0">
+                <User size={20} className="text-gray-400 dark:text-gray-500" />
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="flex justify-between items-start mb-1">
-                  <span className="font-semibold text-sm truncate">
+                  <span className="font-semibold text-sm truncate text-gray-900 dark:text-white">
                     {chat.userNickname || `ID: ${chat.telegramId}`}
                   </span>
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">
                     {new Date(chat.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {chat.messages?.[0]?.text || 'Нет сообщений'}
                 </p>
               </div>
@@ -267,12 +267,12 @@ function AdminChatsContent() {
   );
 
   const renderChatArea = () => (
-    <div className="flex-1 flex flex-col min-w-0 h-full bg-[#f0f2f5]">
+    <div className="flex-1 flex flex-col min-w-0 h-full bg-[#f0f2f5] dark:bg-[#0a0a0a]">
       {selectedChat ? (
         <>
           {/* Header */}
           <div className={cn(
-            "p-3 bg-white border-b flex items-center justify-between shadow-sm z-10 sticky top-0",
+            "p-3 bg-white dark:bg-[#0a0a0a] border-b border-gray-100 dark:border-white/5 flex items-center justify-between shadow-sm z-10 sticky top-0",
             isMobileView && "pt-[calc(0.75rem+env(safe-area-inset-top,0px))]"
           )}>
             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -280,20 +280,20 @@ function AdminChatsContent() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 -ml-2 text-gray-400"
+                  className="h-10 w-10 -ml-2 text-gray-400 dark:text-gray-500"
                   onClick={() => handleSelect(null)}
                 >
                   <ChevronLeft size={24} />
                 </Button>
               )}
-              <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                <User size={18} className="text-blue-600" />
+              <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center shrink-0">
+                <User size={18} className="text-blue-600 dark:text-blue-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-bold text-sm truncate leading-tight">
+                <h3 className="font-bold text-sm truncate leading-tight text-gray-900 dark:text-white">
                   {selectedChat.userNickname || 'Пользователь'}
                 </h3>
-                <p className="text-[10px] text-gray-500">ID: {selectedChat.telegramId}</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400">ID: {selectedChat.telegramId}</p>
               </div>
             </div>
 
@@ -302,7 +302,7 @@ function AdminChatsContent() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 px-2 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                className="h-9 px-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                 onClick={() => {
                   const name = selectedChat.userNickname || '';
                   const telegramId = selectedChat.telegramId || '';
@@ -318,7 +318,7 @@ function AdminChatsContent() {
                 size="sm"
                 className={cn(
                   "h-9 px-2 text-xs font-bold",
-                  selectedChat.status === 'active' ? "text-gray-400 hover:text-amber-600" : "text-amber-600 hover:text-amber-700"
+                  selectedChat.status === 'active' ? "text-gray-400 dark:text-gray-500 hover:text-amber-600 dark:hover:text-amber-400" : "text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300"
                 )}
                 onClick={() => handleStatusUpdate(selectedChat.id, selectedChat.status === 'active' ? 'archived' : 'active')}
               >
@@ -333,7 +333,7 @@ function AdminChatsContent() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 px-2 text-xs text-blue-600 font-bold"
+                  className="h-9 px-2 text-xs text-blue-600 dark:text-blue-400 font-bold"
                   onClick={() => handleSelect(null)}
                 >
                   <ChevronLeft size={16} className="mr-1" /> Чаты
@@ -357,12 +357,12 @@ function AdminChatsContent() {
                     "px-4 py-2 rounded-2xl text-[13px] shadow-sm leading-relaxed max-w-[85%] sm:max-w-[70%] break-words",
                     msg.senderType === 'admin'
                       ? "bg-blue-600 text-white rounded-tr-none"
-                      : "bg-white text-gray-900 rounded-tl-none"
+                      : "bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white rounded-tl-none"
                   )}
                 >
                   {msg.text}
                 </div>
-                <span className="text-[9px] text-gray-400 mt-1 px-1">
+                <span className="text-[9px] text-gray-400 dark:text-gray-500 mt-1 px-1">
                   {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -372,7 +372,7 @@ function AdminChatsContent() {
 
           {/* Input Area */}
           <div className={cn(
-            "p-3 bg-white border-t",
+            "p-3 bg-white dark:bg-[#0a0a0a] border-t border-gray-100 dark:border-white/5",
             isMobileView && "pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]"
           )}>
             <div className="flex items-center gap-2 max-w-4xl mx-auto">
@@ -380,7 +380,7 @@ function AdminChatsContent() {
                 <input
                   type="text"
                   placeholder="Напишите ответ..."
-                  className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-gray-900 dark:text-white"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -398,12 +398,12 @@ function AdminChatsContent() {
           </div>
         </>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400 p-8">
-          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-sm ring-1 ring-gray-100">
-            <MessageCircle size={40} className="text-gray-200" />
+        <div className="flex-1 flex flex-col items-center justify-center text-center text-gray-400 dark:text-gray-500 p-8">
+          <div className="w-20 h-20 bg-white dark:bg-[#1a1a1a] rounded-3xl flex items-center justify-center mb-6 shadow-sm ring-1 ring-gray-100 dark:ring-white/10">
+            <MessageCircle size={40} className="text-gray-200 dark:text-gray-700" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Выберите чат</h3>
-          <p className="max-w-xs text-sm text-gray-500">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Выберите чат</h3>
+          <p className="max-w-xs text-sm text-gray-500 dark:text-gray-400">
             Выберите пользователя из списка слева, чтобы начать переписку.
           </p>
         </div>
@@ -413,7 +413,7 @@ function AdminChatsContent() {
 
   return (
     <div className={cn(
-      "flex h-[100dvh] w-full bg-gray-100 overflow-hidden",
+      "flex h-[100dvh] w-full bg-gray-100 dark:bg-[#0a0a0a] overflow-hidden",
       !isMobileView && "pt-20" // Header offset for desktop
     )}>
       {/* Mobile Logic: Either List or Chat */}
