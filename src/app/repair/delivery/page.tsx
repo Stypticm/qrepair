@@ -105,8 +105,8 @@ export default function RepairDeliveryPage() {
 
                 {deliveryMethod === 'self' ? (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         className="bg-surface rounded-2xl p-6 border border-border space-y-3"
                     >
                         <h3 className="font-bold text-foreground">Адрес сервисного центра</h3>
@@ -132,8 +132,8 @@ export default function RepairDeliveryPage() {
                     </motion.div>
                 ) : (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         className="space-y-4"
                     >
                         <input

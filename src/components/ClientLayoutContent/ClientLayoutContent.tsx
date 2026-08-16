@@ -12,25 +12,28 @@ import { useTelegramDisableVerticalSwipes } from '@/app/telegram/telegram-web-vi
 import { NavigationProvider } from '@/app/navigation/NavigationProvider'
 import { useKeyboardNavigation } from '@/app/navigation/useKeyboardNavigation'
 import { useSwipeNavigation } from '@/app/navigation/useSwipeNavigation'
+import { ClubNavigation } from '@/components/Home/ClubNavigation'
 
 
 
 export function ClientLayoutContent({ children }: PropsWithChildren) {
   useRequestSync()
   useTelegramDisableVerticalSwipes()
-  const { isDesktop } = useSafeArea()
+  const { isDesktop, isTelegram } = useSafeArea()
   const pathname = usePathname()
 
   const isAdminPath = pathname?.startsWith('/admin')
-  const showGlobalHeader = isDesktop && !isAdminPath
+  // Hide global header in Telegram Mini App (to show native experience) or on mobile web
+  const showGlobalHeader = isDesktop && !isAdminPath && !isTelegram
 
   return (
     // <NavigationProvider>
     //   <NavigationEffects />
     // </NavigationProvider>
-    <div id="app-root">
+    <div id="app-root" className={!isAdminPath ? 'pb-28' : ''}>
       {showGlobalHeader && <Header />}
       <AdaptiveContainer>{children}</AdaptiveContainer>
+      {!isAdminPath && <ClubNavigation />}
       <ChatWidget />
     </div>
   )

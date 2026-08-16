@@ -7,7 +7,7 @@ import { SearchBar } from '@/components/features/search/SearchBar';
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { SlidersHorizontal, X, ArrowLeft } from 'lucide-react';
+import { SlidersHorizontal, X, House } from 'lucide-react';
 import type { FilterState } from '@/components/features/catalog/Filters';
 
 interface Product {
@@ -197,18 +197,18 @@ function CatalogContent() {
                         <span className="text-gray-900 font-medium">Каталог</span>
                     </nav>
 
-                    {/* Mobile Header (similar to Repair/Buyback) */}
+                    {/* Mobile Header */}
                     <div className="lg:hidden pt-2 pb-4">
                         <div className="flex flex-col items-center justify-center gap-3">
                             <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white text-center">
                                 Каталог
                             </h1>
                             <button
-                                onClick={() => router.back()}
+                                onClick={() => router.push('/')}
                                 className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-white dark:bg-[#1a1a1a] hover:bg-gray-50 dark:hover:bg-white/5 px-4 py-1.5 rounded-full border border-gray-200 dark:border-white/10 shadow-sm active:scale-95 transition-all"
                             >
-                                <ArrowLeft className="w-4 h-4" />
-                                Назад
+                                <House className="w-4 h-4" />
+                                На главную
                             </button>
                         </div>
                     </div>

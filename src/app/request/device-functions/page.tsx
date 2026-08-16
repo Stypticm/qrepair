@@ -49,85 +49,42 @@ interface FunctionCardProps {
 function FunctionCard({ func, state, onStateChange }: FunctionCardProps) {
   const IconComponent = ICON_MAP[func.icon as keyof typeof ICON_MAP] || Power;
 
-  const getStateIcon = (state: string) => {
-    switch (state) {
-      case 'working': return <CheckCircle className="w-4 h-4 text-gray-600" />;
-      case 'not_working': return <XCircle className="w-4 h-4 text-gray-600" />;
-      default: return <HelpCircle className="w-4 h-4 text-gray-400" />;
+  // Если состояние 'not_working' или для repair_history 'working' (был ремонт) -> считаем это "выбранной проблемой"
+  const isSelected = 
+    (func.key === 'repair_history' && state === 'working') ||
+    (func.key !== 'repair_history' && state === 'not_working');
+
+  const toggleState = () => {
+    if (func.key === 'repair_history') {
+      onStateChange(func.key, state === 'working' ? 'not_working' : 'working');
+    } else {
+      // Для остальных: по умолчанию если кликнули - значит не работает (выбрали проблему)
+      onStateChange(func.key, state === 'not_working' ? 'working' : 'not_working');
     }
   };
 
-  // Определяем, какие функции должны показывать "Да/Нет/Не знаю"
-  const isYesNoQuestion = func.key === 'device_power' || func.key === 'repair_history';
-
-  const getButtonText = (buttonState: string) => {
-    if (isYesNoQuestion) {
-      switch (buttonState) {
-        case 'working': return 'Да';
-        case 'not_working': return 'Нет';
-        default: return 'Не знаю';
-      }
-    } else {
-      switch (buttonState) {
-        case 'working': return 'Работает';
-        case 'not_working': return 'Не работает';
-        default: return 'Не знаю';
-      }
-    }
+  const getLabel = () => {
+    if (func.key === 'device_power') return 'Не включается';
+    if (func.key === 'repair_history') return 'Был ремонт';
+    return `Не работает ${func.title.toLowerCase()}`;
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl p-3 border border-gray-200 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-            <IconComponent className="w-4 h-4 text-gray-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 text-sm">
-              {func.title}
-            </h3>
-          </div>
-        </div>
-        {getStateIcon(state)}
+    <motion.button
+      onClick={toggleState}
+      className={`flex flex-col items-center justify-center p-6 rounded-3xl border transition-all active:scale-[0.98] gap-3 ${
+        isSelected
+          ? 'bg-accent/15 border-accent shadow-md shadow-accent/10'
+          : 'bg-surface-elevated border-border shadow-sm hover:shadow-md hover:border-accent/50'
+      }`}
+    >
+      <div className={`p-4 rounded-full ${isSelected ? 'bg-accent/20 text-accent' : 'bg-gray-100 text-gray-500'}`}>
+        <IconComponent className="w-8 h-8" />
       </div>
-
-      <div className="flex space-x-1">
-        <Button
-          size="sm"
-          variant={state === 'working' ? 'default' : 'outline'}
-          className={`flex-1 h-7 text-xs ${state === 'working'
-            ? 'bg-gray-800 hover:bg-gray-900 text-white'
-            : 'text-gray-600 border-gray-300 hover:bg-gray-50'
-            }`}
-          onClick={() => onStateChange(func.key, 'working')}
-        >
-          {getButtonText('working')}
-        </Button>
-        <Button
-          size="sm"
-          variant={state === 'not_working' ? 'default' : 'outline'}
-          className={`flex-1 h-7 text-xs ${state === 'not_working'
-            ? 'bg-gray-800 hover:bg-gray-900 text-white'
-            : 'text-gray-600 border-gray-300 hover:bg-gray-50'
-            }`}
-          onClick={() => onStateChange(func.key, 'not_working')}
-        >
-          {getButtonText('not_working')}
-        </Button>
-        <Button
-          size="sm"
-          variant={state === 'unknown' ? 'default' : 'outline'}
-          className={`flex-1 h-7 text-xs ${state === 'unknown'
-            ? 'bg-gray-800 hover:bg-gray-900 text-white'
-            : 'text-gray-600 border-gray-300 hover:bg-gray-50'
-            }`}
-          onClick={() => onStateChange(func.key, 'unknown')}
-        >
-          {getButtonText('unknown')}
-        </Button>
-      </div>
-    </div>
+      <span className="text-sm font-semibold text-foreground text-center leading-tight">
+        {getLabel()}
+      </span>
+    </motion.button>
   );
 }
 
@@ -292,11 +249,11 @@ export default function DeviceFunctionsPage() {
 
   const visibleFunctions = shouldShowAllFunctions
     ? DEVICE_FUNCTIONS
-    : DEVICE_FUNCTIONS.slice(0, 2); // Показываем только "Включается ли телефон" и "Был ли ремонт"
+    : DEVICE_FUNCTIONS.filter(f => f.key === 'device_power' || f.key === 'repair_history');
 
   return (
     <Page back={goBack}>
-      <div className="w-full h-full bg-gray-50/30 flex flex-col pt-4 overflow-y-auto overflow-x-hidden">
+      <div className="w-full h-full bg-gray-50/30 flex flex-col pt-[max(24px,env(safe-area-inset-top))] overflow-y-auto overflow-x-hidden">
         <div className="flex-1 p-4 md:p-8 lg:p-12">
           <div className="w-full max-w-6xl mx-auto flex flex-col gap-6 items-center">
             {/* Заголовок */}
@@ -306,8 +263,8 @@ export default function DeviceFunctionsPage() {
               transition={{ duration: 0.3 }}
               className="text-center md:text-left w-full mb-8"
             >
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">Проверка функций</h1>
-              <p className="text-gray-500 text-lg">Укажите исправность основных компонентов устройства.</p>
+              <h1 className="text-3xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">Оценка устройства</h1>
+              <p className="text-gray-500 text-lg">Выберите неисправности, если они есть.</p>
             </motion.div>
 
             <div className="w-full flex flex-col xl:flex-row gap-8 items-start">

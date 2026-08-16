@@ -326,7 +326,7 @@ export default function FullScreenPhoneSelector() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Переходим к следующему шагу
-      router.push('/request/evaluation');
+      router.push('/buyback');
     } catch (error) {
       console.error('Ошибка при переходе:', error);
     } finally {

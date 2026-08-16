@@ -17,6 +17,7 @@ import Image from 'next/image';
 import { getPictureUrl } from '@/core/lib/assets';
 import { OrderStatusTracker } from '@/components/OrderStatusTracker';
 import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
+import { AuthModal } from '@/components/MobileApp/AuthModal';
 
 type TabType = 'selling' | 'bought' | 'repair'
 
@@ -60,6 +61,7 @@ interface Order {
 const MyDevices = () => {
   const telegramId = useAppStore(state => state.telegramId);
   const setTelegramId = useAppStore(state => state.setTelegramId);
+  const logout = useAppStore(state => state.logout);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('selling')
   const [myDevices, setMyDevices] = useState<SkupkaRequest[]>([]);
@@ -68,6 +70,7 @@ const MyDevices = () => {
   const [loading, setLoading] = useState(true);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const toggleCard = (deviceId: string) => {
     setExpandedCards(prev => {
@@ -79,6 +82,11 @@ const MyDevices = () => {
       }
       return newSet;
     });
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.push('/');
   };
 
   // Загрузка Skupka (Продаю)
@@ -216,16 +224,29 @@ const MyDevices = () => {
       <div className="min-h-screen bg-gray-50 md:pt-4">
         <div className="max-w-7xl mx-auto pt-16 md:pt-4 px-6 pb-32">
           <div className="mb-6 px-2">
-            <div className="flex md:hidden items-center gap-4 mb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.push('/')}
-                className="p-2 hover:bg-gray-100 rounded-full h-10 w-10 flex-shrink-0"
-              >
-                <ArrowLeft className="w-6 h-6 text-gray-700" />
-              </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Мои устройства</h1>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/')}
+                  className="md:hidden p-2 hover:bg-gray-100 rounded-full h-10 w-10 flex-shrink-0"
+                >
+                  <ArrowLeft className="w-6 h-6 text-gray-700" />
+                </Button>
+                <h1 className="text-2xl font-bold text-gray-900">Мои устройства</h1>
+              </div>
+              
+              {telegramId && telegramId !== 'guest_' && telegramId !== 'browser_test_user' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 rounded-xl"
+                >
+                  Выйти
+                </Button>
+              )}
             </div>
 
             <div className="mb-6 space-y-4">
@@ -240,15 +261,24 @@ const MyDevices = () => {
                   <div className="w-10 h-10 bg-white rounded-2xl shadow-sm flex items-center justify-center shrink-0">
                     <span className="text-xl">🔔</span>
                   </div>
-                  <div className="space-y-1">
+                  <div className="flex-1 space-y-2">
                     <h4 className="text-sm font-bold text-blue-900">Будьте в курсе статуса</h4>
                     <p className="text-xs text-blue-800/70 leading-relaxed">
                       Войдите в аккаунт, чтобы получать мгновенные <b>Push-уведомления</b> об изменении статуса вашего заказа.
                     </p>
+                    <Button 
+                      onClick={() => setShowAuthModal(true)} 
+                      size="sm" 
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl mt-2 font-semibold"
+                    >
+                      Войти
+                    </Button>
                   </div>
                 </motion.div>
               )}
             </div>
+
+            <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
             {/* Вкладки */}
             <div className="flex gap-2 justify-center mb-4 flex-wrap">

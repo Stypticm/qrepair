@@ -267,7 +267,7 @@ export default function DatabasePhoneSelector() {
       sessionStorage.setItem('phoneSelection', JSON.stringify(phoneSelection));
       
       await new Promise(resolve => setTimeout(resolve, 300));
-      router.push('/request/evaluation');
+      router.push('/buyback');
     } catch (error) {
       console.error('Ошибка при переходе:', error);
     } finally {

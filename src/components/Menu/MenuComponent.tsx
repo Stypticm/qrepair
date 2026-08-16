@@ -1,21 +1,18 @@
 'use client'
 
-import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, RefreshCw, PlusSquare, MessageCircle, LogIn, Sun, Moon } from 'lucide-react';
+import { Smartphone as DevicesIcon, Heart, ShoppingCart, Settings, LogOut, RefreshCw, PlusSquare, MessageCircle, LogIn } from 'lucide-react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
 import { useSafeArea } from '@/hooks/useSafeArea';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
 
 const MenuComponent = ({ userId, router, isLoading }: { userId: string | number | null, router: any, isLoading: boolean }) => {
     const { telegramId, logout } = useAppStore();
     const { needsUpdate, performUpdate } = useVersionCheck();
     const { isStandalone } = useSafeArea();
     const sourceParam = isStandalone ? '?source=pwa' : '';
-    const { theme, setTheme } = useTheme();
-    const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
     const handleLoginClick = () => {
         const event = new CustomEvent('openLoginModal');
@@ -79,16 +76,6 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: string | number 
                             <div className={`relative max-w-md mx-auto flex items-center justify-between gap-2`}>
                                 {!telegramId ? (
                                     <div className="flex flex-1 justify-evenly items-center">
-                                        {/* Theme Toggle */}
-                                        <button
-                                            onClick={toggleTheme}
-                                            className="relative w-12 h-12 rounded-full bg-gradient-to-br from-gray-500/40 to-gray-600/20 dark:from-white/20 dark:to-white/10 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-gray-500/50 hover:to-gray-600/30 dark:hover:from-white/30 dark:hover:to-white/20 shadow-lg"
-                                            aria-label="Сменить тему"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent dark:from-white/10 dark:to-transparent rounded-full"></div>
-                                            {theme === 'dark' ? <Sun className="relative w-6 h-6 text-yellow-400 drop-shadow-sm" /> : <Moon className="relative w-6 h-6 text-gray-700 dark:text-gray-300 drop-shadow-sm" />}
-                                        </button>
-
                                         {/* Кнопка установки PWA (только если не в PWA) */}
                                         {!isStandalone && (
                                             <button
@@ -124,16 +111,6 @@ const MenuComponent = ({ userId, router, isLoading }: { userId: string | number 
                                     </div>
                                 ) : (
                                     <>
-                                        {/* Theme Toggle */}
-                                        <button
-                                            onClick={toggleTheme}
-                                            className="relative w-12 h-12 rounded-full bg-gradient-to-br from-gray-500/40 to-gray-600/20 dark:from-white/20 dark:to-white/10 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-all duration-300 hover:from-gray-500/50 hover:to-gray-600/30 dark:hover:from-white/30 dark:hover:to-white/20 shadow-lg"
-                                            aria-label="Сменить тему"
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent dark:from-white/10 dark:to-transparent rounded-full"></div>
-                                            {theme === 'dark' ? <Sun className="relative w-6 h-6 text-yellow-400 drop-shadow-sm" /> : <Moon className="relative w-6 h-6 text-gray-700 dark:text-gray-300 drop-shadow-sm" />}
-                                        </button>
-
                                         <div className="flex flex-1 justify-between items-center px-2">
                                             {/* Мои устройства */}
                                             <button

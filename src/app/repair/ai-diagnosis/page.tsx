@@ -89,12 +89,16 @@ export default function RepairAiDiagnosisPage() {
                 {analyzing && (
                     <div className="flex flex-col items-center justify-center py-10 space-y-4">
                         <div className="relative w-16 h-16">
-                            <div className="absolute inset-0 bg-purple-200 rounded-full animate-ping opacity-75"></div>
+                            <motion.div
+                                className="absolute inset-0 bg-purple-200 rounded-full"
+                                animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
+                                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                            />
                             <div className="relative bg-gradient-to-tr from-purple-500 to-indigo-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-                                <BrainCircuit className="w-8 h-8 text-white animate-pulse" />
+                                <BrainCircuit className="w-8 h-8 text-white" />
                             </div>
                         </div>
-                        <p className="text-sm font-medium text-purple-600 animate-pulse">Нейросеть работает...</p>
+                        <p className="text-sm font-medium text-purple-600">Нейросеть работает...</p>
                     </div>
                 )}
 

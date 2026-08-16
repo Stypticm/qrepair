@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight, Smartphone, Wrench, Newspaper } from 'lucide-react';
+import { Users, BarChart3, Plus, ShoppingBag, MessageCircle, ArrowRight, Smartphone, Wrench, Newspaper, ArrowLeft, LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
@@ -117,11 +117,32 @@ export function AdminPageClient() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-[#0a0a0a] flex flex-col pt-16 md:pt-24 pb-20 md:pb-12 overflow-x-hidden">
-      <div className="max-w-[1600px] mx-auto px-4 md:px-12 w-full">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-12 w-full pt-[env(safe-area-inset-top)]">
         {/* Header Section */}
         <div className="mb-8 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-900/5 dark:bg-white/10 text-gray-900 dark:text-white text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4">
+          <div className="flex flex-col w-full">
+            {/* Mobile Navigation Buttons directly above Qoqos Admin */}
+            <div className="md:hidden flex items-center justify-between mb-8 w-full">
+                <button
+                    onClick={() => router.push('/')}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-gray-300 text-xs font-bold transition-transform active:scale-95"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    На сайт
+                </button>
+                <button
+                    onClick={() => {
+                        useAppStore.getState().logout();
+                        window.location.href = '/';
+                    }}
+                    className="flex items-center gap-1.5 p-2.5 rounded-full bg-red-100 dark:bg-red-500/10 text-red-600 active:scale-90 transition-transform"
+                    aria-label="Выйти"
+                >
+                    <LogOut className="w-5 h-5" />
+                </button>
+            </div>
+
+            <div className="inline-flex self-start items-center gap-2 px-3 py-1 rounded-full bg-gray-900/5 dark:bg-white/10 text-gray-900 dark:text-white text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4">
               <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500 animate-pulse" />
               Панель управления ({role || 'ADMIN'})
             </div>

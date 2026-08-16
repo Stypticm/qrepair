@@ -21,7 +21,7 @@ export function ChatWidget() {
     const telegramId = useAppStore(state => state.telegramId);
     const username = useAppStore(state => state.username);
     const guestId = useAppStore(state => state.guestId);
-    const { isNativeTelegram, isDesktop } = useSafeArea();
+    const { isNativeTelegram } = useSafeArea();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // If no telegramId and no guestId, generate one when opening
@@ -70,7 +70,7 @@ export function ChatWidget() {
                 const res = await fetch(`/api/agents/poll?guestId=${guestId}`);
                 if (!res.ok) return;
                 const data = await res.json();
-                
+
                 if (data.messages && data.messages.length > 0) {
                     data.messages.forEach((msg: any) => {
                         addMessage({
@@ -164,42 +164,41 @@ export function ChatWidget() {
     // Listen for custom events to open the chat
     useEffect(() => {
         const handleToggleChat = () => {
-            // For NATIVE Telegram App (on mobile), we prefer opening a direct link to the support bot
-            if (isNativeTelegram && !isDesktop) {
-                handleTelegramSupport();
-            } else {
-                setIsOpen(prev => !prev);
-            }
+            setIsOpen(prev => !prev);
         };
         window.addEventListener('toggleChat', handleToggleChat);
         return () => window.removeEventListener('toggleChat', handleToggleChat);
-    }, [isNativeTelegram, isDesktop, handleTelegramSupport]);
+    }, []);
 
     // Hide the chat widget for admin Telegram IDs
     // Correct way to handle body scroll lock
     useEffect(() => {
-        if (!isDesktop && isOpen) {
+        if (isOpen) {
             document.body.style.overflow = 'hidden';
             return () => {
                 document.body.style.overflow = '';
             };
         }
-    }, [isOpen, isDesktop]);
+    }, [isOpen]);
+
+    const handleBackdropTouchMove = (e: React.TouchEvent) => {
+        e.preventDefault();
+    };
 
     // CRITICAL: Hooks must be called before this return
-    if (isAdminTelegramId(telegramId)) return null;
-
-    // On mobile (non-desktop), we don't show floating buttons anymore as they are in the menu
-    if (!isDesktop) return (
+    // Плавающая кнопка убрана — чат открывается через нижнее меню (ClubNavigation).
+    // Этот компонент рендерит только модальное окно чата.
+    return (
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[10000] flex items-end justify-center pointer-events-auto px-4 pb-[env(safe-area-inset-bottom,16px)] pt-4">
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center pointer-events-auto px-4">
                     {/* Backdrop for mobile */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsOpen(false)}
+                        onTouchMove={handleBackdropTouchMove}
                         className="fixed inset-0 bg-black/40 backdrop-blur-md pointer-events-auto"
                     />
 
@@ -207,7 +206,7 @@ export function ChatWidget() {
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="relative w-full max-w-md h-full max-h-[85dvh] bg-white/80 dark:bg-background/80 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
+                        className="relative w-full max-w-md max-h-[65dvh] bg-white/80 dark:bg-background/80 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
                     >
                         {/* Header */}
                         <div className="p-4 bg-gray-900 text-white flex items-center justify-between">
@@ -318,130 +317,5 @@ export function ChatWidget() {
                 </div>
             )}
         </AnimatePresence>
-    );
-
-    return (
-        <div className="fixed bottom-6 right-6 z-[100]">
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                        className="mb-4 w-[calc(100vw-32px)] md:w-[380px] h-[70vh] md:h-[550px] bg-white/80 dark:bg-background/80 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-2xl rounded-3xl overflow-hidden flex flex-col"
-                    >
-                        {/* Header */}
-                        <div className="p-4 bg-gray-900 text-white flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                                    <MessageCircle size={20} />
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-sm">Поддержка Qoqos</h3>
-                                    <div className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                        <span className="text-[10px] text-gray-400 capitalize">Оператор онлайн</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                                aria-label="Minimze chat"
-                            >
-                                <Minus size={20} />
-                            </button>
-                        </div>
-
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth">
-                            {messages.length === 0 ? (
-                                <div className="flex flex-col items-start max-w-[80%] mr-auto">
-                                    <div className="px-4 py-2.5 rounded-2xl text-sm shadow-sm bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none">
-                                        Здравствуйте! Я на связи и готов помочь. Какой у вас вопрос?
-                                    </div>
-                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
-                                        Администратор
-                                    </span>
-                                </div>
-                            ) : (
-                                messages.map((msg) => (
-                                    <div
-                                        key={msg.id}
-                                        className={cn(
-                                            "flex flex-col max-w-[80%]",
-                                            msg.senderType === 'user' ? "ml-auto items-end" : "mr-auto items-start"
-                                        )}
-                                    >
-                                        <div
-                                            className={cn(
-                                                "px-4 py-2.5 rounded-2xl text-sm shadow-sm",
-                                                msg.senderType === 'user'
-                                                    ? "bg-blue-600 text-white rounded-tr-none"
-                                                    : "bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none"
-                                            )}
-                                        >
-                                            {msg.text}
-                                        </div>
-                                        <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
-                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                ))
-                            )}
-                            {isLoading && (
-                                <div className="flex flex-col items-start max-w-[80%] mr-auto">
-                                    <div className="px-4 py-3 rounded-2xl text-sm shadow-sm bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white rounded-tl-none flex items-center gap-1.5 h-10 w-16">
-                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                        <div className="w-1.5 h-1.5 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" />
-                                    </div>
-                                    <span className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 px-1">
-                                        Ассистент печатает...
-                                    </span>
-                                </div>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Input */}
-                        <div className="p-4 bg-white/50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
-                            <div className="relative flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    placeholder="Напишите сообщение..."
-                                    className="flex-1 bg-gray-100 dark:bg-white/5 border-none rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-gray-900 dark:text-white"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                />
-                                <Button
-                                    onClick={handleSendMessage}
-                                    disabled={!input.trim() || isLoading}
-                                    size="icon"
-                                    className="rounded-xl bg-blue-600 hover:bg-blue-700 h-11 w-11 shrink-0 shadow-lg shadow-blue-500/20 transition-all active:scale-95"
-                                    aria-label="Send message"
-                                >
-                                    <Send size={18} />
-                                </Button>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setIsOpen(!isOpen)}
-                className={cn(
-                    "h-16 w-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300",
-                    isOpen ? "bg-white dark:bg-white/10 text-foreground rotate-90" : "bg-gray-900 dark:bg-white text-white dark:text-background"
-                )}
-                aria-label={isOpen ? "Close chat" : "Open chat"}
-            >
-                {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
-            </motion.button>
-        </div>
     );
 }

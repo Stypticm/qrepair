@@ -12,29 +12,41 @@ export async function POST(req: NextRequest) {
     }
 
     const { userId, messages, requestId } = parsed.data;
-    // Берем только последнее сообщение пользователя для передачи Валере
     const lastMessage = messages?.[messages.length - 1]?.content || "";
+    const agentUrl = process.env.AGENT_URL || "http://localhost:8001";
 
     let reply = "";
     let shouldEscalate = false;
 
-    // Таймаут 45 секунд на ответ ИИ
+    const managerKeywords = [
+      'менеджер', 'менеджером', 'менеджеру', 'к менеджеру',
+      'человек', 'человеком', 'человеку', 'живой оператор',
+      'живого оператора', 'оператору', 'соедините с оператором',
+      'соедините с менеджером', 'живой менеджер', 'живого менеджера',
+      'реальный менеджер', 'реальный оператор', 'не робот',
+      'не бот', 'по-живому', 'по живому', 'настоящий сотрудник',
+      'сотрудник', 'администратор', 'админу', 'админа',
+      'ручной режим', 'подключите человека', 'позовите человека',
+      'позовите оператора', 'позовите менеджера'
+    ];
+    const lowerLastMessage = lastMessage.toLowerCase();
+    const hasManagerRequest = managerKeywords.some(k => lowerLastMessage.includes(k));
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 45000);
 
     try {
-      // Стучимся к нашему умному Python-бэкенду (Валера на порту 8001)
-      const response = await fetch("http://localhost:8001/ask", {
+      const response = await fetch(`${agentUrl}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: lastMessage }),
+        body: JSON.stringify({ user_query: lastMessage }),
         signal: controller.signal,
       });
       clearTimeout(timeout);
 
       if (!response.ok) throw new Error("Python backend returned " + response.status);
       const data = await response.json();
-      reply = data.response || "Пустой ответ от ИИ";
+      reply = data.answer || data.response || "Пустой ответ от ИИ";
 
       const lowerReply = reply.toLowerCase();
 
@@ -47,9 +59,19 @@ export async function POST(req: NextRequest) {
         'уточните у оператора', 'пожалуйста, уточните',
         'оператор поможет', 'подключим оператора',
         'escalate', 'оператор', 'в моей базе знаний нет информации',
+        'недоступен', 'не удалось', 'техническая ошибка', 'временн',
+        'попробуйте позже', 'попробуйте ещё раз', 'не удалось обработать',
+        'не могу обработать', 'не понял', 'не поняла', 'не понятно',
+        'нет ответа', 'без ответа', 'не знаю что ответить',
+        'невозможно ответить', 'не могу дать ответ'
       ];
       const hasNoInfo = noInfoPatterns.some(p => lowerReply.includes(p));
-      shouldEscalate = hasEscalateTag || hasNoInfo;
+      const looksLikeGenericError = reply.trim().length < 20 && /не знаю|не могу|нет ответ|не понял|не удалось|не могу|недоступен/i.test(reply);
+      shouldEscalate = hasEscalateTag || hasNoInfo || hasManagerRequest || looksLikeGenericError;
+
+      if (hasManagerRequest && !hasEscalateTag && !hasNoInfo) {
+        reply = "Я передал ваш запрос менеджеру. Он свяжется с вами в ближайшее время!";
+      }
 
       // Очищаем служебные теги из ответа
       reply = reply

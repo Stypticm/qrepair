@@ -195,7 +195,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                             value={login}
                             onChange={(e) => setLogin(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#54A9EB] focus:ring-2 focus:ring-[#54A9EB]/20 outline-none transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-600 text-gray-700 focus:border-[#54A9EB] focus:ring-2 focus:ring-[#54A9EB]/20 outline-none transition-all"
                             placeholder="Введите логин"
                         />
                     </div>
@@ -208,7 +208,7 @@ export const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#54A9EB] focus:ring-2 focus:ring-[#54A9EB]/20 outline-none transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-600 text-gray-700 focus:border-[#54A9EB] focus:ring-2 focus:ring-[#54A9EB]/20 outline-none transition-all"
                             placeholder="Введите пароль"
                         />
                     </div>

@@ -198,6 +198,30 @@ export default function EvaluationModePage() {
             </ModeCard>
 
             {/* Карточку "Ремонт" убрали по новой навигации (перемещено на главную влево) */}
+            <ModeCard
+              title="Ремонт"
+              subtitle="Пошаговая оценка для ремонта"
+              accentClassName="bg-yellow-50"
+              icon={<Wrench className="h-6 w-6 text-yellow-600" />}
+            >
+              <div className="space-y-4">
+                <ChatPanel />
+                <Button
+                  onClick={() => handleAction('repair')}
+                  disabled={!!isLoading}
+                  className="h-11 w-full rounded-xl bg-yellow-600 text-white hover:bg-yellow-700"
+                >
+                  {isLoading === 'repair' ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      {loadingText || 'Выбирается степень поломки...'}
+                    </span>
+                  ) : (
+                    'Начать диагностику'
+                  )}
+                </Button>
+              </div>
+            </ModeCard>
           </div>
         </div>
       </div>

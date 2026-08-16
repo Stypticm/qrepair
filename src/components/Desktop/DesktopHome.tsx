@@ -1,6 +1,5 @@
 'use client';
 
-import { Footer } from '@/components/layout/Footer';
 import { ReviewsCarousel } from '@/components/features/reviews/ReviewsCarousel';
 import { BlogGrid } from '@/components/features/blog/BlogGrid';
 import { RotatingBanner } from '@/components/RotatingBanner';
@@ -77,8 +76,6 @@ export const DesktopHome = () => {
                 <ReviewsCarousel />
                 <FAQAccordion />
             </main>
-
-            <Footer />
         </div>
     );
 };

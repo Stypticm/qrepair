@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, Settings, Smartphone, Hammer, Coins, Sun, Moon } from 'lucide-react';
+import { Search, MapPin, Phone, Heart, Scale, ShoppingCart, Menu, X, Settings, Smartphone, Hammer, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { SearchBar } from '@/components/features/search/SearchBar';
@@ -19,7 +19,6 @@ import { useEffect } from 'react';
 import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { useVersionCheck } from '@/hooks/useVersionCheck';
-import { useTheme } from 'next-themes';
 
 const CATEGORIES = [
   { name: 'Смартфоны', slug: 'smartphones', active: true },
@@ -41,7 +40,6 @@ export const Header = () => {
   const { count: orderNotifs } = useOrderNotifications();
   const { needsUpdate, performUpdate } = useVersionCheck();
   const { isStandalone } = useSafeArea();
-  const { resolvedTheme, setTheme } = useTheme();
   const sourceParam = isStandalone ? '?source=pwa' : '';
   const pathname = usePathname();
 
@@ -52,7 +50,6 @@ export const Header = () => {
     }
   }, [telegramId]);
 
-  const toggleTheme = () => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
 
   return (
     <header className="w-full bg-background z-50 sticky top-0 shadow-sm dark:shadow-black/30 border-b border-transparent dark:border-border/50 transition-colors duration-300">
@@ -71,13 +68,13 @@ export const Header = () => {
           </div>
 
           {needsUpdate && (
-            <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2">
+            <div className="flex items-center justify-center absolute inset-0 pointer-events-none">
               <button
                 onClick={performUpdate}
-                className="flex items-center gap-2 text-teal-700 hover:text-teal-800 transition-colors bg-teal-100/80 hover:bg-teal-200 px-4 py-1.5 rounded-full animate-pulse shadow-sm border border-teal-200"
+                className="pointer-events-auto flex items-center gap-1.5 text-teal-700 hover:text-teal-800 transition-colors bg-teal-100/80 hover:bg-teal-200 px-3 py-1 rounded-full animate-pulse shadow-sm border border-teal-200"
               >
-                <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-                <span className="font-bold text-xs sm:text-sm tracking-wide uppercase">Доступно обновление</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                <span className="font-bold text-[10px] sm:text-xs tracking-wide uppercase">Обновление</span>
               </button>
             </div>
           )}
@@ -89,14 +86,6 @@ export const Header = () => {
             <div className="hidden sm:flex gap-4">
               <Link href="/about" className="hover:text-teal-600 dark:hover:text-teal-400">О компании</Link>
             </div>
-            {/* Кнопка смены темы в топ-баре */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-              title="Сменить тему"
-            >
-              {resolvedTheme === 'dark' ? <Sun className="w-3.5 h-3.5 text-yellow-400" /> : <Moon className="w-3.5 h-3.5" />}
-            </button>
           </div>
         </div>
       </div>
@@ -250,7 +239,7 @@ export const Header = () => {
 
               <Link
                 href="/blog"
-                className="hover:text-teal-600 transition-colors py-1 relative group"
+                className="hidden"
               >
                 Блог
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-500 transition-all group-hover:w-full"></span>

@@ -3,8 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useRepairStore } from '@/stores/repairStore'
-import { Button } from '@/components/ui/button'
-import { ChevronRight } from 'lucide-react'
+import { useState } from 'react'
 
 const MODELS = [
     "17 Pro Max", "17 Pro", "17 Plus", "17",
@@ -19,49 +18,39 @@ const MODELS = [
 
 export default function RepairDevicePage() {
     const router = useRouter()
-    const { deviceModel, setDeviceModel } = useRepairStore()
+    const { setDeviceModel } = useRepairStore()
+    const [selected, setSelected] = useState<string | null>(null)
 
-    const handleNext = () => {
-        if (deviceModel) {
-            router.push('/repair/issue')
-        }
+    const handleSelect = (m: string) => {
+        const model = m === 'Другая модель' ? 'iPhone (Другая)' : `iPhone ${m}`
+        setSelected(m)
+        setDeviceModel(model)
+        setTimeout(() => router.push('/repair/issue'), 180)
     }
 
     return (
-        <div className="space-y-6 flex flex-col min-h-[calc(100vh-140px)]">
+        <div className="space-y-6">
             <div className="space-y-2 mb-4">
                 <p className="text-sm text-muted">Выберите ваше устройство из списка</p>
             </div>
 
-            <div className="flex-1 overflow-y-auto pb-20">
-                <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pb-8">
                     {MODELS.map((m, idx) => (
                         <motion.button
                             key={m}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.02 }}
-                            onClick={() => setDeviceModel(m === "Другая модель" ? "iPhone (Другая)" : `iPhone ${m}`)}
-                            className={`p-4 rounded-2xl text-sm font-semibold transition-all border-2 text-left ${deviceModel === `iPhone ${m}` || (m === "Другая модель" && deviceModel === "iPhone (Другая)")
-                                ? 'border-accent bg-accent/15 text-accent-deep'
-                                : 'border-border bg-surface-elevated text-foreground hover:border-accent/50'
-                                }`}
+                            onClick={() => handleSelect(m)}
+                            className={`p-4 rounded-2xl text-sm font-semibold transition-all border-2 text-left ${
+                                selected === m
+                                    ? 'border-accent bg-accent/15 text-accent-deep scale-[0.97] shadow-md'
+                                    : 'border-border bg-surface-elevated text-foreground hover:border-accent/50 active:scale-[0.97]'
+                            }`}
                         >
                             {m}
                         </motion.button>
                     ))}
-                </div>
-            </div>
-
-            <div className="fixed bottom-6 left-0 right-0 px-4 max-w-md mx-auto z-10">
-                <Button
-                    disabled={!deviceModel}
-                    onClick={handleNext}
-                    className="w-full h-14 rounded-2xl font-bold text-base bg-accent hover:bg-accent-hover text-primary-foreground shadow-xl shadow-accent/20"
-                >
-                    Далее
-                    <ChevronRight className="w-5 h-5 ml-2" />
-                </Button>
             </div>
         </div>
     )
