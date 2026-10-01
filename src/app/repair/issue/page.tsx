@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { useRepairStore } from '@/stores/repairStore'
 import { Button } from '@/components/ui/button'
 import { ChevronRight, Camera, X } from 'lucide-react'

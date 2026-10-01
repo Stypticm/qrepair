@@ -13,8 +13,6 @@ import { useEffect, useState } from 'react';
 import { QRCodeGenerator } from '@/components/QRCodeGenerator';
 import { ChevronDown, ChevronUp, ShoppingBag, Package, ArrowLeft, Hammer, Trash2, Wrench, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import { getPictureUrl } from '@/core/lib/assets';
 import { OrderStatusTracker } from '@/components/OrderStatusTracker';
 import { PushNotificationToggle } from '@/components/notifications/PushNotificationToggle';
 import { AuthModal } from '@/components/MobileApp/AuthModal';
@@ -221,20 +219,28 @@ const MyDevices = () => {
 
   return (
     <Page back={true}>
-      <div className="min-h-screen bg-gray-50 md:pt-4">
+      <div className="min-h-screen bg-background text-foreground md:pt-4">
         <div className="max-w-7xl mx-auto pt-16 md:pt-4 px-6 pb-32">
           <div className="mb-6 px-2">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => router.push('/')}
-                  className="md:hidden p-2 hover:bg-gray-100 rounded-full h-10 w-10 flex-shrink-0"
+                  onClick={() => {
+                    if (typeof window !== 'undefined' && window.history.length > 1) {
+                      router.back();
+                    } else {
+                      router.push('/');
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-elevated border-border text-foreground hover:bg-surface hover:text-foreground hover:border-accent/40 shadow-sm active:scale-95 transition-all"
+                  aria-label="Назад"
                 >
-                  <ArrowLeft className="w-6 h-6 text-gray-700" />
+                  <ArrowLeft className="w-4 h-4" />
+                  <span className="text-xs font-semibold">Назад</span>
                 </Button>
-                <h1 className="text-2xl font-bold text-gray-900">Мои устройства</h1>
+                <h1 className="text-2xl font-bold text-foreground">Мои устройства</h1>
               </div>
               
               {telegramId && telegramId !== 'guest_' && telegramId !== 'browser_test_user' && (
@@ -336,13 +342,7 @@ const MyDevices = () => {
           {/* Индикатор начальной загрузки или пустого состояния */}
           {loading && myDevices.length === 0 && myOrders.length === 0 && myRepairs.length === 0 ? (
             <div className="flex justify-center items-center h-64">
-              <Image
-                src={getPictureUrl('animation_running.gif') || '/animation_running.gif'}
-                alt="Загрузка"
-                width={96}
-                height={96}
-                className="object-contain"
-              />
+              <div className="w-10 h-10 border-3 border-accent border-t-transparent rounded-full animate-spin" />
             </div>
           ) : activeTab === 'selling' ? (
             /* Вкладка "Продаю" (Skupka) */

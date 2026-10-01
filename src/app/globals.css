@@ -94,11 +94,12 @@
   }
 
   html {
-    overflow-x: hidden;
+    overflow-x: clip;
     overflow-y: auto;
     height: auto;
     min-height: 100%;
     -webkit-text-size-adjust: 100%;
+    -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -111,7 +112,7 @@
   }
 
   body {
-    overflow-x: hidden;
+    overflow-x: clip;
     overflow-y: auto;
     height: auto;
     min-height: 100%;
@@ -121,16 +122,17 @@
     color: var(--foreground);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -webkit-overflow-scrolling: touch;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  /* Только на мобильных отключаем bounce-скролл (iOS) без потери десктоп-скролла */
+  /* Предотвращаем паразитный bounce без блокировки нормального скролла */
   @media (max-width: 1023px) {
-    html, body {
-      overscroll-behavior-y: none;
+    body {
+      overscroll-behavior-y: contain;
     }
   }
 
@@ -182,21 +184,23 @@
     animation: shimmer 2.5s infinite linear;
   }
 
-  .club-home {
-    background: radial-gradient(circle at 72% 8%, #0d3475 0, #081a3d 26%, #050b18 58%, #030712 100%);
-    position: relative;
+  #app-root.is-home {
+    background: radial-gradient(circle at 72% 8%, #0d3475 0%, #09204a 35%, #061533 70%, #040e24 100%);
   }
-  .club-home__glow { position: absolute; width: 34rem; height: 34rem; border-radius: 50%; filter: blur(80px); pointer-events: none; opacity: .27; }
-  .club-home__glow--one { right: -16rem; top: 12rem; background: #1269ff; }
-  .club-home__glow--two { left: -23rem; bottom: -18rem; background: #073b98; }
+
+  .club-home {
+    background: radial-gradient(circle at 72% 8%, #0d3475 0%, #09204a 35%, #061533 70%, #040e24 100%);
+    position: relative;
+    overflow: hidden;
+  }
   .club-home__quality, .club-home__catalog-promo p { font-size: 10px; letter-spacing: .18em; color: rgb(191 215 255 / .65); font-weight: 700; }
-  .club-home__hero { display: grid; grid-template-columns: 1fr; min-height: 220px; align-items: center; padding-top: 10px; }
-  .club-home__copy { position: relative; z-index: 2; }
+  .club-home__top { position: relative; z-index: 2; flex: 0 0 auto; text-align: center; }
+  .club-home__center { position: relative; z-index: 3; flex: 1 1 auto; display: flex; flex-direction: column; justify-content: safe center; }
   .club-home__logo { display: flex; justify-content: center; align-items: center; font-size: clamp(62px, 15vw, 118px); line-height: .7; letter-spacing: -.11em; font-weight: 300; padding-right: .11em; }
   .club-home__logo i, .club-home__nav-logo i { display: inline-block; font-style: normal; margin-left: .05em; font-size: 1em; }
   .club-home__quality { text-align: center; margin-top: 18px; }
-  .club-home h1 { font-size: clamp(28px, 7vw, 56px); line-height: 1.03; letter-spacing: -.055em; font-weight: 700; margin-top: 16px; }
-  .club-home__intro { margin-top: 16px; max-width: 370px; color: rgb(220 231 249 / .68); font-size: 14px; line-height: 1.55; }
+  .club-home h1 { font-size: clamp(28px, 7vw, 56px); line-height: 1.03; letter-spacing: -.055em; font-weight: 700; }
+  .club-home__intro { margin-top: 16px; max-width: 370px; color: rgb(220 231 249 / .68); font-size: 14px; line-height: 1.55; margin-inline: auto; }
   .club-home__showcase { position: absolute; height: 330px; right: -36px; top: 130px; width: 58%; max-width: 530px; overflow: hidden; pointer-events: none; }
   .club-home__beam { position: absolute; width: 500px; height: 80px; left: -100px; top: 76px; transform: rotate(-24deg); background: linear-gradient(90deg, transparent, #2e88ff, transparent); filter: blur(9px); opacity: .5; }
   .club-home__orb { position: absolute; width: 260px; height: 260px; right: 20px; top: 24px; border-radius: 50%; border: 1px solid rgb(93 167 255 / .5); box-shadow: inset 0 0 55px #1469e0, 0 0 70px #1765d6; }
@@ -207,30 +211,121 @@
   .club-home__screen-mark { padding-top: 88px; text-align: center; font-size: 30px; color: white; opacity: .7; }
   .club-home__watch { position: absolute; right: 102px; bottom: 4px; width: 86px; height: 94px; transform: rotate(-9deg); border: 5px solid #516682; border-radius: 27px; background: #091525; box-shadow: 0 12px 24px #0009; display: grid; place-items: center; color: #9fc6ff; font-size: 15px; }
   .club-home__showcase-tag { position: absolute; right: 8px; bottom: 9px; display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 12px; background: #091a37cc; backdrop-filter: blur(8px); color: #dcecff; font-size: 10px; }
-  .club-home__actions { display: grid; gap: 10px; grid-template-columns: 1fr; position: relative; z-index: 3; }
-  .club-home__action { display: flex; align-items: center; min-height: 60px; padding: 10px 14px; gap: 10px; border: 1px solid rgb(139 190 255 / .25); border-radius: 17px; background: linear-gradient(110deg, rgb(18 51 105 / .74), rgb(8 23 51 / .74)); box-shadow: inset 0 1px #ffffff14, 0 10px 20px #0003; transition: transform .2s, border-color .2s; }
-  .club-home__action:hover { transform: translateY(-2px); border-color: rgb(121 182 255 / .6); }
-  .club-home__action-icon { display: grid; place-items: center; width: 39px; height: 39px; border-radius: 13px; color: #9bceff; background: #2472dd22; }
-  .club-home__action strong, .club-home__action small { display: block; }
-  .club-home__action strong { font-size: 14px; }
-  .club-home__action small { color: #b9cae3aa; font-size: 11px; margin-top: 3px; }
-  .club-home__arrow { color: #9acbff; }
-  .club-home__benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 12px 0 16px; color: #b6c8e0; }
-  .club-home__benefits div { display: grid; justify-items: center; gap: 6px; text-align: center; font-size: 9px; }
-  .club-home__benefits svg { color: #79b9ff; }
-  .club-home__catalog-promo { display: flex; justify-content: space-between; min-height: 140px; margin-bottom: 8px; padding: 16px; position: relative; overflow: hidden; border: 1px solid #6ea9fd38; border-radius: 22px; background: linear-gradient(115deg, #102c5c, #07162f 72%); }
-  .club-home__catalog-promo h2 { margin: 8px 0 16px; font-size: 22px; line-height: 1.07; letter-spacing: -.04em; }
-  .club-home__catalog-promo a { display: inline-flex; align-items: center; gap: 4px; color: #97c9ff; font-size: 12px; font-weight: 600; }
-  .club-home__mini-products { display: flex; align-items: end; gap: 8px; transform: rotate(-12deg) translate(12px, 8px); }
-  .club-home__mini-products div { width: 44px; height: 102px; border: 2px solid #a8cdfc77; border-radius: 12px; background: linear-gradient(145deg, #b9d8ff, #1a4d9c); box-shadow: 0 12px 18px #0008; }
-  .club-home__mini-products div:nth-child(2) { height: 126px; background: linear-gradient(145deg, #273b64, #0b1530); }
-  .club-home__mini-products div:nth-child(3) { height: 80px; }
-  .club-home__nav { position: fixed; z-index: 9999; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; justify-content: space-around; width: calc(100% - 24px); max-width: 480px; height: 66px; padding: 0 12px; border: 1px solid rgba(115, 169, 240, 0.3); border-radius: 24px; background: rgba(14, 38, 79, 0.75); backdrop-filter: blur(16px); box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px rgba(255,255,255,0.15); }
-  .club-home__nav a, .club-home__nav button { -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9bbbec; background: none; border: none; font-size: 11px; font-weight: 500; font-family: inherit; line-height: 1; padding: 8px 4px; margin: 0; cursor: pointer; transition: all .2s; flex: 1; text-align: center; border-radius: 12px; outline: none; }
-  .club-home__nav a:hover, .club-home__nav button:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
-  .club-home__nav .is-active { color: #ffffff; text-shadow: 0 0 12px rgba(255, 255, 255, 0.6); background: rgba(94, 164, 255, 0.15); font-weight: 700; }
+  button, a {
+    touch-action: pan-y;
+  }
+  .club-home__actions { display: grid; gap: 10px; grid-template-columns: 1fr; position: relative; z-index: 3; margin-top: 20px; }
+  .club-home__action { position: relative; display: flex; align-items: center; overflow: hidden; isolation: isolate; min-height: 98px; padding: 12px 14px; gap: 12px; border: 1px solid rgba(139, 190, 255, 0.25); border-radius: 20px; background: linear-gradient(110deg, rgba(18, 51, 105, 0.8), rgba(8, 23, 51, 0.85)); box-shadow: inset 0 1px rgba(255, 255, 255, 0.12), 0 10px 24px rgba(0, 0, 0, 0.35); transition: transform .2s, border-color .2s; }
+  .club-home__action:hover { transform: translateY(-2px); border-color: rgba(139, 195, 255, 0.65); }
+  .club-home__action-image { z-index: -2; object-fit: cover; object-position: 85% 35%; width: 100%; height: 100%; transition: transform .4s ease; }
+  .club-home__action:hover .club-home__action-image { transform: scale(1.05); }
+  .club-home__action-overlay { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(4, 14, 36, 0.96) 0%, rgba(6, 21, 51, 0.88) 46%, rgba(8, 26, 62, 0.45) 85%, transparent 100%); }
+  .club-home__action-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; color: #9bceff; background: rgba(36, 114, 221, 0.3); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15); backdrop-filter: blur(6px); flex-shrink: 0; }
+  .club-home__action strong, .club-home__action small { display: block; position: relative; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7); }
+  .club-home__action strong { font-size: 15px; font-weight: 700; color: #ffffff; }
+  .club-home__action small { color: rgba(200, 220, 245, 0.85); font-size: 11.5px; margin-top: 3px; }
+  .club-home__arrow { color: #9acbff; position: relative; flex-shrink: 0; }
+  .club-home__benefits {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin: 18px auto 0;
+    width: 100%;
+    max-width: 680px;
+    color: #9bbfe6;
+  }
+  .club-home__benefits div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 500;
+    color: #9bbfe6;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    flex: 1;
+    white-space: nowrap;
+  }
+  .club-home__benefits svg { width: 16px; height: 16px; color: #6ea9fd; flex-shrink: 0; }
+  .club-home__nav { position: fixed; z-index: 9999; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; justify-content: space-around; width: calc(100% - 24px); max-width: 480px; height: 66px; padding: 0 10px; border: 1px solid rgba(115, 169, 240, 0.35); border-radius: 26px; background: rgba(10, 28, 60, 0.85); backdrop-filter: blur(20px); box-shadow: 0 20px 40px rgba(0,0,0,0.65), inset 0 1px rgba(255,255,255,0.2); }
+  .club-home__nav a, .club-home__nav button { -webkit-tap-highlight-color: transparent; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9bbbec; background: none; border: none; font-size: 11px; font-weight: 500; font-family: inherit; line-height: 1; padding: 8px 4px; margin: 0; cursor: pointer; transition: all .2s; flex: 1; text-align: center; border-radius: 14px; outline: none; }
+  .club-home__nav a:hover, .club-home__nav button:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+  .club-home__nav .is-active { color: #ffffff; text-shadow: 0 0 12px rgba(255, 255, 255, 0.6); background: rgba(94, 164, 255, 0.18); font-weight: 700; }
   .club-home__nav .is-active svg { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)); stroke-width: 2.5; }
-  .club-home__nav-logo { position: relative; width: 48px; height: 48px; margin-top: -24px; border-radius: 50%; background: linear-gradient(135deg, #3d8aff, #195ac0); display: grid !important; place-items: center; color: white !important; font-size: 20px !important; font-weight: 700; box-shadow: 0 8px 20px #1a64de77, inset 0 2px #ffffff4d; border: 4px solid #0b1a37; transition: transform .2s !important; flex: 0 0 48px !important; }
-  @media (min-width: 768px) { .club-home__hero { min-height: 280px; }.club-home__logo { justify-content: flex-start; }.club-home__quality { text-align: left; margin-left: 13px; }.club-home__actions { grid-template-columns: repeat(3, 1fr); }.club-home__action { min-height: 96px; }.club-home__benefits { max-width: 650px; margin-left: 0; }.club-home__catalog-promo { max-width: 780px; }.club-home__nav { width: min(570px, calc(100% - 48px)); } }
-  @media (min-width: 1100px) { .club-home__hero { min-height: 410px; }.club-home__catalog-promo { max-width: none; }.club-home__catalog-promo h2 { font-size: 28px; } }
+  .club-home__nav-logo {
+    position: relative;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    height: 100%;
+    margin: 0 !important;
+    padding: 0 10px;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #ffffff !important;
+    font-size: 22px !important;
+    font-weight: 300 !important;
+    letter-spacing: -0.06em;
+    text-shadow: none !important;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease !important;
+    flex: 0 0 auto !important;
+  }
+  .club-home__nav-logo:hover { opacity: 0.8; transform: scale(1.04); }
+  .club-home__nav-logo span { display: inline-flex; align-items: center; color: #ffffff; font-weight: 300; }
+  .club-home__nav-logo i { color: #ffffff; font-style: normal; font-weight: 300; margin-left: 1px; opacity: 0.95; }
+  @media (max-width: 480px) {
+    .club-home__benefits { gap: 4px; }
+    .club-home__benefits div { font-size: 10px; gap: 4px; }
+    .club-home__benefits svg { width: 14px; height: 14px; }
+  }
+  @media (max-width: 767px) and (min-height: 700px) {
+    .club-home {
+      justify-content: center !important;
+      padding-bottom: 0 !important;
+    }
+    .club-home__content {
+      flex: 0 0 auto !important;
+      margin: auto 0 !important;
+      justify-content: center !important;
+      gap: 22px;
+      padding-top: max(40px, calc(env(safe-area-inset-top) + 18px)) !important;
+      padding-bottom: max(96px, calc(env(safe-area-inset-bottom) + 82px)) !important;
+    }
+    .club-home__top {
+      margin-bottom: 4px;
+    }
+    .club-home__group {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+  }
+  @media (min-width: 768px) {
+    .club-home__top { text-align: left; }
+    .club-home__center { text-align: left; }
+    .club-home__logo { justify-content: flex-start; }
+    .club-home__quality { text-align: left; margin-left: 13px; }
+    .club-home__intro { margin-inline: 0; }
+    .club-home__actions { grid-template-columns: repeat(2, 1fr); margin-top: 28px; }
+    .club-home__action { min-height: 154px; padding: 20px; padding-right: 48%; border-radius: 24px; }
+    .club-home__action-image { object-position: 75% 30%; }
+    .club-home__action-overlay { background: linear-gradient(90deg, rgba(4, 14, 36, 0.96) 0%, rgba(6, 21, 51, 0.9) 42%, rgba(8, 26, 62, 0.45) 85%, transparent 100%); }
+    .club-home__action strong { font-size: 18px; }
+    .club-home__action small { font-size: 13px; margin-top: 5px; }
+    .club-home__benefits { justify-content: center; gap: 36px; margin: 24px auto 0; }
+    .club-home__benefits div { font-size: 13px; gap: 8px; }
+    .club-home__benefits svg { width: 18px; height: 18px; }
+    .club-home__nav { width: min(570px, calc(100% - 48px)); }
+  }
 }

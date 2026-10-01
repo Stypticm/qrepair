@@ -15,15 +15,15 @@ mockEnv().then(() => {
         (window as any).TelegramWebviewProxy
       )
 
-    if (!isInTelegram) {
-      console.log(
-        '🌐 Not in Telegram WebApp, skipping SDK initialization'
-      )
-      return
-    }
+    // if (!isInTelegram) {
+    //   console.log(
+    //     '🌐 Not in Telegram WebApp, skipping SDK initialization'
+    //   )
+    //   return
+    // }
 
     console.log(
-      '🚀 In Telegram WebApp, initializing SDK...'
+      // '🚀 In Telegram WebApp, initializing SDK...'
     )
 
     const launchParams = retrieveLaunchParams()

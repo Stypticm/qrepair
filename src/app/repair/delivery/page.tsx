@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { useRepairStore } from '@/stores/repairStore'
 import { Button } from '@/components/ui/button'
 import { MapPin, Truck, AlertCircle, Loader2 } from 'lucide-react'
@@ -104,11 +103,7 @@ export default function RepairDeliveryPage() {
                 </div>
 
                 {deliveryMethod === 'self' ? (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="bg-surface rounded-2xl p-6 border border-border space-y-3"
-                    >
+                    <div className="bg-surface rounded-2xl p-6 border border-border space-y-3">
                         <h3 className="font-bold text-foreground">Адрес сервисного центра</h3>
                         <p className="text-sm text-muted">ул. Примерная, д. 10, оф. 1</p>
                         <p className="text-sm text-muted">Ежедневно с 10:00 до 22:00</p>
@@ -129,13 +124,9 @@ export default function RepairDeliveryPage() {
                             className="w-full h-12 px-4 rounded-xl bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm text-foreground placeholder:text-muted"
                             />
                         </div>
-                    </motion.div>
+                    </div>
                 ) : (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-4"
-                    >
+                    <div className="space-y-4">
                         <input
                             type="text"
                             placeholder="Ваш телефон или Telegram для связи"
@@ -164,7 +155,7 @@ export default function RepairDeliveryPage() {
                                 className="w-full h-12 px-4 rounded-xl bg-input border border-border focus:outline-none focus:ring-2 focus:ring-accent text-sm text-foreground"
                             />
                         </div>
-                    </motion.div>
+                    </div>
                 )}
             </div>
 

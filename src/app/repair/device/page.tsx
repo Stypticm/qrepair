@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { useRepairStore } from '@/stores/repairStore'
 import { useState } from 'react'
 
@@ -36,20 +35,17 @@ export default function RepairDevicePage() {
 
             <div className="grid grid-cols-2 gap-3 pb-8">
                     {MODELS.map((m, idx) => (
-                        <motion.button
+                        <button
                             key={m}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.02 }}
                             onClick={() => handleSelect(m)}
-                            className={`p-4 rounded-2xl text-sm font-semibold transition-all border-2 text-left ${
+                            className={`p-4 rounded-2xl text-sm font-semibold transition-all border-2 text-left active:scale-[0.97] ${
                                 selected === m
                                     ? 'border-accent bg-accent/15 text-accent-deep scale-[0.97] shadow-md'
-                                    : 'border-border bg-surface-elevated text-foreground hover:border-accent/50 active:scale-[0.97]'
+                                    : 'border-border bg-surface-elevated text-foreground hover:border-accent/50'
                             }`}
                         >
                             {m}
-                        </motion.button>
+                        </button>
                     ))}
             </div>
         </div>

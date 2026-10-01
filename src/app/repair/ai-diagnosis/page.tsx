@@ -75,7 +75,7 @@ export default function RepairAiDiagnosisPage() {
                 </div>
 
                 {!analyzing && !result && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                    <div>
                         <Button
                             onClick={startAnalysis}
                             className="w-full h-14 rounded-2xl font-bold text-base bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white shadow-xl shadow-purple-500/20 group"
@@ -83,7 +83,7 @@ export default function RepairAiDiagnosisPage() {
                             Запустить анализ
                             <BrainCircuit className="w-5 h-5 ml-2 group-hover:scale-110 transition-transform" />
                         </Button>
-                    </motion.div>
+                    </div>
                 )}
 
                 {analyzing && (

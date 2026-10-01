@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Boxes, House, MessageCircle, UserRound, Settings } from 'lucide-react';
+import { House, MessageCircle, UserRound, Settings, ShoppingBag } from 'lucide-react';
 import { useAppStore } from '@/stores/authStore';
 import { isAdminTelegramId } from '@/core/lib/admin';
 
@@ -21,8 +21,10 @@ export function ClubNavigation() {
   return (
     <nav className="club-home__nav" aria-label="Основная навигация">
       <Link href="/" className={isActive('/') ? 'is-active' : ''} aria-label="Главная"><House size={20} /><span>Главная</span></Link>
-      <Link href="/catalog" className={isStartsWith('/catalog') ? 'is-active' : ''} aria-label="Каталог"><Boxes size={20} /><span>Каталог</span></Link>
-      <div className="club-home__nav-logo" aria-label="Логотип Qoqos"><span>QØ</span></div>
+      <Link href="/catalog" className={isStartsWith('/catalog') ? 'is-active' : ''} aria-label="Каталог"><ShoppingBag size={20} /><span>Каталог</span></Link>
+      <Link href="/" className="club-home__nav-logo" aria-label="Qoqos Главная">
+        <span>Q<i>Ø</i></span>
+      </Link>
       <Link href="#" onClick={(e) => { e.preventDefault(); openChat(); }} className="" aria-label="Чат">
         <MessageCircle size={20} /><span>Чат</span>
       </Link>

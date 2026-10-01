@@ -7,11 +7,11 @@ export default function RepairLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <div className="w-full flex-1 flex flex-col bg-background text-foreground transition-colors duration-300">
             <RepairHeader />
-            <main className="pb-5 px-4 max-w-md mx-auto pt-4 md:pt-24">
+            <div className="pb-36 px-4 max-w-md mx-auto pt-2 md:pt-24 w-full flex-1">
                 {children}
-            </main>
+            </div>
         </div>
     )
 }

@@ -145,21 +145,21 @@ export function useSafeArea() {
         userAgent.includes('Linux'))
     setIsMobile(mobile)
     setIsDesktop(desktop)
-    
+
     // Силовое логирование для дебага
-    console.log('useSafeArea debug:', { mobile, desktop, userAgent })
+    // console.log('useSafeArea debug:', { mobile, desktop, userAgent })
 
 
     const checkIsNativeTelegram = () => {
       if (typeof window === 'undefined') return false
-      
+
       const ua = window.navigator.userAgent.toLowerCase()
       const isTgInside = ua.includes('telegram') || !!(window as any).TelegramWebviewProxy
       const isStandalone = (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone)
-      
+
       // If it's a PWA, it's NOT a native TG app view
       if (isStandalone) return false
-      
+
       return isTgInside && !!window.Telegram?.WebApp?.platform && window.Telegram.WebApp.platform !== 'unknown'
     }
 
@@ -185,7 +185,7 @@ export function useSafeArea() {
             if (
               'requestFullscreen' in webApp &&
               typeof webApp.requestFullscreen ===
-                'function' &&
+              'function' &&
               webApp.isVersionAtLeast?.('8.0')
             ) {
               webApp.requestFullscreen()
@@ -314,7 +314,7 @@ export function useSafeArea() {
 
         return () => {
           if (webApp.offViewportChanged) {
-            webApp.offViewportChanged(() => {})
+            webApp.offViewportChanged(() => { })
           }
           if (webApp.offEvent) {
             webApp.offEvent(

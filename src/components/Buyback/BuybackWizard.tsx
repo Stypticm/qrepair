@@ -213,8 +213,14 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
         setState(prev => ({ ...prev, ...updates }));
     };
 
-    const nextStep = (next: Step) => setStep(next);
-    const prevStep = (prev: Step) => setStep(prev);
+    const nextStep = (next: Step) => {
+        setStep(next);
+        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const prevStep = (prev: Step) => {
+        setStep(prev);
+        if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
@@ -605,13 +611,13 @@ export function BuybackWizard({ onComplete }: { onComplete?: () => void }) {
                 </div>
             </div>
 
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                     key={step}
-                    initial={{ opacity: 0, x: 10, filter: 'blur(8px)' }}
-                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, x: -10, filter: 'blur(8px)' }}
-                    transition={{ duration: 0.3, ease: 'circOut' }}
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -8 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
                 >
                     {renderStep()}
                 </motion.div>

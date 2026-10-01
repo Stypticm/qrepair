@@ -1,7 +1,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { useRepairStore } from '@/stores/repairStore'
 import { Button } from '@/components/ui/button'
 import { ChevronRight, BrainCircuit, Wallet, AlertCircle } from 'lucide-react'
@@ -32,11 +31,7 @@ export default function RepairEstimatePage() {
             </div>
 
             <div className="flex-1 space-y-6 mt-6">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-surface-elevated p-6 rounded-3xl border border-border shadow-sm text-center space-y-2"
-                >
+                <div className="bg-surface-elevated p-6 rounded-3xl border border-border shadow-sm text-center space-y-2">
                     <div className="flex justify-center mb-4">
                         <div className="p-4 bg-green-50 text-green-600 rounded-full">
                             <Wallet className="w-8 h-8" />
@@ -51,12 +46,9 @@ export default function RepairEstimatePage() {
                     <p className="text-xs text-muted mt-4 px-4 leading-relaxed">
                         *Точная стоимость будет определена после бесплатной диагностики мастером.
                     </p>
-                </motion.div>
+                </div>
 
-                <motion.button
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 }}
+                <button
                     onClick={handleAiDiagnosis}
                     className="w-full relative overflow-hidden bg-gradient-to-r from-purple-500 to-indigo-600 p-6 rounded-3xl text-white text-left flex items-center justify-between shadow-lg shadow-purple-500/30 group hover:shadow-purple-500/50 transition-all active:scale-[0.98]"
                 >
@@ -73,7 +65,7 @@ export default function RepairEstimatePage() {
                         </p>
                     </div>
                     <ChevronRight className="w-6 h-6 text-purple-200 relative z-10" />
-                </motion.button>
+                </button>
 
                 <div className="bg-amber-50 rounded-2xl p-4 flex gap-3 items-start border border-amber-100">
                     <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />

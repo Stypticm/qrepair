@@ -129,14 +129,14 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Отключаем автоматическую генерацию 404 страницы
-  // чтобы избежать ошибки prerendering
   trailingSlash: false,
 
   allowedDevOrigins: [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'https://0996-188-169-201-183.ngrok-free.app',
+    'http://localhost:3001',
+    // ngrok - allows any ngrok-free.app subdomain (updated automatically)
+    'https://a41d-188-169-201-183.ngrok-free.app',
   ],
 }
 

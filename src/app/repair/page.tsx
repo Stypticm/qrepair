@@ -1,8 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { MonitorSmartphone, BatteryCharging, Camera, Cpu, Settings2, Smartphone } from 'lucide-react'
+import { Cpu, BatteryCharging, Camera, Smartphone, MonitorSmartphone, Settings2 } from 'lucide-react'
 import { useRepairStore } from '@/stores/repairStore'
 import { useEffect, useState } from 'react'
 
@@ -33,38 +32,36 @@ export default function RepairCategoriesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="text-center space-y-2 mt-2">
+    <div className="flex flex-col gap-6 pb-20 touch-pan-y" style={{ touchAction: 'pan-y' }}>
+      <div className="text-center space-y-1.5">
         <p className="text-sm text-muted">Выберите проблему для предварительной оценки</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {CATEGORIES.map((cat, idx) => {
+      <div className="grid grid-cols-2 gap-3 touch-pan-y" style={{ touchAction: 'pan-y' }}>
+        {CATEGORIES.map((cat) => {
           const isSelected = selected === cat.id
           return (
-            <motion.button
+            <button
               key={cat.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.05 }}
+              type="button"
               onClick={() => handleSelect(cat.name, cat.id)}
-              className={`flex flex-col items-center justify-center p-6 rounded-3xl border-2 transition-all gap-3 ${
+              style={{ touchAction: 'pan-y' }}
+              className={`flex flex-col items-center justify-center p-5 rounded-3xl border-2 transition-all gap-2.5 active:scale-[0.97] touch-pan-y select-none cursor-pointer ${
                 isSelected
                   ? `${cat.accent} scale-[0.97] shadow-lg`
-                  : 'bg-surface-elevated border-border shadow-sm hover:shadow-md hover:border-accent/50 active:scale-[0.97]'
+                  : 'bg-surface-elevated border-border shadow-sm hover:shadow-md hover:border-accent/50'
               }`}
             >
-              <div className={`p-4 rounded-full ${cat.bg} ${cat.color}`}>
+              <div className={`p-4 rounded-full pointer-events-none ${cat.bg} ${cat.color}`}>
                 <cat.icon className="w-8 h-8" />
               </div>
-              <span className="text-sm font-semibold text-foreground text-center leading-tight">
+              <span className="text-sm font-semibold text-foreground text-center leading-tight pointer-events-none">
                 {cat.name}
               </span>
-            </motion.button>
+            </button>
           )
         })}
       </div>
-
     </div>
   )
 }

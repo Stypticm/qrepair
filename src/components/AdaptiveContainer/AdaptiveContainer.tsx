@@ -75,8 +75,9 @@ export function AdaptiveContainer({ children, fixedContent, className = '' }: Ad
 
 
   const getContainerStyles = () => {
+    const isHome = pathname === '/';
     return {
-      container: 'w-full min-h-screen flex flex-col bg-background',
+      container: `w-full flex-1 flex flex-col ${isHome ? 'bg-transparent' : 'bg-background min-h-screen'}`,
       main: 'w-full flex-1 flex flex-col',
       wrapper: 'w-full flex-1 flex flex-col',
       fixedLayer: 'fixed inset-0 pointer-events-none z-[10000]'
