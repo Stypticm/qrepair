@@ -127,15 +127,43 @@ const MyDevices = () => {
 
   // Загрузка Repair (Ремонт)
   useEffect(() => {
-    if (telegramId && activeTab === 'repair') {
+    if (activeTab === 'repair') {
       const getData = async () => {
         try {
           setLoading(true);
-          const res = await fetch(`/api/repair/my?telegramId=${telegramId}`);
+          const effectiveTelegramId = telegramId || (typeof window !== 'undefined' ? sessionStorage.getItem('telegramId') : null);
+          let guestIds: string[] = [];
+          if (typeof window !== 'undefined') {
+            try {
+              const list = JSON.parse(localStorage.getItem('qoqos_guest_repairs') || '[]');
+              const last = localStorage.getItem('last_repair_request_id');
+              guestIds = Array.from(new Set([...(last ? [last] : []), ...list]));
+            } catch (e) {
+              // ignore
+            }
+          }
+
+          let url = '';
+          if (effectiveTelegramId && effectiveTelegramId !== 'guest_' && effectiveTelegramId !== 'browser_test_user' && !effectiveTelegramId.startsWith('web_')) {
+            url = `/api/repair/my?telegramId=${effectiveTelegramId}`;
+          } else if (guestIds.length > 0) {
+            url = `/api/repair/my?ids=${guestIds.join(',')}`;
+          } else if (effectiveTelegramId) {
+            url = `/api/repair/my?telegramId=${effectiveTelegramId}`;
+          }
+
+          if (!url) {
+            setMyRepairs([]);
+            setLoading(false);
+            return;
+          }
+
+          const res = await fetch(url);
           const data = await res.json();
           setMyRepairs(Array.isArray(data) ? data : []);
         } catch (e) {
           console.error('Ошибка при загрузке ремонтных заявок:', e);
+          setMyRepairs([]);
         } finally {
           setLoading(false);
         }
@@ -496,30 +524,45 @@ const MyDevices = () => {
           ) : activeTab === 'repair' ? (
             /* Вкладка "Ремонт" */
             myRepairs.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="text-center py-12 space-y-3">
+                <div className="w-16 h-16 bg-violet-100 rounded-2xl flex items-center justify-center mx-auto">
                   <Wrench className="w-8 h-8 text-violet-500" />
                 </div>
-                <div className="text-gray-600 text-lg mb-2">Нет заявок на ремонт</div>
-                <div className="text-gray-500 text-sm">Оставьте заявку через раздел «Ремонт»</div>
+                <div className="text-gray-800 dark:text-gray-100 text-lg font-bold">Нет активных заявок на ремонт</div>
+                <div className="text-gray-500 text-sm max-w-xs mx-auto">Оформите новую заявку или проверьте статус по номеру</div>
+                <div className="flex justify-center gap-2 pt-2">
+                  <Button
+                    onClick={() => router.push('/repair')}
+                    className="bg-accent hover:bg-accent-hover text-primary-foreground font-bold rounded-xl text-xs"
+                  >
+                    Оформить ремонт
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/repair/status')}
+                    className="border-border text-foreground rounded-xl text-xs font-semibold"
+                  >
+                    Найти по номеру
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
                 {myRepairs.map((repair: any) => {
                   const isExpanded = expandedCards.has(repair.id);
                   return (
-                    <Card key={repair.id} className="bg-white border border-gray-200 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+                    <Card key={repair.id} className="bg-white dark:bg-surface-elevated border border-gray-200 dark:border-border rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
                       <CardHeader
-                        className="pb-3 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                        className="pb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-surface transition-colors duration-200"
                         onClick={() => toggleCard(repair.id)}
                       >
                         <div className="flex justify-between items-start">
                           <div className="flex-1 pr-4">
-                            <CardTitle className="text-base font-semibold text-gray-900">
-                              {repair.deviceName || repair.category || 'Заявка на ремонт'}
+                            <CardTitle className="text-base font-bold text-gray-900 dark:text-foreground">
+                              {repair.deviceModel || repair.deviceName || repair.category || 'Заявка на ремонт'}
                             </CardTitle>
-                            <p className="text-sm text-gray-500 mt-1">
-                              #{repair.id?.slice(0, 8)} · {repair.issue || repair.description || ''}
+                            <p className="text-sm text-gray-500 dark:text-muted mt-1 font-mono">
+                              #{repair.id?.slice(-6)?.toUpperCase()} · {repair.category || repair.issue || repair.description || ''}
                             </p>
                           </div>
                           <div className="flex flex-col items-end gap-2">

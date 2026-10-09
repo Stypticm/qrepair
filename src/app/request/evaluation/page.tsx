@@ -370,14 +370,7 @@ export default function EvaluationPage() {
             try { wa.expand(); } catch { }
           }
           try { wa.enableClosingConfirmation(); } catch { }
-          destroy = () => {
-            // Восстанавливаем свайп вниз при размонтировании (опционально)
-            try {
-              if (typeof wa?.enableVerticalSwipes === 'function') {
-                wa.enableVerticalSwipes();
-              }
-            } catch { }
-          }
+          destroy = () => {}
         } catch { }
       }
     } catch { }

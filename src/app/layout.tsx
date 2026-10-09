@@ -49,13 +49,26 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const isTelegramEnv = typeof window !== 'undefined' && (
+    window.location.search.includes('tgWebAppPlatform') ||
+    window.location.search.includes('tgWebAppData') ||
+    window.location.search.includes('tgWebAppVersion') ||
+    document.cookie.includes('_initData=') ||
+    !!(window as any).TelegramWebviewProxy
+  )
+
+  // Load Telegram script in Telegram env OR in development for local testing
+  const shouldLoadTelegramScript = isTelegramEnv || process.env.NODE_ENV === 'development'
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script
-          src="https://telegram.org/js/telegram-web-app.js"
-          strategy="beforeInteractive"
-        />
+        {shouldLoadTelegramScript && (
+          <Script
+            src="https://telegram.org/js/telegram-web-app.js"
+            strategy="beforeInteractive"
+          />
+        )}
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
@@ -84,7 +97,7 @@ export default function RootLayout({
             </I18nProvider>
           </ThemeProvider>
         </ReactQueryProvider>
-        <Toaster position="top-center" richColors />
+        <Toaster position="top-center" offset="72px" richColors />
         <CookieBanner />
       </body>
     </html>

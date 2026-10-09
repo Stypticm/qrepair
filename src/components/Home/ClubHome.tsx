@@ -12,7 +12,7 @@ const benefits = [{ label: 'Гарантия до 12 мес.', icon: ShieldCheck
 
 export function ClubHome() {
   return (
-    <main className="club-home w-full flex-1 flex flex-col justify-between text-white relative pb-28 md:pb-24 min-h-dvh md:min-h-full">
+    <main className="club-home w-full flex-1 flex flex-col justify-between text-white relative md:pb-24 min-h-dvh md:min-h-full">
       <div className="club-home__content relative mx-auto w-full max-w-[1360px] px-4 pt-[max(16px,env(safe-area-inset-top))] sm:px-7 lg:px-10 flex-1 flex flex-col justify-between">
         <div className="club-home__group">
           <div className="club-home__top">

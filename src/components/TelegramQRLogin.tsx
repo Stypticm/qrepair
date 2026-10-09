@@ -27,7 +27,7 @@ export const TelegramQRLogin = ({ onSuccess, botName: propBotName }: { onSuccess
     // 1. Initial Auth Request Creation
     useEffect(() => {
         // Fetch Bot Username from props or env
-        const botName = propBotName || process.env.NEXT_PUBLIC_BOT_USERNAME || 'QoqosAppBot';
+        const botName = propBotName || process.env.NEXT_PUBLIC_BOT_USERNAME || 'qoqos_market_bot';
         setBotUsername(botName);
 
         const createAuthRequest = async () => {

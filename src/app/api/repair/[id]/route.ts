@@ -11,10 +11,6 @@ export async function GET(
     const { id } = await params;
     const telegramId = request.headers.get('x-telegram-id');
 
-    if (!telegramId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const requestData = await api.get<any>('repair-requests', id, {
       _embed: 'assignedMaster'
     });
@@ -23,11 +19,12 @@ export async function GET(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    // Проверяем доступ: либо владелец заявки, либо сотрудник
-    const { hasAccess } = await checkAdminAccessFromDB(telegramId);
-    
-    if (requestData.telegramId !== telegramId && !hasAccess) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Если telegramId передан, проверяем права (владелец либо сотрудник)
+    if (telegramId) {
+      const { hasAccess } = await checkAdminAccessFromDB(telegramId);
+      if (requestData.telegramId && requestData.telegramId !== telegramId && !hasAccess) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     return NextResponse.json({ request: requestData });

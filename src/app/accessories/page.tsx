@@ -115,7 +115,7 @@ export default function AccessoriesPage() {
     <Page back={true}>
       <div className="min-h-screen bg-gray-50">
         {/* Заголовок */}
-        <div className="bg-white border-b border-gray-200 px-4 py-6 pt-16 text-center">
+        <div className="bg-white border-b border-gray-200 px-4 py-6 pt-4 text-center">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"

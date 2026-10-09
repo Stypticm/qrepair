@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { api } from '@/services/api';
+import { notifyAllAdmins } from '@/lib/notifications/admin-notifications';
 
 export async function POST(request: NextRequest) {
   try {
-    const telegramId = request.headers.get('x-telegram-id');
-
-    if (!telegramId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    const telegramIdHeader = request.headers.get('x-telegram-id');
     const data = await request.json();
 
     // Базовая валидация
@@ -18,6 +14,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Для гостей и неавторизованных в Telegram пользователей формируем веб-идентификатор
+    const telegramId =
+      telegramIdHeader && telegramIdHeader.trim() !== ''
+        ? telegramIdHeader
+        : data.telegramId || (data.clientContact ? `web_${data.clientContact.replace(/[^\w+]/g, '')}` : `web_${crypto.randomUUID().slice(0, 10)}`);
 
     // Создаем заявку на ремонт с явным ID
     const newId = crypto.randomUUID();
@@ -41,32 +43,36 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date().toISOString(),
     });
 
-    // После успешного создания отправляем уведомления всем админам и мастерам
+    // После успешного создания отправляем подробное уведомление администраторам в Telegram
     try {
-        const { notifyUser } = await import('@/lib/notifications/user-notifications');
-        const users = await api.list<any>('users');
-        if (users && users.length > 0) {
-            const staff = users.filter((u: any) => u.role === 'ADMIN' || u.role === 'MASTER');
-            
-            const title = 'Новая заявка на ремонт';
-            const body = `${data.deviceModel} - ${data.issueDescription || 'Без описания'}`;
-            
-            // Отправляем всем параллельно
-            await Promise.allSettled(
-                staff.map((employee: any) => 
-                   notifyUser(employee.telegramId, {
-                       title,
-                       body,
-                       url: '/admin/repair' // общая админка
-                   })
-                )
-            );
-        }
+        const contactStr = data.clientContact ? `📞 Контакт: <b>${data.clientContact}</b>` : '📞 Контакт: не указан';
+        const deliveryStr = data.deliveryMethod === 'courier'
+            ? `🚚 Доставка: <b>Курьер</b> (${data.appointmentDate || ''} ${data.appointmentTime || ''})\n📍 Адрес: ${data.clientAddress || 'Не указан'}`
+            : '🏪 Способ: <b>Клиент привезет сам в СЦ</b>';
+        const priceStr = data.estimatedMin && data.estimatedMax
+            ? `💰 Предв. смета: <b>${Number(data.estimatedMin).toLocaleString('ru')} – ${Number(data.estimatedMax).toLocaleString('ru')} ₽</b>`
+            : '';
+
+        const bodyParts = [
+            `📱 Устройство: <b>${data.deviceModel || 'iPhone'}</b>`,
+            `🛠 Неисправности: <b>${data.category}</b>`,
+            data.issueDescription ? `📝 Описание: <i>${data.issueDescription}</i>` : '',
+            data.issuePhotos && data.issuePhotos.length > 0 ? `📸 Прикреплено фото: <b>${data.issuePhotos.length} шт.</b>` : '',
+            deliveryStr,
+            contactStr,
+            priceStr,
+        ].filter(Boolean).join('\n');
+
+        await notifyAllAdmins({
+            title: '🛠 Новая заявка на ремонт!',
+            body: bodyParts,
+            url: `/admin/repair`
+        });
     } catch (notifyErr) {
-        console.error('[Repair Create] Failed to notify staff:', notifyErr);
+        console.error('[Repair Create] Failed to notify admins in Telegram:', notifyErr);
     }
 
-    return NextResponse.json({ success: true, id: newId });
+    return NextResponse.json({ success: true, id: newId, guestId: telegramId });
   } catch (error) {
     console.error('Error creating repair request:', error);
     return NextResponse.json(

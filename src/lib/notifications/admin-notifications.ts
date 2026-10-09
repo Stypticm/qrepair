@@ -1,44 +1,51 @@
-import { api } from '@/services/api';
-import { isAdminTelegramId, ADMIN_TELEGRAM_IDS } from '@/core/lib/admin';
-import { NotificationService } from '@/services/notification.service';
+import { sendTelegramMessage } from '@/core/lib/sendTelegramMessage';
+import { ADMIN_TELEGRAM_IDS } from '@/core/lib/admin';
 
 export async function notifyAllAdmins(payload: { title: string; body: string; url?: string }) {
-    try {        
-        const [hardcodedSubs, roleSubs] = await Promise.all([
-          api.list<any>('push-subscriptions', { telegramId: ADMIN_TELEGRAM_IDS.join(',') }),
-          api.list<any>('users', { role: 'ADMIN' }).then(users => {
-             const adminIds = users.map((u: any) => u.telegramId).filter(Boolean);
-             if (adminIds.length === 0) return [];
-             return api.list<any>('push-subscriptions', { telegramId: adminIds.join(',') });
-          })
-        ]);
+    try {
+        // Собираем все admin chat ID из .env (ADMIN_CHAT_ID, TELEGRAM_CHAT_ID_misha, TELEGRAM_CHAT_ID_roma и др.)
+        const dynamicEnvIds: string[] = [];
+        for (const [key, value] of Object.entries(process.env)) {
+            if (value && /^(ADMIN_CHAT_ID|TELEGRAM_CHAT_ID|ADMIN_TELEGRAM_ID)/i.test(key)) {
+                value.split(',').forEach((val) => {
+                    const trimmed = val.trim();
+                    if (trimmed) dynamicEnvIds.push(trimmed);
+                });
+            }
+        }
 
-        const adminSubscriptions = [...(hardcodedSubs || []), ...(roleSubs || [])];
+        const targetChatIds = Array.from(new Set([
+            ...dynamicEnvIds,
+            ...ADMIN_TELEGRAM_IDS,
+        ].filter(Boolean) as string[]));
 
-        console.log(`[Push] Target admin subscriptions: ${adminSubscriptions.length}`);
+        console.log(`[Admin Telegram Notify] Sending notification to ${targetChatIds.length} admins:`, targetChatIds);
 
-        if (adminSubscriptions.length === 0) {
-            console.log('[Push] No admin subscriptions found for broadcast');
+        if (targetChatIds.length === 0) {
+            console.log('[Admin Telegram Notify] No admin chat IDs found in env');
             return;
         }
 
-        const uniqueAdminIds = Array.from(new Set(
-            adminSubscriptions
-                .map((s: any) => s.telegramId)
-                .filter((id: string | null | undefined): id is string => !!id)
-        ));
+        const messageText = `🔔 <b>${payload.title}</b>\n\n${payload.body}`;
 
-        const results = await Promise.all(uniqueAdminIds.map(telegramId => 
-            NotificationService.sendToUser(telegramId, {
-                title: payload.title,
-                message: payload.body,
-                url: payload.url,
+        const results = await Promise.allSettled(
+            targetChatIds.map(async (chatId) => {
+                try {
+                    return await sendTelegramMessage(chatId, messageText, { parse_mode: 'HTML' });
+                } catch (htmlErr) {
+                    // Fallback to plain text if HTML formatting fails
+                    try {
+                        return await sendTelegramMessage(chatId, `${payload.title}\n\n${payload.body}`);
+                    } catch (plainErr) {
+                        console.error(`[Admin Telegram Notify] Error sending to ${chatId}:`, plainErr);
+                        throw plainErr;
+                    }
+                }
             })
-        ));
+        );
 
-        const totalSent = results.reduce((acc, r: any) => acc + (r.sent || 0), 0);
-        console.log(`Sent admin notifications. Total successful deliveries: ${totalSent}`);
-
+        const successful = results.filter((r) => r.status === 'fulfilled').length;
+        console.log(`[Admin Telegram Notify] Successfully sent to ${successful}/${targetChatIds.length} admins`);
     } catch (error) {
         console.error('Error in notifyAllAdmins:', error);
     }

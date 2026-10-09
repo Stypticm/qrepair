@@ -214,6 +214,15 @@
   button, a {
     touch-action: pan-y;
   }
+
+  /* Allow horizontal scroll on series tabs and similar containers */
+  .horizontal-scroll {
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+  .horizontal-scroll > * {
+    touch-action: pan-x pan-y;
+  }
   .club-home__actions { display: grid; gap: 10px; grid-template-columns: 1fr; position: relative; z-index: 3; margin-top: 20px; }
   .club-home__action { position: relative; display: flex; align-items: center; overflow: hidden; isolation: isolate; min-height: 98px; padding: 12px 14px; gap: 12px; border: 1px solid rgba(139, 190, 255, 0.25); border-radius: 20px; background: linear-gradient(110deg, rgba(18, 51, 105, 0.8), rgba(8, 23, 51, 0.85)); box-shadow: inset 0 1px rgba(255, 255, 255, 0.12), 0 10px 24px rgba(0, 0, 0, 0.35); transition: transform .2s, border-color .2s; }
   .club-home__action:hover { transform: translateY(-2px); border-color: rgba(139, 195, 255, 0.65); }

@@ -9,14 +9,23 @@ import webpush from 'web-push';
 const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC!;
 const privateVapidKey = process.env.VAPID_PRIVATE_KEY || process.env.VAPID_PRIVATE!;
 
+let hasWarnedVapid = false;
+
 if (!publicVapidKey || !privateVapidKey) {
-    console.warn('⚠️ VAPID keys are missing! Notifications will not work.');
+    if (process.env.NODE_ENV !== 'production' && !hasWarnedVapid) {
+        hasWarnedVapid = true;
+        console.warn('[web-push] VAPID keys not configured. Set VAPID_PUBLIC / VAPID_PRIVATE in .env to enable web push notifications.');
+    }
 } else {
-    webpush.setVapidDetails(
-        'mailto:admin@qoqos.ru', // Replace with your email
-        publicVapidKey,
-        privateVapidKey
-    );
+    try {
+        webpush.setVapidDetails(
+            'mailto:admin@qoqos.ru',
+            publicVapidKey,
+            privateVapidKey
+        );
+    } catch (e) {
+        // ignore invalid keys
+    }
 }
 
 export interface PushPayload {

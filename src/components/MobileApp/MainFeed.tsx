@@ -77,7 +77,7 @@ export const MainFeed = ({
                                         </div>
                                     </Link>
 
-                                    <Link href="/catalog" className="bg-card/60 dark:bg-white/5 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm border border-border hover:bg-card/80 dark:hover:bg-white/10 transition-all active:scale-[0.96]">
+                                    <Link href="/catalog" className="bg-card/60 dark:bg-white/5 backdrop-blur-md rounded-2xl p-3 flex flex-col items-center gap-2 shadow-sm border border-border hover:bg-card/80 dark:hover:bg-white/10 transition-all active:scale-[0.96]" prefetch={true}>
                                         <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center flex-shrink-0">
                                             <Grid3X3 className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
                                         </div>
@@ -92,8 +92,8 @@ export const MainFeed = ({
 
                         <div className="w-full mt-8">
                             <div className="mb-4 px-2">
-                            <h2 className="text-2xl font-bold text-foreground tracking-tight">Новинки</h2>
-                            <p className="text-sm text-muted font-medium">Последние поступления</p>
+                                <h2 className="text-2xl font-bold text-foreground tracking-tight">Новинки</h2>
+                                <p className="text-sm text-muted font-medium">Последние поступления</p>
                             </div>
                             <AdaptiveDeviceFeed
                                 items={marketplaceItems}

@@ -1,20 +1,10 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-const SCROLL_TOLERANCE = 4;
-
-function isPageScrollable() {
-  const doc = document.documentElement;
-  return (
-    doc.scrollHeight - doc.clientHeight > SCROLL_TOLERANCE ||
-    document.body.scrollHeight - window.innerHeight > SCROLL_TOLERANCE
-  );
-}
-
 /**
- * Telegram-специфика: `disableVerticalSwipes()` блокирует не только свайп-закрытие,
- * но и вертикальный скролл WebView. Поэтому отключаем свайпы только на страницах,
- * которые не прокручиваются, а на прокручиваемых оставляем нативный скролл.
+ * Telegram Mini App: отключает свайп вниз для сворачивания/закрытия приложения в трей
+ * во всем приложении глобально.
+ * Закрытие доступно только по системной кнопке Telegram или крестику с подтверждением.
  */
 export function useTelegramDisableVerticalSwipes() {
   const pathname = usePathname();
@@ -25,39 +15,36 @@ export function useTelegramDisableVerticalSwipes() {
     const tg = (window as any).Telegram?.WebApp;
     if (!tg) return;
 
-    const platform = tg.platform;
-    if (platform !== "ios" && platform !== "android") return;
-
     const apply = () => {
       try {
-        if (isPageScrollable()) {
-          if (typeof tg.enableVerticalSwipes === "function") {
-            tg.enableVerticalSwipes();
-          }
-        } else if (typeof tg.disableVerticalSwipes === "function") {
+        // Всегда блокируем свайп в трей/закрытие во всем приложении
+        if (typeof tg.disableVerticalSwipes === "function") {
           tg.disableVerticalSwipes();
         }
+        // Всегда запрашиваем подтверждение закрытия
+        if (typeof tg.enableClosingConfirmation === "function") {
+          tg.enableClosingConfirmation();
+        }
+        // Разворачиваем на весь экран
+        if (typeof tg.expand === "function") {
+          tg.expand();
+        }
       } catch {
-        // игнорируем, если клиент не поддерживает
+        // игнорируем ошибки, если клиент не поддерживает
       }
     };
 
     apply();
     const frame = requestAnimationFrame(apply);
-    const timer = window.setTimeout(apply, 400);
-    window.addEventListener("resize", apply);
+    const timer1 = window.setTimeout(apply, 150);
+    const timer2 = window.setTimeout(apply, 500);
+    const timer3 = window.setTimeout(apply, 1200);
 
     return () => {
       cancelAnimationFrame(frame);
-      window.clearTimeout(timer);
-      window.removeEventListener("resize", apply);
-      if (typeof tg?.enableVerticalSwipes === "function") {
-        try {
-          tg.enableVerticalSwipes();
-        } catch {
-          // игнорируем ошибки при размонтировании
-        }
-      }
+      window.clearTimeout(timer1);
+      window.clearTimeout(timer2);
+      window.clearTimeout(timer3);
     };
   }, [pathname]);
 }

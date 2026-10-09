@@ -24,14 +24,17 @@ export function ClientLayoutContent({ children }: PropsWithChildren) {
 
   const isAdminPath = pathname?.startsWith('/admin')
   const isHome = pathname === '/'
-  // Hide global header in Telegram Mini App (to show native experience) or on mobile web
-  const showGlobalHeader = isDesktop && !isAdminPath && !isTelegram
+  const isRepair = pathname?.startsWith('/repair')
+  const isBuyback = pathname?.startsWith('/buyback')
+  const isFlowPage = isRepair || isBuyback
+  // Hide global header in Telegram Mini App, on mobile web, or on flow pages (repair/buyback)
+  const showGlobalHeader = isDesktop && !isAdminPath && !isTelegram && !isFlowPage
 
   return (
     // <NavigationProvider>
     //   <NavigationEffects />
     // </NavigationProvider>
-    <div id="app-root" className={`${isHome ? 'is-home' : ''} ${!isAdminPath && !isHome ? 'pb-28' : ''}`}>
+    <div id="app-root" className={`${isHome ? 'is-home' : ''} ${!isAdminPath && !isHome ? '' : ''}`}>
       {showGlobalHeader && <Header />}
       <AdaptiveContainer className={isHome ? 'flex-[1_0_auto] !min-h-0 !bg-transparent' : ''}>{children}</AdaptiveContainer>
       {!isAdminPath && <ClubNavigation />}
